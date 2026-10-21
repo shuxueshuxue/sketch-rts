@@ -1,0 +1,3514 @@
+{
+  "schemaVersion": 1,
+  "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+  "mainBaseline": "d4ca266820770b2bf9c938eb8e90b772e88c9908",
+  "node": "24.22.0",
+  "ownerRace": "grove",
+  "pressureRace": "ember",
+  "modes": {
+    "witness": [
+      {
+        "puzzle": "ship-away/far",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1189.707,
+        "commandCount": 16,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 1012,
+          "transport-at-embark": 1013,
+          "army-on-island": 1707,
+          "landing-near": 1707,
+          "target-attacked": 1943,
+          "camp-cleared": 2033,
+          "worker-on-island": 3434,
+          "hall-complete": 4160
+        },
+        "losses": [
+          {
+            "tick": 1989,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2033,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "move": 6,
+          "board": 3,
+          "enterCabin": 1,
+          "leaveCabin": 1,
+          "unload": 2,
+          "attack": 2,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "ship-away/near",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 775.486,
+        "commandCount": 12,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 769,
+          "landing-near": 769,
+          "target-attacked": 1013,
+          "camp-cleared": 1103,
+          "worker-on-island": 2504,
+          "hall-complete": 3230
+        },
+        "losses": [
+          {
+            "tick": 1059,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1103,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "board": 3,
+          "enterCabin": 1,
+          "leaveCabin": 1,
+          "unload": 2,
+          "attack": 2,
+          "move": 2,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "supply-tier/knight",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 130.303,
+        "commandCount": 5,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": true
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "farm-complete": 180,
+          "army-on-island": 427,
+          "knight-trained": 427,
+          "landing-near": 427,
+          "target-attacked": 726,
+          "camp-cleared": 960
+        },
+        "losses": [
+          {
+            "tick": 830,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 960,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 90,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 9,
+            "stables": 1
+          }
+        },
+        "commandTypes": {
+          "build": 1,
+          "train": 1,
+          "attack": 3
+        },
+        "trainedKinds": {
+          "knight": 1
+        }
+      },
+      {
+        "puzzle": "supply-tier/footmen",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 113.016,
+        "commandCount": 5,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": true
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 177,
+          "landing-near": 177,
+          "footmen-trained": 337,
+          "target-attacked": 673,
+          "camp-cleared": 838
+        },
+        "losses": [
+          {
+            "tick": 750,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 838,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 200,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "train": 2,
+          "attack": 3
+        },
+        "trainedKinds": {
+          "footman": 2
+        }
+      },
+      {
+        "puzzle": "navy-zero/default",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1462.964,
+        "commandCount": 22,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true,
+          "hallFundingPreserved": true
+        },
+        "tick": 9600,
+        "first": {
+          "shipyard-complete": 600,
+          "transport-trained": 857,
+          "army-boarded": 1715,
+          "army-on-island": 2329,
+          "landing-near": 2329,
+          "target-attacked": 2590,
+          "camp-cleared": 2714,
+          "worker-on-island": 4264,
+          "hall-complete": 5000
+        },
+        "losses": [
+          {
+            "tick": 2678,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2714,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "build": 3,
+          "train": 1,
+          "move": 8,
+          "board": 2,
+          "enterCabin": 1,
+          "leaveCabin": 2,
+          "unload": 3,
+          "attack": 2
+        },
+        "trainedKinds": {
+          "transport": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/urgent",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 929.765,
+        "commandCount": 11,
+        "passed": true,
+        "checks": {
+          "homeSurvived": true,
+          "defended": true,
+          "islandHallComplete": true,
+          "priority": true
+        },
+        "tick": 9600,
+        "first": {
+          "defended": 1984,
+          "transport-at-embark": 2367,
+          "army-boarded": 2490,
+          "army-on-island": 3265,
+          "worker-on-island": 3265,
+          "landing-far": 3265,
+          "target-attacked": 3466,
+          "camp-cleared": 3548,
+          "hall-complete": 4179
+        },
+        "losses": [
+          {
+            "tick": 1748,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1776,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 1837,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1851,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 1886,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1964,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 1984,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 3508,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 3548,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 3,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "attack": 4,
+          "move": 1,
+          "board": 2,
+          "enterCabin": 1,
+          "leaveCabin": 1,
+          "unload": 1,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "defense-window/later",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1637.328,
+        "commandCount": 22,
+        "passed": true,
+        "checks": {
+          "homeSurvived": true,
+          "defended": true,
+          "islandHallComplete": true,
+          "priority": true
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 387,
+          "army-boarded": 539,
+          "army-on-island": 1323,
+          "worker-on-island": 1323,
+          "landing-far": 1323,
+          "target-attacked": 1546,
+          "camp-cleared": 1637,
+          "hall-complete": 2274,
+          "army-returned": 3414,
+          "army-all-returned": 3447,
+          "defended": 7382
+        },
+        "losses": [
+          {
+            "tick": 1612,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1637,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 7217,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7229,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 7283,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7304,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 7349,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7382,
+            "kind": "footman",
+            "owner": "pressure"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "move": 3,
+          "board": 3,
+          "enterCabin": 3,
+          "unload": 4,
+          "leaveCabin": 4,
+          "attack": 4,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "guarded-shore/strong",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1801.255,
+        "commandCount": 23,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 119,
+          "beach-attacked": 466,
+          "army-on-island": 483,
+          "landing-near": 483,
+          "beach-cleared": 797,
+          "target-attacked": 1207,
+          "camp-cleared": 1275,
+          "worker-on-island": 2860,
+          "hall-complete": 3760
+        },
+        "losses": [
+          {
+            "tick": 516,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 642,
+            "kind": "ogreLord",
+            "owner": "neutral"
+          },
+          {
+            "tick": 708,
+            "kind": "ogreWarrior",
+            "owner": "neutral"
+          },
+          {
+            "tick": 797,
+            "kind": "ogreMage",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1239,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1242,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1275,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 447,
+          "homeAlive": true,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "board": 3,
+          "enterCabin": 2,
+          "leaveCabin": 4,
+          "unload": 4,
+          "attack": 5,
+          "move": 4,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "guarded-shore/weak",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1227.067,
+        "commandCount": 20,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": true
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 1192,
+          "landing-far": 1192,
+          "target-attacked": 1648,
+          "camp-cleared": 1721,
+          "worker-on-island": 4715,
+          "hall-complete": 5783
+        },
+        "losses": [
+          {
+            "tick": 1677,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1721,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 3,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "board": 3,
+          "enterCabin": 1,
+          "leaveCabin": 1,
+          "unload": 2,
+          "attack": 3,
+          "move": 8,
+          "build": 2
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "negative-return/default",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 743.165,
+        "commandCount": 2,
+        "passed": true,
+        "checks": {
+          "localExpansion": true,
+          "rejectedBadIsland": true
+        },
+        "tick": 8400,
+        "first": {
+          "local-cleared": 198,
+          "local-hall-complete": 1123
+        },
+        "losses": [
+          {
+            "tick": 162,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 198,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 39,
+          "homeAlive": true,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 3,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "attack": 1,
+          "build": 1
+        },
+        "trainedKinds": {}
+      },
+      {
+        "puzzle": "evacuate/default",
+        "mode": "witness",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 607.425,
+        "commandCount": 4,
+        "passed": true,
+        "checks": {
+          "workersRescued": true,
+          "noSuicideReinforcement": true
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "camp-cleared": 1,
+          "transport-at-embark": 479,
+          "workers-rescued": 809
+        },
+        "losses": [],
+        "final": {
+          "gold": 0,
+          "homeAlive": true,
+          "armyAlive": 2,
+          "workersRescued": 4,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "board": 1,
+          "enterCabin": 1,
+          "leaveCabin": 1,
+          "unload": 1
+        },
+        "trainedKinds": {}
+      }
+    ],
+    "v9_knight": [
+      {
+        "puzzle": "ship-away/far",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4072.995,
+        "commandCount": 42,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 553,
+          "farm-complete": 1486,
+          "shipyard-complete": 3879,
+          "transport-at-embark": 4083,
+          "army-on-island": 4773,
+          "worker-on-island": 4773,
+          "landing-near": 4773,
+          "target-attacked": 4944,
+          "camp-cleared": 5000
+        },
+        "losses": [
+          {
+            "tick": 4972,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 5000,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 579,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 10,
+          "train": 9,
+          "board": 5,
+          "build": 5,
+          "unload": 2,
+          "holdPosition": 1,
+          "attackMove": 5,
+          "research": 4,
+          "move": 1
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "lancer": 6
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4283.832,
+        "commandCount": 103,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 843,
+          "landing-near": 843,
+          "target-attacked": 1024,
+          "camp-cleared": 1107,
+          "shipyard-complete": 1448,
+          "farm-complete": 3403,
+          "worker-on-island": 4921,
+          "hall-complete": 5612
+        },
+        "losses": [
+          {
+            "tick": 1076,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1107,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 18,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 2,
+            "sanctum": 1,
+            "stables": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 25,
+          "train": 16,
+          "board": 5,
+          "build": 11,
+          "unload": 3,
+          "holdPosition": 1,
+          "attackMove": 10,
+          "move": 26,
+          "stop": 4,
+          "research": 2
+        },
+        "trainedKinds": {
+          "worker": 10,
+          "lancer": 5,
+          "footman": 1
+        }
+      },
+      {
+        "puzzle": "supply-tier/knight",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 628.042,
+        "commandCount": 42,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 1032,
+          "landing-near": 1032,
+          "target-attacked": 2317,
+          "camp-cleared": 2428
+        },
+        "losses": [
+          {
+            "tick": 2373,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2428,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 60,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 8,
+          "train": 10,
+          "build": 2,
+          "move": 6,
+          "attackMove": 12,
+          "attack": 4
+        },
+        "trainedKinds": {
+          "worker": 6,
+          "lancer": 4
+        }
+      },
+      {
+        "puzzle": "supply-tier/footmen",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 664.89,
+        "commandCount": 45,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 207,
+          "landing-near": 207,
+          "target-attacked": 1657,
+          "camp-cleared": 1763,
+          "hall-complete": 3138
+        },
+        "losses": [
+          {
+            "tick": 1710,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1763,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 109,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 12,
+          "train": 12,
+          "move": 7,
+          "attackMove": 9,
+          "attack": 4,
+          "build": 1
+        },
+        "trainedKinds": {
+          "worker": 8,
+          "lancer": 4
+        }
+      },
+      {
+        "puzzle": "navy-zero/default",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4846.255,
+        "commandCount": 194,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": false,
+          "safeWorkerSequence": false,
+          "hallFundingPreserved": false
+        },
+        "tick": 9600,
+        "first": {
+          "hall-funding-spent-elsewhere": 318,
+          "farm-complete": 857,
+          "shipyard-complete": 2483,
+          "transport-trained": 3407,
+          "army-boarded": 3614
+        },
+        "losses": [],
+        "final": {
+          "gold": 529,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 2,
+            "shipyard": 1,
+            "stables": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 13,
+          "train": 10,
+          "move": 3,
+          "build": 6,
+          "attackMove": 6,
+          "board": 3,
+          "stop": 1,
+          "unload": 144,
+          "holdPosition": 3,
+          "research": 5
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "lancer": 6,
+          "transport": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/urgent",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3541.519,
+        "commandCount": 57,
+        "passed": false,
+        "checks": {
+          "homeSurvived": false,
+          "defended": false,
+          "islandHallComplete": false,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "army-boarded": 754,
+          "transport-at-embark": 758,
+          "farm-complete": 835,
+          "army-on-island": 1272,
+          "worker-on-island": 1272,
+          "landing-far": 1272,
+          "target-attacked": 1470,
+          "camp-cleared": 1548,
+          "home-hit": 2212
+        },
+        "losses": [
+          {
+            "tick": 1506,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1548,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1734,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1795,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1822,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1997,
+            "kind": "lancer",
+            "owner": "planner"
+          },
+          {
+            "tick": 2055,
+            "kind": "worker",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 24,
+          "homeAlive": false,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "mine": 8,
+          "train": 5,
+          "board": 4,
+          "move": 4,
+          "build": 6,
+          "stop": 2,
+          "unload": 3,
+          "holdPosition": 5,
+          "attackMove": 7,
+          "attack": 12,
+          "repair": 1
+        },
+        "trainedKinds": {
+          "worker": 4,
+          "lancer": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/later",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4733.969,
+        "commandCount": 70,
+        "passed": false,
+        "checks": {
+          "homeSurvived": true,
+          "defended": true,
+          "islandHallComplete": false,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "army-boarded": 754,
+          "transport-at-embark": 758,
+          "farm-complete": 835,
+          "army-on-island": 1272,
+          "worker-on-island": 1272,
+          "landing-far": 1272,
+          "target-attacked": 1470,
+          "camp-cleared": 1548,
+          "shipyard-complete": 1883,
+          "defended": 7269
+        },
+        "losses": [
+          {
+            "tick": 1506,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1548,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 7131,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7162,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7175,
+            "kind": "lancer",
+            "owner": "planner"
+          },
+          {
+            "tick": 7240,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7269,
+            "kind": "footman",
+            "owner": "pressure"
+          }
+        ],
+        "final": {
+          "gold": 444,
+          "homeAlive": true,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "defenseTower": 2,
+            "stables": 1,
+            "moonWell": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 14,
+          "train": 9,
+          "board": 8,
+          "move": 7,
+          "build": 8,
+          "stop": 4,
+          "unload": 4,
+          "holdPosition": 1,
+          "attackMove": 12,
+          "research": 1,
+          "attack": 2
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "lancer": 6
+        }
+      },
+      {
+        "puzzle": "guarded-shore/strong",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3692.383,
+        "commandCount": 108,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 119,
+          "farm-complete": 193,
+          "army-on-island": 1234,
+          "landing-far": 1234,
+          "target-attacked": 1681,
+          "camp-cleared": 1747,
+          "shipyard-complete": 1990
+        },
+        "losses": [
+          {
+            "tick": 1707,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1747,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 500,
+          "homeAlive": true,
+          "armyAlive": 8,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 9,
+            "barracks": 1,
+            "shipyard": 1,
+            "defenseTower": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 17,
+          "build": 11,
+          "board": 3,
+          "move": 3,
+          "unload": 54,
+          "train": 9,
+          "holdPosition": 1,
+          "attackMove": 9,
+          "stop": 1
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "lancer": 6
+        }
+      },
+      {
+        "puzzle": "guarded-shore/weak",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3532.224,
+        "commandCount": 95,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": true
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 1193,
+          "landing-far": 1193,
+          "target-attacked": 1636,
+          "camp-cleared": 1724,
+          "shipyard-complete": 1825,
+          "farm-complete": 3710
+        },
+        "losses": [
+          {
+            "tick": 1691,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1724,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 429,
+          "homeAlive": true,
+          "armyAlive": 3,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 3,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 9,
+          "train": 9,
+          "board": 3,
+          "build": 4,
+          "unload": 54,
+          "holdPosition": 1,
+          "attackMove": 7,
+          "move": 2,
+          "stop": 1,
+          "research": 5
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "lancer": 6
+        }
+      },
+      {
+        "puzzle": "negative-return/default",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4428.134,
+        "commandCount": 157,
+        "passed": false,
+        "checks": {
+          "localExpansion": false,
+          "rejectedBadIsland": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 193,
+          "farm-complete": 805,
+          "transport-at-embark": 1444,
+          "army-on-island": 2130,
+          "landing-near": 2130,
+          "local-cleared": 2239,
+          "shipyard-complete": 3535,
+          "target-attacked": 6187,
+          "camp-cleared": 6688,
+          "hall-complete": 7363
+        },
+        "losses": [
+          {
+            "tick": 2184,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2239,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 6311,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 6329,
+            "kind": "ogreWarrior",
+            "owner": "neutral"
+          },
+          {
+            "tick": 6556,
+            "kind": "ogreLord",
+            "owner": "neutral"
+          },
+          {
+            "tick": 6688,
+            "kind": "ogreMage",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 258,
+          "homeAlive": true,
+          "armyAlive": 5,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1,
+            "moonWell": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 21,
+          "train": 16,
+          "board": 6,
+          "build": 8,
+          "unload": 3,
+          "holdPosition": 1,
+          "move": 80,
+          "attackMove": 13,
+          "attack": 3,
+          "stop": 4,
+          "research": 2
+        },
+        "trainedKinds": {
+          "worker": 10,
+          "lancer": 6
+        }
+      },
+      {
+        "puzzle": "evacuate/default",
+        "mode": "v9_knight",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1695.796,
+        "commandCount": 47,
+        "passed": false,
+        "checks": {
+          "workersRescued": true,
+          "noSuicideReinforcement": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "camp-cleared": 1,
+          "workers-rescued": 1484,
+          "army-boarded": 1818,
+          "mainland-army-sent-to-island": 2392,
+          "army-on-island": 2663,
+          "landing-near": 2663
+        },
+        "losses": [
+          {
+            "tick": 2853,
+            "kind": "lancer",
+            "owner": "planner"
+          },
+          {
+            "tick": 2919,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 2971,
+            "kind": "footman",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 90,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 4,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 2,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 7,
+          "move": 14,
+          "board": 5,
+          "stop": 4,
+          "unload": 3,
+          "build": 1,
+          "train": 6,
+          "holdPosition": 1,
+          "attackMove": 6
+        },
+        "trainedKinds": {
+          "lancer": 6
+        }
+      }
+    ],
+    "v9_archer": [
+      {
+        "puzzle": "ship-away/far",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4398.64,
+        "commandCount": 84,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 553,
+          "transport-at-embark": 4163,
+          "army-on-island": 4848,
+          "worker-on-island": 4848,
+          "landing-near": 4848,
+          "target-attacked": 5023,
+          "camp-cleared": 5089,
+          "farm-complete": 5108,
+          "shipyard-complete": 5367,
+          "hall-complete": 5767,
+          "footmen-trained": 7827
+        },
+        "losses": [
+          {
+            "tick": 5057,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 5089,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 52,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 6,
+            "archeryRange": 1,
+            "barracks": 2,
+            "stables": 1,
+            "workshop": 1,
+            "shipyard": 1,
+            "defenseTower": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 24,
+          "train": 16,
+          "board": 4,
+          "build": 14,
+          "unload": 1,
+          "holdPosition": 1,
+          "move": 18,
+          "attackMove": 5,
+          "stop": 1
+        },
+        "trainedKinds": {
+          "worker": 9,
+          "archer": 4,
+          "lancer": 1,
+          "footman": 2
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4220.962,
+        "commandCount": 102,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 843,
+          "landing-near": 843,
+          "target-attacked": 1024,
+          "camp-cleared": 1107,
+          "shipyard-complete": 1448,
+          "farm-complete": 3350,
+          "worker-on-island": 5212,
+          "hall-complete": 5870
+        },
+        "losses": [
+          {
+            "tick": 1076,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1107,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 82,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "archeryRange": 1,
+            "shipyard": 1,
+            "barracks": 2,
+            "stables": 1,
+            "defenseTower": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 24,
+          "train": 17,
+          "board": 6,
+          "build": 11,
+          "unload": 3,
+          "holdPosition": 1,
+          "attackMove": 10,
+          "move": 26,
+          "stop": 4
+        },
+        "trainedKinds": {
+          "worker": 9,
+          "archer": 7,
+          "lancer": 1
+        }
+      },
+      {
+        "puzzle": "supply-tier/knight",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 566.687,
+        "commandCount": 59,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 1437,
+          "landing-near": 1437,
+          "footmen-trained": 1737,
+          "target-attacked": 2674,
+          "camp-cleared": 2808
+        },
+        "losses": [
+          {
+            "tick": 2742,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2808,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 144,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1,
+            "archeryRange": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 7,
+          "train": 7,
+          "build": 3,
+          "attackMove": 30,
+          "move": 12
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "footman": 2,
+          "archer": 2
+        }
+      },
+      {
+        "puzzle": "supply-tier/footmen",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 596.297,
+        "commandCount": 68,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": true
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 192,
+          "landing-near": 192,
+          "footmen-trained": 447,
+          "target-attacked": 2109,
+          "camp-cleared": 2240,
+          "hall-complete": 3561
+        },
+        "losses": [
+          {
+            "tick": 2169,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2240,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 33,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1,
+            "archeryRange": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 11,
+          "train": 11,
+          "move": 16,
+          "build": 2,
+          "attackMove": 28
+        },
+        "trainedKinds": {
+          "worker": 7,
+          "footman": 2,
+          "archer": 2
+        }
+      },
+      {
+        "puzzle": "navy-zero/default",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4714.27,
+        "commandCount": 181,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": false,
+          "safeWorkerSequence": false,
+          "hallFundingPreserved": false
+        },
+        "tick": 9600,
+        "first": {
+          "hall-funding-spent-elsewhere": 318,
+          "farm-complete": 739,
+          "shipyard-complete": 4163,
+          "transport-trained": 5102,
+          "army-boarded": 5291
+        },
+        "losses": [],
+        "final": {
+          "gold": 442,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 7,
+            "archeryRange": 2,
+            "barracks": 1,
+            "stables": 1,
+            "shipyard": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 15,
+          "train": 16,
+          "move": 7,
+          "build": 11,
+          "attackMove": 13,
+          "board": 4,
+          "stop": 1,
+          "unload": 112,
+          "holdPosition": 2
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "archer": 8,
+          "lancer": 4,
+          "transport": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/urgent",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3388.765,
+        "commandCount": 71,
+        "passed": false,
+        "checks": {
+          "homeSurvived": false,
+          "defended": false,
+          "islandHallComplete": false,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "farm-complete": 475,
+          "transport-at-embark": 906,
+          "army-boarded": 923,
+          "army-on-island": 1259,
+          "worker-on-island": 1259,
+          "landing-far": 1259,
+          "target-attacked": 1447,
+          "camp-cleared": 1521,
+          "home-hit": 2324
+        },
+        "losses": [
+          {
+            "tick": 1490,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1521,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1807,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1830,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1853,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 2318,
+            "kind": "archer",
+            "owner": "planner"
+          },
+          {
+            "tick": 2454,
+            "kind": "worker",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 58,
+          "homeAlive": false,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "farm": 2
+          }
+        },
+        "commandTypes": {
+          "mine": 8,
+          "train": 5,
+          "board": 4,
+          "move": 10,
+          "build": 6,
+          "stop": 1,
+          "unload": 3,
+          "holdPosition": 6,
+          "attackMove": 9,
+          "attack": 15,
+          "aim": 3,
+          "repair": 1
+        },
+        "trainedKinds": {
+          "worker": 4,
+          "archer": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/later",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4891.734,
+        "commandCount": 142,
+        "passed": false,
+        "checks": {
+          "homeSurvived": false,
+          "defended": false,
+          "islandHallComplete": false,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "farm-complete": 475,
+          "transport-at-embark": 906,
+          "army-boarded": 923,
+          "army-on-island": 1259,
+          "worker-on-island": 1259,
+          "landing-far": 1259,
+          "target-attacked": 1447,
+          "camp-cleared": 1521,
+          "shipyard-complete": 1870,
+          "home-hit": 8136
+        },
+        "losses": [
+          {
+            "tick": 1490,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1521,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 7157,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7174,
+            "kind": "archer",
+            "owner": "planner"
+          },
+          {
+            "tick": 7240,
+            "kind": "archer",
+            "owner": "planner"
+          },
+          {
+            "tick": 7275,
+            "kind": "archer",
+            "owner": "planner"
+          },
+          {
+            "tick": 7397,
+            "kind": "archer",
+            "owner": "planner"
+          },
+          {
+            "tick": 7458,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7587,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 7674,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 7850,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 7960,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 8859,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 8969,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 9057,
+            "kind": "worker",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 58,
+          "homeAlive": false,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "farm": 4,
+            "shipyard": 1,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 17,
+          "train": 9,
+          "board": 5,
+          "move": 30,
+          "build": 21,
+          "stop": 2,
+          "unload": 3,
+          "holdPosition": 7,
+          "attackMove": 27,
+          "aim": 3,
+          "attack": 13,
+          "repair": 5
+        },
+        "trainedKinds": {
+          "worker": 4,
+          "archer": 5
+        }
+      },
+      {
+        "puzzle": "guarded-shore/strong",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4290.259,
+        "commandCount": 150,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 119,
+          "farm-complete": 193,
+          "army-on-island": 1234,
+          "landing-far": 1234,
+          "target-attacked": 1681,
+          "camp-cleared": 1747,
+          "shipyard-complete": 2111,
+          "transport-trained": 7082
+        },
+        "losses": [
+          {
+            "tick": 1707,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1747,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 444,
+          "homeAlive": true,
+          "armyAlive": 8,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 6,
+            "archeryRange": 1,
+            "barracks": 1,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 14,
+          "build": 8,
+          "board": 4,
+          "move": 3,
+          "unload": 95,
+          "train": 12,
+          "holdPosition": 2,
+          "attackMove": 10,
+          "stop": 2
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "archer": 4,
+          "lancer": 4,
+          "transport": 1
+        }
+      },
+      {
+        "puzzle": "guarded-shore/weak",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3109.797,
+        "commandCount": 80,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": true
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 1193,
+          "landing-far": 1193,
+          "target-attacked": 1636,
+          "camp-cleared": 1724,
+          "shipyard-complete": 2063
+        },
+        "losses": [
+          {
+            "tick": 1691,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1724,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 2314,
+          "homeAlive": true,
+          "armyAlive": 3,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 2,
+            "archeryRange": 1,
+            "barracks": 1,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 8,
+          "train": 5,
+          "board": 3,
+          "build": 3,
+          "unload": 54,
+          "holdPosition": 1,
+          "move": 2,
+          "attackMove": 3,
+          "stop": 1
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "archer": 2
+        }
+      },
+      {
+        "puzzle": "negative-return/default",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3904.188,
+        "commandCount": 98,
+        "passed": false,
+        "checks": {
+          "localExpansion": false,
+          "rejectedBadIsland": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 193,
+          "farm-complete": 475,
+          "transport-at-embark": 1444,
+          "army-on-island": 2130,
+          "landing-near": 2130,
+          "shipyard-complete": 2694,
+          "local-cleared": 4799,
+          "worker-on-island": 6766,
+          "target-attacked": 6906,
+          "camp-cleared": 7090,
+          "hall-complete": 7758
+        },
+        "losses": [
+          {
+            "tick": 4738,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 4799,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 6973,
+            "kind": "ogreWarrior",
+            "owner": "neutral"
+          },
+          {
+            "tick": 6997,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 7077,
+            "kind": "ogreLord",
+            "owner": "neutral"
+          },
+          {
+            "tick": 7090,
+            "kind": "ogreMage",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 61.08,
+          "homeAlive": true,
+          "armyAlive": 5,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 6,
+            "archeryRange": 1,
+            "barracks": 1,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 21,
+          "train": 19,
+          "board": 8,
+          "build": 8,
+          "unload": 3,
+          "holdPosition": 1,
+          "attackMove": 13,
+          "move": 20,
+          "stop": 4,
+          "research": 1
+        },
+        "trainedKinds": {
+          "worker": 11,
+          "archer": 4,
+          "lancer": 4
+        }
+      },
+      {
+        "puzzle": "evacuate/default",
+        "mode": "v9_archer",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1747.457,
+        "commandCount": 34,
+        "passed": false,
+        "checks": {
+          "workersRescued": true,
+          "noSuicideReinforcement": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "camp-cleared": 1,
+          "workers-rescued": 1484,
+          "army-boarded": 1815,
+          "mainland-army-sent-to-island": 2399,
+          "army-on-island": 2672,
+          "landing-near": 2672,
+          "shipyard-complete": 3578
+        },
+        "losses": [
+          {
+            "tick": 2951,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 3056,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 3195,
+            "kind": "worker",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 124,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 4,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 2,
+            "archeryRange": 1,
+            "barracks": 1,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 9,
+          "move": 8,
+          "board": 4,
+          "stop": 2,
+          "unload": 2,
+          "build": 3,
+          "holdPosition": 1,
+          "train": 2,
+          "attackMove": 3
+        },
+        "trainedKinds": {
+          "archer": 1,
+          "lancer": 1
+        }
+      }
+    ],
+    "v9_summoner": [
+      {
+        "puzzle": "ship-away/far",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4382.572,
+        "commandCount": 149,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 553,
+          "footmen-trained": 1002,
+          "transport-at-embark": 4033,
+          "army-on-island": 4720,
+          "worker-on-island": 4720,
+          "landing-near": 4720,
+          "target-attacked": 4886,
+          "camp-cleared": 4965,
+          "shipyard-complete": 5094,
+          "farm-complete": 5337,
+          "hall-complete": 5647
+        },
+        "losses": [
+          {
+            "tick": 4930,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 4965,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 139,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 1,
+            "sanctum": 1,
+            "workshop": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 23,
+          "train": 17,
+          "board": 5,
+          "build": 10,
+          "unload": 1,
+          "holdPosition": 1,
+          "move": 79,
+          "attackMove": 6,
+          "stop": 2,
+          "research": 2,
+          "cast": 3
+        },
+        "trainedKinds": {
+          "worker": 11,
+          "footman": 4,
+          "summoner": 2
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4147.218,
+        "commandCount": 148,
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 843,
+          "landing-near": 843,
+          "footmen-trained": 1002,
+          "target-attacked": 1024,
+          "camp-cleared": 1107,
+          "shipyard-complete": 1643,
+          "worker-on-island": 4939,
+          "farm-complete": 5174,
+          "hall-complete": 5630
+        },
+        "losses": [
+          {
+            "tick": 1076,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1107,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 304,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 23,
+          "train": 17,
+          "board": 3,
+          "build": 11,
+          "unload": 2,
+          "holdPosition": 1,
+          "attackMove": 8,
+          "move": 76,
+          "stop": 2,
+          "research": 2,
+          "cast": 3
+        },
+        "trainedKinds": {
+          "worker": 11,
+          "footman": 4,
+          "summoner": 2
+        }
+      },
+      {
+        "puzzle": "supply-tier/knight",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 606.913,
+        "commandCount": 41,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 987,
+          "landing-near": 987,
+          "footmen-trained": 1287,
+          "target-attacked": 1976,
+          "camp-cleared": 2108,
+          "hall-complete": 3261
+        },
+        "losses": [
+          {
+            "tick": 2048,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2108,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 49,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 12,
+          "train": 11,
+          "build": 2,
+          "move": 4,
+          "attackMove": 9,
+          "attack": 3
+        },
+        "trainedKinds": {
+          "worker": 8,
+          "footman": 3
+        }
+      },
+      {
+        "puzzle": "supply-tier/footmen",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 652.165,
+        "commandCount": 43,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "appropriateForce": true
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "army-on-island": 192,
+          "landing-near": 192,
+          "footmen-trained": 447,
+          "target-attacked": 1390,
+          "camp-cleared": 1522,
+          "hall-complete": 2693
+        },
+        "losses": [
+          {
+            "tick": 1461,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1522,
+            "kind": "murlocHunter",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 74,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 8,
+            "stables": 1,
+            "barracks": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 12,
+          "train": 12,
+          "move": 4,
+          "attackMove": 10,
+          "attack": 3,
+          "build": 2
+        },
+        "trainedKinds": {
+          "worker": 8,
+          "footman": 4
+        }
+      },
+      {
+        "puzzle": "navy-zero/default",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 2979.129,
+        "commandCount": 358,
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": false,
+          "safeWorkerSequence": false,
+          "hallFundingPreserved": false
+        },
+        "tick": 9600,
+        "first": {
+          "hall-funding-spent-elsewhere": 318,
+          "footmen-trained": 627,
+          "farm-complete": 749,
+          "shipyard-complete": 7148,
+          "transport-trained": 7397,
+          "army-boarded": 7613
+        },
+        "losses": [
+          {
+            "tick": 8192,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 8417,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 8642,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 8867,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 9002,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 9227,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 9452,
+            "kind": "spirit",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 420,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 6,
+            "barracks": 2,
+            "sanctum": 2,
+            "shipyard": 1,
+            "workshop": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 15,
+          "train": 11,
+          "attackMove": 9,
+          "build": 11,
+          "cast": 14,
+          "move": 235,
+          "board": 1,
+          "stop": 1,
+          "unload": 58,
+          "holdPosition": 1,
+          "research": 2
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "footman": 2,
+          "summoner": 5,
+          "transport": 1
+        }
+      },
+      {
+        "puzzle": "defense-window/urgent",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3309.425,
+        "commandCount": 49,
+        "passed": false,
+        "checks": {
+          "homeSurvived": false,
+          "defended": false,
+          "islandHallComplete": false,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "farm-complete": 482,
+          "army-boarded": 776,
+          "transport-at-embark": 777,
+          "army-on-island": 1140,
+          "worker-on-island": 1140,
+          "landing-far": 1140,
+          "target-attacked": 1350,
+          "camp-cleared": 1431,
+          "shipyard-complete": 1527,
+          "home-hit": 2135
+        },
+        "losses": [
+          {
+            "tick": 1387,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1431,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1805,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1817,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1843,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1884,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 1906,
+            "kind": "worker",
+            "owner": "planner"
+          },
+          {
+            "tick": 2027,
+            "kind": "worker",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 70,
+          "homeAlive": false,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "farm": 2,
+            "shipyard": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 9,
+          "train": 3,
+          "board": 3,
+          "move": 3,
+          "build": 6,
+          "stop": 1,
+          "unload": 2,
+          "holdPosition": 1,
+          "attackMove": 1,
+          "attack": 18,
+          "repair": 2
+        },
+        "trainedKinds": {
+          "worker": 3
+        }
+      },
+      {
+        "puzzle": "defense-window/later",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 6212.543,
+        "commandCount": 254,
+        "passed": false,
+        "checks": {
+          "homeSurvived": true,
+          "defended": true,
+          "islandHallComplete": true,
+          "priority": false
+        },
+        "tick": 9600,
+        "first": {
+          "farm-complete": 482,
+          "army-boarded": 776,
+          "transport-at-embark": 777,
+          "army-on-island": 1140,
+          "worker-on-island": 1140,
+          "landing-far": 1140,
+          "target-attacked": 1350,
+          "camp-cleared": 1431,
+          "shipyard-complete": 1527,
+          "hall-complete": 4722,
+          "footmen-trained": 5682,
+          "defended": 7871
+        },
+        "losses": [
+          {
+            "tick": 1387,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1431,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 7249,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 7320,
+            "kind": "summoner",
+            "owner": "planner"
+          },
+          {
+            "tick": 7381,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7621,
+            "kind": "priest",
+            "owner": "planner"
+          },
+          {
+            "tick": 7623,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7687,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 7871,
+            "kind": "footman",
+            "owner": "pressure"
+          },
+          {
+            "tick": 9392,
+            "kind": "spirit",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 36,
+          "homeAlive": true,
+          "armyAlive": 6,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 4,
+            "sanctum": 1,
+            "workshop": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 42,
+          "train": 17,
+          "board": 6,
+          "move": 134,
+          "build": 14,
+          "stop": 5,
+          "unload": 4,
+          "holdPosition": 5,
+          "attackMove": 9,
+          "research": 3,
+          "cast": 3,
+          "repair": 9,
+          "attack": 2,
+          "setStance": 1
+        },
+        "trainedKinds": {
+          "worker": 11,
+          "footman": 2,
+          "summoner": 3,
+          "priest": 1
+        }
+      },
+      {
+        "puzzle": "guarded-shore/strong",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3494.014,
+        "commandCount": 187,
+        "passed": false,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 119,
+          "farm-complete": 193,
+          "army-on-island": 1234,
+          "landing-far": 1234,
+          "shipyard-complete": 1643,
+          "target-attacked": 1681,
+          "camp-cleared": 1747
+        },
+        "losses": [
+          {
+            "tick": 1707,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1747,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 8327,
+            "kind": "spirit",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 580,
+          "homeAlive": true,
+          "armyAlive": 8,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 6,
+            "barracks": 1,
+            "shipyard": 1,
+            "sanctum": 2,
+            "workshop": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 15,
+          "build": 9,
+          "board": 3,
+          "attackMove": 5,
+          "unload": 55,
+          "train": 5,
+          "holdPosition": 1,
+          "move": 88,
+          "stop": 1,
+          "research": 1,
+          "cast": 4
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "summoner": 2
+        }
+      },
+      {
+        "puzzle": "guarded-shore/weak",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 3475.364,
+        "commandCount": 242,
+        "passed": true,
+        "checks": {
+          "campCleared": true,
+          "armyLanded": true,
+          "suitableLanding": true
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "footmen-trained": 1002,
+          "army-on-island": 1193,
+          "landing-far": 1193,
+          "target-attacked": 1636,
+          "camp-cleared": 1724,
+          "shipyard-complete": 2063,
+          "farm-complete": 6203
+        },
+        "losses": [
+          {
+            "tick": 1691,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1724,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 8387,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 8612,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 8837,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 9197,
+            "kind": "spirit",
+            "owner": "planner"
+          },
+          {
+            "tick": 9422,
+            "kind": "spirit",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 610,
+          "homeAlive": true,
+          "armyAlive": 3,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 6,
+            "barracks": 1,
+            "shipyard": 1,
+            "sanctum": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 13,
+          "train": 10,
+          "board": 3,
+          "build": 9,
+          "unload": 54,
+          "holdPosition": 1,
+          "attackMove": 5,
+          "move": 133,
+          "stop": 1,
+          "cast": 11,
+          "research": 2
+        },
+        "trainedKinds": {
+          "worker": 3,
+          "footman": 3,
+          "summoner": 4
+        }
+      },
+      {
+        "puzzle": "negative-return/default",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 4466.545,
+        "commandCount": 221,
+        "passed": false,
+        "checks": {
+          "localExpansion": true,
+          "rejectedBadIsland": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 193,
+          "farm-complete": 805,
+          "footmen-trained": 1362,
+          "transport-at-embark": 1444,
+          "army-on-island": 2130,
+          "landing-near": 2130,
+          "local-cleared": 2174,
+          "shipyard-complete": 3009,
+          "target-attacked": 4597,
+          "camp-cleared": 5164,
+          "local-hall-complete": 6064,
+          "worker-on-island": 6547,
+          "hall-complete": 7246
+        },
+        "losses": [
+          {
+            "tick": 2130,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2174,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 4721,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 4739,
+            "kind": "ogreWarrior",
+            "owner": "neutral"
+          },
+          {
+            "tick": 4966,
+            "kind": "ogreLord",
+            "owner": "neutral"
+          },
+          {
+            "tick": 5164,
+            "kind": "ogreMage",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 103,
+          "homeAlive": true,
+          "armyAlive": 5,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 3,
+            "farm": 4,
+            "barracks": 2,
+            "shipyard": 1,
+            "sanctum": 1,
+            "moonWell": 1,
+            "defenseTower": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 28,
+          "train": 21,
+          "board": 5,
+          "build": 10,
+          "unload": 3,
+          "holdPosition": 2,
+          "move": 137,
+          "attackMove": 7,
+          "attack": 3,
+          "research": 1,
+          "stop": 4
+        },
+        "trainedKinds": {
+          "worker": 16,
+          "footman": 3,
+          "priest": 2
+        }
+      },
+      {
+        "puzzle": "evacuate/default",
+        "mode": "v9_summoner",
+        "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+        "mainBaseline": "d4ca2668",
+        "aiTree": "c9998a799a18d631835c6518f2b6ad070573c638",
+        "elapsedMs": 1719.158,
+        "commandCount": 48,
+        "passed": false,
+        "checks": {
+          "workersRescued": true,
+          "noSuicideReinforcement": false
+        },
+        "tick": 3600,
+        "first": {
+          "worker-on-island": 1,
+          "camp-cleared": 1,
+          "workers-rescued": 1484,
+          "army-boarded": 1813,
+          "footmen-trained": 2036,
+          "mainland-army-sent-to-island": 2400,
+          "army-on-island": 2673,
+          "landing-near": 2673,
+          "farm-complete": 2840
+        },
+        "losses": [
+          {
+            "tick": 2883,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 2961,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 3030,
+            "kind": "footman",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 10,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 4,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 3,
+            "barracks": 1
+          }
+        },
+        "commandTypes": {
+          "mine": 8,
+          "move": 15,
+          "attackMove": 6,
+          "board": 4,
+          "stop": 3,
+          "unload": 3,
+          "build": 2,
+          "train": 6,
+          "holdPosition": 1
+        },
+        "trainedKinds": {
+          "footman": 4,
+          "lancer": 2
+        }
+      }
+    ]
+  },
+  "initialSha256": {
+    "ship-away/far": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+    "ship-away/near": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+    "supply-tier/knight": "2f4a017b40b3b9eeb98a94e12c02a50d3f9056864a4791e2241f6000e5f32f8b",
+    "supply-tier/footmen": "5dfa98f69a187b549b19bbc27f0f0c0381783e930a086940c04584a9195432e4",
+    "navy-zero/default": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+    "defense-window/urgent": "c95e2cc72f4e4a554ee8b2a336e8d128283c217f71fbb8fd33f620cb2217fecd",
+    "defense-window/later": "0925b2b147801f68e565baf4080781fa6262d7fed96b80c8f6930fa117b4a1f4",
+    "guarded-shore/strong": "0a692db16a83920f5e1dce9cd41d9c96ceba3d6f32ebdb450f29d582aee66aed",
+    "guarded-shore/weak": "5df5c3e4e368914011c3348c5a0d18dcd2d89b36983868eaf6b8f0e41dbdbf60",
+    "negative-return/default": "9ba34970d2f18893c8aecb1bfd5f63af75739afe05dfa0d17988abb73b4b8e7f",
+    "evacuate/default": "d37b220ec5963fd7559786be4ca846932db613bbd2d3e33e4db03793b078a195"
+  },
+  "probes": {
+    "negative-island-counterfactual": {
+      "sameColdFrameAs": "negative-return/default",
+      "initialSha256": "9ba34970d2f18893c8aecb1bfd5f63af75739afe05dfa0d17988abb73b4b8e7f",
+      "footmenLost": 4,
+      "execution": {
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 613,
+          "army-boarded": 785,
+          "army-on-island": 1362,
+          "landing-near": 1362,
+          "target-attacked": 1608,
+          "camp-cleared": 2034,
+          "worker-on-island": 3737,
+          "hall-complete": 4475
+        },
+        "losses": [
+          {
+            "tick": 1662,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1708,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1789,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1794,
+            "kind": "ogreLord",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1899,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 1902,
+            "kind": "ogreMage",
+            "owner": "neutral"
+          },
+          {
+            "tick": 2034,
+            "kind": "ogreWarrior",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 409,
+          "homeAlive": true,
+          "armyAlive": 2,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 2,
+          "buildings": {
+            "townHall": 2,
+            "farm": 2
+          }
+        }
+      }
+    },
+    "weak-near-beach-counterfactual": {
+      "sameColdFrameAs": "guarded-shore/weak",
+      "initialSha256": "5df5c3e4e368914011c3348c5a0d18dcd2d89b36983868eaf6b8f0e41dbdbf60",
+      "footmenLost": 3,
+      "execution": {
+        "passed": false,
+        "checks": {
+          "campCleared": false,
+          "armyLanded": true,
+          "suitableLanding": false
+        },
+        "tick": 9600,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "beach-attacked": 447,
+          "army-on-island": 447,
+          "landing-near": 447
+        },
+        "losses": [
+          {
+            "tick": 554,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 576,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 649,
+            "kind": "footman",
+            "owner": "planner"
+          },
+          {
+            "tick": 988,
+            "kind": "transport",
+            "owner": "planner"
+          }
+        ],
+        "final": {
+          "gold": 400,
+          "homeAlive": true,
+          "armyAlive": 0,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 2
+          }
+        }
+      }
+    }
+  }
+}
