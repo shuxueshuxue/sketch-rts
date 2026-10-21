@@ -86,6 +86,38 @@ it('re-prices conditional production against the actual allowed lanes and half-o
   expect(forecastForceAssembly({ ...model, unavailableProduction: [{ buildingId: 'barracks', lane: 'research', fromTicks: 0, throughTicks: 100 }] }).readyTick).toBe(200);
 });
 
+it('does not let a slow producer delay an independent fast producer when more certain supply is available', () => {
+  const { input } = example();
+  const fast = input.snapshot.buildings.find(building => building.id === 'barracks')!;
+  const slow = structuredClone(fast); slow.id = 'slow'; slow.x += 300;
+  slow.queue = [{ id: 'slow-paid', unitKind: 'footman', remaining: 500 }];
+  input.snapshot.buildings.push(slow);
+  const model = { ...input, conditionalProduction: conditional(.01),
+    paidJobRoutes: [{ buildingId: 'slow', jobId: 'slow-paid', postId: 'home', arrival: arrival(0) }] };
+  const together = forecastForceAssembly(model);
+  const fastOnly = forecastForceAssembly({ ...model, allowedProduction: [{ buildingId: 'barracks', lane: 'training' }] });
+  expect(together.readyTick).toBe(200);
+  expect(together.readyTick).toBeLessThanOrEqual(fastOnly.readyTick!);
+});
+
+it('combines a certain arrival exactly at the horizon with the conditional supply accumulated before it', () => {
+  const { input } = example();
+  input.snapshot.units.push(createUnit('last-arrival', 'us', 'footman', 1800, 1000));
+  const forecast = forecastForceAssembly({ ...input, throughTick: 100,
+    target: { ...input.target, requiredForce: 2.5 }, conditionalProduction: conditional(.005),
+    unitSupply: [...input.unitSupply, { unitId: 'last-arrival', postId: 'home', source: 'idle', availableTick: 0, arrival: arrival(100) }] });
+  expect(forecast).toMatchObject({ status: 'gathering', readyTick: 100, certainForce: 2, conditionalForce: .5 });
+});
+
+it('keeps native queue work occupied even when that paid recruit has no published rally arrival', () => {
+  const { input } = example(), building = input.snapshot.buildings.find(building => building.id === 'barracks')!;
+  building.queue.push({ id: 'paid-without-route', unitKind: 'footman', remaining: 500 });
+  const forecast = forecastForceAssembly({ ...input, conditionalProduction: conditional(.01) });
+  expect(forecast.readyTick).toBeGreaterThanOrEqual(500);
+  expect(forecast.conditionalSegments.filter(segment => segment.fromTick < 500).every(segment => segment.forcePerTick === 0)).toBe(true);
+  expect(forecast.missing.some(fact => fact.code === 'assembly-recruit-arrival-unknown')).toBe(true);
+});
+
 it('excludes unavailable real members and training lanes without blocking independent research or moving paid jobs', () => {
   const { input } = example(), building = input.snapshot.buildings.find(building => building.id === 'barracks')!;
   building.queue.push({ id: 'paid', unitKind: 'footman', remaining: 100 });
