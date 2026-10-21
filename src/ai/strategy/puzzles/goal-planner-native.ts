@@ -3,6 +3,7 @@ import type { GameSnapshot, PlayerId } from '../../../shared/types';
 import type { AiPolicyMemory } from '../../memory';
 import { withGoalPlannerInput } from '../goal-planner-input';
 import type { GoalPlannerInput } from '../goal-planner-types';
+export { createExecution } from './goal-planner-execution';
 
 /** Explicit diagnostic run, never the default-capacity acceptance result. */
 export const puzzleGeometryMeasurement = process.env.SKETCH_PUZZLE_GEOMETRY_MEASUREMENT === '1';
