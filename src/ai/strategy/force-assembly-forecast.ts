@@ -56,6 +56,7 @@ export type ForceAssemblyForecast = Readonly<{
   fillScenarios: readonly AssemblyFillScenario[];
   diagnostics: Readonly<{ scenarioCount: number; scenarioLimitCount: number; unresolvedProbability?: number }>;
   completionProbabilityBounds?: Readonly<{ lower: number; upper: number }>;
+  probabilityBasis?: 'exact' | 'proven-lower-bound';
   conditionalSegments: readonly Readonly<{ scenarioId: string; fromTick: number; throughTick: number; forcePerTick: number; producerIds: readonly string[] }>[];
   certainReadyTick: number | null; supplies: readonly Supply[]; forceCurve: readonly ForcePoint[];
   production: readonly ProductionUse[]; missing: readonly Missing[];
@@ -284,17 +285,21 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   const filledProbability = filled.reduce((sum, scenario) => sum + scenario.probability, 0);
   const completionProbability = Math.min(1, filledProbability);
   const unresolvedProbability = fillScenarios.filter(scenario => unresolved.has(scenario.id)).reduce((sum, scenario) => sum + scenario.probability, 0);
-  const status = atRallyForce >= requiredForce ? 'ready' : unresolvedProbability > 0 ? 'unknown' : completionProbability > 0 ? 'gathering'
+  const status = atRallyForce >= requiredForce ? 'ready' : completionProbability > 0 ? 'gathering' : unresolvedProbability > 0 ? 'unknown'
     : missing.some(fact => fact.status === 'unknown') ? 'unknown' : 'blocked';
   if (status === 'blocked' && deficit > 0) missing.push({ code: 'needs-production', status: 'unmet', factIds: [] });
   const readyTick = status === 'ready' ? now : completionProbability > 0
     ? Math.ceil(filled.reduce((sum, scenario) => sum + scenario.probability * scenario.readyTick!, 0) / filledProbability - 1e-9) : null;
+  // Known filled mass is an actionable conservative lower bound. Unobserved
+  // tails retain their upper mass; they are neither known zero nor credited
+  // value. Assembly occupation is still paid for the whole present cohort.
   // The mean is diagnostic. A continuation must price each successful path at
   // its own time/cohort, not use a fractional mean unit or discount twice.
   const conditionalForce = completionProbability > 0
     ? filled.reduce((sum, scenario) => sum + scenario.probability * scenario.conditionalForce, 0) / filledProbability : 0;
   return { ...base, status, readyTick, completionProbability: status === 'ready' ? 1 : completionProbability,
     conditionalForce, fillScenarios, conditionalSegments, diagnostics: { ...diagnostic, unresolvedProbability },
+    probabilityBasis: status !== 'ready' && unresolvedProbability > 0 ? 'proven-lower-bound' : 'exact',
     completionProbabilityBounds: status === 'ready' ? { lower: 1, upper: 1 }
       : { lower: completionProbability, upper: Math.min(1, completionProbability + unresolvedProbability) },
     production: canonicalProductionUses(filled.flatMap(scenario => scenario.production)), missing };
