@@ -165,6 +165,10 @@ export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: rea
  * planned producer slots, never invented world IDs or allocation leases. */
 export type GoalActionDeclaration = Readonly<{
   id: string; kind: GoalActionKind; preconditions: readonly GoalFact[];
+  /** Admission evidence covers this action's scheduled completion, rather
+   * than its goal's deadline. The scheduler rewrites these fact IDs whenever
+   * the action is delayed; persistent protection effects keep their own clock. */
+  preconditionWindows?: readonly Readonly<{ factId: string; through: 'finish' }>[];
   /** Coarse declarations are search proposals, never execution authority. */
   precision?: 'coarse' | 'exact';
   effects: readonly GoalFactEffect[]; demands: readonly GoalResourceDemand[];
