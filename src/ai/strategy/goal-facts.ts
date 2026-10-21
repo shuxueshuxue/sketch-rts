@@ -1,0 +1,45 @@
+import type { GameSnapshot } from '../../shared/types';
+import { neutralCampExposure, type NeutralCampExposure } from '../situation/neutral-camp-exposure';
+import type { GoalFact, GoalFactPredicate } from './goal-planner-types';
+
+/** Full semantic keys avoid shortened-hash collisions. Task IDs, caller order
+ * and process state never participate in fact identity. */
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value)
+    .filter(([, item]) => item !== undefined).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
+    .map(([key, item]) => [key, canonical(item)]));
+  if (typeof value === 'number' && !Number.isFinite(value)) return { invalidNumber: String(value) };
+  return value;
+}
+export function goalFact(predicate: GoalFactPredicate): GoalFact {
+  const normalized = predicate.kind === 'assets-safe'
+    ? { ...predicate, unitIds: [...new Set(predicate.unitIds)].sort() } : predicate;
+  return { id: `fact:${JSON.stringify(canonical(normalized))}`, predicate: normalized };
+}
+
+/** A camp is the shared native home group, identified by its recorded member
+ * IDs. Never use enumeration indices or nearest-center guesses. Retain this
+ * original ID as guards die so camp-cleared can still be read from the world. */
+export function goalCampId(memberIds: readonly string[]): string {
+  return `camp:${JSON.stringify([...new Set(memberIds)].sort())}`;
+}
+export function goalCampMemberIds(campId: string): readonly string[] | null {
+  if (!campId.startsWith('camp:')) return null;
+  try {
+    const ids: unknown = JSON.parse(campId.slice(5));
+    return Array.isArray(ids) && ids.length > 0 && ids.every(id => typeof id === 'string')
+      && goalCampId(ids) === campId ? ids as string[] : null;
+  } catch { return null; }
+}
+export function resolveGoalCamp(snapshot: GameSnapshot, campId: string):
+  | Readonly<{ status: 'present'; exposure: NeutralCampExposure; originalMemberIds: readonly string[] }>
+  | Readonly<{ status: 'cleared'; originalMemberIds: readonly string[] }>
+  | Readonly<{ status: 'invalid' }> {
+  const ids = goalCampMemberIds(campId);
+  if (!ids) return { status: 'invalid' };
+  const live = snapshot.units.filter(unit => ids.includes(unit.id) && unit.owner === 'neutral' && unit.hp > 0);
+  if (!live.length) return { status: 'cleared', originalMemberIds: ids };
+  const exposure = neutralCampExposure(snapshot).camps.find(camp => live.every(unit => camp.memberIds.includes(unit.id)));
+  return exposure ? { status: 'present', exposure, originalMemberIds: ids } : { status: 'invalid' };
+}
