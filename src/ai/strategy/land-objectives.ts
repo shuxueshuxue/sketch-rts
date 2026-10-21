@@ -2,6 +2,7 @@ import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { constructionWorkers } from '../../shared/construction';
+import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import type { Unit } from '../../shared/types';
 import { strategyIsOpponent } from './ownership';
 import { canLandIntercept, landInterceptionShotDamage } from './land-interception';
@@ -233,7 +234,7 @@ class LandModel {
         threat.lossProbability, threat.attackers.map(attacker => [attacker.unitId, attacker.strength, arrival(attacker.arrival)])]),
       guards: ownHall && this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && !interruption(unit)
         && unit.location.kind === 'land' && unit.location.landId === candidate.target.landId
-        && gap(unit.location.point, candidate.target.point) <= 650).map(unit => [unit.id, unit.strength, unit.commitments.map(claim => claim.objectiveId)]),
+        && withinExpansionGarrisonCoverage(unit.location.point, candidate.target.point)).map(unit => [unit.id, unit.strength, unit.commitments.map(claim => claim.objectiveId)]),
       workers: this.mining(candidate.kind) && this.own.filter(unit => unit.roles.includes('worker') && !interruption(unit))
         .map(unit => { const a = arrivalAt(unit, candidate.key); return [unit.id, unquoted(a), knownArrival(a)
           && a.status === 'reachable' && a.ticks < HORIZON]; }),
@@ -427,7 +428,7 @@ class LandModel {
       condition('budget', hall || s.economy.cashGold - reservedElsewhere >= BUILDING_DEFS.townHall.cost ? 'met' : 'unmet', 'hall-capital',
         hall ? '矿厅已经支付，不重复扣费' : '清营之后需要矿厅本金', { kind: 'gold', amount: hall ? 0 : BUILDING_DEFS.townHall.cost });
       const guards = this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && unit.location.kind === 'land'
-        && unit.location.landId === candidate.target.landId && gap(unit.location.point, candidate.target.point) <= 650 && !interruption(unit)
+        && unit.location.landId === candidate.target.landId && withinExpansionGarrisonCoverage(unit.location.point, candidate.target.point) && !interruption(unit)
         && unit.commitments.some(claim => claim.objectiveId === identity('DefendSite', s.owner, hall?.id ?? '')));
       const guardPower = guards.reduce((sum, unit) => sum + unit.strength, 0);
       const staticPower = hall ? this.context.snapshot.buildings.filter(building => building.owner === s.owner && building.complete

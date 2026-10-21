@@ -3,6 +3,7 @@ import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { snapshotGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
+import { EXPANSION_GARRISON_COVERAGE_RADIUS } from '../bootstrap_1/expansion-garrison-rules';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback } from './allocation-lifecycle';
 import type { AllocationMethodProvider, ExecutableMethod, StrategyAllocationMemory } from './allocation-types';
@@ -17,14 +18,15 @@ import { landIdAt } from './regions';
 
 /** An allocation/execution contract, not a supplied solution to a public
  * puzzle. Authority is obtained from the actual allocator and gateway. */
-function fixture() {
+function fixture(post = { x: 1000, y: 1000 }) {
   const game = sketchScene('native-formal-garrison-proof').map('bareDuel').replaceDefaults().player('us')
     .townHall('us', 1150, 1000, { id: 'hall' }).goldMine('mine', 1000, 1000, 10000)
-    .unit('us', 'footman', 1000, 1000, { id: 'guard' }).build().createGame();
+    .unit('us', 'footman', post.x, post.y, { id: 'guard' }).build().createGame();
   const snapshot = snapshotGame(game), policy = createAiPolicyMemory();
   let authority!: StrategyAllocationMemory;
   withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory: policy, goals: [] }, planning => {
-    const at = { point: { x: 1000, y: 1000 }, landId: landIdAt(snapshot.map, { x: 1000, y: 1000 })! };
+    const at = { point: post, landId: landIdAt(snapshot.map, post)! };
+    const mine = { point: { x: 1000, y: 1000 }, landId: landIdAt(snapshot.map, { x: 1000, y: 1000 })!, entityId: 'mine' };
     const objective: DecisionFacts<Objective> = { id: 'guard-contract', owner: 'us', kind: 'ExpandLand', target: at, effects: [],
       sinceTick: snapshot.tick, status: 'candidate', rank: null, reasons: [], methodIds: [],
       stability: { minimumStayUntilTick: 0, challengerId: null, challengerThinks: 0 },
@@ -35,7 +37,7 @@ function fixture() {
       actions: [{ id: 'hold', executor: 'goal.hold-position', target: at, unitIds: ['guard'], demands: [], spendIds: [], dependsOn: [], completionEffects: [],
         intent: { kind: 'goal-action', goalId: objective.id, declarationId: 'hold-contract', actionKind: 'hold-position', outputs: [],
           parameters: { target: at, throughTick: 1200, cohort: [{ kind: 'existing', entityId: 'guard' }],
-            garrisonMineId: 'mine', garrisonAt: { ...at, entityId: 'mine' } } } }] };
+            garrisonMineId: 'mine', garrisonAt: mine } } }] };
     const provider: AllocationMethodProvider = { id: 'guard-contract', buildMethods: () => [method], quote: () => ({
       methodId: method.id, status: 'feasible', force: null, missingPreconditions: [], potentialUtility: null,
       reason: { code: 'contract-price', factIds: [], values: {} }, utility: { horizonTicks: 1200,
@@ -55,12 +57,13 @@ function fixture() {
   return { game, policy, authority };
 }
 
-function read(f: ReturnType<typeof fixture>, authority = f.authority) {
+function read(f: ReturnType<typeof fixture>, authority = f.authority, composed = false) {
   const snapshot = snapshotGame(f.game), policy = createAiPolicyMemory();
+  if (composed) policy.strategyAllocation = authority;
   return withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory: policy, goals: [] }, input => {
     const fact = goalFact({ kind: 'garrison-ready', mineId: 'mine', at: { entityId: 'mine', point: { x: 1000, y: 1000 },
       landId: landIdAt(snapshot.map, { x: 1000, y: 1000 })! } });
-    return readGoalGuardFact(fact, input.context, authority);
+    return composed ? input.context.readFact(fact) : readGoalGuardFact(fact, input.context, authority);
   });
 }
 
@@ -87,4 +90,22 @@ it('does not promote a foundation or a mere accepted hold command to garrison re
   f.game.buildings.find(building => building.id === 'hall')!.complete = true;
   f.game.units.find(unit => unit.id === 'guard')!.order = { type: 'idle' };
   expect(read(f)).toBeNull();
+});
+
+it('does not count a real leased hold on a distant post in the same land as mining coverage', () => {
+  // The original audit input: both guard and declared post are 2828 units
+  // from the mine, while allocator, hold command and SDK proof are valid.
+  const f = fixture({ x: 3000, y: 3000 });
+  expect(read(f)).toMatchObject({ state: 'unmet', reason: { code: 'garrison-post-outside-mine-coverage' } });
+  expect(read(f, f.authority, true)).toMatchObject({ state: 'unmet', reason: { code: 'garrison-post-outside-mine-coverage' } });
+});
+
+it('uses the native inclusive coverage boundary for both the post and its actual cohort', () => {
+  const edge = 1000 + EXPANSION_GARRISON_COVERAGE_RADIUS;
+  expect(read(fixture({ x: edge, y: 1000 }))?.state).toBe('met');
+  expect(read(fixture({ x: edge + .001, y: 1000 }))).toMatchObject({ state: 'unmet',
+    reason: { code: 'garrison-post-outside-mine-coverage' } });
+  const inside = fixture({ x: edge - 50, y: 1000 });
+  inside.game.units.find(unit => unit.id === 'guard')!.x = edge + 1;
+  expect(read(inside)).toMatchObject({ state: 'unmet', reason: { code: 'garrison-cohort-outside-mine-coverage' } });
 });

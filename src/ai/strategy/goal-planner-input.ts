@@ -173,8 +173,9 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           } });
         const read: GoalPlanningContext['readFact'] = fact => {
           const guard = readGoalGuardFact(fact, context, memory.strategyAllocation, allowedUnitIds, interruptedUnitIds);
-          if (guard) return guard;
+          if (guard?.state === 'met') return guard;
           const value = baseRead(fact), p = fact.predicate;
+          if (guard && value.state !== 'met') return guard;
           if (p.kind !== 'production' || p.producer?.kind !== 'existing' || value.state !== 'met') return value;
           const producerId = p.producer.entityId;
           const occupied = unavailableProduction.filter(use => use.buildingId === producerId && use.lane === 'training');

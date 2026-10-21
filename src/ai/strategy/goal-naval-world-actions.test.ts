@@ -7,6 +7,7 @@ import type { GameSnapshot } from '../../shared/types';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import { shipPassengers } from '../../shared/ship-geometry';
 import { createAiPolicyMemory } from '../memory';
+import { EXPANSION_GARRISON_COVERAGE_RADIUS } from '../bootstrap_1/expansion-garrison-rules';
 import { assessAllocatedForce } from './allocated-force';
 import { goalFact } from './goal-facts';
 import { declareGoalGarrison } from './goal-garrison-action';
@@ -70,6 +71,10 @@ describe('naval achievers preserve independent world predicates',()=>{
   expect(declareGoalGarrison({...input,duration:pending},context)!.duration).toEqual(pending);
   expect(declareGoalGarrison({...input,mineId:'different-mine'},context)).toBeNull();
   expect(declareGoalGarrison({...input,duration:known(999)},context)).toBeNull();
+  const edge={...f.post,point:{x:f.at.point.x+EXPANSION_GARRISON_COVERAGE_RADIUS,y:f.at.point.y}};
+  expect(declareGoalGarrison({...input,target:edge},context)).not.toBeNull();
+  expect(declareGoalGarrison({...input,target:{...edge,point:{...edge.point,x:edge.point.x+.001}}},context)).toBeNull();
+  expect(declareGoalGarrison({...input,target:{...f.post,point:{x:3000,y:3000}}},context)).toBeNull();
  });
  it('exposes field-strength and garrison alternatives through the same provider and preserves distinct mine identities',()=>{
   const f=frame(),situation=evaluateSituation(f.snapshot,f.owner,createAiPolicyMemory());

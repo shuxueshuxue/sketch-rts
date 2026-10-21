@@ -1,5 +1,6 @@
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { structureRating } from '../policy/v6/strength';
+import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import { allocationGrants } from './allocation-lifecycle';
 import type { StrategyAllocationMemory } from './allocation-types';
 import { ASSEMBLY_RANGE } from './assembly-posts';
@@ -24,6 +25,11 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
   const target = p.at;
   if (!target.landId || context.snapshot.tick !== context.tick || context.situation.tick !== context.tick) return null;
   const allowed = allowedUnitIds === undefined ? null : new Set(allowedUnitIds), interrupted = new Set(interruptedUnitIds);
+  let uncovered: GoalFactObservation | null = null;
+  const outside = (code: string, post: Target, ids: readonly string[] = []): GoalFactObservation => ({
+    fact, state: 'unmet', observedTick: context.tick, revision: goalValueKey([fact.id, code, post, ids]), evidence: [], entityIds: [],
+    reason: { code, factIds: [fact.id, ...ids], values: { postToMine: gap(post.point, target.point) } },
+  });
   for (const grant of allocationGrants(authority)) {
     const execution = authority.executions[grant.action.actionId], intent = execution?.intent;
     if (!execution || execution.status !== 'active' || intent?.kind !== 'goal-action'
@@ -34,12 +40,18 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
     if (!post?.landId || !protectedSite || typeof through !== 'number' || !Number.isFinite(through) || through <= context.tick
       || typeof since !== 'number' || !Number.isFinite(since) || since > context.tick || since < execution.sinceTick) continue;
     if (params.garrisonMineId !== p.mineId || !sameSite(protectedSite, target)) continue;
+    if (post.landId !== target.landId || !withinExpansionGarrisonCoverage(post.point, target.point)) {
+      uncovered = outside('garrison-post-outside-mine-coverage', post); continue;
+    }
     const ids = goalEntityIds(params.cohort);
     if (!ids?.length || ids.some(id => allowed && !allowed.has(id) || interrupted.has(id))) continue;
     const members = ids.map(id => context.snapshot.units.find(unit => unit.id === id));
     if (members.some(unit => !unit || unit.owner !== context.owner || unit.hp <= 0 || unit.expiresTick !== undefined || unit.deck || unit.cabin
       || unit.order.type !== 'hold'
       || landIdAt(context.snapshot.map, unit) !== post.landId || gap(unit, post.point) > ASSEMBLY_RANGE)) continue;
+    if (members.some(unit => !withinExpansionGarrisonCoverage(unit!, target.point))) {
+      uncovered = outside('garrison-cohort-outside-mine-coverage', post, ids); continue;
+    }
     if (ids.some(id => {
       const lease = authority.leases[`unit:${id}`], assignment = authority.assignments[`assignment:${id}`];
       return !lease || lease.origin !== 'allocator' || lease.objectiveId !== grant.objectiveId || !sameAction(lease.action, grant.action)
@@ -73,5 +85,5 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
         values: { supportedThroughTick: through, assumesObservedMembership: true, assumesNoNewOrdersOrThreats: true,
           nativePostObserved: true, retainedLease: true, fieldStrength: power, requiredFieldStrength: required } } };
   }
-  return null;
+  return uncovered;
 }

@@ -2,6 +2,7 @@ import { unitMover } from '../../shared/catalog';
 import { isOpenGround } from '../../shared/terrain';
 import type { Unit } from '../../shared/types';
 import { MINING_RALLY_RADIUS } from '../bootstrap_1/mining-rally';
+import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import { bootstrapCampApproach, type CampApproachPointReader } from '../bootstrap_1/camp-geometry';
 import { effectiveCombatRating, structureRating, TOWER_STRENGTH } from '../policy/v6/strength';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
@@ -198,6 +199,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     // macro which waits for a hall to exist before it can be declared.
     if (!site.landId) return pending('combat-guard-post-region-pending', [effect.id]);
     const post: Target = { landId: site.landId, point: defenseGatherPost(site.point, from.point) };
+    if (!withinExpansionGarrisonCoverage(post.point, site.point)) return unmet('combat-guard-post-outside-mine-coverage', [effect.id]);
     if (!isOpenGround(context.snapshot.map, post.point.x, post.point.y) || landIdAt(context.snapshot.map, post.point) !== site.landId)
       return unmet('combat-guard-post-ground-blocked', [effect.id]);
     const safetyFact = goalFact({ kind: 'site-safe', site: post, throughTick }), safety = context.readFact(safetyFact);

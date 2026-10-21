@@ -10,6 +10,7 @@ import { isTransportKind } from '../../shared/transport-role';
 import type { Unit } from '../../shared/types';
 import { effectiveCombatRating, structureRating } from '../policy/v6/strength';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
+import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import { assessAllocatedForce } from './allocated-force';
 import type { AllocationLandRouteReader } from './allocation-arrival-query';
 import { ASSEMBLY_RANGE } from './assembly-posts';
@@ -127,7 +128,7 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
         && ports.regionAt(building, 'land') === p.at.landId);
       const stationed = input.situation.units.filter(unit => own.some(actor => actor.id === unit.id)
         && unit.expiresTick === null && !unit.roles.some(role => ['worker', 'caster', 'healer'].includes(role))
-        && unit.location.kind === 'land' && unit.location.landId === p.at.landId && gap(unit.location.point, p.at.point) <= 650
+        && unit.location.kind === 'land' && unit.location.landId === p.at.landId && withinExpansionGarrisonCoverage(unit.location.point, p.at.point)
         && unit.commitments.some(claim => claim.objectiveId === `DefendSite:${owner}:${hall?.id ?? ''}`));
       const staticPower = hall ? snapshot.buildings.filter(building => building.owner === owner && building.hp > 0 && building.complete
         && building.attackDamage > 0 && gap(building, hall) <= building.attackRange + hall.radius
