@@ -95,3 +95,25 @@ it('shares finite route publication and preserves first-request time across JSON
   }
   expect(published).toBe(true);
 });
+
+it('publishes legal assembly geometry separately from the presence of a hostile or a future safety promise', () => {
+  const snapshot = snapshotGame(scene()), context = frame(snapshot), geometry: GoalGeometryMemory = { version: 1, entries: [] };
+  const at = { point: { x: 2100, y: 2100 }, landId: landIdAt(snapshot.map, { x: 2100, y: 2100 })! };
+  const fact = goalFact({ kind: 'assembly-post', at }), before = JSON.stringify(snapshot);
+  let answer: ReturnType<ReturnType<typeof source>> | undefined;
+  for (const sequence of [1, 2]) {
+    const work = new FactWorkQueue(snapshot.tick, 1, undefined, sequence);
+    const read = createGoalFactReader({ ...context, memory: createGoalWorldFactMemory('us'), ports: {
+      reservedGold: 0, geometryRevision: 'native-assembly-ground',
+      geometry: createGoalGeometryReader({ tick: snapshot.tick, work, memory: geometry }),
+      regionAt: (point, mover) => mover === 'land' ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point),
+      landRoute: () => { throw Error('Point legality is not a new route query'); },
+    } });
+    answer = strict(() => withFactWork(work, () => { const row = read(fact); work.flush(); return row; }));
+    expect(work.receipt.used).toBe(sequence === 1 ? 1 : 0);
+    expect(answer.state).toBe(sequence === 1 ? 'pending' : 'met');
+  }
+  expect(answer!.derived).toBeUndefined(); expect(answer!.threats).toBeUndefined();
+  expect(snapshot.units.some(unit => unit.id === 'guard' && unit.hp > 0)).toBe(true);
+  expect(JSON.stringify(snapshot)).toBe(before);
+});
