@@ -13,6 +13,7 @@ import { currentFactWork, FactWorkQueue, withFactWork } from './fact-work';
 import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
 import { goalEconomyActionProvider } from './goal-economy-provider';
+import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import type { GoalGeometryMemory } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
@@ -172,6 +173,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           ports: physical, readFact: read });
       };
       const combat = createGoalNavalCombatGrounding(context, { landRoute, resolveCohort,
+        movementRisk: request => assessGoalCombatMovementRisk({ snapshot, situation, request }),
         arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
         ...(input.allowedUnitIds === undefined ? {} : { allowedUnitIds: input.allowedUnitIds }),
         ...(input.interruptedUnitIds === undefined ? {} : { interruptedUnitIds: input.interruptedUnitIds }) });

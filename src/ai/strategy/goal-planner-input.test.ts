@@ -129,3 +129,25 @@ it('composes actual safety and combat candidates in the same native owner scope 
   expect(situationConstructionCount() - count).toBe(1); expect(JSON.stringify(snapshot)).toBe(before);
   expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
 });
+
+it('publishes a physical local march and its observed no-exposure proof without inventing a risk number', () => {
+  const game = scene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
+  const at = { point: { x: 700, y: 350 }, landId: landIdAt(snapshot.map, { x: 700, y: 350 })! };
+  const fact = goalFact({ kind: 'worker-at', at, count: 1, byTick: 1200 });
+  let memory = createAiPolicyMemory(), known = false;
+  for (let sequence = 1; sequence <= 10 && !known; sequence++) {
+    strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [] }, input => {
+      const options = input.context.grounding!.combatOptions!(fact);
+      if (options.state !== 'met') return;
+      for (const option of options.candidates) if (option.cost.state === 'met' && option.successProbability.state === 'met') {
+        expect(option.duration.state).toBe('met');
+        expect(option.cost.value.map(term => term.gold)).toEqual([0]); expect(option.successProbability.value).toBe(1);
+        expect(option.preconditions.every(route => input.context.readFact(route).state === 'met')).toBe(true);
+        known = true;
+      }
+    }));
+    expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(known).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
+});
