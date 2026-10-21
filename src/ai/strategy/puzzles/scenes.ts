@@ -1,5 +1,7 @@
 import { BUILDING_DEFS, TIER_SUPPLY_CAP, UNIT_DEFS } from '../../../shared/catalog';
 import { seconds } from '../../../shared/time';
+import { boardUnit } from '../../../shared/decks';
+import { stepGame } from '../../../shared/sim';
 import { HOME, ISLAND, MAINLAND, PUZZLE_OWNER, PUZZLE_OPPONENT, TARGET_MINE, camp, findMine, finishWorld, homeEconomy,
   neutralGroup, puzzleBuilder, soldiers, targetMine, terrainWorld, type PuzzleWorld } from './world';
 
@@ -79,6 +81,11 @@ export function evacuateScene() {
   const world = finishWorld(terrainWorld(b, [MAINLAND, ISLAND]), TARGET_MINE, TARGET_GUARD, { x: 2176, y: 768 });
   world.islandHall = world.game.buildings.find(h => h.owner === PUZZLE_OWNER && h.kind === 'townHall' && h !== world.home)!;
   world.islandWorkers = world.workers.filter(u => u.x > 2304); world.attackers = world.game.units.filter(u => u.owner === PUZZLE_OPPONENT);
+  // A real invasion already has a first wave ashore; the last rider is still on
+  // its incoming hull. The runner orders an ordinary unload, never a timed spawn.
+  const invasion = world.game.spawnUnit(PUZZLE_OPPONENT, 'transport', 3840, 896);
+  if (!boardUnit(invasion, world.attackers.at(-1)!, world.game.units)) throw new Error('Invasion rider does not fit its real deck');
+  stepGame(world.game);
   return world;
 }
 export const PUBLIC_PUZZLES: readonly PublicPuzzleCase[] = [
