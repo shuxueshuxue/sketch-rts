@@ -110,6 +110,7 @@ describe('grounded economic declarations against native rules', () => {
     expect(resume.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(0);
     expect(resume.duration).toMatchObject({ state: 'met', value: 15 + foundation.buildTime - 40 });
     expect(resume.preconditions.some(fact => fact.predicate.kind === 'gold' || fact.predicate.kind === 'build-site')).toBe(false);
+    expect(resume.outputs).toEqual([]);
     expect(declareGoalBuilding({ buildingKind: 'farm', at: { ...site, landId: 'land:2' }, worker, byTick: 5000 }, context(snapshot, road))).toBeNull();
     expect(declareGoalBuilding({ buildingKind: 'fortifiedTower', at: site, worker, byTick: 5000 }, context(snapshot, road))).toBeNull();
   });

@@ -164,7 +164,7 @@ export function declareGoalBuilding(input: Readonly<{
     successProbability: known(1, [site.id, route.id]),
     executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref,
       approach: route.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },
-    outputs: ['building'], reasons: [],
+    outputs: foundation ? [] : ['building'], reasons: [],
   };
 }
 
