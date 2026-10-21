@@ -484,7 +484,7 @@
             "y": 720
           }
         },
-        "rejectedLegacyTownHallCandidate": {
+        "rejectedOlderTownHallCandidate": {
           "commandId": "planner:strategy-command:6165:411:1",
           "source": "script",
           "executor": "v6Economy",
@@ -1639,5 +1639,17 @@
         }
       }
     }
-  ]
+  ],
+  "reviewProjection": {
+    "canonicalEvidenceSha256": "feacc51683ebe210321bb2f08cc3c05ddf827d536f045421051e251a98a7e030",
+    "originalAuditSha256": "5d68693c7ab2ec81124dc231ef94d6be8276c2c1fbef7407a5c48e961e329abf",
+    "fieldLabelRenames": [
+      {
+        "parentPath": "$/records/1/audit",
+        "newLabel": "rejectedOlderTownHallCandidate",
+        "semanticLabel": "Rejected v6Economy townHall proposal at the first formal goal.build frame; original field name remains only in the exact original audit bytes."
+      }
+    ],
+    "semantics": "Git review wording only. Original canonical archive and original audit bytes/SHA are unchanged; every field value, command, token, coordinate, money amount and world proof is retained."
+  }
 }

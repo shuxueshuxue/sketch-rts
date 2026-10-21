@@ -76,3 +76,5 @@
 根/tools-ai tsc、SDK7、结构9、步骤7预检均exit0。两个独立单worker原进程的argv、原Vitest JSON和退出码完整保存；派生汇总只取各自6项，不重复统计另一个变体的pattern跳过项。未跑全量src或其他题。原物理失败与严格归属失败不相互替换。[完整验证](ship-73d777cd.validation.json)。
 
 [完整证据指针](ship-73d777cd.evidence.json)：SHA`feacc51683ebe210321bb2f08cc3c05ddf827d536f045421051e251a98a7e030`，252848729B，存储端字节/SHA已核。含560×2原member、SDK应用原流、before/after memory、原账本与全部只读脚本。源码归档`archive/public-puzzles-ship-73d777cd-source-20261021`，PR仍draft，不合并。
+
+Git审阅副本将独立37报告中表示“被拒的v6Economy建厅候选”的一个字段标签写为`rejectedOlderTownHallCandidate`；映射及原audit SHA见domain-audit.json的reviewProjection。原canonical包、原始audit及其SHA保持不变，所有命令、任务、坐标和金额值均保留。
