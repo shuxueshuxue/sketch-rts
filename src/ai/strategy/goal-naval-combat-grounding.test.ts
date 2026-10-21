@@ -141,6 +141,44 @@ describe('coarse transport time from the published sea field', () => {
 });
 
 describe('naval combat grounding on actual observation cohorts', () => {
+  it('quotes rolling defend response and movement only within current support while keeping the full obligation', () => {
+    const movementRisk = vi.fn<NonNullable<GoalNavalCombatGroundingPorts['movementRisk']>>(() => known({ expectedLossGold: 11, survivalProbability: .8 }));
+    const f = fixture({ movementRisk }), before = JSON.stringify(f.snapshot);
+    const short = goalFact({ kind: 'site-safe', site: f.site, throughTick: f.snapshot.tick + f.situation.horizonTicks });
+    const long = goalFact({ kind: 'site-safe', site: f.site, throughTick: f.snapshot.tick + 12000 });
+    const current = options(f.read(short)).find(option => option.cohort.length === 2)!;
+    const retained = options(f.read(long)).find(option => option.cohort.length === 2)!;
+    expect(current.cost.state).toBe('met'); expect(retained.cost.state).toBe('met');
+    if (current.cost.state !== 'met' || retained.cost.state !== 'met') throw Error('current response missing');
+    expect(retained.cost.value.map(term => ({ code: term.code, gold: term.gold })))
+      .toEqual(current.cost.value.map(term => ({ code: term.code, gold: term.gold })));
+    expect(retained.cost.value.some(term => term.gold > 0)).toBe(true);
+    if (current.successProbability.state !== 'met' || retained.successProbability.state !== 'met') throw Error('current P missing');
+    expect(retained.successProbability.value).toBe(current.successProbability.value);
+    expect(retained.successProbability.value).toBeLessThan(1);
+    expect(retained.duration).toMatchObject({ state: 'met', value: 12000 });
+    expect(retained.byTick).toBe(f.snapshot.tick + 12000);
+    expect(movementRisk.mock.calls.every(([request]) => request.throughTick <= f.snapshot.tick + f.situation.horizonTicks)).toBe(true);
+    const action = goalNavalActionProvider.actionsFor(long, f.context).find(action => (action.executor.parameters.cohort as unknown[]).length === 2)!;
+    expect(action.effects[0]!.fact).toEqual(long);
+    expect(action.executor.parameters.throughTick).toBe(f.snapshot.tick + 12000);
+    expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
+    expect(JSON.stringify(f.snapshot)).toBe(before);
+  });
+
+  it.each(['risk', 'response'] as const)('retains unknown current %s in rolling defend quotes', field => {
+    const unquoted = { state: 'pending' as const, requestIds: ['current-march-risk'], reason: { code: 'current-march-risk', factIds: [], values: {} } };
+    const f = fixture({ movementRisk: field === 'risk' ? () => unquoted : () => known({ expectedLossGold: 11, survivalProbability: .8 }) });
+    const site = field === 'response' ? { ...f.site, entityId: 'unpublished-protected-site' } : f.site;
+    const effect = goalFact({ kind: 'site-safe', site, throughTick: f.snapshot.tick + 12000 });
+    const result = f.read(effect);
+    if (field === 'response') expect(result).toMatchObject({ state: 'pending', reason: { code: 'combat-candidate-facts-pending' } });
+    else {
+      const row = options(result).find(option => option.cohort.length === 2)!;
+      expect(row.cost).toMatchObject({ state: 'pending', requestIds: ['current-march-risk'] });
+      expect(row.successProbability.state).toBe('pending');
+    }
+  });
   it('offers local defense with a native combat-rating requirement and the same physical post in declaration/execution', () => {
     const f = fixture(), effect = goalFact({ kind: 'site-safe', site: f.site, throughTick: 900 });
     const before = JSON.stringify(f.snapshot), count = situationConstructionCount(), rows = strict(() => options(f.read(effect)));

@@ -306,7 +306,8 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     const post: Target = { ...site, point: defenseGatherPost(site.point, field) };
     if (!isOpenGround(context.snapshot.map, post.point.x, post.point.y) || landIdAt(context.snapshot.map, post.point) !== site.landId)
       return unmet('combat-guard-post-ground-blocked', [effect.id]);
-    const request = travel(effect, group, from, post, throughTick), windowTicks = Math.max(1, throughTick - context.tick);
+    const quoteThrough = Math.min(throughTick, context.tick + context.situation.horizonTicks);
+    const request = travel(effect, group, from, post, quoteThrough), windowTicks = Math.max(1, quoteThrough - context.tick);
     const ownTowers = targetCoveringTowers(context.snapshot, context.owner, post, 'own');
     const hostileTowers = targetCoveringTowers(context.snapshot, context.owner, site, 'opponent');
     const opponents: { unit: Unit; share: number }[] = [], scoped = threat.attackers.flatMap(row => {
@@ -327,7 +328,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     const assessed = assessGoalDefenseCombatOption({ snapshot: context.snapshot, situation: context.situation, effect, cohort: group,
       from, target: site, post, byTick: throughTick, routes: request.routes, arrivalTicks: request.arrivalTicks, movementRisk: movement(request),
       requiredCombatRating: known(requiredForce, [effect.id, ...opponents.map(row => row.unit.id)]),
-      defense: throughTick > context.tick + threat.horizonTicks ? pending('combat-defense-window-uncovered', [effect.id]) : known({
+      defense: quoteThrough > context.tick + threat.horizonTicks ? pending('combat-defense-window-uncovered', [effect.id]) : known({
         threat: defenseThreatScenarios({ ...threat, attackers: scoped }, ports.response?.(request) ?? { status: 'unknown' }),
         opponents, hostileTowers, windowTicks, staticForce: ownTowers.reduce((sum, tower) => sum + TOWER_STRENGTH * Math.max(0, tower.hp / Math.max(1, tower.maxHp)), 0),
         onStation: group.filter(member => gap(member.assessment, post.point) <= MINING_RALLY_RADIUS).map(member => member.reference),

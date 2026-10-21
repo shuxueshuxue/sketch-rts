@@ -3,6 +3,7 @@ import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { declareGoalDestroyTarget, declareGoalEngageUnits, declareGoalHoldPosition, goalLandActionProvider, type GoalLandCombatGrounding } from './goal-land-actions';
 import { goalFact } from './goal-facts';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 import type { GoalEntityReference, GoalPlanningContext } from './goal-planner-types';
 import type { Situation, Target } from './types';
 
@@ -78,9 +79,38 @@ describe('atomic land action declarations', () => {
       expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
     }
     const hold = declareGoalHoldPosition({ ...input, throughTick: 500 }, context)!;
-    expect(safety.every(fact => hold.preconditions.includes(fact))).toBe(true);
+    expect(safety.every(fact => hold.preconditions.some(proof => proof.id === goalFact({ ...fact.predicate, throughTick: 500 } as typeof fact.predicate).id))).toBe(true);
     expect(hold.preconditionWindows).toBeUndefined();
     expect(hold.effects[0]!.fact.predicate).toMatchObject({ throughTick: 500 });
+  });
+
+  it.each(['hold-position', 'defend'] as const)('uses rolling safety prerequisites for %s without changing its persistent effect or lease', kind => {
+    const context = scene(), throughTick = context.tick + 12000;
+    const safety = [goalFact({ kind: 'site-safe', site: target, throughTick }),
+      goalFact({ kind: 'shore-safe', landId: 'land:1', landing: target, throughTick }),
+      goalFact({ kind: 'assets-safe', unitIds: ['weak'], at: target, throughTick })];
+    const hold = declareGoalHoldPosition({ ...grounding(), byTick: throughTick, throughTick,
+      duration: { state: 'met', value: 12000, factIds: [] } }, context)!;
+    expect(hold.executor.parameters.protectionWindowTicks).toBe(2400);
+    const original = { ...hold, kind, preconditions: [...hold.preconditions, ...safety],
+      // Same safety fact as an effect is intentionally retained at the full
+      // obligation; mapping admission IDs must not change world promises.
+      effects: [...hold.effects, { fact: safety[0]!, operation: 'establish' as const, at: 'start' as const }],
+      preconditionWindows: safety.map(fact => ({ factId: fact.id, through: 'finish' as const })),
+      cost: { state: 'met' as const, value: [{ code: 'quoted-current-loss', gold: 11, factIds: safety.map(fact => fact.id) }], factIds: safety.map(fact => fact.id) } };
+    const action = withGoalSafetyPreconditionWindows(original, context.tick, context.situation.horizonTicks);
+    const current = safety.map(fact => goalFact({ ...fact.predicate, throughTick: context.tick + 2400 } as typeof fact.predicate));
+    expect(action.preconditions).toEqual(expect.arrayContaining(current));
+    expect(action.preconditions.some(fact => safety.some(full => full.id === fact.id))).toBe(false);
+    expect(action.cost).toMatchObject({ factIds: current.map(fact => fact.id), value: [{ gold: 11, factIds: current.map(fact => fact.id) }] });
+    expect(action.preconditionWindows).toBeUndefined();
+    expect(action.effects).toEqual(original.effects);
+    expect(action.executor).toEqual(original.executor);
+    expect(action.duration).toEqual(original.duration);
+    expect(action.demands).toEqual(original.demands);
+    expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
+    expect(action.executor.parameters.throughTick).toBe(throughTick);
+    expect(withGoalSafetyPreconditionWindows(action, context.tick, 2400)).toEqual(action);
   });
 
   it('retains pending assessments and symbolic future members without inventing world identities', () => {
