@@ -20,9 +20,10 @@ export function materializeConquestAssembly(input: AllocationMethodQuoteInput): 
   const departed = input.executions.some(action => action.methodId === method.id && ['active', 'complete'].includes(action.status)
     && ['deliver-force', 'clear-camp'].includes(action.intent.kind));
   if (departed) return undefined;
-  const selected = new Set(input.unitIds);
+  const selected = new Set(input.unitIds), interrupted = new Set(input.interruptedUnitIds ?? []);
   const fighters = snapshot.units.filter(unit => selected.has(unit.id) && unit.owner === objective.owner && unit.hp > 0
-    && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && unit.attackDamage > 0 && unit.expiresTick === undefined);
+    && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && unit.attackDamage > 0 && unit.expiresTick === undefined
+    && !interrupted.has(unit.id));
   const assessment = assessAllocatedForce(objective.owner, fighters, { metric: 'camp-force', camp });
   const previous = input.executions.find(action => action.token.actionId === actionId);
   // An initially sufficient batch retains the existing direct execution path.
@@ -30,7 +31,8 @@ export function materializeConquestAssembly(input: AllocationMethodQuoteInput): 
   if (assessment.sufficient && !previous) return undefined;
   const bound = bindConquestAssemblyPosts({ ...input, methodId: method.id });
   const intent = { kind: 'assemble-force' as const, campTarget: objective.target, requiredForce: assessment.requiredForce, posts: bound.posts };
-  const current = assessForceAssemblyPosts({ snapshot, owner: objective.owner, intent, unitIds: bound.unitIds });
+  const current = assessForceAssemblyPosts({ snapshot, owner: objective.owner, intent, unitIds: bound.unitIds,
+    ...(input.interruptedUnitIds ? { interruptedUnitIds: input.interruptedUnitIds } : {}) });
   if (!bound.missing.length && current.status === 'known' && current.sufficient) return undefined;
   const target = bound.posts.find(post => post.unitIds.length)?.target ?? bound.posts[0]?.target ?? objective.target;
   const demand = { kind: 'force' as const, metric: 'camp-force' as const, strength: assessment.requiredForce,
@@ -59,8 +61,10 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
   const facts = input.assemblyFacts?.({ objective, methodId: method.id, campTarget: intent.campTarget,
     requiredForce: intent.requiredForce, posts: intent.posts, unitIds,
     ...(input.valuation ? { valuation: input.valuation } : {}),
+    ...(input.interruptedUnitIds ? { interruptedUnitIds: input.interruptedUnitIds } : {}),
     ...(input.responseEligibleUnitIds ? { responseEligibleUnitIds: input.responseEligibleUnitIds } : {}) });
-  const current = assessForceAssemblyPosts({ snapshot, owner: objective.owner, intent, unitIds });
+  const current = assessForceAssemblyPosts({ snapshot, owner: objective.owner, intent, unitIds,
+    ...(input.interruptedUnitIds ? { interruptedUnitIds: input.interruptedUnitIds } : {}) });
   if (current.status === 'blocked') add(current.reasonCode, 'unknown', current.unitIds);
   if (!facts) {
     const value = current.status === 'known' ? current.assembledForce : null;
@@ -71,8 +75,10 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
   const forecast = facts?.forecast, continuation = facts?.continuation;
   if (facts) {
     missing.push(...facts.missing);
+    if (forecast!.requiredForce !== intent.requiredForce) add('assembly-demand-forecast-mismatch');
     if (forecast!.status === 'blocked' || forecast!.status === 'unknown') {
-      for (const fact of forecast!.missing) add(fact.code, fact.status, fact.factIds);
+      for (const fact of forecast!.missing) add(fact.code, fact.status, fact.factIds, {
+        requiredForce: forecast!.requiredForce, certainForce: forecast!.certainForce, deficit: forecast!.deficit });
       if (!forecast!.missing.length) add(forecast!.status === 'blocked' ? 'needs-production' : 'assembly-supply-unquoted',
         forecast!.status === 'blocked' ? 'unmet' : 'unknown');
     }
@@ -89,7 +95,8 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
   if (valuation?.phase === 'net' && valuation.opportunity?.status !== 'known') add('committed-opportunity-cost-unknown', 'unknown', unitIds);
   const stationed = current.status === 'known' ? current.onStationUnitIds : [];
   const force: ForceQuotation = { metric: 'camp-force', target: objective.target, onStationUnitIds: stationed,
-    enRouteUnitIds: unitIds.filter(id => !stationed.includes(id)), unavailableUnitIds: [], unknownUnitIds: [],
+    enRouteUnitIds: unitIds.filter(id => !stationed.includes(id) && !input.interruptedUnitIds?.includes(id)),
+    unavailableUnitIds: unitIds.filter(id => input.interruptedUnitIds?.includes(id)), unknownUnitIds: [],
     onStationForce: current.status === 'known' ? current.assembledForce : 0,
     effectiveForce: current.status === 'known' ? current.assembledForce : 0, discountedEnRouteForce: 0,
     requiredForce: intent.requiredForce, evaluationUntilTick: snapshot.tick + window.horizonTicks };
@@ -99,9 +106,11 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
     values: { assembledForce: force.onStationForce, requiredForce: intent.requiredForce, forecastTick: forecast?.forecastTick ?? null,
       battleProbability: current.status === 'known' && current.unitIds.length === 0 ? 0 : null,
       readyTick: forecast?.readyTick ?? null, completionProbability: forecast?.completionProbability ?? null,
+      certainForce: forecast?.certainForce ?? null, supplyDeficit: forecast?.deficit ?? null,
       continuationGold: continuation?.utility.score ?? null, assemblyDelayApplied: continuation?.assemblyDelayApplied ?? false,
       calibrationId: calibration?.calibrationId ?? null, timeMaeTicks: calibration?.timeMaeTicks ?? null,
-      timeP90ErrorTicks: calibration?.timeP90ErrorTicks ?? null } };
+      timeP90ErrorTicks: calibration?.timeP90ErrorTicks ?? null,
+      scenarioCount: forecast?.diagnostics.scenarioCount ?? null, scenarioLimitCount: forecast?.diagnostics.scenarioLimitCount ?? null } };
   if (missing.length || !continuation || !forecast) return { methodId: method.id, status: 'blocked', force, ...(valuation ? { valuation } : {}),
     utility: null, potentialUtility: null, reason, missingPreconditions: missing, assumptions };
   const p = forecast.completionProbability, original = continuation.utility;
