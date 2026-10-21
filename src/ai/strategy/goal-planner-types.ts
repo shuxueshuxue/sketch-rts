@@ -63,6 +63,9 @@ export type GoalFactObservation = Readonly<{
   site?: Readonly<{ logicalTarget: Target; buildPoint: Target['point']; buildingId?: string }>;
   interception?: Readonly<{ threatIds: readonly string[]; capableUnitIds: readonly string[]; counterKinds: readonly UnitKind[] }>;
   threats?: Readonly<{ unitIds: readonly string[]; campIds: readonly string[]; requiredForce: number }>;
+  /** A shared world rule, e.g. removing these observed threats makes this
+   * particular site safe. This is a causal fact proof, not an action recipe. */
+  derived?: Readonly<{ allOf: readonly GoalFact[] }>;
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
   | Readonly<{ state: 'met' | 'unmet' }>);
 export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
@@ -172,6 +175,8 @@ export type GoalTransportOption = Readonly<{
   landing: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
   crossing: GoalFact; shoreSafe: GoalFact;
   duration: GoalEstimate<number>; factIds: readonly string[];
+  cost?: GoalEstimate<readonly GoalActionCost[]>;
+  successProbability?: GoalEstimate<number>;
 } & (Readonly<{ origin: 'land';
   departure: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
   approach: GoalFact;
@@ -193,6 +198,7 @@ export type GoalGroundingReader = Readonly<{
 export type GoalCohortMember = Readonly<{ reference: GoalEntityReference; assessment: Unit }>;
 export type GoalCombatOption = Readonly<{
   id: string; target: Target; cohort: readonly GoalEntityReference[]; requiredForce: number; byTick: number;
+  campId?: string;
   /** Actual source pose/region, distinct from the requested destination post. */
   from?: Target;
   duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
