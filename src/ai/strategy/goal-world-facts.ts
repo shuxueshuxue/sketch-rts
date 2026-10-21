@@ -84,6 +84,7 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
     if (p.kind === 'route') {
       const actor = p.actor?.kind === 'existing' ? own.find(unit => p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
       if (p.actor && !actor) return answer(fact, false, 'route-actor-not-available', p.actor);
+      if (actor && unitMover(actor.kind) !== p.mover) return answer(fact, false, 'route-actor-mover-mismatch', unitRevision(actor));
       if (p.mover === 'sea') return actor && ports.seaRoute ? ports.seaRoute(p, actor)
         : pending(fact, 'goal-sea-route-port-required', [p, actor && unitRevision(actor)]);
       const a = p.from.landId ?? ports.regionAt(p.from.point, 'land'), b = p.to.landId ?? ports.regionAt(p.to.point, 'land');

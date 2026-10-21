@@ -18,7 +18,7 @@ import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { createUnitCommitmentQuery, unitRoles } from './commitments';
-import { landIdAt, regionIndex, seaIdAt, unitLocation } from './regions';
+import { landIdAt, regionIndex, seaIdAt, unitLocation, type RegionIndex } from './regions';
 import { forceSuccessProbability, STRATEGY_PARAMETERS } from './utility';
 import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, SituationObservation, SiteThreat, Target, SituationUnit } from './types';
 import type { SituationHistory, StrategyObservationMemory } from './observation-memory';
@@ -72,15 +72,22 @@ const descriptions = {
 let constructionCount = 0;
 export function situationConstructionCount(): number { return constructionCount; }
 
+export type SituationPhysicalQueries = Readonly<{
+  regions: RegionIndex;
+  distances: ReturnType<typeof createPlanningDistanceQuery>;
+  arrivals: ReturnType<typeof createArrivalQuery>;
+}>;
+
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
  * The previous value is observational history, never a serialized policy task. */
 export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: SituationHistory,
-  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory): Situation {
+  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory,
+  physical?: SituationPhysicalQueries): Situation {
   constructionCount++;
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
-  const regions = regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
-  const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
-  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
+  const regions = physical?.regions ?? regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
+  const distances = physical?.distances ?? createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
+  const query = physical?.arrivals ?? createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
   const { liveUnits: live, live: byId } = snapshotUnitIndex(snapshot);
   const locations = new Map<string, SituationUnit['location']>();
   for (const unit of live) locations.set(unit.id, unitLocation(snapshot.map, unit, byId, tick));

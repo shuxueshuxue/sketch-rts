@@ -1,0 +1,64 @@
+import { expect, it } from 'vitest';
+import { sketchScene } from '../../sdk/scene';
+import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
+import { snapshotGame, stepGame } from '../../shared/sim';
+import { createAiPolicyMemory, type AiPolicyMemory } from '../memory';
+import { currentFactWork, FactWorkQueue } from './fact-work';
+import { goalFact } from './goal-facts';
+import { planOwnerGoals, withGoalPlannerInput } from './goal-planner-input';
+import { planGoals } from './goal-planner';
+import type { GoalRequest } from './goal-planner-types';
+import { landIdAt, regionIndex } from './regions';
+import { situationConstructionCount } from './situation';
+
+function scene() {
+  const game = sketchScene('real-goal-input-assembly').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove' }).player('foe', { race: 'ember' }).playerState('us', { gold: 3000 })
+    .townHall('us', 350, 350).townHall('foe', 4000, 4000)
+    .building('us', 'barracks', 350, 650, { id: 'producer' }).worker('us', 450, 350).build().createGame();
+  game.scriptedVictory = true; regionIndex(game.map); return game;
+}
+const strict = <T>(run: () => T) => withNavigationAudit(event => {
+  if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation);
+}, () => withNavigationPhase('strategy-planning', run));
+function request(game: ReturnType<typeof scene>): GoalRequest {
+  const at = { point: { x: 350, y: 650 }, landId: landIdAt(game.map, { x: 350, y: 650 })! };
+  return { id: 'one-footman', owner: 'us', effects: [goalFact({ kind: 'unit-available', unitKind: 'footman', count: 1, at, byTick: 10000 })],
+    rewardGold: 2000, deadlineTick: 10000, reasons: [] };
+}
+
+it('assembles native inputs and search inside one Situation/query/work scope without issuing a command', () => {
+  const game = scene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory(), work = new FactWorkQueue(snapshot.tick, 0);
+  const before = JSON.stringify(snapshot), count = situationConstructionCount();
+  const output = strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [request(game)], work }, input => {
+    expect(currentFactWork()).toBe(work); expect(input.work).toBe(work);
+    expect(input.context.situation.tick).toBe(snapshot.tick);
+    expect(input.initialBalances.find(balance => balance.resource.kind === 'gold')!.quantity).toBe(game.players.us!.gold);
+    return planGoals(input);
+  }));
+  expect(situationConstructionCount() - count).toBe(1);
+  expect(work.receipt.used).toBe(0); expect(output.readyActions).toEqual([]);
+  expect(memory.strategyAllocation).toBeUndefined(); expect(JSON.stringify(snapshot)).toBe(before);
+});
+
+it('produces a real training-ready declaration after shared route publication, including a JSON cold continuation', () => {
+  const game = scene(), goal = request(game);
+  let memory: AiPolicyMemory = createAiPolicyMemory(), ready = false;
+  for (let think = 0; think < 60 && !ready; think++) {
+    if (think) for (let step = 0; step < 15; step++) stepGame(game);
+    const snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
+    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal] }));
+    expect(JSON.stringify(snapshot)).toBe(before);
+    expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    expect(memory.strategyAllocation).toBeUndefined();
+    if (output.readyActions.length) {
+      expect(output.readyActions.map(item => item.action.declaration.kind)).toEqual(['train']);
+      expect(output.readyActions[0]!.action.declaration.executor.parameters).toMatchObject({ unitKind: 'footman', count: 1,
+        producer: { kind: 'existing', entityId: 'producer' } });
+      ready = true;
+    }
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(ready).toBe(true);
+  expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(0);
+});
