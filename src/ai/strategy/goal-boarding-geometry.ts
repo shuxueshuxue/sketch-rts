@@ -6,6 +6,7 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalBerth, GoalGeometryReader, GoalHullCandidate, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalFactReader } from './goal-planner-types';
+import { advanceGoalBoardingCandidate, beginGoalBoardingCandidate, type GoalBoardingCandidateCursor } from './goal-boarding-candidates';
 import { landIdAt, seaIdAt, type RegionIndex, type Shore } from './regions';
 import type { Point } from './types';
 
@@ -20,6 +21,7 @@ type Cursor = {
   attempt: number; ground: Point; water: Point; heading: number;
   phase: 'project' | 'scan' | 'walk' | 'pose' | 'fallback-land' | 'fallback-sea' | 'finish';
   scan: number; after: Candidate | null; best: Candidate | null; land: Point | null;
+  candidates: GoalBoardingCandidateCursor | null;
   pose: NearestShipPoseCursor; fallback: boolean; proofIds: string[];
 };
 export function createGoalBoardingGeometry(input: Readonly<{
@@ -38,7 +40,7 @@ export function createGoalBoardingGeometry(input: Readonly<{
     });
     const shoreVersion = input.geometry.reference?.('shore', shore);
     const references = hullVersion && shoreVersion ? [hullVersion, shoreVersion] : undefined;
-    const key = `${preparedCells ? 'boarding-cells' : 'boarding'}:${goalValueKey(references
+    const key = `${preparedCells ? 'boarding-near' : 'boarding'}:${goalValueKey(references
       ? [hull.reference, hullVersion, passenger.radius, shoreVersion]
       : [hull.reference, profile.hull, hull.assessment.sailing?.heading ?? 0, passenger.radius, shore])}`;
     const pending = (code: string): GoalPublishedValue<Point> => ({ state: 'pending', requestIds: [key],
@@ -63,7 +65,7 @@ export function createGoalBoardingGeometry(input: Readonly<{
     const read = input.geometry<Cursor, { berth: GoalBerth | null; factIds: readonly string[] }>({ key, revision: input.geometryRevision,
       ...(references ? { references } : {}),
       initialState: { attempt: 0, ground: shore.ground, water: shore.water, heading: hull.assessment.sailing?.heading ?? 0,
-        phase: 'project', scan: 0, after: null, best: null, land: null, pose: beginNearestShipPose(), fallback: false, proofIds: [] },
+        phase: 'project', scan: 0, after: null, best: null, land: null, candidates: null, pose: beginNearestShipPose(), fallback: false, proofIds: [] },
       advance(state, allowance) {
         let work = 0;
         const done = (berth: GoalBerth | null) => ({ state, work, done: true,
@@ -85,10 +87,18 @@ export function createGoalBoardingGeometry(input: Readonly<{
             work++; state.ground = projected; state.phase = 'scan'; continue;
           }
           if (state.phase === 'scan') {
-            const count = preparedCells?.length ?? input.snapshot.map.terrain?.cells.length ?? 0;
-            if (!count && !preparedCells) return done(null);
+            if (preparedCells) {
+              const next = preparedCells.length ? advanceGoalBoardingCandidate(input.snapshot.map, person, ship,
+                state.candidates ??= beginGoalBoardingCandidate(), allowance - work, state.after) : { work: 0, done: true, value: null };
+              work += next.work;
+              if (!next.done) return { state, work, done: false };
+              state.best = next.value; state.candidates = null;
+              state.phase = state.best ? 'walk' : 'fallback-land'; state.pose = beginNearestShipPose(); state.fallback = !state.best; continue;
+            }
+            const count = input.snapshot.map.terrain?.cells.length ?? 0;
+            if (!count) return done(null);
             if (state.scan < count) {
-              const offset = state.scan++, index = preparedCells ? preparedCells[offset]! : offset;
+              const index = state.scan++;
               const candidate = boardingBerthCandidateAt(input.snapshot.map, person, ship, index); work++;
               if (candidate && (!state.after || candidate.score > state.after.score || candidate.score === state.after.score && index > state.after.index)
                 && (!state.best || candidate.score < state.best.score || candidate.score === state.best.score && index < state.best.index))
@@ -128,11 +138,11 @@ export function createGoalBoardingGeometry(input: Readonly<{
               state.attempt++;
               if (state.attempt >= 4) return done(null);
               state.ground = state.land; state.water = { x: pose.x, y: pose.y }; state.heading = pose.heading;
-              state.phase = 'project'; state.after = null; state.best = null; state.scan = 0; state.land = null; state.pose = beginNearestShipPose(); continue;
+              state.phase = 'project'; state.after = null; state.best = null; state.scan = 0; state.candidates = null; state.land = null; state.pose = beginNearestShipPose(); continue;
             }
           }
           if (state.fallback) return done(null);
-          state.after = state.best; state.best = null; state.scan = 0; state.phase = 'scan'; state.land = null; state.pose = beginNearestShipPose();
+          state.after = state.best; state.best = null; state.scan = 0; state.candidates = null; state.phase = 'scan'; state.land = null; state.pose = beginNearestShipPose();
         }
         return { state, work, done: false };
       } });

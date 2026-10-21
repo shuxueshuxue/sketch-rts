@@ -14,6 +14,7 @@ import type { GoalBerth, GoalGeometryMemory, GoalHullCandidate, GoalPublishedVal
 import type { GoalFactReader } from './goal-planner-types';
 import { regionIndex, type Shore } from './regions';
 import { nativeVoyageBerth } from './voyage-berth';
+import { advanceGoalBoardingCandidate, beginGoalBoardingCandidate, type GoalBoardingCandidate } from './goal-boarding-candidates';
 
 function frame() {
   const { snapshot, owner }: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
@@ -84,6 +85,41 @@ it('retains every native boarding candidate and global row-order tie in the prep
     });
     expect(evaluate(indexed)).toEqual(evaluate(all));
   }
+});
+
+it('proves the same first and rejected-next native candidates with bounded nearby rings and JSON continuation', () => {
+  const input = frame(), regions = regionIndex(input.snapshot.map), terrain = input.snapshot.map.terrain!;
+  const shores = new Map<string, Shore>();
+  for (const shore of regions.shores) shores.set(`${shore.landId}/${shore.seaId}`, shore);
+  let reduced = 0;
+  for (const shore of [...shores.values()].slice(0, 6)) {
+    const person = { ...input.passenger, x: shore.ground.x, y: shore.ground.y, deck: undefined, cabin: undefined };
+    const ship = { ...input.hull.assessment, x: shore.water.x, y: shore.water.y };
+    shareShipProfile(input.hull.assessment, ship);
+    const all = Array.from({ length: terrain.cells.length }, (_, index) => index).flatMap(index => {
+      const value = boardingBerthCandidateAt(input.snapshot.map, person, ship, index);
+      return value ? [{ ...value, index }] : [];
+    }).sort((a, b) => a.score - b.score || a.index - b.index);
+    for (const slice of [1, 7, 128]) {
+      let after: GoalBoardingCandidate | null = null;
+      for (const expected of all.slice(0, 3)) {
+        let cursor = beginGoalBoardingCandidate(), total = 0;
+        for (let n = 0; n < 100000; n++) {
+          const next = strict(() => advanceGoalBoardingCandidate(input.snapshot.map, person, ship, cursor, slice, after));
+          expect(next.work).toBeLessThanOrEqual(slice); total += next.work;
+          cursor = JSON.parse(JSON.stringify(next.cursor));
+          if (next.done) { expect(next.value).toEqual(expected); break; }
+          if (n === 99999) throw Error('native candidate did not finish');
+        }
+        if (total < terrain.cells.length) reduced++;
+        after = expected;
+      }
+    }
+  }
+  expect(reduced).toBeGreaterThan(0);
+  const cursor = beginGoalBoardingCandidate(), before = JSON.stringify(cursor);
+  expect(strict(() => advanceGoalBoardingCandidate(input.snapshot.map, input.passenger, input.hull.assessment, cursor, 0)).work).toBe(0);
+  expect(JSON.stringify(cursor)).toBe(before);
 });
 
 it('does not run native destination lookup at zero allowance or turn absent exact roads into physical infeasibility', () => {

@@ -39,10 +39,33 @@ export function createArrivalPlanningPhysics(input: ArrivalPlanningPhysicsInput)
       : route.status === 'unreachable' ? { ...base, state: 'unmet' }
       : { ...base, state: 'pending', requestId: fact.id, requestedTick: input.snapshot.tick };
   };
+  const projection = (request: Extract<Parameters<GoalNativeGroundReader>[0], { kind: 'project-goal' }>) =>
+    input.geometry<null, { point: Point | null; open: boolean }>({ key: `arrival-ground-v2:${goalValueKey(request)}`,
+      revision: input.geometryRevision, initialState: null, advance: (state, allowance) => {
+        if (allowance < 2) return { state, work: 0, done: false };
+        const terrain = input.snapshot.map.terrain;
+        const point = terrain ? { x: Math.max(0, Math.min(input.snapshot.map.width, request.point.x)),
+          y: Math.max(0, Math.min(input.snapshot.map.height, request.point.y)) } : request.point;
+        const check = terrain ? { x: Math.min(point.x, terrain.cols * terrain.cell - .001),
+          y: Math.min(point.y, terrain.rows * terrain.cell - .001) } : point;
+        return { state, work: 2, done: true, value: {
+          point: isWalkable(input.snapshot.map, check.x, check.y, request.mover) ? { ...point } : null,
+          open: isOpenGround(input.snapshot.map, check.x, check.y, request.mover),
+        } };
+      } });
   const ground: GoalNativeGroundReader = request => {
     if (input.readGroundPoint) return input.readGroundPoint(request);
     const key = `arrival-ground:${goalValueKey(request)}`;
     if (request.kind === 'walk-destination') {
+      // A walker already on its open goal has no journey or partial endpoint
+      // to solve. Reuse the published finite placement check instead of asking
+      // for an entire goal field merely to prove this native zero-length case.
+      if (request.from.x === request.goal.x && request.from.y === request.goal.y) {
+        const checked = projection({ kind: 'project-goal', point: request.goal, mover: 'land' });
+        if (checked.state !== 'met') return checked;
+        return checked.value.open && checked.value.point?.x === request.goal.x && checked.value.point.y === request.goal.y
+          ? { ...checked, value: { ...request.goal } } : pending(key, 'arrival-native-partial-ground-pending');
+      }
       const fromLand = landIdAt(input.snapshot.map, request.from), toLand = landIdAt(input.snapshot.map, request.goal);
       const fact = goalFact({ kind: 'route', mover: 'land', from: { point: request.from, ...(fromLand ? { landId: fromLand } : {}) },
         to: { point: request.goal, ...(toLand ? { landId: toLand } : {}) } });
@@ -55,19 +78,9 @@ export function createArrivalPlanningPhysics(input: ArrivalPlanningPhysicsInput)
         : route.state === 'pending' ? { state: 'pending', requestIds: [route.requestId], reason: route.reason }
         : pending(key, 'arrival-native-partial-ground-pending');
     }
-    const result = input.geometry<null, Point | null>({ key, revision: input.geometryRevision, initialState: null,
-      advance: (state, allowance) => {
-        if (!allowance) return { state, work: 0, done: false };
-        const terrain = input.snapshot.map.terrain;
-        const point = terrain ? { x: Math.max(0, Math.min(input.snapshot.map.width, request.point.x)),
-          y: Math.max(0, Math.min(input.snapshot.map.height, request.point.y)) } : request.point;
-        const check = terrain ? { x: Math.min(point.x, terrain.cols * terrain.cell - .001),
-          y: Math.min(point.y, terrain.rows * terrain.cell - .001) } : point;
-        return { state, work: 1, done: true,
-          value: isWalkable(input.snapshot.map, check.x, check.y, request.mover) ? { ...point } : null };
-      } });
+    const result = projection(request);
     if (result.state !== 'met') return result;
-    return result.value ? { ...result, value: result.value } : pending(key, 'arrival-native-goal-projection-pending');
+    return result.value.point ? { ...result, value: result.value.point } : pending(key, 'arrival-native-goal-projection-pending');
   };
   const boarding = createGoalBoardingGeometry({ ...input, readFact: readRoute, readGroundPoint: ground });
   return {

@@ -97,8 +97,29 @@ it('queues exact native ground checks on the shared allowance and publishes only
     memory = JSON.parse(JSON.stringify(memory)); return { result, work };
   };
   expect(run(0, 0).work.receipt.used).toBe(0);
-  const first = run(1, 1); expect(first.result.state).toBe('pending'); expect(first.work.receipt.used).toBe(1);
-  expect(run(2, 0).result).toMatchObject({ state: 'met', value: point });
+  expect(run(1, 1).work.receipt.used).toBe(0);
+  const first = run(2, 2); expect(first.result.state).toBe('pending'); expect(first.work.receipt.used).toBe(2);
+  expect(run(3, 0).result).toMatchObject({ state: 'met', value: point });
+});
+
+it('proves a native stationary open walking endpoint without creating a whole-map route request', () => {
+  const f = frame(), point = { x: f.unit.x, y: f.unit.y }, before = JSON.stringify(f.snapshot);
+  expect(terrain.isOpenGround(f.snapshot.map, point.x, point.y)).toBe(true);
+  expect(terrain.walkDestination(f.snapshot.map, point, point)).toEqual(point);
+  let memory: GoalGeometryMemory = { version: 1, entries: [] };
+  const landRoute = vi.fn(() => ({ status: 'unknown' as const, reasonCode: 'whole-field-unpublished' }));
+  for (let turn = 0; turn < 3; turn++) {
+    const tick = f.snapshot.tick + 15 * turn, work = new FactWorkQueue(tick, turn === 1 ? 2 : 0);
+    const physics = createArrivalPlanningPhysics({ snapshot: f.snapshot, geometryRevision: 'same', landRoute,
+      geometry: createGoalGeometryReader({ tick, work, memory }) });
+    const result = strict(() => physics.ground({ kind: 'walk-destination', from: point, goal: point }));
+    strict(() => work.flush());
+    expect(result.state).toBe(turn === 2 ? 'met' : 'pending');
+    if (result.state === 'met') expect(result.value).toEqual(point);
+    expect(work.receipt.used).toBe(turn === 1 ? 2 : 0);
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(landRoute).not.toHaveBeenCalled(); expect(JSON.stringify(f.snapshot)).toBe(before);
 });
 
 it('keeps blocked projection, partial walking endpoints and missing launch pending instead of synchronous fallback', () => {
@@ -118,12 +139,12 @@ it('does not turn a non-walkable exact point into a proven impossible native pro
   // A mine is land. Its sea projection requires a real nearest-goal service.
   expect(terrain.isWalkable(f.snapshot.map, point.x, point.y, 'sea')).toBe(false);
   for (const turn of [0, 1]) {
-    const tick = f.snapshot.tick + turn * 15, work = new FactWorkQueue(tick, 1);
+    const tick = f.snapshot.tick + turn * 15, work = new FactWorkQueue(tick, 2);
     const physics = createArrivalPlanningPhysics({ snapshot: f.snapshot, geometryRevision: 'same-ground',
       geometry: createGoalGeometryReader({ tick, work, memory }),
       landRoute: () => ({ status: 'unreachable', reasonCode: 'not-this-component' }) });
     expect(strict(() => physics.ground({ kind: 'project-goal', point, mover: 'sea' })).state).toBe('pending');
-    strict(() => work.flush()); expect(work.receipt.used).toBeLessThanOrEqual(1);
+    strict(() => work.flush()); expect(work.receipt.used).toBeLessThanOrEqual(2);
     memory = JSON.parse(JSON.stringify(memory));
   }
 });
