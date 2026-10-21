@@ -1,7 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import { assessAllocatedForce } from './allocated-force';
 import type { AllocationMethodQuoteInput, AllocationPrecondition, AllocationReason, AllocationUtility,
-  ExecutableMethod, ForceQuotation, MethodAllocationQuote } from './allocation-types';
+  AllocationValuationBasis, ExecutableMethod, ForceQuotation, MethodAllocationQuote } from './allocation-types';
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { bindConquestAssemblyPosts } from './conquest-rallies';
 import { strategicTargetCamp } from './target-camp';
@@ -87,6 +87,14 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
       || forecast!.completionProbability < 0 || forecast!.completionProbability > 1)) add('assembly-current-completion-forecast-unquoted');
     if (['ready', 'gathering'].includes(forecast!.status) && !continuation) add('assembly-continuation-value-unquoted');
   }
+  let valuationBasis: AllocationValuationBasis | undefined;
+  const bounds = forecast?.completionProbabilityBounds;
+  if (forecast?.probabilityBasis === 'proven-lower-bound' && forecast.completionProbability > 0) {
+    if (!bounds || !Number.isFinite(bounds.lower) || !Number.isFinite(bounds.upper) || bounds.lower !== forecast.completionProbability
+      || bounds.lower < 0 || bounds.upper < bounds.lower || bounds.upper > 1) add('assembly-probability-bound-unquoted');
+    else valuationBasis = { kind: 'proven-lower-bound', probabilityLower: bounds.lower, probabilityUpper: bounds.upper,
+      unresolvedProbability: forecast.diagnostics.unresolvedProbability ?? bounds.upper - bounds.lower };
+  }
   const window = continuation?.window ?? valuationWindow(Math.max(0, (forecast?.readyTick ?? snapshot.tick) - snapshot.tick), input.valuation);
   if (continuation && (!continuation.assemblyDelayApplied || input.valuation?.window
     && !sameValuationWindow(input.valuation.window, window))) add('assembly-continuation-window-mismatch');
@@ -106,13 +114,16 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
     values: { assembledForce: force.onStationForce, requiredForce: intent.requiredForce, forecastTick: forecast?.forecastTick ?? null,
       battleProbability: current.status === 'known' && current.unitIds.length === 0 ? 0 : null,
       readyTick: forecast?.readyTick ?? null, completionProbability: forecast?.completionProbability ?? null,
+      probabilityLower: bounds?.lower ?? forecast?.completionProbability ?? null,
+      probabilityUpper: bounds?.upper ?? forecast?.completionProbability ?? null,
+      unresolvedProbability: forecast?.diagnostics.unresolvedProbability ?? 0,
       certainForce: forecast?.certainForce ?? null, supplyDeficit: forecast?.deficit ?? null,
       continuationGold: continuation?.utility.score ?? null, assemblyDelayApplied: continuation?.assemblyDelayApplied ?? false,
       calibrationId: calibration?.calibrationId ?? null, timeMaeTicks: calibration?.timeMaeTicks ?? null,
       timeP90ErrorTicks: calibration?.timeP90ErrorTicks ?? null,
       scenarioCount: forecast?.diagnostics.scenarioCount ?? null, scenarioLimitCount: forecast?.diagnostics.scenarioLimitCount ?? null } };
   if (missing.length || !continuation || !forecast) return { methodId: method.id, status: 'blocked', force, ...(valuation ? { valuation } : {}),
-    utility: null, potentialUtility: null, reason, missingPreconditions: missing, assumptions };
+    ...(valuationBasis ? { valuationBasis } : {}), utility: null, potentialUtility: null, reason, missingPreconditions: missing, assumptions };
   const p = forecast.completionProbability, original = continuation.utility;
   const scaled = (terms: AllocationUtility['benefit'], scale: number) => terms.map(term => ({ ...term, value: term.value * scale,
     ...(term.catalogUnitValues ? { catalogUnitValues: term.catalogUnitValues.map(entry => ({ ...entry, valueGold: entry.valueGold * scale })) } : {}) }));
@@ -123,5 +134,5 @@ export function quoteConquestAssembly(input: AllocationMethodQuoteInput): Method
     persistenceBonus: p * original.persistenceBonus, score: p * original.score - (valuation?.opportunity?.status === 'known' ? valuation.opportunity.gold : 0) };
   assertUnitValueSides(utility);
   return { methodId: method.id, status: 'feasible', force, ...(valuation ? { valuation } : {}), utility, potentialUtility: null,
-    reason, missingPreconditions: [], assumptions };
+    ...(valuationBasis ? { valuationBasis } : {}), reason, missingPreconditions: [], assumptions };
 }
