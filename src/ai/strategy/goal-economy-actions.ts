@@ -90,7 +90,10 @@ export function declareGoalBuilding(input: Readonly<{
   const binding = input.siteBinding;
   if (binding && (binding.buildingKind !== buildingKind || goalFact({ kind: 'build-site', buildingKind, at: binding.at }).id
     !== goalFact({ kind: 'build-site', buildingKind, at }).id)) return null;
-  const foundation = input.foundationId ? context.snapshot.buildings.find(building => building.id === input.foundationId) : undefined;
+  const matchingFoundations = context.snapshot.buildings.filter(building => building.owner === context.owner && building.kind === buildingKind
+    && building.hp > 0 && !building.complete && Math.hypot(building.x - at.point.x, building.y - at.point.y) <= 1e-6);
+  if (!input.foundationId && matchingFoundations.length > 1) return null;
+  const foundation = input.foundationId ? context.snapshot.buildings.find(building => building.id === input.foundationId) : matchingFoundations[0];
   if (input.foundationId && (!foundation || foundation.owner !== context.owner || foundation.kind !== buildingKind
     || foundation.hp <= 0 || foundation.complete || Math.hypot(foundation.x - at.point.x, foundation.y - at.point.y) > 1e-6)) return null;
   const ref = worker.ref;
@@ -155,7 +158,8 @@ export function declareGoalBuilding(input: Readonly<{
     duration, cost: known([{ code: foundation ? 'construction-capital-already-paid' : 'construction-capital', gold: amountGold,
       factIds: foundation ? [foundation.id] : [gold.id] }]),
     successProbability: known(1, [site.id, route.id]),
-    executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref, foundationId: foundation?.id ?? null } },
+    executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref,
+      approach: route.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },
     outputs: ['building'], reasons: [],
   };
 }
