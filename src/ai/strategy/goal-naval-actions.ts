@@ -6,7 +6,7 @@ import { effectiveCombatRating } from '../policy/v6/strength';
 import { forceFor } from '../policy/v7/creep';
 import { assessAllocatedForce } from './allocated-force';
 import { goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
-import type { GoalActionDeclaration, GoalEntityReference, GoalFact,
+import type { GoalActionDeclaration, GoalEntityReference, GoalEstimate, GoalFact,
   GoalFactEffect, GoalParameter, GoalResourceFlow, GoalTransportOption } from './goal-planner-types';
 import type { Target } from './types';
 import { strategyIsOpponent } from './ownership';
@@ -296,12 +296,33 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     ? { landId: option.from.landId!, point: option.departure.ground } : null;
   const waitingMass = waiting.reduce((sum, unit) => sum + bodyMass(unit), 0);
   const loadedMass = dependents.reduce((sum, unit) => sum + bodyMass(unit), 0);
+  const shorePredicate = option.shoreSafe.predicate;
+  if (shorePredicate.kind !== 'shore-safe') return null;
+  // This is a prototype at the observation epoch. The scheduler binds the
+  // marked windows to the real start + duration before allowing execution.
+  // An unquoted duration remains unquoted; current safety is not a forecast.
+  const throughTick = input.snapshot.tick + (option.duration.state === 'met' ? option.duration.value : 0);
+  const shoreSafe = goalFact({ ...shorePredicate, throughTick });
+  const handoffSafe = engineers.length ? goalFact({ kind: 'site-safe', site: option.to, throughTick }) : undefined;
+  const oldHandoff = handoffSafe ? goalFact({ kind: 'site-safe', site: option.to, throughTick: input.byTick }) : undefined;
+  const replacements = new Map([[option.shoreSafe.id, shoreSafe], ...(oldHandoff && handoffSafe ? [[oldHandoff.id, handoffSafe] as const] : [])]);
+  const factIds = (ids: readonly string[]) => [...new Set(ids.map(id => replacements.get(id)?.id ?? id))].sort();
+  const factReferences = <T>(estimate: GoalEstimate<T>): GoalEstimate<T> => estimate.state === 'met'
+    ? { ...estimate, factIds: factIds(estimate.factIds) }
+    : { ...estimate, reason: { ...estimate.reason, factIds: factIds(estimate.reason.factIds) },
+      ...(estimate.state === 'pending' ? { requestIds: factIds(estimate.requestIds) } : {}) };
+  const optionFactIds = factIds(option.factIds);
+  const estimates: GoalNavalEstimates = { duration: factReferences(option.duration),
+    cost: factReferences(input.estimates.cost.state === 'met' ? { ...input.estimates.cost,
+      value: input.estimates.cost.value.map(term => ({ ...term, factIds: factIds(term.factIds) })) } : input.estimates.cost),
+    successProbability: factReferences(input.estimates.successProbability) };
   const preconditions: GoalFact[] = [goalFact({ kind: 'transport-in', seaId: option.seaId,
-    capacity: waitingMass, transport: option.transport, byTick: input.byTick }), ...(option.preconditions ?? []), option.crossing, option.shoreSafe];
+    capacity: waitingMass, transport: option.transport, byTick: input.byTick }),
+    ...(option.preconditions ?? []).map(fact => replacements.get(fact.id) ?? fact), option.crossing, shoreSafe];
   if (loaded.length) preconditions.push(goalFact({ kind: 'cargo-aboard', transport: option.transport, units: loadedRefs }));
   // An unprotected delivery must be safe at its actual shore and at the
   // requested handoff. A remote safe beach does not make a guarded mine safe.
-  if (engineers.length) preconditions.push(goalFact({ kind: 'site-safe', site: option.to, throughTick: input.byTick }));
+  if (handoffSafe) preconditions.push(handoffSafe);
   if (waiting.length) {
     preconditions.push(...poolFacts(waiting, option.from, input.byTick), ...input.pickupRoutes,
       goalFact({ kind: 'transport-at', transport: option.transport,
@@ -329,19 +350,20 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     { resource: { kind: 'entity-control', entity: option.transport }, quantity: 1, from: 'start', until: 'finish' },
     ...(waitingMass > 0 ? [{ resource: { kind: 'transport-capacity' as const, transport: option.transport, seaId: option.seaId },
       quantity: waitingMass, from: 'start' as const, until: 'finish' as const }] : [])];
-  const sourceFacts = [...new Set([...option.factIds, ...preconditions.map(fact => fact.id)])].sort();
+  const declaredPreconditions = preconditions.map(fact => replacements.get(fact.id) ?? fact);
+  const sourceFacts = factIds([...optionFactIds, ...declaredPreconditions.map(fact => fact.id)]);
   const flows = movementFlows(waiting, loadingPost ?? option.from, option.to, rating(input.snapshot, waiting), sourceFacts, 'post', 'pool');
   // Already loaded soldiers have no invented original land pool. Their actual
   // unload is a destination contribution, and frees their occupied payload.
   for (const unitKind of [...new Set(loaded.map(unit => unit.kind))].sort()) flows.push({
     resource: { kind: 'unit-pool', unitKind, at: option.to }, delta: loaded.filter(unit => unit.kind === unitKind).length,
-    at: 'finish', factIds: option.factIds,
+    at: 'finish', factIds: optionFactIds,
   });
   if (loaded.some(unit => unit.kind !== 'worker')) flows.push({ resource: { kind: 'force', at: option.to,
-    metric: 'combat-rating', scope: 'pool' }, delta: rating(input.snapshot, loaded), at: 'finish', factIds: option.factIds });
+    metric: 'combat-rating', scope: 'pool' }, delta: rating(input.snapshot, loaded), at: 'finish', factIds: optionFactIds });
   if (loadedMass > 0) flows.push({ resource: { kind: 'transport-capacity', transport: option.transport, seaId: option.seaId },
-    delta: loadedMass, at: 'finish', factIds: option.factIds });
-  return declaration(workers ? 'transport-worker' : 'transport-force', 'strategy.transport', {
+    delta: loadedMass, at: 'finish', factIds: optionFactIds });
+  const action = declaration(workers ? 'transport-worker' : 'transport-force', 'strategy.transport', {
     optionId: option.id, transport: option.transport, cohort, origin: option.origin,
     ...(loadingPost && waiting.some(unit => unit.kind !== 'worker') ? { loadingPost } : {}),
     from: option.from, at: option.to, departure: { water: option.departure.water, heading: option.departure.heading,
@@ -349,7 +371,9 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     loadedUnitIds: loaded.map(unit => unit.id), payloadMass: waitingMass + loadedMass,
     dependentUnitIds: dependents.map(unit => unit.id).sort(),
     byTick: input.byTick, berthTolerance: input.berthTolerance,
-  }, { ...input, estimates: { ...input.estimates, duration: option.duration } }, preconditions, effects, resources, flows);
+  }, { ...input, estimates }, declaredPreconditions, effects, resources, flows);
+  return { ...action, preconditionWindows: [shoreSafe, ...(handoffSafe ? [handoffSafe] : [])]
+    .map(fact => ({ factId: fact.id, through: 'finish' as const })) };
 }
 
 export function declareGoalForceTransport(input: GoalTransportInput): GoalActionDeclaration | null {
