@@ -175,14 +175,15 @@ describe('grounded naval world-effect declarations', () => {
     expect(action.preconditions.find(fact => fact.predicate.kind === 'cargo-aboard')?.predicate).toEqual({
       kind: 'cargo-aboard', transport, units: [{ kind: 'existing', entityId: soldier.id }],
     });
-    const destination = action.effects.find(effect => effect.fact.predicate.kind === 'force-at')!.fact.predicate;
+    const destination = action.effects.find(effect => effect.fact.predicate.kind === 'force-available')!.fact.predicate;
     expect(destination).toMatchObject({ cohort: [{ kind: 'existing', entityId: soldier.id }],
       minimum: effectiveCombatRating(snapshot, soldier) });
     expect(action.demands.filter(demand => demand.resource.kind === 'entity-control').map(demand => demand.resource)).toContainEqual({
       kind: 'entity-control', entity: { kind: 'existing', entityId: worker.id },
     });
     expect(action.flows.some(flow => flow.delta < 0 && flow.resource.kind === 'unit-pool')).toBe(false);
-    expect(action.flows.find(flow => flow.resource.kind === 'transport-capacity')?.delta).toBe(bodyMass(soldier));
+    expect(action.flows.find(flow => flow.resource.kind === 'transport-capacity')?.delta).toBe(loaded.reduce((sum, unit) => sum + bodyMass(unit), 0));
+    expect(action.effects.some(effect => effect.fact.predicate.kind === 'force-at')).toBe(false);
     expect(declareGoalWorkerTransport({ ...args, unitIds: [worker.id] })!.effects.some(effect =>
       effect.fact.predicate.kind === 'worker-at' && effect.fact.predicate.worker?.kind === 'existing')).toBe(true);
     const wrong = { ...option, transport: { kind: 'existing' as const, entityId: 'another-hull' } };
@@ -215,5 +216,48 @@ describe('grounded naval world-effect declarations', () => {
       at: { seaId: 'sea:1', point: from.point }, tolerance: hull.radius,
     });
     expect(action.flows.filter(flow => flow.resource.kind === 'unit-pool').map(flow => flow.delta)).toEqual([-1, 1]);
+  });
+
+  it('keeps future troops symbolic through assembly, camp checks and transport without deduplicating identical prototypes', () => {
+    const input = frame(), prototype = { ...input.snapshot.units.find(unit => unit.id === 'fighter-a')!, id: 'must-not-be-a-world-identity' };
+    const cohort = [0, 1].map(index => ({ reference: { kind: 'output' as const, actionId: 'train-pair', output: `unit-${index}` }, assessment: prototype }));
+    const base = { snapshot: input.snapshot, owner: input.owner, byTick: input.byTick, estimates: input.estimates,
+      from: input.from, at: input.at, campId: input.campId, cohort };
+    const safePost = goalFact({ kind: 'site-safe', site: input.at, throughTick: 2000 });
+    const assembled = strict(() => declareGoalAssembly({ ...base, safePost, routes: [input.route], campId: input.campId }))!;
+    const refs = cohort.map(member => member.reference);
+    expect(assembled.demands.map(demand => demand.resource)).toEqual(refs.map(entity => ({ kind: 'entity-control', entity })));
+    const force = assembled.effects.find(effect => effect.fact.predicate.kind === 'force-at'
+      && effect.fact.predicate.metric === 'combat-rating')!.fact.predicate;
+    expect(force).toMatchObject({ cohort: refs, minimum: effectiveCombatRating(input.snapshot, prototype) * 2 });
+    expect(declareGoalCampClearing({ ...base, routes: [] })!.preconditions.find(fact => fact.predicate.kind === 'force-at')?.predicate)
+      .toMatchObject({ cohort: refs, metric: 'camp-force' });
+    const hull = { kind: 'output' as const, actionId: 'train-boat', output: 'unit-0' };
+    const prerequisite = goalFact({ kind: 'production', unitKind: 'transport', byTick: input.byTick });
+    const option: GoalTransportOption = { id: 'future-cohort-and-hull', transport: hull, seaId: 'sea:1', from: input.from,
+      to: { ...input.at, landId: 'land:2' }, capacity: 1000, origin: 'land', loadedUnitIds: [],
+      departure: { water: input.from.point, ground: input.from.point, heading: null },
+      landing: { water: input.at.point, ground: input.at.point, heading: null }, approach: input.route, crossing: input.route,
+      shoreSafe: safePost, duration: known(300), factIds: ['future-shape'], preconditions: [prerequisite] };
+    const carried = strict(() => declareGoalForceTransport({ ...base, option, berthTolerance: 36, pickupRoutes: [] }))!;
+    expect(carried.preconditions).toContainEqual(prerequisite);
+    expect(carried.effects.find(effect => effect.fact.predicate.kind === 'force-available')?.fact.predicate).toMatchObject({ cohort: refs });
+    expect(carried.demands).toContainEqual({ resource: { kind: 'entity-control', entity: hull }, quantity: 1, from: 'start', until: 'finish' });
+    expect(carried.executor.parameters.cohort).toEqual(refs);
+    for (const declaration of [assembled, carried, declareGoalCampClearing({ ...base, routes: [] })!]) {
+      expect(JSON.stringify(declaration)).not.toContain(prototype.id);
+      expect(JSON.stringify(declaration)).not.toContain('assessment:');
+    }
+    expect(JSON.parse(JSON.stringify(carried))).toEqual(carried);
+    const engineer = { reference: { kind: 'output' as const, actionId: 'train-engineer', output: 'unit-0' },
+      assessment: { ...input.snapshot.units.find(unit => unit.id === 'worker')!, id: prototype.id } };
+    const escorted = declareGoalForceTransport({ ...base, cohort: [cohort[0]!, engineer], option,
+      berthTolerance: 36, pickupRoutes: [] })!;
+    expect(escorted.effects.find(effect => effect.fact.predicate.kind === 'force-available')?.fact.predicate)
+      .toMatchObject({ cohort: [cohort[0]!.reference], minimum: effectiveCombatRating(input.snapshot, prototype) });
+    expect(escorted.effects.find(effect => effect.fact.predicate.kind === 'worker-at')?.fact.predicate)
+      .toMatchObject({ worker: engineer.reference });
+    expect(escorted.demands.find(demand => demand.resource.kind === 'transport-capacity')?.quantity)
+      .toBe(bodyMass(prototype) + bodyMass(engineer.assessment));
   });
 });
