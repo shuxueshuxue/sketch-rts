@@ -6,7 +6,7 @@ import { shipProfile } from '../../shared/ship-geometry';
 import { isTransportKind } from '../../shared/transport-role';
 import type { BuildingKind, TrainableUnitKind } from '../../shared/types';
 import { combatRating } from '../policy/v6/strength';
-import { goalFact } from './goal-facts';
+import { goalFact, goalValueKey } from './goal-facts';
 import type { AllocationReason } from './allocation-types';
 import type { GoalActionDeclaration, GoalBuildSite, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
@@ -51,7 +51,7 @@ export function declareGoalTraining(input: Readonly<{
     capacity: count * hullCapacity, byTick }) : null;
   const workerEffects = unitKind === 'worker' && at.landId ? [goalFact({ kind: 'worker-at', at, count, byTick })] : [];
   return {
-    id, kind: 'train', preconditions: unique([production, exit, gold, room, cap]),
+    id, kind: 'train', precision: context.precision ?? 'exact', preconditions: unique([production, exit, gold, room, cap]),
     effects: [{ fact: effect, operation: 'establish', at: 'finish' }, ...(transportEffect ? [{
       fact: transportEffect, operation: 'establish' as const, at: 'finish' as const }] : []),
       ...workerEffects.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const }))],
@@ -79,11 +79,13 @@ export function declareGoalTraining(input: Readonly<{
  * is only a same-land pool: the separate, same-think route pays the walk. */
 export function declareGoalBuilding(input: Readonly<{
   buildingKind: BuildingKind; at: Target; byTick: number;
-  worker: Readonly<{ ref: GoalEntityReference; from: Target }>;
+  worker: Readonly<{ ref: GoalEntityReference; from?: Target }>;
   foundationId?: string; additionalPreconditions?: readonly GoalFact[]; siteBinding?: GoalBuildSite;
 }>, context: GoalPlanningContext): GoalActionDeclaration | null {
   const { buildingKind, at, byTick, worker } = input, race = context.snapshot.players[context.owner]?.race;
-  if (!race || !at.landId || !worker.from.landId || worker.from.landId !== at.landId || !Number.isFinite(byTick)
+  const pooled = worker.ref.kind === 'pool-member' && worker.ref.unitKind === 'worker' && worker.ref.at.landId === at.landId;
+  if (!race || !at.landId || worker.ref.kind === 'pool-member' && !pooled
+    || (!pooled && !worker.from?.landId) || worker.from && worker.from.landId !== at.landId || !Number.isFinite(byTick)
     || !RACE_DEFS[race].buildableBuildings.includes(buildingKind)) return null;
   const binding = input.siteBinding;
   if (binding && (binding.buildingKind !== buildingKind || goalFact({ kind: 'build-site', buildingKind, at: binding.at }).id
@@ -104,15 +106,18 @@ export function declareGoalBuilding(input: Readonly<{
   const rules = BUILDING_DEFS[buildingKind], amountGold = foundation ? 0 : rules.cost;
   const workTicks = foundation ? Math.max(0, Math.ceil(foundation.buildTime - foundation.buildProgress)) : rules.buildTime;
   const site = goalFact({ kind: 'build-site', buildingKind, at });
-  const workers = goalFact({ kind: 'worker-at', at, count: 1, byTick, worker: worker.ref });
-  const route = binding?.route ?? goalFact({ kind: 'route', mover: 'land', from: worker.from, to: at, actor: worker.ref });
+  const workers = goalFact({ kind: 'worker-at', at, count: 1, byTick, ...(!pooled ? { worker: worker.ref } : {}) });
+  const route = binding ? binding.route : worker.from ? goalFact({ kind: 'route', mover: 'land', from: worker.from, to: at, actor: worker.ref }) : null;
   const gold = goalFact({ kind: 'gold', minimum: amountGold, byTick });
-  const routeFact = binding ? null : context.readFact(route);
+  const routeFact = binding || !route || context.precision === 'coarse' ? null : context.readFact(route);
   let duration: GoalEstimate<number>;
-  if (binding) duration = binding.walkTicks.state === 'met'
+  if (context.precision === 'coarse') duration = known(workTicks, [workers.id]);
+  else if (binding) duration = binding.walkTicks.state === 'met'
     ? Number.isFinite(binding.walkTicks.value) && binding.walkTicks.value >= 0
       ? known(binding.walkTicks.value + workTicks, [...binding.factIds, ...binding.walkTicks.factIds])
-      : failed('construction-route-time-unavailable', [route.id]) : binding.walkTicks;
+      : failed('construction-route-time-unavailable', route ? [route.id] : [workers.id]) : binding.walkTicks;
+  else if (!route) duration = { state: 'pending', requestIds: [`worker-pool-route:${workers.id}`],
+    reason: reason('construction-worker-pool-route-pending', [workers.id]) };
   else if (routeFact!.state === 'pending') duration = { state: 'pending', requestIds: [routeFact!.requestId], reason: routeFact!.reason };
   else if (routeFact!.state === 'unmet') duration = { state: 'unmet', reason: routeFact!.reason };
   else if (routeFact!.route?.ticks === null || routeFact!.route?.ticks === undefined || !Number.isFinite(routeFact!.route.ticks)
@@ -131,8 +136,8 @@ export function declareGoalBuilding(input: Readonly<{
   const safety = unique([goalFact({ kind: 'site-safe', site: at, throughTick: byTick }),
     ...(buildingKind === 'townHall' && mine && binding
       ? [goalFact({ kind: 'site-safe', site: binding.logicalTarget, throughTick: byTick })] : [])]);
-  const preconditions = unique([workers, route, ...(foundation ? [] : [site, gold]), ...safety, ...additionalPreconditions]);
-  const id = `action:build:${JSON.stringify([baseEffect.id, route.id,
+  const preconditions = unique([workers, ...(route ? [route] : []), ...(foundation ? [] : [site, gold]), ...safety, ...additionalPreconditions]);
+  const id = `action:build:${JSON.stringify([baseEffect.id, route?.id ?? goalValueKey(worker.ref),
     effects.map(fact => fact.id), preconditions.map(fact => fact.id)])}`;
   const building: GoalEntityReference = foundation ? { kind: 'existing', entityId: foundation.id }
     : { kind: 'output', actionId: id, output: 'building' };
@@ -143,7 +148,7 @@ export function declareGoalBuilding(input: Readonly<{
     .map(unitKind => goalFact({ kind: 'production', unitKind, producer: building, at, byTick }));
   const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building }), ...production]);
   return {
-    id, kind: 'build', preconditions,
+    id, kind: 'build', precision: context.precision ?? 'exact', preconditions,
     effects: [
       ...(foundation ? [] : [{ fact: site, operation: 'invalidate' as const, at: 'start' as const }]),
       ...completed.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const })),
@@ -151,6 +156,10 @@ export function declareGoalBuilding(input: Readonly<{
     demands: [{ resource: { kind: 'entity-control', entity: worker.ref }, quantity: 1, from: 'start', until: 'finish' }],
     flows: [
       { resource: { kind: 'gold' }, delta: amountGold ? -amountGold : 0, at: 'start', factIds: foundation ? [foundation.id] : [gold.id] },
+      ...(pooled ? [
+        { resource: { kind: 'unit-pool' as const, unitKind: 'worker' as const, at }, delta: -1, at: 'start' as const, factIds: [workers.id] },
+        { resource: { kind: 'unit-pool' as const, unitKind: 'worker' as const, at }, delta: 1, at: 'finish' as const, factIds: [workers.id] },
+      ] : []),
       ...(rules.supplyProvided ? [
         { resource: { kind: 'supply-cap' as const }, delta: rules.supplyProvided, at: 'finish' as const, factIds: [baseEffect.id] },
         { resource: { kind: 'population-room' as const }, delta: rules.supplyProvided, at: 'finish' as const, factIds: [baseEffect.id] },
@@ -162,10 +171,11 @@ export function declareGoalBuilding(input: Readonly<{
     ],
     duration, cost: known([{ code: foundation ? 'construction-capital-already-paid' : 'construction-capital', gold: amountGold,
       factIds: foundation ? [foundation.id] : [gold.id] }]),
-    successProbability: known(1, [site.id, route.id]),
+    successProbability: known(1, [site.id, ...(route ? [route.id] : [])]),
     executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref,
-      approach: route.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },
-    outputs: foundation ? [] : ['building'], reasons: [],
+      approach: route?.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },
+    outputs: foundation ? [] : ['building'], reasons: context.precision === 'coarse'
+      ? [reason('coarse-construction-walk-lower-bound', [workers.id])] : [],
   };
 }
 
@@ -200,7 +210,7 @@ export function declareGoalWaitIncome(effect: GoalFact, context: GoalPlanningCon
     ? { state: 'pending' as const, requestIds: [observed.requestId], reason: observed.reason }
     : known(Math.ceil(segments.at(-1)!.throughTick - context.tick), forecast.factIds);
   return {
-    id: `action:wait-income:${creditedFact.id}`, kind: 'wait-income', preconditions: [],
+    id: `action:wait-income:${creditedFact.id}`, kind: 'wait-income', precision: context.precision ?? 'exact', preconditions: [],
     effects: [{ fact: creditedFact, operation: 'establish', at: 'finish' }], demands: [],
     flows: [{ resource: { kind: 'gold' }, delta: credited, at: 'finish',
       factIds: forecast.factIds, source: { ...forecast.source, segments } }], duration,

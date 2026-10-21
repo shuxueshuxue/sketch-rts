@@ -20,6 +20,7 @@ import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import { readGoalGuardFact } from './goal-guard-facts';
+import { goalPoolMemberCandidates } from './goal-pool-members';
 import type { GoalGeometryMemory, GoalGeometryReader } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
@@ -73,7 +74,7 @@ export type GoalPlannerNativeFrame = Readonly<{
   decision: StrategyDecision; project?: () => StrategyPlanTrace;
   executionFacts: (authority: StrategyAllocationMemory) => GoalPlanningContext['readFact'];
   objectives: readonly DecisionFacts<Objective>[]; landRoute: AllocationLandRouteReader;
-  resolveReference: (reference: GoalEntityReference) => Extract<GoalEntityReference, { kind: 'existing' }> | null;
+  resolveReference: import('./goal-planner-types').GoalEntityResolver;
   requote: (request: Pick<AllocationMethodQuoteInput, 'unitIds' | 'valuation'>, plan: GoalPlan) => GoalPlanRequotation;
 }>;
 
@@ -269,8 +270,13 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
           return makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedAllocationGold(authority)).readFact;
         },
-        resolveReference(reference) {
+        resolveReference(reference, selection) {
           assertActive();
+          if (reference.kind === 'pool-member') {
+            const unit = goalPoolMemberCandidates({ snapshot, owner, reference, allowedUnitIds: input.allowedUnitIds,
+              interruptedUnitIds: input.interruptedUnitIds, excludedUnitIds: selection?.excludedUnitIds })[0];
+            return unit ? { kind: 'existing', entityId: unit.id } : null;
+          }
           if (reference.kind === 'existing') return [...snapshot.units, ...snapshot.buildings].some(entity =>
             entity.id === reference.entityId && entity.owner === owner && entity.hp > 0) ? reference : null;
           if (reference.kind !== 'output') return null;
