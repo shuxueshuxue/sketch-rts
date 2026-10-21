@@ -1,7 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import { goalFact } from './goal-facts';
 import { strategyIsOpponent } from './ownership';
-import type { GoalActionCost, GoalActionDeclaration, GoalActionKind, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
+import type { GoalActionCost, GoalActionDeclaration, GoalActionKind, GoalActionProvider, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
 
 /** Physical estimates and routes come from the shared fact/assessment ports.
@@ -72,3 +72,23 @@ export function declareGoalEngageUnits(input: GoalLandCombatGrounding & Readonly
   return declare(input, context, 'engage-units', goalFact({ kind: 'harassment-ended', site: input.target, throughTick: input.throughTick }),
     [goalFact({ kind: 'interception-capability', site: input.target, throughTick: input.throughTick, cohort: input.cohort })]);
 }
+
+/** Candidate membership, battle estimates and counter capability are chosen
+ * by the one shared source. This provider only declares the matching atomic
+ * world effect, preserving every selected cohort and pending assessment. */
+export const goalLandActionProvider: GoalActionProvider = {
+  id: 'goal:land-combat',
+  actionsFor(effect, context) {
+    const predicate = effect.predicate;
+    if (predicate.kind !== 'enemy-site-destroyed' && predicate.kind !== 'route-controlled' && predicate.kind !== 'harassment-ended') return [];
+    const candidates = context.grounding?.combatOptions?.(effect);
+    if (!candidates || candidates.state !== 'met') return [];
+    const actions = candidates.candidates.map(option => predicate.kind === 'enemy-site-destroyed'
+      ? declareGoalDestroyTarget(option, context)
+      : predicate.kind === 'route-controlled' ? declareGoalHoldPosition({ ...option, throughTick: predicate.throughTick }, context)
+      : declareGoalEngageUnits({ ...option, throughTick: predicate.throughTick }, context));
+    return [...new Map(actions.filter((action): action is GoalActionDeclaration => !!action
+      && action.effects.some(result => result.fact.id === effect.id)).map(action => [action.id, action])).values()]
+      .sort((a, b) => order(a.id, b.id));
+  },
+};

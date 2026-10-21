@@ -127,8 +127,12 @@ export function declareGoalBuilding(input: Readonly<{
     ...(buildingKind === 'shipyard' && (binding?.logicalTarget.seaId ?? at.seaId)
       ? [goalFact({ kind: 'shipyard-for', seaId: (binding?.logicalTarget.seaId ?? at.seaId)! })] : [])]);
   const additionalPreconditions = unique([...(input.additionalPreconditions ?? []), ...(binding?.preconditions ?? [])]);
+  const safety = unique([goalFact({ kind: 'site-safe', site: at, throughTick: byTick }),
+    ...(buildingKind === 'townHall' && mine && binding
+      ? [goalFact({ kind: 'site-safe', site: binding.logicalTarget, throughTick: byTick })] : [])]);
+  const preconditions = unique([workers, route, ...(foundation ? [] : [site, gold]), ...safety, ...additionalPreconditions]);
   const id = `action:build:${JSON.stringify([baseEffect.id, route.id,
-    effects.map(fact => fact.id), additionalPreconditions.map(fact => fact.id)])}`;
+    effects.map(fact => fact.id), preconditions.map(fact => fact.id)])}`;
   const building: GoalEntityReference = foundation ? { kind: 'existing', entityId: foundation.id }
     : { kind: 'output', actionId: id, output: 'building' };
   // A native new producer completes with an empty training lane. Declare the
@@ -138,7 +142,7 @@ export function declareGoalBuilding(input: Readonly<{
     .map(unitKind => goalFact({ kind: 'production', unitKind, producer: building, at, byTick }));
   const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building }), ...production]);
   return {
-    id, kind: 'build', preconditions: unique([workers, route, ...(foundation ? [] : [site, gold]), ...additionalPreconditions]),
+    id, kind: 'build', preconditions,
     effects: [
       ...(foundation ? [] : [{ fact: site, operation: 'invalidate' as const, at: 'start' as const }]),
       ...completed.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const })),

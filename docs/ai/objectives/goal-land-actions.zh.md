@@ -20,6 +20,8 @@
 
 建造的 start 金币负流表示分配后的可用现金预留；原生命令在工人实际破土时付款。它没有把付款提前写进游戏世界。
 
+几何净空不能证明工人施工安全。建造独立要求工地点的 `site-safe` 覆盖其期限；矿厅另保留逻辑矿点的安全前置。营地死亡、回防或清理威胁怎样使该世界事实成立，由共享事实投影和原子 achiever 处理，建造声明不安排一条清营配方。
+
 ## 经济候选 grounding
 
 `createGoalEconomicGrounding(context, ports)` 只实现共同 `buildSites / productionOptions`，使用中心注入的 `GoalGeometryReader`、几何 revision 和已准备的 mover-region 索引视图。它不建立 Situation、Arrival query、FactWorkQueue 或另一份预算。
@@ -29,6 +31,10 @@
 每个建址保留原生精确建筑中心与工人的陆地 approach。合法船厂中心可以在水中；共享 route 的终点是 footprint 内可步行的陆地点，`goal.build` 执行参数显式保留它，不能把原建筑中心投到另一点。真实工人的 route/ETA 来自同次事实端口。还没有真实工人的 binding 保留 pending，不用逻辑锚点伪算当前步行时间。
 
 已有未完工建筑按实际身份进入候选，建造声明读取原进度并免除第二笔本金；完成后有空训练通道才建立 production 能力。现有生产者候选依据本种族原生生产边和实际 mover-region，未完工或队列占用者不伪造释放时间。尚未公布的可选新工地放在共同 `deferred` 字段，已有可用生产者仍可比较。
+
+`goalEconomyActionProvider.actionsFor` 将一个请求效果映射到单个原子动作的候选。训练同时提供单个成员与所需批量的替代，数量缺口可由不同生产者的正流合成。人口容量枚举原生可建、确实提供容量的建筑；不会把一座农场的效果写成任意高的人口目标。缺少生产者时，训练保留 `building-complete` 前置；建造提供绑定在同一 output 上的 `production` 效果，由规划器反推，动作 provider 不调用另一个 provider 来编排链。
+
+精确现存 cohort 不因训练额外单位就变强；这种绑定不会生成训练 achiever。`camp-force` 的非线性充分性仍由共享整组评估决定，provider 只枚举 native combatRating 的正贡献，不把营力除以单兵评分来承诺人数。此 provider 还未注册到默认命令入口。
 
 ## 陆地动作的共同边界
 
@@ -40,6 +46,8 @@
 
 速度、射程、火力及 camp-force 都由共享事实/整组评估给出。全池里另有反制兵，不代表被分配的弱兵组具备反制能力；声明前置须绑定实际 cohort。缺反制能力时由生产候选回归到同一训练动作，动作侧不插入特定兵种的固定步骤。
 
+`goalLandActionProvider` 只消费统一 `grounding.combatOptions(effect)`。端口缺失或候选 pending 时不私选军、不另跑战斗；可用候选声明精确 cohort 的能力前置，符号成员仍保留 output/binding，路线和战斗时间 pending 继续透传。测试使用明确的结构化评估端口验证这一绑定，没有将它当作完整战斗预测或题库结果。
+
 ## 验证范围
 
-构造器和 grounding 测试包括真实原生训练付款/出生、真实农场完成后解锁骑士、同一共享 6144/Arrival 的水中船厂中心建址及公开 move→build 完工，以及 route/income 结构端口、JSON 续行、零预算和无账外原生导航调用。它们验证声明与领域规则的对应，不替代公开题的完整规划和执行检查。自动 actionsFor、规划器分配接线及执行绑定需要在同一共享事实源上继续验收。
+构造器和 grounding 测试包括真实原生训练付款/出生、真实农场完成后解锁骑士、同一共享 6144/Arrival 的水中船厂中心建址及公开 move→build 完工，以及 route/income 结构端口、JSON 续行、零预算和无账外原生导航调用。两份 actionsFor 的测试验证单原子候选、生产者 output 连接、数量部分贡献和精确战斗组绑定。它们不替代公开题的完整规划和执行检查；规划器分配接线及执行绑定仍需在同一共享事实源上继续验收。
