@@ -11,7 +11,7 @@ import { goalCampId, goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
 import { goalNavalActionProvider } from './goal-naval-provider';
 import type { GoalCandidates, GoalCombatOption, GoalPlanningContext } from './goal-planner-types';
-import { landIdAt, regionIndex } from './regions';
+import { landIdAt, regionIndex, seaIdAt } from './regions';
 import { evaluateSituation } from './situation';
 
 const strict = <T>(run: () => T) => withNavigationAudit(event => {
@@ -24,6 +24,8 @@ function fixture(injured = false) {
     .unit('us', 'footman', 820, 1020, { id: 'fighter-b', ...(injured ? { hp: 10 } : {}) })
     .unit('us', 'footman', 840, 1000, { id: 'fighter-c', ...(injured ? { hp: 10 } : {}) })
     .unit('us', 'footman', 820, 980, { id: 'fighter-d', ...(injured ? { hp: 10 } : {}) })
+    .worker('us', 700, 1000, { id: 'worker' })
+    .unit('us', 'transport', 1800, 1000, { id: 'hull' })
     .unit('neutral', 'murlocPeon', 3000, 1000, { id: 'guard-a' })
     .unit('neutral', 'murlocPeon', 3070, 1000, { id: 'guard-b' }).build().createGame();
   game.map.terrain = { cell: 32, cols: 128, rows: 96,
@@ -32,7 +34,7 @@ function fixture(injured = false) {
   const situation = evaluateSituation(snapshot, 'us', createAiPolicyMemory());
   const camp = neutralCampExposure(snapshot).camps[0]!, campId = goalCampId(camp.memberIds);
   const effect = goalFact({ kind: 'camp-cleared', campId });
-  const cohort = snapshot.units.filter(unit => unit.owner === 'us').map(assessment => ({
+  const cohort = snapshot.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman').map(assessment => ({
     reference: { kind: 'existing' as const, entityId: assessment.id }, assessment }));
   const input = { snapshot, situation, effect, campId, cohort, byTick: 1800 };
   const unavailable = vi.fn((): never => { throw Error('coarse discovery requested exact work'); });
@@ -120,5 +122,40 @@ describe('conditional camp quotation before exact transport refinement', () => {
     expect(answer.candidates.every(option => option.cohort.length === 1 && option.cohort[0]!.kind === 'existing'
       && option.cohort[0]!.entityId === f.cohort[0]!.assessment.id)).toBe(true);
     expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  it('discovers the other ship-one location atoms using cached regions while preserving optimistic-only declarations', () => {
+    const f = fixture(), before = JSON.stringify(f.snapshot), forbidden = f.unavailable;
+    const target = { landId: landIdAt(f.snapshot.map, f.snapshot.units.find(unit => unit.id === 'guard-a')!)!, point: { x: 3035, y: 1000 } };
+    const refs = f.cohort.map(member => member.reference), worker = { kind: 'existing' as const, entityId: 'worker' };
+    const hull = f.snapshot.units.find(unit => unit.id === 'hull')!, transport = { kind: 'existing' as const, entityId: hull.id };
+    const factory = createGoalNavalCombatGrounding(f.context, { arrival: forbidden, landRoute: forbidden,
+      readGroundPoint: forbidden, movementRisk: forbidden, resolveCohort: forbidden });
+    const resolve: GoalNavalCombatGroundingPorts['resolveCohort'] = refs => ({ state: 'met', factIds: [], candidates: refs.flatMap(reference => {
+      const actor = reference.kind === 'existing' && f.snapshot.units.find(unit => unit.id === reference.entityId);
+      return actor ? [{ reference, assessment: actor }] : [];
+    }) });
+    const context: GoalPlanningContext = { ...f.context, grounding: { ...f.context.grounding!, ...factory, resolveCohort: resolve } };
+    const force = goalFact({ kind: 'force-at', at: target, cohort: refs, metric: 'camp-force', campId: f.campId, minimum: 1, byTick: 1800 });
+    const pool = goalFact({ kind: 'force-available', at: target, cohort: refs, metric: 'combat-rating', minimum: 1, byTick: 1800 });
+    const engineer = goalFact({ kind: 'worker-at', at: target, worker, count: 1, byTick: 1800 });
+    const garrison = goalFact({ kind: 'garrison-ready', mineId: 'prospective-mine', at: { ...target, entityId: 'prospective-mine' } });
+    const atHull = goalFact({ kind: 'transport-at', transport, at: { seaId: seaIdAt(f.snapshot.map, hull)!, point: { x: 1800, y: 1500 } }, tolerance: 50, byTick: 1800 });
+    for (const effect of [force, pool, engineer, garrison, atHull]) {
+      const answer = strict(() => factory.combatOptions!(effect));
+      expect(answer.state).toBe('met'); if (answer.state !== 'met') throw Error(JSON.stringify(answer));
+      expect(answer.candidates.length).toBeGreaterThan(0);
+      expect(answer.candidates.every(option => option.duration.state === 'met' && option.cost.state === 'met'
+        && option.successProbability.state === 'met')).toBe(true);
+      if (effect === force || effect === garrison || effect === atHull) {
+        const actions = strict(() => goalNavalActionProvider.actionsFor(effect, context));
+        expect(actions.length).toBeGreaterThan(0);
+        expect(actions.every(action => action.precision === 'coarse')).toBe(true);
+        if (effect === garrison) expect(actions.every(action => action.kind === 'hold-position'
+          && action.preconditions.some(fact => fact.predicate.kind === 'hall-complete')
+          && action.preconditions.some(fact => fact.predicate.kind === 'site-safe'))).toBe(true);
+      }
+    }
+    expect(forbidden).not.toHaveBeenCalled(); expect(JSON.stringify(f.snapshot)).toBe(before);
   });
 });

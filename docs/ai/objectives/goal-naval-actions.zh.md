@@ -101,3 +101,10 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 不冒充清营专模。后续专模可通过同一个 `campBattleModel` 注入口替换，
 粗/精确两档均消费期望金币损失、独立胜率与战斗时长，不附加损失余量。
 精确档仍使用已公布行军风险和路线；未知敌军卸载归属保留 pending。
+
+题 1 搜索所需的 garrison-ready、force-at/force-available、worker-at、
+transport-at 也有同档粗估分支。它们只用已缓存成员、region 与直接距离；
+零行军损失和 P1 是标注为乐观的搜索估计，不是无暴露或保护能力证明。
+远程 post 显式依赖同一组到目标陆块的兵池，garrison 仍要求真实厅和
+安全窗，运输仍消费中心注入的粗 transportOptions。所有返回的声明
+（包括 transport 循环内的动作）统一标记 coarse，不能直接执行。

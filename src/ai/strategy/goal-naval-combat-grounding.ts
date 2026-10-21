@@ -3,6 +3,7 @@ import { isOpenGround } from '../../shared/terrain';
 import type { Unit } from '../../shared/types';
 import { shipProfile } from '../../shared/ship-geometry';
 import { bodyMass } from '../../shared/physical-body';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import { MINING_RALLY_RADIUS } from '../bootstrap_1/mining-rally';
 import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
@@ -237,6 +238,32 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       successProbability: unavailable ?? known(risk.state === 'met' ? risk.value.survivalProbability : 0, ids),
       preconditions: request.routes.map(row => row.fact), factIds: ids };
   }
+  function coarseLocation(effect: GoalFact, group: readonly GoalCohortMember[], from: Target, target: Target,
+    throughTick: number, preconditions: readonly GoalFact[] = []): GoalCombatOption {
+    const refs = group.map(member => member.reference), p = effect.predicate;
+    const crossing = from.landId !== target.landId || !!from.seaId;
+    // A remote post is conditional on the same exact group reaching its pool.
+    // This optimistic search origin is not a published physical landing.
+    const conditionalPost = crossing && (p.kind === 'force-at' || p.kind === 'garrison-ready');
+    const origin = conditionalPost ? target : from;
+    const pool = conditionalPost ? [goalFact({ kind: 'force-available', at: target,
+      metric: 'combat-rating', minimum: 0, cohort: refs, byTick: throughTick })] : [];
+    const routes = p.kind === 'garrison-ready' || crossing && !conditionalPost ? [] : group.map(member => goalFact({ kind: 'route', mover: 'land',
+      actor: member.reference, from: { ...(origin.landId ? { landId: origin.landId } : {}),
+        point: conditionalPost ? target.point : { x: member.assessment.x, y: member.assessment.y } }, to: target }));
+    const clocks = conditionalPost || crossing ? [0] : group.map(member => Math.ceil(gap(member.assessment, target.point)
+      / Math.max(1, member.assessment.speed) * SIM_TICKS_PER_SECOND));
+    const facts = sorted([effect.id, ...preconditions.map(fact => fact.id), ...pool.map(fact => fact.id), ...routes.map(fact => fact.id)]);
+    const safety = p.kind === 'garrison-ready' ? [goalFact({ kind: 'site-safe', site: target, throughTick })] : [];
+    return { id: `coarse-location:${goalValueKey([effect.id, refs, origin, target])}`, target, from: origin, cohort: refs,
+      requiredForce: p.kind === 'garrison-ready'
+        ? group.reduce((sum, member) => sum + effectiveCombatRating(context.snapshot, member.assessment), 0) : 0,
+      byTick: throughTick, duration: known(p.kind === 'garrison-ready' ? Math.max(0, throughTick - context.tick) : Math.max(...clocks), facts),
+      // Search bounds only. Exact refinement must replace both estimates;
+      // these values are never a no-exposure or protection world proof.
+      cost: known([], facts), successProbability: known(1, facts),
+      preconditions: [...preconditions, ...pool, ...safety, ...routes], factIds: facts };
+  }
   function defense(effect: GoalFact, group: readonly GoalCohortMember[], from: Target, site: Target, throughTick: number): GoalCandidates<GoalCombatOption> {
     const threat = context.situation.lands.flatMap(land => land.threats).find(threat => threat.siteId === site.entityId);
     if (!threat) return pending('combat-site-threat-unpublished', [effect.id]);
@@ -379,6 +406,15 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       if (sea !== p.at.seaId) return unmet('combat-transport-other-basin', [effect.id]);
       const cargo = context.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === actor.id);
       const from: Target = { seaId: sea, point: { x: actor.x, y: actor.y } };
+      if (context.precision === 'coarse') {
+        const route = goalFact({ kind: 'route', mover: 'sea', actor: p.transport, from, to: p.at,
+          ...(actor.sailing?.heading === undefined ? {} : { fromHeading: actor.sailing.heading }) });
+        return { state: 'met', factIds: [effect.id], candidates: [{ id: `coarse-hull:${effect.id}`, target: p.at, from,
+          cohort: [p.transport], requiredForce: 0, byTick: p.byTick,
+          duration: known(gap(actor, p.at.point) <= p.tolerance ? 0
+            : Math.ceil(gap(actor, p.at.point) / Math.max(1, actor.speed) * SIM_TICKS_PER_SECOND), [effect.id]),
+          cost: known([], [effect.id]), successProbability: known(1, [effect.id]), preconditions: [route], factIds: [effect.id, route.id] }] };
+      }
       const hull: GoalHullCandidate = { id: actor.id, reference: p.transport, assessment: actor, seaId: sea, availableTick: context.tick,
         capacity: profile.loadCapacity - cargo.reduce((mass, unit) => mass + bodyMass(unit), 0),
         cargoUnitIds: sorted(cargo.map(unit => unit.id)), preconditions: [], factIds: [actor.id] };
@@ -431,6 +467,16 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     let rejected: Extract<GoalCandidates<never>, { state: 'unmet' }> | undefined;
     for (const origin of groups.candidates) {
       const group = origin.members, id = `combat-location:${goalValueKey(group.map(m => m.reference))}${origin.preconditions.length ? `:${origin.id}` : ''}`, from = origin.from;
+      if (context.precision === 'coarse' && ['garrison-ready', 'force-at', 'force-available', 'worker-at'].includes(p.kind)) {
+        let option = coarseLocation(effect, group, from, target, throughTick, origin.preconditions);
+        if ((p.kind === 'force-at' || p.kind === 'force-available') && p.metric === 'camp-force') {
+          const camp = resolveGoalCamp(context.snapshot, p.campId);
+          if (camp.status !== 'present') { rejected ??= unmet('combat-camp-binding-invalid', [p.campId]); continue; }
+          option = { ...option, campId: p.campId,
+            requiredForce: assessAllocatedForce(context.owner, [], { metric: 'camp-force', camp: camp.exposure.camp }).requiredForce };
+        }
+        result.push(option); continue;
+      }
       if (from.landId !== target.landId) {
         if (p.kind === 'force-available' || p.kind === 'worker-at') {
           // A manifest is an input to transport grounding, not a priced land
