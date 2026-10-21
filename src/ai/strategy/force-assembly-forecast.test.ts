@@ -80,6 +80,15 @@ it('keeps zero or too-slow net growth a known force deficit rather than waiting 
   }
 });
 
+it('keeps paid recruit walking separate from the producer lane clock', () => {
+  const { input } = example(), building = input.snapshot.buildings.find(building => building.id === 'barracks')!;
+  building.queue.push({ id: 'long-walk', unitKind: 'footman', remaining: 100 });
+  const forecast = forecastForceAssembly({ ...input, conditionalProduction: conditional(.01),
+    paidJobRoutes: [{ buildingId: building.id, jobId: 'long-walk', postId: 'home', arrival: arrival(700) }] });
+  expect(forecast.readyTick).toBe(300); // 100 native work, then two conditional force. The paid recruit arrives at 800.
+  expect(forecast.supplies.find(supply => supply.jobId === 'long-walk')?.readyTick).toBe(800);
+});
+
 it('re-prices conditional production against the actual allowed lanes and half-open occupancy', () => {
   const { input } = example(), model = { ...input, conditionalProduction: conditional(.01) };
   expect(forecastForceAssembly(model).readyTick).toBe(200);
@@ -209,6 +218,8 @@ it('keeps nonmonotonic empirical inventory, finite support and exact boundary ev
   const forecast = forecastForceAssembly({ ...input, throughTick: 300, conditionalProduction: model,
     unitSupply: [...input.unitSupply, { unitId: 'late', postId: 'home', source: 'idle', availableTick: 0, arrival: arrival(250) }] });
   expect(forecast.readyTick).toBe(300); // The stock at 100 is gone when the certain member arrives at 250.
+  expect(forecast.fillScenarios[0]!.stockSelections).toEqual([
+    { buildingId: 'barracks', postId: 'home', sampleTick: 300, shiftTicks: 0, force: 2 }]);
   const exhausted = forecastForceAssembly({ ...input, throughTick: 500, target: { ...input.target, requiredForce: 4 }, conditionalProduction: model });
   expect(exhausted).toMatchObject({ status: 'unknown', readyTick: null });
   expect(exhausted.missing.some(fact => fact.code === 'assembly-conditional-support-exhausted')).toBe(true);

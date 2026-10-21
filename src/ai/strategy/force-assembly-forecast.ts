@@ -35,6 +35,11 @@ export const ASSEMBLY_SCENARIO_LIMIT = 64;
 export type AssemblyFillScenario = Readonly<{
   id: string; probability: number; readyTick: number | null; conditionalForce: number;
   production: readonly ProductionUse[];
+  /** Exact empirical step selected by this forecast after queue alignment.
+   * The continuation reader uses its real member profiles, not a fractional
+   * mean recruit or a second implementation of the first-passage clock. */
+  stockSelections?: readonly Readonly<{ buildingId: string; postId: string;
+    sampleTick: number; shiftTicks: number; force: number }>[];
 }>;
 export type ForceAssemblyInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; rallies: readonly Readonly<{ id: string; target: Target }>[]; target: AllocatedForceTarget;
@@ -149,7 +154,6 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       const travelTicks = travel(route?.arrival ?? null, 'assembly-recruit-arrival-unknown', [building.id, job.id]);
       if (!route || travelTicks === null) continue;
       const readyTick = now + next + travelTicks;
-      paidPipelineUntil.set(building.id, Math.max(paidPipelineUntil.get(building.id) ?? now, readyTick));
       paidUses.set(`${building.id}\0${job.id}`, use);
       add({ source: 'paid-job', unitId: null, buildingId: building.id, jobId: job.id, postId: route.postId, readyTick }, recruit);
     }
@@ -277,7 +281,14 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       const throughTicks = Math.min(use.throughTicks, cutoff - now);
       return throughTicks > use.fromTicks ? [{ ...use, throughTicks }] : [];
     }) : [])]);
-    return { id: scenario.id, probability: scenario.probability, readyTick, conditionalForce, production };
+    const stockSelections = readyTick === null ? [] : curves.flatMap(producer => {
+      const shiftTicks = shift(producer), unshifted = readyTick - shiftTicks;
+      if (unshifted < producer.startsAtTick || unshifted > producer.throughTick) return [];
+      const point = producer.points.filter(point => point.tick <= unshifted).at(-1);
+      return point ? [{ buildingId: producer.buildingId, postId: producer.postId,
+        sampleTick: point.tick, shiftTicks, force: point.force }] : [];
+    });
+    return { id: scenario.id, probability: scenario.probability, readyTick, conditionalForce, production, stockSelections };
   };
   const fillScenarios = (conditional?.scenarios ?? [{ id: 'certain-supply', probability: 1, producers: [] }])
     .slice().sort((a, b) => compare(a.id, b.id)).map(evaluate);
