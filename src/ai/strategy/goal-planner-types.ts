@@ -1,4 +1,4 @@
-import type { BootstrapAiVersion, BuildingKind, GameSnapshot, PlayerId, UnitKind } from '../../shared/types';
+import type { BootstrapAiVersion, BuildingKind, GameSnapshot, PlayerId, Unit, UnitKind } from '../../shared/types';
 import type { AllocationReason } from './allocation-types';
 import type { FactWorkQueue } from './fact-work';
 import type { Evidence, LandId, SeaId, Situation, Target } from './types';
@@ -188,9 +188,13 @@ export type GoalGroundingReader = Readonly<{
    * unit. Mass alone does not identify radius, existing cargo or hull binding. */
   transportOptions: (from: Target, to: Target, capacity: number, request?: GoalTransportRequest) => GoalCandidates<GoalTransportOption>;
   combatOptions?: (effect: GoalFact) => GoalCandidates<GoalCombatOption>;
+  resolveCohort?: (references: readonly GoalEntityReference[]) => GoalCandidates<GoalCohortMember>;
 }>;
+export type GoalCohortMember = Readonly<{ reference: GoalEntityReference; assessment: Unit }>;
 export type GoalCombatOption = Readonly<{
   id: string; target: Target; cohort: readonly GoalEntityReference[]; requiredForce: number; byTick: number;
+  /** Actual source pose/region, distinct from the requested destination post. */
+  from?: Target;
   duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
   preconditions: readonly GoalFact[]; factIds: readonly string[];
 }>;
@@ -215,6 +219,7 @@ export type GoalPlanEdge = Readonly<{ from: string; to: string; kind: 'requires'
 export type GoalSubgoal = Readonly<{
   id: string; factId: string; parentGoalId: string; requestedByActionIds: readonly string[];
   state: GoalFactState; chosenActionId: string | null; alternativeIds: readonly string[];
+  chosenActionIds?: readonly string[];
 }>;
 export type GoalAlternative = Readonly<{
   id: string; factId: string; actionId: string; status: 'chosen' | 'rejected' | 'pending';
