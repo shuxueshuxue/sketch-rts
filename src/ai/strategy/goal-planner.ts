@@ -14,7 +14,10 @@ const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const finish = (path: Path, epoch: number) => Math.max(epoch, ...path.steps.map(step => step.finishTick));
 const pathKey = (path: Path) => goalValueKey([path.steps.map(step => [step.action.id, step.startTick, step.finishTick]), path.bindings]);
-const pathValue = (path: Path, goal: GoalRequest, epoch: number) => discountGold(path.probability * goal.rewardGold, finish(path, epoch) - epoch) - path.cost;
+const achievementTick = (path: Path, goal: GoalRequest, state: GoalSearchMemory, input: GoalPlannerInput) =>
+  Math.max(input.context.tick, ...goal.effects.map(fact => satisfies(fact, path, state, input).tick));
+const pathValue = (path: Path, goal: GoalRequest, state: GoalSearchMemory, input: GoalPlannerInput) =>
+  discountGold(path.probability * goal.rewardGold, achievementTick(path, goal, state, input) - input.context.tick) - path.cost;
 const pathOrder = (epoch: number) => (a: Path, b: Path) => a.cost - b.cost || finish(a, epoch) - finish(b, epoch) || order(pathKey(a), pathKey(b));
 const validEstimate = (action: GoalActionDeclaration) => action.duration.state === 'met'
   && Number.isFinite(action.duration.value) && action.duration.value >= 0 && action.cost.state === 'met'
@@ -55,13 +58,14 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
       const shifted = replay.steps.map(step => actionNode(step, input));
       const projected = projectGoalResources({ epoch: context.tick, initial: balances(previous.continuation, input),
         actions: replay.steps });
-      if (scheduleValid && projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
-        const valueGold = pathValue(replay, goal, context.tick), profitable = valueGold > 0;
+      if (scheduleValid && projected.state === 'met' && goal.effects.every(fact => { const result = satisfies(fact, replay, refreshed, input);
+        return result.met && (deadline === null || result.tick <= deadline); })) {
+        const valueGold = pathValue(replay, goal, refreshed, input), profitable = valueGold > 0;
         const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted, valueGold,
           status: previous.plan.status === 'complete' ? 'complete' : profitable ? 'ready' : 'blocked',
           reasons: profitable ? [] : [reason('goal-plan-net-nonpositive', [], { valueGold })],
           readyActionIds: profitable ? shifted.filter(action => action.state === 'ready').map(action => action.id) : [],
-          completedTick: previous.plan.completedTick === null ? null : finish(replay, context.tick),
+          completedTick: previous.plan.completedTick === null ? null : achievementTick(replay, goal, refreshed, input),
           resourceTimeline: projected.timeline,
           search: { ...previous.plan.search, work: 0 }, facts: previous.plan.facts.map(node => ({ ...node, observation: context.readFact(node.observation.fact) })) };
         plans.push(plan); entries.push({ ...previous, plan }); continue;
@@ -238,7 +242,8 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
     state.frontier.sort(pathOrder(input.context.tick));
     const path = state.frontier.shift();
     if (!path) { state.phase = 'done'; return; }
-    const goalMet = goal.effects.every(fact => satisfies(fact, path, state, input).met);
+    const goalMet = goal.effects.every(fact => { const result = satisfies(fact, path, state, input);
+      return result.met && (goal.deadlineTick === null || result.tick <= goal.deadlineTick); });
     if (goalMet) {
       state.solutions.push(path); state.solutions.sort(pathOrder(input.context.tick));
       state.solutions.splice(input.limits.maxPlans); return;
@@ -284,7 +289,7 @@ function scheduleAction(path: Path, action: GoalActionDeclaration, state: GoalSe
     startTick = Math.max(startTick, prior.finishTick); dependencies.add(prior.action.id);
   }
   const finishTick = startTick + bound.duration.value;
-  if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && finishTick > goal.deadlineTick) return null;
+  if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && startTick > goal.deadlineTick) return null;
   const step: Step = { action: bound, startTick, finishTick, dependsOn: [...dependencies].sort() };
   let projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
   if (projection.state === 'unmet' && startTick < finish(path, input.context.tick)) {
@@ -292,7 +297,7 @@ function scheduleAction(path: Path, action: GoalActionDeclaration, state: GoalSe
     step.dependsOn = path.steps.map(prior => prior.action.id).sort();
     projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
   }
-  if (projection.state !== 'met' || goal.deadlineTick !== null && step.finishTick > goal.deadlineTick) return null;
+  if (projection.state !== 'met' || goal.deadlineTick !== null && step.startTick > goal.deadlineTick) return null;
   return { step, bindings };
 }
 function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
@@ -307,10 +312,10 @@ function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
 }
 
 function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest, work: number): GoalPlan {
-  const valueOrder = (a: Path, b: Path) => pathValue(b, goal, input.context.tick) - pathValue(a, goal, input.context.tick)
+  const valueOrder = (a: Path, b: Path) => pathValue(b, goal, state, input) - pathValue(a, goal, state, input)
     || pathOrder(input.context.tick)(a, b);
   const path = [...state.solutions].sort(valueOrder)[0];
-  const valueGold = path ? pathValue(path, goal, input.context.tick) : null;
+  const valueGold = path ? pathValue(path, goal, state, input) : null;
   const profitable = valueGold !== null && valueGold > 0;
   const steps = path?.steps ?? [], chosen = new Set(steps.map(step => step.action.id));
   const unresolved = state.observed.some(observation => observation.state === 'pending')
@@ -343,7 +348,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
     alternatives, readyActionIds: profitable ? actions.filter(action => action.state === 'ready').map(action => action.id) : [],
     resourceTimeline: projection.state === 'pending' ? [] : projection.timeline,
     costGold: path?.cost ?? null, successProbability: path?.probability ?? null,
-    valueGold, completedTick: path ? finish(path, input.context.tick) : null,
+    valueGold, completedTick: path ? achievementTick(path, goal, state, input) : null,
     search: { expansions: state.expansions, depth: state.depth, work, limitReason: state.limitReason },
     reasons: path ? profitable ? [] : [reason('goal-plan-net-nonpositive', [], { valueGold })] : [reason(state.limitReason ?? (unresolved ? 'goal-required-facts-pending' : 'goal-no-feasible-plan'))] };
 }

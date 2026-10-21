@@ -239,3 +239,22 @@ it('discovers explicit future achievers for a pending world fact while retaining
   expect(output.plans[0]!.facts.find(node => node.id === hall.id)!.observation.state).toBe('pending');
   expect(output.plans[0]!.facts.find(node => node.id === hall.id)!.producerActionIds).toEqual(['build']);
 });
+
+it('meets a protection deadline at effect activation while retaining its actor through the promised window', () => {
+  const { input, actions } = example(), request = input();
+  const safe = goalFact({ kind: 'site-safe', site: { landId: 'land:1', point: { x: 2000, y: 2000 } }, throughTick: 200 });
+  const guard: GoalActionDeclaration = { ...actions[0]!, id: 'continuous-guard', kind: 'defend', preconditions: [],
+    effects: [{ fact: safe, operation: 'establish', at: { offsetTicks: 20 } }], flows: [],
+    demands: [{ resource: { kind: 'unit', unitId: 'guard' }, quantity: 1, from: 'start', until: 'finish' }],
+    duration: { state: 'met', value: 200, factIds: [] }, cost: { state: 'met', value: [{ code: 'full-window-loss', gold: 10, factIds: [] }], factIds: [] } };
+  const configured = { ...request, goals: [{ ...request.goals[0]!, effects: [safe], deadlineTick: 20 }],
+    providers: [{ id: 'guard-window', actionsFor: () => [guard] }] };
+  const output = planGoals(configured), plan = output.plans[0]!;
+  expect(plan.status).toBe('ready'); expect(plan.completedTick).toBe(20); expect(plan.costGold).toBe(10);
+  expect(plan.actions[0]).toMatchObject({ startTick: 0, finishTick: 200 });
+  expect(plan.actions[0]!.declaration.demands[0]!.until).toBe('finish');
+  const cached = planGoals({ ...configured, work: new FactWorkQueue(0), previous: JSON.parse(JSON.stringify(output.cache)) });
+  expect(cached.plans[0]!.actions).toEqual(plan.actions); expect(cached.plans[0]!.completedTick).toBe(20);
+  const late = planGoals({ ...configured, work: new FactWorkQueue(0), goals: [{ ...configured.goals[0]!, deadlineTick: 19 }] });
+  expect(late.plans[0]!.status).toBe('blocked'); expect(late.readyActions).toEqual([]);
+});
