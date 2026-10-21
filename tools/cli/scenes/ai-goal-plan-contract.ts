@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import type { Scene } from '../drivers/browser';
+import { proveGoalTimeAlignment } from '../drivers/goal-plan-proof';
 
 /** Actual game/replay UI, artificial GoalPlan input. Never evidence of real planner behavior. */
 export default async function(s: Scene) {
@@ -58,6 +59,7 @@ export default async function(s: Scene) {
     document.body.append(watermark);
   });
   s.must(await s.page.locator('.goal-graph-node').count()>=17,'Missing branched navy dependencies');
+  const alignment=await proveGoalTimeAlignment(s);
   await s.shot('goal-contract-overview');
   await s.page.locator('.goal-graph-node.fact').filter({hasText:'兵力到岗'}).click();await s.wait(300);
   const details=()=>s.page.locator('.plan-panel').innerText();
@@ -87,6 +89,6 @@ export default async function(s: Scene) {
   s.must(gapTick>3700,'Pointer missed the unrecorded interval');
   s.must(await s.page.locator('.plan-dependency-sheet').count()===0,'Graph leaked across an unrecorded gap');
   await s.shot('goal-contract-unrecorded');
-  s.record('goal-plan-contract',{evidence:'artificial-public-puzzle-3',gpu,packets:replay.aiPlans.packets.length,drags,
-    checked:['branched-dependencies','left-to-right-regression','gold-prefixes','hall-reservation','human-readable-labels','rejected-alternatives','pending-request','pointer-seek','incremental-replay','unrecorded-gap']});
+  s.record('goal-plan-contract',{evidence:'artificial-public-puzzle-3',gpu,alignment,packets:replay.aiPlans.packets.length,drags,
+    checked:['branched-dependencies','execution-time-default','shared-gold-clock','regression-toggle','zoom-and-scroll-alignment','gold-prefixes','hall-reservation','human-readable-labels','rejected-alternatives','pending-request','pointer-seek','incremental-replay','unrecorded-gap']});
 }

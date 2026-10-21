@@ -52,7 +52,7 @@ export function goalNavyFixture(tick = 50) {
   // 80 bounty and 60 income are illustration amounts; prices above are native catalog values.
   const actions = [buildHall,transportWorker,clear,transportForce,trainHull,buildYard,income];
   const observed = (fact:GoalFact,readyTick:number) => ({ id:fact.id,producerActionIds:actions.filter(row=>row.declaration.effects.some(effect=>effect.fact.id===fact.id)).map(row=>row.id),
-    observation:{fact,state:tick>=readyTick?'met' as const:'unmet' as const,observedTick:tick,revision:`sample-${Math.min(tick,readyTick)}`,reason:reason('navy-build-from-zero'),evidence:[]} });
+    observation:{fact,state:tick>=readyTick?'met' as const:'unmet' as const,observedTick:tick,...(tick>=readyTick?{availableTick:readyTick}:{}),revision:`sample-${Math.min(tick,readyTick)}`,reason:reason('navy-build-from-zero'),evidence:[]} });
   const facts = [observed(hall,3560),observed(goldHall,0),observed(camp,2000),observed(worker,2800),observed(force,1600),observed(ship,740),observed(yard,440),observed(goldHull,0),observed(goldYard,0),
     { ...observed(route,300),observation:{...observed(route,300).observation,state:tick<300?'pending' as const:'met' as const,requestId:'sample-sea-route',requestedTick:40} }];
   const plan:GoalPlan = { id:'navy-from-zero',goal:{id:'navy-island',owner:'player',effects:[hall],rewardGold:1800,deadlineTick:4000,reasons:[reason('navy-build-from-zero')]},

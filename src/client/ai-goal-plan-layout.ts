@@ -1,14 +1,17 @@
 import type { GoalPlan } from '../ai/strategy/goal-planner-types';
+import { goalTimeAxis, goalTimeX, type GoalTimeAxis } from './ai-goal-plan-time';
 
-type Node = { id: string; recordId: string; kind: 'goal' | 'fact' | 'action'; x: number; y: number; reference?: boolean };
+export type GoalGraphOrder = 'time' | 'regression';
+type Node = { id: string; recordId: string; kind: 'goal' | 'fact' | 'action'; x: number; y: number; reference?: boolean; time?:number|null };
 type Edge = { from: string; to: string; kind: string; recordFrom: string; recordTo: string };
-export type GoalGraphLayout = { nodes: Node[]; edges: Edge[]; width: number; height: number; omitted: number };
+export type GoalGraphLayout = { nodes: Node[]; edges: Edge[]; width: number; height: number; omitted: number; axis?:GoalTimeAxis; cardHeight?:number; untimedY?:number };
 const cache = new WeakMap<GoalPlan, GoalGraphLayout>();
+const timeCache = new WeakMap<GoalPlan, GoalGraphLayout>();
 export const GOAL_CARD = { width: 116, height: 86, column: 140, row: 108 };
 
 /** A reading projection, not a change to the recorded plan: effect -> achiever
  * -> prerequisite. Shared prerequisites merge in their longest-path column. */
-export function goalGraphLayout(plan: GoalPlan): GoalGraphLayout {
+function regressionLayout(plan: GoalPlan): GoalGraphLayout {
   const old = cache.get(plan); if (old) return old;
   const all = [{ id: '$goal', kind: 'goal' as const }, ...plan.facts.map(row => ({ id: row.id, kind: 'fact' as const })),
     ...plan.actions.map(row => ({ id: row.id, kind: 'action' as const }))];
@@ -47,4 +50,50 @@ export function goalGraphLayout(plan: GoalPlan): GoalGraphLayout {
   const value = { nodes, edges: edges.filter(row => row.to), width: Math.max(300, ...nodes.map(row => row.x + GOAL_CARD.width + 16)),
     height: maxRows * GOAL_CARD.row + 8, omitted };
   cache.set(plan, value); return value;
+}
+
+/** Scheduled actions anchor at start; effects anchor at availability/finish.
+ * Equal-time nodes use separate rows rather than shifting the shared clock. */
+function timedLayout(plan:GoalPlan):GoalGraphLayout {
+  const old=timeCache.get(plan);if(old)return old;
+  const axis=goalTimeAxis(plan);
+  const availability=new Map(plan.facts.map(row=>{
+    const observation=row.observation;
+    const produced=plan.actions.filter(action=>row.producerActionIds.includes(action.id)
+      ||action.declaration.effects.some(effect=>effect.operation==='establish'&&effect.fact.id===observation.fact.id))
+      .flatMap(action=>action.finishTick==null?[]:[action.finishTick]);
+    const time=observation.availableTick??(produced.length?Math.max(...produced):observation.state==='met'?observation.observedTick:null);
+    return [row.id,time] as const;
+  }));
+  const goalTimes=plan.facts.filter(row=>plan.goal.effects.some(effect=>effect.id===row.observation.fact.id))
+    .map(row=>availability.get(row.id)).filter((tick):tick is number=>tick!=null);
+  const complete=plan.completedTick??(goalTimes.length===plan.goal.effects.length&&goalTimes.length?Math.max(...goalTimes):null);
+  const all=[{id:'$goal',kind:'goal' as const,time:complete},...plan.facts.map(row=>({id:row.id,kind:'fact' as const,time:availability.get(row.id)??null})),
+    ...plan.actions.map(row=>({id:row.id,kind:'action' as const,time:row.startTick}))];
+  const rows=all.slice(0,201),ids=new Set(rows.map(row=>row.id)),ends:number[]=[];
+  const cardHeight=72,rowHeight=102;
+  const known=rows.filter(row=>row.time!=null).sort((a,b)=>a.time!-b.time!);
+  const nodes:Node[]=known.map(row=>{
+    const x=goalTimeX(axis,row.time!)-GOAL_CARD.width/2;
+    let lane=ends.findIndex(end=>end+14<=x);if(lane<0)lane=ends.length;
+    ends[lane]=x+GOAL_CARD.width;
+    return {...row,recordId:row.id,x,y:30+lane*rowHeight};
+  });
+  const unknown=rows.filter(row=>row.time==null),untimedY=unknown.length?Math.max(1,ends.length)*rowHeight+50:undefined;
+  const perRow=Math.max(1,Math.floor((axis.width-32)/GOAL_CARD.column));
+  for(let index=0;index<unknown.length;index++){
+    const row=unknown[index]!;
+    nodes.push({...row,recordId:row.id,x:16+index%perRow*GOAL_CARD.column,y:untimedY!+24+Math.floor(index/perRow)*rowHeight});
+  }
+  const edges:Edge[]=plan.edges.map(row=>({...row,recordFrom:row.from,recordTo:row.to,
+    from:row.kind==='requires'?row.to:row.from,to:row.kind==='requires'?row.from:row.to}))
+    .filter(row=>ids.has(row.from)&&ids.has(row.to));
+  for(const fact of plan.facts)if(plan.goal.effects.some(effect=>effect.id===fact.observation.fact.id)&&ids.has(fact.id))
+    edges.push({from:fact.id,to:'$goal',kind:'goal-effect',recordFrom:'$goal',recordTo:fact.id});
+  const height=Math.max(130,...nodes.map(row=>row.y+cardHeight+12));
+  const value:GoalGraphLayout={nodes,edges,width:axis.width,height,omitted:all.length-rows.length,axis,cardHeight,...(untimedY==null?{}:{untimedY})};
+  timeCache.set(plan,value);return value;
+}
+export function goalGraphLayout(plan:GoalPlan,order:GoalGraphOrder='time'):GoalGraphLayout {
+  return order==='time'?timedLayout(plan):regressionLayout(plan);
 }
