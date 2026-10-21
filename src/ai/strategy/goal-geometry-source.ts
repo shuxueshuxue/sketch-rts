@@ -108,7 +108,9 @@ export function createGoalGeometryReader(input: Readonly<{
   };
 }
 
-/** Eviction only discards evidence. Re-reading an evicted request is pending,
+/** Limits count the cached payload {version, entries}, including its envelope.
+ * Capacity diagnostics are separate metadata, never part of their own byte calculation.
+ * Eviction only discards evidence. Re-reading an evicted request is pending,
  * never known-unreachable. Active callbacks verify their entry still exists. */
 export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Entry) {
   const capacity = memory.capacity;
@@ -123,7 +125,7 @@ export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Ent
     memory.entries.splice(memory.entries.indexOf(oldest), 1);
   }
   if (!capacity) return;
-  const pins = pinned(), bytes = observationJsonBytes(pins);
+  const pins = pinned(), bytes = observationJsonBytes({ version: memory.version, entries: pins });
   capacity.pinnedBytes = bytes; capacity.pinnedEntries = pins.length;
   capacity.peakPinnedBytes = Math.max(capacity.peakPinnedBytes, bytes);
   capacity.peakResidentBytes = Math.max(capacity.peakResidentBytes, size());

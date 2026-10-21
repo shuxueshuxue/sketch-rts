@@ -149,3 +149,15 @@ it('measures the full pinned payload without changing finite work or publication
   expect(retained.entries[0]!.value).toBe('x'.repeat(GOAL_GEOMETRY_BYTES * 2));
   expect(read(request).state).toBe('pending');
 });
+
+it('includes the serialization envelope when the pinned payload crosses its byte capacity', () => {
+  const retained = memory(), work = new FactWorkQueue(0, 2, undefined, 1);
+  const read = createGoalGeometryReader({ tick: 0, work, memory: retained, limits: { maxBytes: 1024, maxEntries: 4 } });
+  const request: GoalGeometryRequest<number, string> = { key: 'wrapper-boundary', revision: 'v1', initialState: 0,
+    advance: () => ({ state: 1, work: 1, done: true, value: 'x'.repeat(1000) }) };
+  work.withConsumer('boundary-plan', null, () => read(request)); work.flush();
+  const payload = new TextEncoder().encode(JSON.stringify({ version: retained.version, entries: retained.entries })).byteLength;
+  expect(retained.capacity!.pinnedBytes).toBe(payload);
+  expect(retained.capacity!.pressure).toMatchObject({ bytes: payload, limitBytes: 1024, planIds: ['boundary-plan'] });
+  expect(retained.entries[0]!.value).toBe('x'.repeat(1000));
+});
