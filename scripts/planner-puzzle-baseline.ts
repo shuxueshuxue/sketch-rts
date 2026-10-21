@@ -14,11 +14,13 @@ if (!selected.length) throw new Error('No matching puzzle');
 const out = resolve(option('--out') ?? `work/public-puzzles/${mode}`);
 mkdirSync(out, { recursive: true });
 const source = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const aiTree = execFileSync('git', ['rev-parse', 'd4ca2668:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
 const actualAiTree = execFileSync('git', ['rev-parse', 'HEAD:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
-if (actualAiTree !== aiTree) throw new Error('Main baseline bootstrap policy changed; choose and document a new baseline');
-execFileSync('git', ['diff', '--exit-code', 'd4ca2668', '--', 'src/ai', 'src/shared', 'src/sdk',
-  ':(exclude)src/ai/strategy/puzzles'], { stdio: 'pipe' });
+if (mode !== 'witness') {
+  const aiTree = execFileSync('git', ['rev-parse', 'd4ca2668:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
+  if (actualAiTree !== aiTree) throw new Error('Main baseline bootstrap policy changed; use archive/public-puzzles-main-baseline-20261021');
+  execFileSync('git', ['diff', '--exit-code', 'd4ca2668', '--', 'src/ai', 'src/shared', 'src/sdk',
+    ':(exclude)src/ai/strategy/puzzles'], { stdio: 'pipe' });
+}
 const summary: unknown[] = [];
 for (const puzzle of selected) {
   const ticks = option('--ticks');
@@ -26,7 +28,7 @@ for (const puzzle of selected) {
   const name = `${puzzle.key}-${puzzle.variant}`;
   writeFileSync(resolve(out, `${name}.json.gz`), gzipSync(JSON.stringify(result), { level: 9 }));
   const { commands, ...execution } = result.execution;
-  const row = { puzzle: result.puzzle, mode, source, mainBaseline: 'd4ca2668', aiTree, elapsedMs: result.elapsedMs,
+  const row = { puzzle: result.puzzle, mode, source, mainBaseline: mode === 'witness' ? null : 'd4ca2668', aiTree: actualAiTree, elapsedMs: result.elapsedMs,
     commandCount: commands.length, ...execution };
   summary.push(row);
   writeFileSync(resolve(out, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
