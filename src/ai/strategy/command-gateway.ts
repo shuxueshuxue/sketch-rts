@@ -3,7 +3,7 @@ import type { ActionGrant, ActionToken, CommandAdmission, ExclusiveResourceKey, 
 import { sameAction } from './control';
 import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-command-source';
 import { allocationCommandCost, reservedAllocationGold } from './allocation-ledger';
-import { isLifeSavingScript } from './script-safety';
+import { isLifeSavingScript, safetyCommandReplacesOrder } from './script-safety';
 
 export type StrategyCommandProposal = Readonly<{
   id: string;
@@ -83,6 +83,7 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
   const usedBudgetGold = new Map<string, number>();
   return { admit(proposals: readonly StrategyCommandProposal[]) {
   for (const proposal of proposals) if (proposal.purpose === 'life-saving'
+    && safetyCommandReplacesOrder(snapshot, proposal.command)
     && (grantFor(proposal) || proposal.source === 'script' && isLifeSavingScript(proposal.executor))) {
     for (const id of operands(snapshot, proposal.command).units) if (allows(`unit:${id}`, proposal)) interruptions.add(id);
   }

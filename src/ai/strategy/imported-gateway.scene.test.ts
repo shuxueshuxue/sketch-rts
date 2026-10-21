@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, it } from 'vitest';
-import type { BootstrapAiVersion, GameSnapshot } from '../../shared/types';
+import type { BootstrapAiVersion, GameCommand, GameSnapshot } from '../../shared/types';
+import { createUnit } from '../../shared/map';
+import { createGame, restoreSnapshotIntoGame } from '../../shared/sim';
+import { issueCommandFrame } from '../../sdk/commands/frame';
+import { ABILITY_DEFS } from '../../shared/catalog';
 import type { AiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import type { CommandAdmission } from './allocation-types';
@@ -13,6 +17,7 @@ import { buildStrategyDecision } from './decision';
 import { assertStrategyAllocationBounds } from './control';
 
 type Frame = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory; version: BootstrapAiVersion;
+  nextId: number; activePlayers: string[];
   commandAdmissions: readonly CommandAdmission[] };
 it.each(['gull-control-p1-2977', 'sapphire-control-p1-2327'])
   ('preserves the old native orders at %s with imported bookkeeping and no formal grant', name => {
@@ -67,4 +72,39 @@ it('keeps a formal takeover exclusive while accepting the original local rescue 
   expect(interrupted.events.filter(event => event.kind === 'interrupted')).toHaveLength(raw.command.unitIds.length);
   expect(assertStrategyAllocationBounds(interrupted)).toBeGreaterThan(0);
   expect(recordScriptSafetyInterruptions(interrupted, snapshot, situation, result.admissions)).toEqual(interrupted);
+});
+
+it.each([false, true])('records a medical interruption only when the native heal must walk (outside range: %s)', outside => {
+  // Derived medical geometry: preserve the real parent tokens, but give one
+  // leased member a priest and a patient on either side of native heal range.
+  const frame: Frame = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/gull-control-p1-2977.json.gz', import.meta.url))).toString());
+  const authority = frame.memory.strategyAllocation!, assignment = Object.values(authority.assignments)[0]!;
+  const original = frame.snapshot.units.find(unit => unit.id === assignment.unitId)!;
+  const caster = createUnit(original.id, frame.owner, 'priest', original.x, original.y);
+  const patient = frame.snapshot.units.find(unit => unit.owner === frame.owner && unit.kind === 'footman' && unit.id !== caster.id)!;
+  patient.x = caster.x + ABILITY_DEFS.heal.range + (outside ? 1 : 0); patient.y = caster.y; patient.hp = patient.maxHp / 2;
+  frame.snapshot.units[frame.snapshot.units.indexOf(original)] = caster;
+  const memory = { ...authority, leases: Object.fromEntries(Object.entries(authority.leases).map(([key, lease]) =>
+    [key, { ...lease, origin: 'allocator' as const, incumbentTask: null }])) };
+  const task: GameCommand = { type: 'move', unitIds: [caster.id], x: caster.x - 100, y: caster.y };
+  const heal: GameCommand = { type: 'cast', unitId: caster.id, ability: 'heal', targetId: patient.id };
+  const proposals = [
+    { id: 'medical-parent', source: 'executor' as const, executor: memory.executions[assignment.action.actionId]!.executor,
+      action: assignment.action, allocationRevision: memory.revision, purpose: 'task' as const, command: task },
+    { id: 'medical-rescue', source: 'script' as const, executor: 'medicalRecovery', action: null,
+      allocationRevision: null, purpose: 'life-saving' as const, command: heal },
+  ];
+  const before = JSON.stringify({ frame, memory });
+  const result = admitStrategyCommands({ snapshot: frame.snapshot, owner: frame.owner, memory,
+    grants: allocationGrants(memory), queuedTick: null, proposals });
+  expect(result.accepted.map(proposal => proposal.command)).toEqual(outside ? [heal] : [task, heal]);
+  const situation = buildStrategyDecision(frame.snapshot, frame.owner, { memory: structuredClone(frame.memory) }, undefined, undefined, Infinity).situation;
+  const next = recordScriptSafetyInterruptions(memory, frame.snapshot, situation, result.admissions);
+  expect(next.assignments[assignment.id]?.interruption?.executor ?? null).toBe(outside ? 'medicalRecovery' : null);
+  if (!outside) expect(next).toEqual(memory);
+  const game = createGame(frame.snapshot.map.id, { players: frame.activePlayers });
+  restoreSnapshotIntoGame(game, structuredClone(frame.snapshot), frame.nextId); game.activePlayers = [...frame.activePlayers];
+  issueCommandFrame(game, result.accepted.map(proposal => ({ playerId: frame.owner, scriptId: proposal.executor, command: proposal.command })));
+  expect(game.units.find(unit => unit.id === caster.id)!.order.type).toBe(outside ? 'cast' : 'move');
+  expect(JSON.stringify({ frame, memory })).toBe(before);
 });

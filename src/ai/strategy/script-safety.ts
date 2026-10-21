@@ -1,9 +1,5 @@
-/** Purpose follows the actual local service, not a move/attack command shape.
- * These existing scripts retain their native rescue authority under control. */
-export function isLifeSavingScript(id: string): boolean {
-  return ['campRecovery', 'frontRecovery', 'mobileCare', 'medicalRecovery', 'skirmishPreservation'].includes(id);
-}
-import type { GameSnapshot } from '../../shared/types';
+import { ABILITY_DEFS } from '../../shared/catalog';
+import type { GameCommand, GameSnapshot } from '../../shared/types';
 import type { DecisionFacts } from './decision';
 import type { Situation, ResourceDemand } from './types';
 import type { CommandAdmission, StrategyAllocationMemory } from './allocation-types';
@@ -11,6 +7,23 @@ import { commandSetsNativeOrder } from './allocation-ledger';
 import { appendAllocationEvent } from './allocation-lifecycle';
 import { sameAction } from './control';
 
+/** Purpose follows the actual local service, not a move/attack command shape.
+ * These existing scripts retain their native rescue authority under control. */
+export function isLifeSavingScript(id: string): boolean {
+  return ['campRecovery', 'frontRecovery', 'mobileCare', 'medicalRecovery', 'skirmishPreservation'].includes(id);
+}
+
+/** The same range rule as the existing runner: an instant heal leaves its
+ * caster's task intact; a charge or walk-to-cast takes over its native order. */
+export function safetyCommandReplacesOrder(snapshot: GameSnapshot, command: GameCommand): boolean {
+  if (command.type !== 'cast') return commandSetsNativeOrder(command);
+  const definition = ABILITY_DEFS[command.ability];
+  const caster = snapshot.units.find(unit => unit.id === command.unitId);
+  const target = command.targetId ? [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === command.targetId) : command;
+  const radius = target && !('order' in target) && 'radius' in target ? target.radius : 0;
+  return definition.behavior === 'charge' || !!(caster && target && target.x !== undefined && target.y !== undefined
+    && Math.hypot(caster.x - target.x, caster.y - target.y) > definition.range + radius);
+}
 
 /** The accepted native service command proves the interruption. It preserves
  * the real parent and its vacancy without inventing an admitted parent order. */
@@ -19,7 +32,7 @@ export function recordScriptSafetyInterruptions(memory: StrategyAllocationMemory
   let next = memory;
   for (const admission of admissions) {
     if (admission.status !== 'accepted' || admission.source !== 'script' || admission.purpose !== 'life-saving'
-      || !isLifeSavingScript(admission.executor) || !commandSetsNativeOrder(admission.command)) continue;
+      || !isLifeSavingScript(admission.executor) || !safetyCommandReplacesOrder(snapshot, admission.command)) continue;
     const unitIds = 'unitIds' in admission.command ? admission.command.unitIds : 'unitId' in admission.command ? [admission.command.unitId] : [];
     for (const unitId of unitIds) {
       const assignment = next.assignments[`assignment:${unitId}`], lease = next.leases[`unit:${unitId}`];
