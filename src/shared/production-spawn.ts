@@ -60,7 +60,11 @@ export function landSpawnPrototype(building: Building, kind: UnitKind): Unit {
 /** Warcraft III's official building guide specifies the rally-side exit;
  * our exact placement is a bounded local search with full body clearance.
  * An unreachable rally cannot move a unit across a wall, river or island. */
-export function landSpawnPoint(world: World, building: Building, unit: Unit): Point | undefined {
+export function landSpawnPoint(world: World, building: Building, unit: Unit,
+  /** Planning supplies its published, budgeted reachability. undefined means
+   * pending, not an unreachable gate. Native simulation omits this callback
+   * and keeps its ordinary route/cache behavior. No callback is retained. */
+  planningReachability?: (from: Point, goal: Point) => boolean | undefined): Point | undefined {
   if (building.hp <= 0) return undefined;
   const radius = Math.max(unit.radius, unit.bodyRadius ?? 0), terrain = world.map.terrain;
   // Only nearby solid footprints can intersect an exit or its slideway.
@@ -86,8 +90,9 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
     && (shipProfile(body) ? distanceToHull(body, building) : Math.hypot(body.x - building.x, body.y - building.y) - Math.max(body.radius, body.bodyRadius ?? 0)) <= cached!.range);
   const aim = productionRallyPoint(world, building);
   const selection = `${aim.x}:${aim.y}:${bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${body.bodyRadius}:${body.sailing?.heading ?? 0}`).join('|')}`;
-  if (cached.selection !== selection) {
-    cached.selection = selection;
+  let result = cached.result;
+  if (planningReachability || cached.selection !== selection) {
+    if (!planningReachability) cached.selection = selection;
     const goal = walkableGoal(world.map, aim.x, aim.y);
     const rally = `${goal.x}:${goal.y}`;
     if (cached.reachability?.rally !== rally) cached.reachability = { rally, points: new Map() };
@@ -103,9 +108,12 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
     const ordered = cached.ordering.points;
     let fallback: Point | undefined;
     let reachableExit = false;
-    cached.result = undefined;
+    result = undefined;
     for (const point of ordered) {
-      let reachable = cached.reachability.points.get(point);
+      // Planning never adopts a process-warm native reachability answer or
+      // mutates that cache. Cold/fork publication remains owned by its caller.
+      let reachable = planningReachability ? planningReachability(point, goal) : cached.reachability.points.get(point);
+      if (planningReachability && reachable === undefined) return undefined;
       if (reachable === undefined) {
         const destination = walkDestination(world.map, point, goal);
         reachable = Math.hypot(destination.x - goal.x, destination.y - goal.y) <= 1e-6;
@@ -116,13 +124,14 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
         : Math.hypot(point.x - body.x, point.y - body.y) >= radius + Math.max(body.radius, body.bodyRadius ?? 0) + GAP)) continue;
       fallback ??= point;
       if (!reachable) continue;
-      cached.result = point; break;
+      result = point; break;
     }
     // A traffic-blocked reachable gate waits. Falling back into an isolated
     // courtyard would strand the paid unit on the wrong side of its own wall.
-    if (!reachableExit) cached.result = fallback;
+    if (!reachableExit) result = fallback;
+    if (!planningReachability) cached.result = result;
   }
-  return cached.result ? { ...cached.result } : undefined;
+  return result ? { ...result } : undefined;
 }
 
 function solidHalf(map: GameMap, body: Solid) {

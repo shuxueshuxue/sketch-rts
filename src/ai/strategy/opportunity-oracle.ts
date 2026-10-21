@@ -63,13 +63,13 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
       if (source.objectiveId === request.objectiveId || !source.unitIds.some(id => requested.has(id)) && !sharedProduction
         || source.effectKeys.some(key => requestEffects.has(key))) continue;
       const ids = [...new Set(source.unitIds)].sort();
-      const before = quote(source, ids, request.window);
       const remaining = ids.filter(id => !requested.has(id));
-      const after = before.status === 'feasible' ? quote(source, remaining, request.window, sharedProduction ? production : []) : null;
-      if (source.committed && (before.status !== 'feasible' || before.coverage !== 'complete'
-        || after?.status === 'unknown' || after?.status === 'feasible' && after.coverage !== 'complete')) {
-        const displacement = source.assemblyDisplacement?.(remaining, request.window, sharedProduction ? production : [], request.objectiveId);
-        if (displacement?.status === 'known') {
+      // Formal gathering always uses its paired supply/cash-flow upper proof.
+      // Even an exact fill probability does not make a known-effects payoff
+      // difference a safe upper bound on what displacement loses.
+      if (source.committed && source.assemblyDisplacement) {
+        const displacement = source.assemblyDisplacement(remaining, request.window, sharedProduction ? production : [], request.objectiveId);
+        if (displacement.status === 'known') {
           const bound = displacement.bound;
           alternatives.push({ objectiveId: source.objectiveId, unitIds: ids,
             ...(source.production?.length ? { production: canonicalProductionUses(source.production) } : {}),
@@ -77,6 +77,12 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
             withoutResourcesStatus: 'unknown', assemblyDelayUpperBound: bound });
           continue;
         }
+        unknown.add(source.objectiveId); continue;
+      }
+      const before = quote(source, ids, request.window);
+      const after = before.status === 'feasible' ? quote(source, remaining, request.window, sharedProduction ? production : []) : null;
+      if (source.committed && (before.status !== 'feasible' || before.coverage !== 'complete'
+        || after?.status === 'unknown' || after?.status === 'feasible' && after.coverage !== 'complete')) {
         unknown.add(source.objectiveId); continue;
       }
       if (before.status !== 'feasible' || !after) continue;
