@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { snapshotGame } from '../../../shared/sim';
-import { isFootprintBuildable, sameGround } from '../../../shared/terrain';
+import { isFootprintBuildable, isWalkable, sameGround } from '../../../shared/terrain';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../../shared/catalog';
 import { boardingBerth } from '../../../shared/naval';
 import { neutralCampExposure } from '../../situation/neutral-camp-exposure';
@@ -51,6 +51,11 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       if (key === 'navy-zero') {
         const at = legalBuildingSite(world.game, 'shipyard', { x: 1536, y: 1280 });
         expect(checkCommandLegality(frame, world.owner, { type: 'build', unitId: world.workers[0]!.id, buildingKind: 'shipyard', ...at })).toBeUndefined();
+      }
+      if (key === 'guarded-shore') {
+        expect(isWalkable(world.game.map, 2256, 1200), 'no third cheap beach through the cliff ring').toBe(false);
+        expect(isWalkable(world.game.map, 2368, 768)).toBe(true);
+        expect(isWalkable(world.game.map, 3104, 3200)).toBe(true);
       }
     });
     it.skipIf(!publicPuzzlePlanner)('cold-frame dependency graph: required actions, causal order and forbidden choices', () => {
