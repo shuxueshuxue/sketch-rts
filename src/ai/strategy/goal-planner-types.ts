@@ -202,6 +202,9 @@ export type GoalCombatOption = Readonly<{
   /** Actual source pose/region, distinct from the requested destination post. */
   from?: Target;
   duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
+  /** Arrival/activation delay inside a sustained action. Its world effect can
+   * become available before its continuing protection lease is released. */
+  effectDelayTicks?: GoalEstimate<number>;
   preconditions: readonly GoalFact[]; factIds: readonly string[];
 }>;
 export type GoalRequest = Readonly<{
