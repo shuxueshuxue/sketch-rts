@@ -2,7 +2,7 @@
 
 #576 保持 draft，固定消费契约为 `feat/strategy-goal-planner` 的 `8afe8a35`。入口是 `AiPlanTrace.goalPlanner?: GoalPlannerOutput`；不调用规划器、事实源或动作 provider，不生成命令、兵力或预算。
 
-当前样稿：[从零造海军，双击打开](goal-navy.html)。它与游戏叠加层使用相同的渲染函数，由 `scripts/export-goal-plan-mockup.ts` 导出，单文件、无需联网。默认展开全图，点击节点后打开侧栏，支持缩放、查看原始字段和切换时间。
+当前样稿：[从零造海军，双击打开](goal-navy.html)。它与游戏叠加层使用相同的渲染函数，由 `scripts/export-goal-plan-mockup.ts` 导出，单文件、无需联网。默认按时间推进，点击节点后打开侧栏，支持缩放、查看原始字段和切换时间；也可切换“从目标反推”。
 
 ## 公开第 3 题的人工展示
 
@@ -16,9 +16,11 @@
 
 ## 阅读顺序与原始记录
 
-图上统一从左向右反推：目标 → 缺的条件 → 满足它的动作 → 动作的前置条件。实线表示满足条件，虚线表示需要条件，点线表示先后约束。共享条件在同一节点汇合。
+默认从左到右按时间排：最早动作在左，目标完成在右。动作中心对齐预计开始时刻，节点下的横线延伸至预计结束；支出、赏金与收入事件共用同一时间坐标。缩放和横向滚动时，图与金币带同步，竖向可对上哪一步花钱、哪一步入账。实线表示满足条件，虚线表示需要条件，点线表示先后约束；分叉和共享条件继续保留。
 
-这是视图投影：`establishes` 和 `resource-before` 在反推阅读方向展示，原始边、ID 和方向不修改，保留在“查看结构化字段”中。布局限制 200 个事实与动作；循环记录用明确标记的前向引用叶子保留，不反向画箭头。
+条件优先读取 availableTick，否则使用已观测时刻或所选生产动作声明的 start / finish / offset 时刻。缺时间的动作、条件及目标单放“时间未记录”，不拿零点或 deadline 补出 ETA。多个生产者缺任意一个 ETA 时保持未知。
+
+“从目标反推”切换保留目标 → 条件 → 动作 → 前置的阅读顺序，循环记录用前向引用叶子保留。两种模式都只投影视图，不改原始边、ID、方向或计划数据；结构化详情保留原记录。布局限制 200 个事实与动作。
 
 节点和侧栏用中文说明条件、动作、当前进度、预算及结果。pending 路线显示“等路线算完”；缺少执行者、时刻或数值时显示“—”。内部 ID、requestId、执行器代码、原生证据及完整声明收进结构化详情。候选方案仍保留选中/落选、成本、完成时间和原因。
 
@@ -32,7 +34,7 @@
 
 ## 验证
 
-代码源 `a23acc53df1c0517445afd49cfd86f77f4f191bf`：根/CLI tsc 均退出 0，10 文件 51 项通过。新增检查包括分叉与汇合、每条阅读边向右、原生边不可变、循环有界、先花后挣、400 金保护、并发预留合计及付款后的 0 预留。现有通路回归仍检查零构造、私有过滤、不可变回放、worker、观察开关前后逐命令和逐 tick 哈希一致。
+代码源 `d5ced6379e9010792129c3bf6b4e707b47de124f`：根/CLI tsc 均退出 0，10 文件 54 项通过。新增检查包括默认按时间排序、动作中心与金币事件共用坐标、未知 ETA 不补值、start / finish / offset 生效时刻、分叉与汇合、反推切换、原生边不可变、循环有界、先花后挣及 400 金保护。现有通路回归仍检查零构造、私有过滤、不可变回放、worker、观察开关前后逐命令和逐 tick 哈希一致。
 
 ```sh
 npx tsc --noEmit -p .
@@ -43,9 +45,9 @@ SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu ai-goal-pla
 SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu ai-goal-navy-mockup --ref HEAD --on mac1 --locale zh-CN --json
 ```
 
-mac1 使用真实 Metal GPU。游戏场景实际点击候选和预算、鼠标拖到清营后/完工/未记录时段；独立 HTML 从 file 打开并重开，检查预留、落选方案和结果。原图逐张查看；SHA256、实际拖动 tick 和来源见 [goal-consumer-capture.json](goal-consumer-capture.json)。本轮不跑胜率 benchmark；未把人工场景当作真实 AI 或性能验收，也未新增完整 src 测试。
+mac1 使用真实 Metal GPU。游戏场景实际点击候选和预算、鼠标拖到清营后/完工/未记录时段；独立 HTML 从 file 打开并重开。两处均测量 0:10 / 0:25 / 2:30 三次支出的节点中心与金币标记，默认、视图切换、放大并横向滚动 190px 后最大误差小于 0.02 CSS px；候选、预算、结果及未记录处理保持原样。原图逐张查看；SHA256、实际拖动 tick 和来源见 [goal-consumer-capture.json](goal-consumer-capture.json)。本轮不跑胜率 benchmark；未把人工场景当作真实 AI 或性能验收，也未新增完整 src 测试。
 
-CLI 增量复制会漏带 docs 文件，因此独立页面用该源的 git archive 放入 mac1 的独立目录 `runs/camps-navy-preview-a23acc53`；没有覆盖版本缓存。完整副本可直接运行常规命令。
+CLI 增量复制会漏带 docs 文件，因此独立页面用该源的 git archive 放入 mac1 的独立目录 `runs/camps-navy-preview-d5ced637`；没有覆盖版本缓存。完整副本可直接运行常规命令。
 
 ![人工样稿：完整分叉与金币预留](goal-navy-layout.png)
 ![游戏内人工样例：选中和落选的运兵方案](goal-contract-alternatives.png)

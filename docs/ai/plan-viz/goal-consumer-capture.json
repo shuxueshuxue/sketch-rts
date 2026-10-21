@@ -1,18 +1,90 @@
 {
   "schemaVersion": 2,
   "evidence": "artificial-public-puzzle-3",
-  "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
+  "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
   "contractSource": "8afe8a35b3474855ac4352752cd1ffe0b6c999c9",
   "page": {
     "path": "goal-navy.html",
-    "sha256": "ef514007b939383bf8989e57a6fc15b2d99bde09142e4e9b6968c2b5209cde6f"
+    "sha256": "7f924f08890dd43208d0715f69dd8c888ee975aba456f2aded1b0ba0a646ab1e"
   },
   "checks": [
     {
-      "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
-      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhmk67x-a2daf2/a23acc5",
+      "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhndwov-a8e012/d5ced63",
       "evidence": "artificial-public-puzzle-3",
       "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "alignment": {
+        "fitted": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 126.37677001953125,
+              "goldX": 126.38252639770508,
+              "error": 0.005756378173828125
+            },
+            {
+              "tick": 500,
+              "nodeX": 198.4854278564453,
+              "goldX": 198.48551177978516,
+              "error": 8.392333984375e-05
+            },
+            {
+              "tick": 3000,
+              "nodeX": 799.3503112792969,
+              "goldX": 799.3438720703125,
+              "error": 0.006439208984375
+            }
+          ]
+        },
+        "switched": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 126.37677001953125,
+              "goldX": 126.38252639770508,
+              "error": 0.005756378173828125
+            },
+            {
+              "tick": 500,
+              "nodeX": 198.4854278564453,
+              "goldX": 198.48551177978516,
+              "error": 8.392333984375e-05
+            },
+            {
+              "tick": 3000,
+              "nodeX": 799.3503112792969,
+              "goldX": 799.3438720703125,
+              "error": 0.006439208984375
+            }
+          ]
+        },
+        "zoomed": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 82.50186920166016,
+              "goldX": 82.5182876586914,
+              "error": 0.01641845703125
+            },
+            {
+              "tick": 500,
+              "nodeX": 258.54840087890625,
+              "goldX": 258.55267333984375,
+              "error": 0.0042724609375
+            },
+            {
+              "tick": 3000,
+              "nodeX": 1725.5035400390625,
+              "goldX": 1725.5060424804688,
+              "error": 0.00250244140625
+            }
+          ]
+        },
+        "scrolled": 190
+      },
       "packets": 4,
       "drags": [
         {
@@ -30,7 +102,10 @@
       ],
       "checked": [
         "branched-dependencies",
-        "left-to-right-regression",
+        "execution-time-default",
+        "shared-gold-clock",
+        "regression-toggle",
+        "zoom-and-scroll-alignment",
         "gold-prefixes",
         "hall-reservation",
         "human-readable-labels",
@@ -46,55 +121,127 @@
       "shots": [
         {
           "path": "goal-contract-overview.png",
-          "sha256": "394e1d4bf52cdf892c6a0606d95d407185266ddc75b8b5bde573b045549926a1",
-          "bytes": 217199,
+          "sha256": "c0a4505e36fb75102a1d381a14b470c090f0daadbd85d1bc35530717a02b17db",
+          "bytes": 224193,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-alternatives.png",
-          "sha256": "d0f6cb2e98c3d07f2743221b969cbdf449bbda83a2b18014f727abfc0abe6e06",
-          "bytes": 255447,
+          "sha256": "f6b152304e7e0a4ccff00e6b639d990ad65637e9031f933a86c614df03351f12",
+          "bytes": 279608,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-execution.png",
-          "sha256": "4beee14da12a9ec01196b989618104b67622b3cff29a067bda20c1fda3759473",
-          "bytes": 241736,
+          "sha256": "d683cdcc155b06e16621ceae353db5c61a895b3c3314887e71fa38ce358c2eae",
+          "bytes": 262655,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-progress.png",
-          "sha256": "1543ead9abc4504aa76d65b2347de10bce63470404ec04d67af1791906cc89a1",
-          "bytes": 247664,
+          "sha256": "2a304909febf237ed9cc145d923d52a59b85b3a628ad2478be6f6f4cb725bf50",
+          "bytes": 280767,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-result.png",
-          "sha256": "4a9a85cd8b33880072b1e5afb1185ae47251845673283357ce157ee98b9b96e0",
-          "bytes": 229603,
+          "sha256": "44d6510ba2648c5b4a73addb597cc7348b9fd399a85b2de1e986ac65b1f982f1",
+          "bytes": 260437,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-unrecorded.png",
-          "sha256": "aa01084fa3d70d3f88020ae9ffbd2e45948eb944c9dec2e98d9edc7ce40ad601",
-          "bytes": 494804,
+          "sha256": "653d14b3f98b1079df847ad085ca3a40b3ccd563b55a88667bc9ac5ad3ad4bec",
+          "bytes": 494646,
           "width": 1600,
           "height": 900
         }
       ]
     },
     {
-      "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
-      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhml3fp-813fe8/a23acc5",
+      "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhndxlt-14a8c0/d5ced63",
       "evidence": "artificial-public-puzzle-3",
       "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
-      "file": "/Users/mac1/work/sketch-cli/runs/camps-navy-preview-a23acc53/goal-navy.html",
-      "sha256": "ef514007b939383bf8989e57a6fc15b2d99bde09142e4e9b6968c2b5209cde6f",
+      "file": "/Users/mac1/work/sketch-cli/runs/camps-navy-preview-d5ced637/goal-navy.html",
+      "sha256": "7f924f08890dd43208d0715f69dd8c888ee975aba456f2aded1b0ba0a646ab1e",
+      "alignment": {
+        "fitted": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 142.35463333129883,
+              "goldX": 142.36265563964844,
+              "error": 0.008022308349609375
+            },
+            {
+              "tick": 500,
+              "nodeX": 225.82823181152344,
+              "goldX": 225.83067321777344,
+              "error": 0.00244140625
+            },
+            {
+              "tick": 3000,
+              "nodeX": 921.3946228027344,
+              "goldX": 921.3975830078125,
+              "error": 0.002960205078125
+            }
+          ]
+        },
+        "switched": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 142.35463333129883,
+              "goldX": 142.36265563964844,
+              "error": 0.008022308349609375
+            },
+            {
+              "tick": 500,
+              "nodeX": 225.82823181152344,
+              "goldX": 225.83067321777344,
+              "error": 0.00244140625
+            },
+            {
+              "tick": 3000,
+              "nodeX": 921.3946228027344,
+              "goldX": 921.3975830078125,
+              "error": 0.002960205078125
+            }
+          ]
+        },
+        "zoomed": {
+          "order": "time",
+          "rows": [
+            {
+              "tick": 200,
+              "nodeX": 121.51032257080078,
+              "goldX": 121.5294189453125,
+              "error": 0.01909637451171875
+            },
+            {
+              "tick": 500,
+              "nodeX": 325.3033142089844,
+              "goldX": 325.3084259033203,
+              "error": 0.0051116943359375
+            },
+            {
+              "tick": 3000,
+              "nodeX": 2023.46337890625,
+              "goldX": 2023.4669189453125,
+              "error": 0.0035400390625
+            }
+          ]
+        },
+        "scrolled": 190
+      },
       "checked": [
         "file-open",
         "branched-layout",
@@ -109,15 +256,15 @@
       "shots": [
         {
           "path": "goal-navy-layout.png",
-          "sha256": "530295b6f277c8ba71ec8bb60c1480f60d142ab9c6342edc73acf3b524482a63",
-          "bytes": 139462,
+          "sha256": "3d730915bfd2c9d5de31473e407da190b5511d0e2d3369fee06b0305749152fc",
+          "bytes": 161315,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-navy-options.png",
-          "sha256": "3c7bbc67fc5796acab70931011f0ebc9c594c57f2bd837d561ed8af7ddb39e2d",
-          "bytes": 163876,
+          "sha256": "08c1dc89b164b44fd14814d6b9bd5ca1531cd6a761eee64908890f43b3d86c1d",
+          "bytes": 199740,
           "width": 1600,
           "height": 900
         }
@@ -128,7 +275,7 @@
     "rootTscExit": 0,
     "cliTscExit": 0,
     "testFiles": 10,
-    "testsPassed": 51
+    "testsPassed": 54
   },
   "notEvidenceOf": [
     "real planner decisions",

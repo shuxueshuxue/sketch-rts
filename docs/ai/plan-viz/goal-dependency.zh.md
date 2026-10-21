@@ -1,6 +1,6 @@
 # 第一版目标依赖图（历史样稿）
 
-当前样稿已换成[从零造海军](goal-navy.html)，分叉、汇合、左向右反推和金币余额见[当前说明](goal-consumer.zh.md)。
+当前样稿已换成[从零造海军](goal-navy.html)，分叉、汇合、按时间推进与金币对齐见[当前说明](goal-consumer.zh.md)。
 
 以下保留第一版来源。[打开历史样稿](goal-dependency.html)。HTML、CSS、JS 随目录提供，无联网、服务端或游戏依赖；正文采用系统中文字体。
 
