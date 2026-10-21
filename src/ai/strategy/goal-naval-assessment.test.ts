@@ -57,6 +57,14 @@ function only(result:ReturnType<typeof assessGoalCampCombatOption>):GoalCombatOp
 }
 
 describe('pure shared naval combat assessment',()=>{
+ it('uses the same replaceable camp-model contract for exact refinement without adding a second loss margin',()=>{
+  const f=campFixture(),result=only(strict(()=>assessGoalCampCombatOption({...f,battleModel:()=>({state:'met',factIds:['camp-mixture'],value:{
+   modelId:'camp-mixture',expectedLossGold:12,successProbability:.91,battleTicks:80,requiredForce:3,
+   lossDistribution:{zeroProbability:.8,positive:[{probability:1,lossGold:60}]},factIds:['camp-mixture']}})})));
+  expect(result.cost).toMatchObject({state:'met',value:[{gold:.8*12},{gold:7}]});
+  expect(result.successProbability).toMatchObject({state:'met',value:.8*.91});
+  expect(result.duration).toMatchObject({state:'met',value:100});
+ });
  it('prices the same real camp cohort with native P/catalog deaths and keeps staging separate from the enemy camp',()=>{
   const f=campFixture(),before=JSON.stringify(f),work=new FactWorkQueue(0,0);
   const result=only(strict(()=>assessGoalCampCombatOption(f)));

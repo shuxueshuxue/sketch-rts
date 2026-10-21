@@ -88,3 +88,16 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 清营候选复用原生集合点顺序和同组 battle/赏金模型，`option.target` 是 staging，实际营地由 campId 绑定。集合负责当前来源到 staging；清营本体只计 staging 后的接战段。跨海和未来池仍 deferred，未发布条件行军风险时即使战斗时长可算，成本/P 也保持 pending；固定风险端口的构造器回归不证明真实 owner-scope 已有该风险事实。
 
 未建厅矿点的 garrison 不再要求已有 SiteThreat 才能枚举：仍是同一个 hold-position，以真实 hall-complete 和精确 force-at(post) 为前置，守到完整 throughTick。只有对应 post 的当前、完整、无威胁安全窗事实才能证明零守点损失；安全靠作战维持、缺时窗或缺保护评估时，候选的成本/P 明确保留 pending。没有把未知保护能力或命令 ACK 填成 P1。
+# 清营搜索报价与精确执行
+
+`context.precision='coarse'` 时，清营候选可在运输泊位尚未公布时声明。
+它以当前真实成员的 HP、武器和升级属性，条件于整组到达原生
+`stagingPoint` 候选后，调用同一个 `GoalCampBattleModel`。候选仍要求
+精确组的目标陆块兵池、`force-at`、`camp-staging` 和接战路线；粗估不
+建立这些世界事实，也不发 Arrival、路线、地面投影或风险工作请求。
+声明显式标为 `precision='coarse'`，必须由中心精确 refinement 后才可授予执行。
+
+临时默认模型明确标记 `legacy-casualty-alpha-0.19`，损失分布返回 null，
+不冒充清营专模。后续专模可通过同一个 `campBattleModel` 注入口替换，
+粗/精确两档均消费期望金币损失、独立胜率与战斗时长，不附加损失余量。
+精确档仍使用已公布行军风险和路线；未知敌军卸载归属保留 pending。

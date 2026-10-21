@@ -1,6 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import type { Building, GameSnapshot, Unit } from '../../shared/types';
-import { assessAllocatedCampBattle, assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
+import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
+import { legacyGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
 import { arrivalWeightedForce } from './arrival-force';
 import type { DecisionFacts } from './decision';
 import { defenseProtectionValue, type defenseThreatScenarios } from './defense-risk';
@@ -25,6 +26,7 @@ export type GoalCampCombatInput = GoalNavalCombatInput & Readonly<{
   campId: string; staging: Target;
   /** Published legality/safety facts for this attack staging point. */
   stagingFacts: readonly GoalFactObservation[];
+  battleModel?: GoalCampBattleModel;
 }>;
 export type GoalDefenseCombatInput = GoalNavalCombatInput & Readonly<{
   /** Exact source-selected guard post; target remains the protected site. */
@@ -143,20 +145,20 @@ export function assessGoalCampCombatOption(input: GoalCampCombatInput): GoalCand
   }
   if (timing.state !== 'met') return timing;
   const assessed = assessment(input, init.members, input.staging);
-  const battle = assessAllocatedCampBattle({ snapshot: assessed.snapshot, situation: input.situation, target: input.target,
+  const battle = (input.battleModel ?? legacyGoalCampBattleModel)({ snapshot: assessed.snapshot, situation: input.situation, target: input.target,
     unitIds: assessed.units.map(unit => unit.id), battleStartTicks: timing.value });
-  const ids = unique([...init.factIds, input.campId, ...battle.engagement.memberIds,
+  const ids = unique([...init.factIds, input.campId, ...(battle.state === 'met' ? battle.factIds : battle.reason.factIds),
     ...timing.factIds, ...(movement.state === 'met' ? movement.factIds : movement.reason.factIds)]);
-  const unknownBattle = battle.status !== 'known' ? pending(battle.reasonCode, ids, battle.engagement.unknownEnemyIds) : null;
-  const duration = unknownBattle ?? known(battle.battleUntilTicks, ids);
-  const uncertainty = unknownBattle ?? (movement.state !== 'met' ? movement : null);
+  const unknownBattle = battle.state !== 'met' ? battle : null;
+  const duration = unknownBattle ?? known(timing.value + (battle.state === 'met' ? battle.value.battleTicks : 0), ids);
   let cost: GoalCombatOption['cost'], successProbability: GoalCombatOption['successProbability'];
-  if (uncertainty) { cost = uncertainty; successProbability = uncertainty; }
-  else if (movement.state === 'met') {
-    cost = known(costs(movement.value.survivalProbability * battle.attrition.expectedLossGold, movement.value, ids), ids);
-    successProbability = known(movement.value.survivalProbability * battle.successProbability!, ids);
-  } else { cost = movement; successProbability = movement; }
-  const result = option(input, init.members, input.staging, battle.requiredForce ?? requiredForce,
+  if (battle.state !== 'met') { cost = battle; successProbability = battle; }
+  else if (movement.state !== 'met') { cost = movement; successProbability = movement; }
+  else {
+    cost = known(costs(movement.value.survivalProbability * battle.value.expectedLossGold, movement.value, ids), ids);
+    successProbability = known(movement.value.survivalProbability * battle.value.successProbability, ids);
+  }
+  const result = option(input, init.members, input.staging, battle.state === 'met' ? battle.value.requiredForce : requiredForce,
     { duration, cost, successProbability }, ids, input.campId);
   return result.state === 'met' ? { ...result, candidates: result.candidates.map(item => ({ ...item,
     preconditions: [...item.preconditions, ...input.stagingFacts.map(row => row.fact)],
