@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
+import { UNIT_DEFS } from '../../shared/catalog';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot } from '../../shared/types';
@@ -64,6 +65,48 @@ function rows(result: ReturnType<NonNullable<ReturnType<typeof createGoalLandCom
 function full(f: ReturnType<typeof fixture>, effect = f.effect) { return rows(strict(() => f.read(effect))).find(option => option.cohort.length === 2)!; }
 
 describe('land combat grounding from real targets and published physical facts', () => {
+  it('quotes rolling hold attrition over the current response window and retains the complete control duration', () => {
+    const f = fixture({ responder: true, tower: true }), before = JSON.stringify(f.context.snapshot);
+    // A shorter supported observation makes native damage remain below the
+    // death-cost cap, so accidentally pricing 12000 ticks cannot pass merely
+    // because both long losses have saturated at the cohort's replacement.
+    const base = { ...f.context, situation: { ...f.context.situation, horizonTicks: 60 } };
+    const factory = createGoalLandCombatGrounding(base, f.ports);
+    const context = { ...base, grounding: { ...f.context.grounding!, ...factory } };
+    const read = (effect: GoalFact) => rows(factory.combatOptions!(effect)).find(option => option.cohort.length === 2)!;
+    const short = goalFact({ kind: 'route-controlled', at: f.at, throughTick: context.tick + context.situation.horizonTicks });
+    const long = goalFact({ kind: 'route-controlled', at: f.at, throughTick: f.context.tick + 12000 });
+    const current = read(short), retained = read(long);
+    expect(current.cost.state).toBe('met'); expect(retained.cost.state).toBe('met');
+    if (current.cost.state !== 'met' || retained.cost.state !== 'met') throw Error('current observed battle unpublished');
+    expect(retained.cost.value.map(term => ({ code: term.code, gold: term.gold })))
+      .toEqual(current.cost.value.map(term => ({ code: term.code, gold: term.gold })));
+    expect(retained.cost.value.some(term => term.gold > 0)).toBe(true);
+    expect(retained.successProbability).toMatchObject({ state: 'met' });
+    if (current.successProbability.state !== 'met' || retained.successProbability.state !== 'met') throw Error('current P missing');
+    expect(retained.successProbability.value).toBe(current.successProbability.value);
+    expect(retained.successProbability.value).toBeLessThan(1);
+    const price = f.context.snapshot.units.filter(unit => unit.owner === 'us')
+      .reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0);
+    expect(retained.cost.value.find(term => term.code === 'land-native-expected-attrition')!.gold)
+      .toBeLessThan(price * (1 - retained.successProbability.value));
+    expect(retained.duration).toMatchObject({ state: 'met', value: 12000 });
+    expect(retained.byTick).toBe(f.context.tick + 12000);
+    const action = goalLandActionProvider.actionsFor(long, context).find(action => (action.executor.parameters.cohort as unknown[]).length === 2)!;
+    expect(action.effects[0]!.fact).toEqual(long);
+    expect(action.executor.parameters).toMatchObject({ throughTick: f.context.tick + 12000, protectionWindowTicks: context.situation.horizonTicks });
+    expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
+    expect(JSON.stringify(f.context.snapshot)).toBe(before);
+  });
+
+  it('retains unpublished current responders for a rolling hold instead of inventing protection', () => {
+    const f = fixture({ responder: true, readFact: (fact, tick) => fact.predicate.kind === 'route'
+      && fact.predicate.actor?.kind === 'existing' && fact.predicate.actor.entityId === 'responder'
+      ? { ...observed(fact, tick), state: 'pending', requestedTick: tick, requestId: 'current-responder-route' } : observed(fact, tick) });
+    const effect = goalFact({ kind: 'route-controlled', at: f.at, throughTick: f.context.tick + 12000 });
+    expect(full(f, effect).cost).toMatchObject({ state: 'pending', requestIds: ['current-responder-route'] });
+    expect(full(f, effect).successProbability.state).toBe('pending');
+  });
   it('includes real building HP in work and does not run a second Situation, selector or path query', () => {
     const f = fixture(), doubleFixture = fixture({ hp: 200 }), before = JSON.stringify(f.context.snapshot), count = situationConstructionCount();
     const option = full(f), fighters = f.context.snapshot.units.filter(unit => unit.owner === 'us');

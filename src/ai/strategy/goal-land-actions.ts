@@ -44,10 +44,11 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
     executor: { executor: `goal.${kind}`, parameters: { cohort, target: input.target,
       ...(effect.predicate.kind === 'route-controlled' || effect.predicate.kind === 'harassment-ended'
         ? { throughTick: effect.predicate.throughTick } : {}),
+      ...(kind === 'hold-position' ? { protectionWindowTicks: context.situation.horizonTicks } : {}),
       ...(effect.predicate.kind === 'harassment-ended' && effect.predicate.unitIds
         ? { threatUnitIds: effect.predicate.unitIds } : {}) } },
     outputs: [], reasons: [],
-  }, context.tick);
+  }, context.tick, context.situation.horizonTicks);
 }
 
 /** A hostile target's destruction is a world effect, not an expansion recipe.

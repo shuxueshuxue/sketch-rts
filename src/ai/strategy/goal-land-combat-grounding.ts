@@ -106,9 +106,14 @@ export function assessGoalLandEngagement(input: GoalLandEngagementInput): GoalCa
   const arrivalTicks = request.arrivalTicks.value, holdingTicks = p.kind === 'route-controlled' ? p.throughTick - context.tick : undefined;
   if ([...fighters, ...targets.value].some(unit => ![unit.hp, unit.attackDamage, unit.attackCooldown].every(Number.isFinite)))
     return unavailable(pending('land-combat-native-stats-pending', ids));
-  const workTicks = landCombatWorkTicks(targets.value, fighters, holdingTicks), responseWindow = Math.min(context.situation.horizonTicks, arrivalTicks + workTicks);
-  if (arrivalTicks > context.situation.horizonTicks || p.kind !== 'route-controlled' && arrivalTicks + workTicks > context.situation.horizonTicks
-    || p.kind === 'route-controlled' && p.throughTick > context.tick + context.situation.horizonTicks)
+  const workTicks = landCombatWorkTicks(targets.value, fighters, holdingTicks);
+  // A continuing hold quotes observed combat only through the current
+  // support horizon. Its action duration/through/lease remains the full
+  // obligation and the executor must reassess protection on later thinks.
+  const quoteWorkTicks = p.kind === 'route-controlled'
+    ? Math.min(workTicks, Math.max(0, context.situation.horizonTicks - arrivalTicks)) : workTicks;
+  const responseWindow = Math.min(context.situation.horizonTicks, arrivalTicks + quoteWorkTicks);
+  if (arrivalTicks > context.situation.horizonTicks || p.kind !== 'route-controlled' && arrivalTicks + workTicks > context.situation.horizonTicks)
     return unavailable(pending('land-combat-response-window-uncovered', ids));
   const pool = enemyPool(context), observations = new Map(context.situation.units.map(unit => [unit.id, unit]));
   const arrivals = new Map(input.opponents.value.map(row => [row.unitId, row.ticks]));
@@ -134,7 +139,7 @@ export function assessGoalLandEngagement(input: GoalLandEngagementInput): GoalCa
   const requiredForce = responders.reduce((sum, row) => sum + effectiveCombatRating(context.snapshot, row.raw) * row.coverage, 0)
     + towers.reduce((sum, tower) => sum + structureRating(tower), 0);
   const firing = [...responders.map(row => row.raw), ...towers, ...targets.value.filter(target => target.attackDamage > 0)];
-  const assessed = assessLandCombatAttrition({ tick: context.tick, arrivalTicks, workTicks, fighters, fieldStrength, requiredFieldStrength,
+  const assessed = assessLandCombatAttrition({ tick: context.tick, arrivalTicks, workTicks: quoteWorkTicks, fighters, fieldStrength, requiredFieldStrength,
     firing: firing.map(body => ({ body, arrivalTicks: arrivals.get(body.id) ?? null, expiresTick: observations.get(body.id)?.expiresTick ?? null })) });
   const duration = known(p.kind === 'route-controlled' ? workTicks : arrivalTicks + workTicks, ids), risk = input.movementRisk;
   if (risk.state !== 'met') return make({ duration, cost: risk, successProbability: risk }, requiredForce);

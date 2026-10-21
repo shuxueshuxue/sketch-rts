@@ -6,6 +6,8 @@ import { withNavigationAudit, withNavigationPhase } from '../../shared/navigatio
 import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { declareGoalGarrison } from './goal-garrison-action';
+import { declareGoalHoldPosition } from './goal-land-actions';
+import { createGoalLandCombatGrounding } from './goal-land-combat-grounding';
 import { goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
 import { withGoalPlannerInput } from './goal-planner-input';
@@ -56,6 +58,29 @@ function safety(option: GoalCombatOption) {
 }
 
 describe('garrison quotation within the published observation horizon', () => {
+  it.each(originals)('$variant also supports a rolling generic hold on the unchanged original world', row => fixture(row, context => {
+    const effect = goalFact({ kind: 'route-controlled', at, throughTick: 20000 });
+    const forbidden = vi.fn(() => { throw Error('A stationary hold must not issue a private query'); });
+    const factory = createGoalLandCombatGrounding(context, { arrival: forbidden, landRoute: forbidden,
+      movementRisk: forbidden, allowedUnitIds: ids,
+      resolveCohort: refs => ({ state: 'met', factIds: [], candidates: refs.flatMap(reference => {
+        const unit = reference.kind === 'existing' ? context.snapshot.units.find(unit => unit.id === reference.entityId) : undefined;
+        return unit ? [{ reference, assessment: unit }] : [];
+      }) }) });
+    const result = factory.combatOptions!(effect);
+    expect(result.state).toBe('met'); if (result.state !== 'met') throw Error('original hold cohort missing');
+    const option = result.candidates.find(candidate => candidate.cohort.length === 4)!;
+    expect(option.duration).toMatchObject({ state: 'met', value: 20000 - context.tick });
+    expect(option.cost).toMatchObject({ state: 'met' });
+    expect(option.successProbability).toMatchObject({ state: 'met', value: 1 });
+    const action = declareGoalHoldPosition({ ...option, throughTick: 20000 }, context)!;
+    expect(action.effects[0]!.fact).toEqual(effect);
+    expect(action.executor.parameters).toMatchObject({ throughTick: 20000, protectionWindowTicks: context.situation.horizonTicks });
+    expect(action.demands).toHaveLength(4);
+    expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
+    expect(forbidden).not.toHaveBeenCalled();
+  }));
+
   it.each(originals)('$variant keeps the full hold and lease while quoting only the current supported window', row => fixture(row, context => {
     const throughTick = 20000;
     // Variable form exercises the shared optional field without changing its
