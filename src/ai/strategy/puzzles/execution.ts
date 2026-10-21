@@ -1,4 +1,5 @@
 import { observeSimulation } from '../../../shared/sim';
+import { BUILDING_DEFS } from '../../../shared/catalog';
 import { sameGround } from '../../../shared/terrain';
 import type { GameCommand, Unit } from '../../../shared/types';
 import type { Observed } from '../../../shared/sim/observation';
@@ -51,6 +52,10 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     mark('farm-complete', game.buildings.some(b => !initialBuildings.has(b.id) && b.owner === owner && b.kind === 'farm' && b.complete));
     mark('knight-trained', units.some(u => !initialUnits.has(u.id) && u.kind === 'knight'));
     mark('footmen-trained', units.filter(u => !initialUnits.has(u.id) && u.kind === 'footman').length >= 2);
+    mark('shipyard-complete', game.buildings.some(b => b.owner === owner && b.kind === 'shipyard' && b.complete));
+    mark('transport-trained', units.some(u => !initialUnits.has(u.id) && u.kind === 'transport'));
+    const newHall = game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && !initialBuildings.has(b.id));
+    mark('hall-funding-spent-elsewhere', puzzle.key === 'navy-zero' && !newHall && game.players[owner]!.gold < BUILDING_DEFS.townHall.cost);
     mark('mainland-army-sent-to-island', puzzle.key === 'evacuate' && army.some(u => physicallyOnLand(world, u, world.mine)));
     mark('workers-rescued', world.islandWorkers.length > 0 && alive(world.islandWorkers).length === world.islandWorkers.length
       && world.islandWorkers.every(u => physicallyOnLand(world, u, world.home)));
@@ -77,7 +82,9 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
       case 'negative-return': checks = { localExpansion: seen('local-hall-complete') && seen('local-cleared'), rejectedBadIsland: !seen('target-attacked') && !seen('army-on-island') }; break;
       case 'evacuate': checks = { workersRescued: seen('workers-rescued'), noSuicideReinforcement: !seen('mainland-army-sent-to-island') }; break;
       default: checks = { islandHallComplete: seen('hall-complete'), campCleared: seen('camp-cleared'),
-        armyTransported: seen('army-boarded') && seen('army-on-island'), workerTransported: seen('worker-on-island') };
+        armyTransported: before('army-boarded', 'army-on-island'),
+        safeWorkerSequence: before('camp-cleared', 'worker-on-island') && before('worker-on-island', 'hall-complete') };
+        if (puzzle.key === 'navy-zero') checks.hallFundingPreserved = !seen('hall-funding-spent-elsewhere');
     }
     const buildings: Record<string, number> = {};
     for (const b of game.buildings.filter(b => b.owner === owner && b.hp > 0)) buildings[b.kind] = (buildings[b.kind] ?? 0) + 1;
