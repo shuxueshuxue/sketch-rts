@@ -1,3 +1,4 @@
+import { isOpenGround } from '../../shared/terrain';
 import { currentFactWork } from './fact-work';
 import { planningFieldKey } from './distance-fields';
 import { unitMover } from '../../shared/catalog';
@@ -101,6 +102,17 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
         route: { distance: route.distance, ticks: actor ? actor.speed > 0 ? Math.ceil(route.distance / actor.speed * SIM_TICKS_PER_SECOND) : null : null,
           points: route.points }, availableTick: tick,
       });
+    }
+    if (p.kind === 'assembly-post') {
+      const land = p.at.landId ?? ports.regionAt(p.at.point, 'land');
+      if (!land?.startsWith('land:') || ports.regionAt(p.at.point, 'land') !== land)
+        return answer(fact, false, 'assembly-post-land-mismatch', [p.at, land]);
+      const result = ports.geometry({ key: `assembly-post:${fact.id}`, revision: ports.geometryRevision, initialState: null,
+        advance: (state, allowance) => allowance < 1 ? { state, work: 0, done: false }
+          : { state, work: 1, done: true, value: isOpenGround(snapshot.map, p.at.point.x, p.at.point.y) } });
+      if (result.state !== 'met') return pending(fact, result.reason.code, [p.at, ports.geometryRevision, result.reason.factIds]);
+      return answer(fact, result.value, 'native-assembly-post-ground', [p.at, ports.geometryRevision, result.factIds, result.value],
+        result.value ? { availableTick: tick } : {});
     }
     if (p.kind === 'camp-cleared') {
       if (!memory.camps.includes(p.campId)) return answer(fact, false, 'camp-identity-unobserved', p.campId);
