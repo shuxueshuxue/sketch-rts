@@ -11,13 +11,13 @@ function action(id: string, kind: GoalActionKind, unit = 'unit-a', tick = 10, x 
       successProbability: { state: 'met', value: 1, factIds: [] }, outputs: [], reasons: [],
       executor: { executor: `goal.${kind}`, parameters: { actor: { kind: 'existing', entityId: unit }, at: { x, y: 240 } } } } };
 }
-function output(actions: readonly GoalActionNode[]) {
-  return { plans: [{ goal: { id: 'objective' }, actions, facts: [], edges: [] }] };
+function output<T extends readonly GoalActionNode[]>(actions: T) {
+  return { plans: [{ goal: { id: 'objective' }, actions, facts: [], edges: [] }] as const };
 }
 function chain(tick = 10, x = 240) {
   const assemble = action(`assemble:${tick}:${x}`, 'assemble', 'unit-a', tick, x);
   const transport = action(`transport:${tick}:${x}`, 'transport-force', 'unit-a', tick + 20, x);
-  return output([assemble, { ...transport, dependsOnActionIds: [assemble.id] }]);
+  return output([assemble, { ...transport, dependsOnActionIds: [assemble.id] }] as const);
 }
 
 describe('public puzzle last-three structural stability', () => {
@@ -38,11 +38,11 @@ describe('public puzzle last-three structural stability', () => {
   });
 
   it.each(['order', 'kind', 'participants', 'dependency', 'added-action'] as const)('rejects changed %s', change => {
-    const baseline = chain(), actions = [...chain().plans[0].actions];
+    const baseline = chain(), actions: GoalActionNode[] = [...chain().plans[0].actions], second = actions[1]!;
     if (change === 'order') actions.reverse();
-    if (change === 'kind') actions[1] = { ...action(actions[1].id, 'transport-worker'), dependsOnActionIds: actions[1].dependsOnActionIds };
-    if (change === 'participants') actions[1] = { ...action(actions[1].id, 'transport-force', 'unit-b'), dependsOnActionIds: actions[1].dependsOnActionIds };
-    if (change === 'dependency') actions[1] = { ...actions[1], dependsOnActionIds: [] };
+    if (change === 'kind') actions[1] = { ...action(second.id, 'transport-worker'), dependsOnActionIds: second.dependsOnActionIds };
+    if (change === 'participants') actions[1] = { ...action(second.id, 'transport-force', 'unit-b'), dependsOnActionIds: second.dependsOnActionIds };
+    if (change === 'dependency') actions[1] = { ...second, dependsOnActionIds: [] };
     if (change === 'added-action') actions.push(action('hold', 'hold-position'));
     expect(comparePuzzlePlanWindow([baseline, baseline, output(actions)]).stable).toBe(false);
   });
