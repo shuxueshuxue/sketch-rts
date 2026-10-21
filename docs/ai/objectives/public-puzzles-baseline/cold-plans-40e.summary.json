@@ -1,0 +1,1001 @@
+{
+  "sharedBase": "40e06d3a",
+  "source": "475dd5e8",
+  "policyVersion": "v9_knight",
+  "nativeTick": "one cold owner think, no simulation advance",
+  "counts": {
+    "passed": 0,
+    "wrongSelectedChain": 0,
+    "missingCapability": 11
+  },
+  "cases": [
+    {
+      "puzzle": "defense-window/later",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "defense target must be present: expected 0 to be greater than 0",
+      "workUsed": 1937,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {
+        "attackMove": 4
+      },
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "defense-window/urgent",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "defense target must be present: expected 0 to be greater than 0",
+      "workUsed": 1937,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {
+        "attackMove": 4
+      },
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "evacuate/default",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "evacuation is an action: expected 0 to be greater than 0",
+      "workUsed": 6144,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "DefendSite:planner:scene-public-planner-frame-planner-townHall-2",
+          "effects": [
+            "site-safe"
+          ],
+          "rewardGold": 0,
+          "deadlineTick": 902
+        },
+        {
+          "id": "Evacuate:planner:scene-public-planner-frame-planner-townHall-2",
+          "effects": [
+            "assets-safe"
+          ],
+          "rewardGold": 300,
+          "deadlineTick": 2402
+        },
+        {
+          "id": "ReinforceFront:planner:land:2",
+          "effects": [
+            "force-at"
+          ],
+          "rewardGold": 0,
+          "deadlineTick": 2402
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "DefendSite:planner:scene-public-planner-frame-planner-townHall-2",
+          "status": "waiting-facts",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 4,
+            "depth": 0,
+            "work": 4,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "site-safe",
+              "state": "pending",
+              "reason": "goal-world-domain-port-required",
+              "metric": null
+            }
+          ]
+        },
+        {
+          "goalId": "Evacuate:planner:scene-public-planner-frame-planner-townHall-2",
+          "status": "waiting-facts",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 4,
+            "depth": 0,
+            "work": 4,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "assets-safe",
+              "state": "pending",
+              "reason": "goal-world-domain-port-required",
+              "metric": null
+            }
+          ]
+        },
+        {
+          "goalId": "ReinforceFront:planner:land:2",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 4,
+            "depth": 0,
+            "work": 4,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "force-at",
+              "state": "unmet",
+              "reason": "native-selected-force",
+              "metric": "field-strength"
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-2",
+          "horizonTicks": 900,
+          "attackerCount": 10,
+          "firstArrivalTicks": 0
+        }
+      ],
+      "enemyOrders": {
+        "attackMove": 9,
+        "idle": 1,
+        "unload": 1
+      },
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "guarded-shore/strong",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "army crosses water: expected 0 to be greater than 0",
+      "workUsed": 3664,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "guarded-shore/weak",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "army crosses water: expected 0 to be greater than 0",
+      "workUsed": 3664,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "navy-zero/default",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "army transport before camp: predecessor: expected 0 to be greater than 0",
+      "workUsed": 3294,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "negative-return/default",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "use army on mainland opportunity: expected 0 to be greater than 0",
+      "workUsed": 6144,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 500,
+          "deadlineTick": null
+        },
+        {
+          "id": "ExpandLand:planner:resource-2",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 0.011999598013466551,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        },
+        {
+          "goalId": "ExpandLand:planner:resource-2",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        },
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "ship-away/far",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "army transport before camp: predecessor: expected 0 to be greater than 0",
+      "workUsed": 3294,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "army transport before camp: predecessor: expected 0 to be greater than 0",
+      "workUsed": 3294,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 1200,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "supply-tier/footmen",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "faster basic force clears camp: predecessor: expected 0 to be greater than 0",
+      "workUsed": 148,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ExpandLand:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 0.009795650486292827,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ExpandLand:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    },
+    {
+      "puzzle": "supply-tier/knight",
+      "passed": false,
+      "phase": "plan-verdict",
+      "calls": 1,
+      "snapshotUntouched": true,
+      "error": "farm unlocks knight tier: predecessor: expected 0 to be greater than 0",
+      "workUsed": 147,
+      "workLimit": 6144,
+      "ports": {
+        "combatOptions": false,
+        "futureProjection": false
+      },
+      "goals": [
+        {
+          "id": "ExpandLand:planner:resource-1",
+          "effects": [
+            "hall-complete",
+            "garrison-ready"
+          ],
+          "rewardGold": 0.009795650486292827,
+          "deadlineTick": null
+        }
+      ],
+      "plans": [
+        {
+          "goalId": "ExpandLand:planner:resource-1",
+          "status": "blocked",
+          "actions": [],
+          "alternativeCount": 0,
+          "search": {
+            "expansions": 5,
+            "depth": 0,
+            "work": 5,
+            "limitReason": null
+          },
+          "facts": [
+            {
+              "kind": "garrison-ready",
+              "state": "unmet",
+              "reason": "observed-garrison-handoff",
+              "metric": null
+            },
+            {
+              "kind": "hall-complete",
+              "state": "unmet",
+              "reason": "native-mine-hall-missing",
+              "metric": null
+            }
+          ]
+        }
+      ],
+      "afterPlanHallGrounding": [
+        {
+          "state": "pending",
+          "reasonCode": "goal-geometry-publication-pending",
+          "candidateCount": 0,
+          "requestCount": 1,
+          "error": null
+        }
+      ],
+      "threats": [
+        {
+          "siteId": "scene-public-planner-frame-planner-townHall-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        },
+        {
+          "siteId": "scene-public-planner-frame-planner-farm-1",
+          "horizonTicks": 900,
+          "attackerCount": 0,
+          "firstArrivalTicks": null
+        }
+      ],
+      "enemyOrders": {},
+      "classification": {
+        "category": "missing-capability",
+        "review": "manual: no selected actions; see cited facts and native grounding states"
+      }
+    }
+  ]
+}
