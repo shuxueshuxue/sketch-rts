@@ -56,3 +56,11 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 伤亡金额与 P 复用现有整组 camp / defense battle 和保护模型，不加入目标收入、生产费用或第二份 bundle 机会费用。defense 的旧 field-strength 战斗模型与新的 combat-rating 到岗门槛分开，后者必须显式提供 `requiredCombatRating`；缺标量时返回共享 pending 候选，而非填 0。行军风险缺失时成本/P 保持 pending。敌方 aboard-unload 尚无预算化归属端口时，清营 helper 在旧 assessor 触发原生卸载投影前保留 pending。
 
 评估副本只用于条件战斗，不产生世界实体、lease 或输出回执。测试核实际原生快照、同组原 battle 金额/P、集合点绑定、符号引用、持续防守 offset、严格原生导航闸和 JSON/输入不变；固定已发布路线与风险端口不构成完整 source 或题库执行验收。
+
+`goal-naval-executors.ts` 独立导出 `goalNavalExecutors`，注册 ID 为 `goal.<actionKind>`，交由唯一 ready-action bridge 选择。八种海运/防守动作都接现有 `ExecutorInput` / `ActionGrant` / command gateway；仅接受中心已解析的 existing 引用，所选成员、船体及整船实际乘员必须有本 action 的真实 lease，中断成员不能暗借回来。原声明的 strategy executor 名称不构成第二条执行入口。
+
+集结、清营、撤离复用现有原生执行逻辑，目标和所选组来自声明参数；集合 staging 与实际 camp 中心分开。调用前使用同一个 landRoute 端口，unknown 为 pending，不回退私有导航。持续防守可保护尚未施工的明确地点；到岗后守到 throughTick，晚到不能伪称完成过去的保护窗口。纯调船不要求乘员，实际 cargo 仍逐项核租用。
+
+运输直接使用已解析的船、组、水陆点执行串行 move → board → unload，不为 aboard origin 填假原岸或自建 VoyageAllocation。首条 move 保留，未观察到船进入容差前不下 board；已确认的泊位漂移成为顶层 failed。所有装载、航行、卸载进度来自实际快照，全部目标成员实际上岸且实际 cargo 已卸空后才完成。抢占反馈使用现有 handoff ACK，保留状态，由唯一框架决定后续资源和进度。
+
+执行回归使用真实原生快照和显式现有 grant，覆盖严格导航闸、pending/unreachable、extra lease 不扩选组、空地点保护、原 4180 公开登船链、真实 aboard 卸载、清岸与抢占。它们验证领域 adapter/native 协议；统一 source → 规划器 → 分配器 → gateway 的公开题计划/执行检查仍须在共同接线后单独验收。
