@@ -8,6 +8,7 @@ import { copiedEvidenceProjection, deferredEvidence, deferredRecord, projectedCo
 export const STRATEGY_PARAMETERS = Object.freeze({
   utilityHorizonTicks: 120 * SIM_TICKS_PER_SECOND,
   threatHorizonTicks: 45 * SIM_TICKS_PER_SECOND,
+  knownThreatHorizonTicks: 600 * SIM_TICKS_PER_SECOND,
   goldPerFieldStrength: 100,
   minimumStayTicks: 15 * SIM_TICKS_PER_SECOND,
   challengerThinks: 3,

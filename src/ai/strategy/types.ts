@@ -117,7 +117,7 @@ export type SiteThreat = Readonly<{
     /** Current native activity is separate from a route the enemy could choose.
      * One enemy has at most one actual site; other sites retain redirect risk. */
     intent?: Readonly<{ kind: 'actual-intrusion' | 'potential-redirect'; actualSiteId: string | null; redirectGroupId: string;
-      basis: 'native-target' | 'native-destination' | 'hostile-presence' | 'potential-route' }> }> [];
+      basis: 'native-target' | 'native-destination' | 'native-unload' | 'hostile-presence' | 'potential-route' }> }> [];
   arrivedStrength: number;
   /** Not yet at the site; disjoint from arrivedStrength. */
   incomingStrength: number;

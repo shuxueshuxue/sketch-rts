@@ -39,7 +39,10 @@ export function goalRequestFromObjective(objective: ObservedObjective, context: 
       if (objective.kind === 'DefendSite') {
         const threat = situation.lands.flatMap(land => land.threats).find(threat => threat.siteId === effect.siteId);
         const site = situation.assets.find(asset => asset.id === effect.siteId);
-        if (threat && site?.hp !== null && site?.hp !== undefined)
+        const declaredArrivals = threat?.attackers.filter(attacker => attacker.intent?.kind === 'actual-intrusion'
+          && attacker.intent.basis !== 'hostile-presence').flatMap(attacker => 'ticks' in attacker.arrival ? [attacker.arrival.ticks] : []) ?? [];
+        if (declaredArrivals.length) deadlines.push(tick + Math.min(...declaredArrivals));
+        else if (threat && site?.hp !== null && site?.hp !== undefined)
           deadlines.push(tick + Math.min(threat.horizonTicks, siteCollapseAfter(snapshot, threat, site.hp)));
       }
     } else if (effect.kind === 'mining-established') {
