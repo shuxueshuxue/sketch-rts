@@ -127,7 +127,8 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       let result: ReturnType<typeof runPublicPuzzle> | undefined, error: unknown;
       let stepOwnership: PuzzleStepOwnership | undefined;
       try {
-        result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner });
+        result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner,
+          ...(ownershipScope ? { onCommand: event => session.applied?.(event) } : {}) });
         expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
         expect(result.execution.checks).not.toEqual({});
         expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
