@@ -29,6 +29,7 @@ export type ProductionBinding = Readonly<{
     queueIndex: number; observedTick: number; remainingTicks: number }>;
 }>;
 export type ActionIntent =
+  | import('./goal-execution-types').GoalExecutableIntent
   | Readonly<{ kind: 'clear-camp'; memberIds: readonly string[] }>
   | Readonly<{ kind: 'assemble-force'; campTarget: Target; requiredForce: number;
       posts: readonly Readonly<{ id: string; target: Target; unitIds: readonly string[] }>[] }>
@@ -387,6 +388,9 @@ export type ExecutorFeedback = Readonly<{
   /** A receipt is checked against the native queue/foundation and the captured
    * pre-command baseline. Command admission alone is never a payment. */
   payments?: readonly AllocationPayment[];
+  /** Declarative output slots are not bound until the common lifecycle
+   * validates these proposals against actual native world evidence. */
+  goalOutputs?: readonly import('./goal-execution-types').GoalOutputReceipt[];
   handoffs: readonly Readonly<{ eventId: AllocationEventId; disposition: 'shrink' | 'pause' | 'fail' }>[];
 }>;
 export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
