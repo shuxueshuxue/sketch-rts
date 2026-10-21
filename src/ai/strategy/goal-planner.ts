@@ -37,15 +37,23 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
       return current.revision === dependency.revision && current.state === dependency.state;
     });
     if (unchanged && previous.continuation?.phase === 'done' && previous.plan.status !== 'search-pending') {
-      const delta = context.tick - previous.plan.observedTick;
       const deadline = goal.deadlineTick;
-      const shifted = previous.plan.actions.map(action => ({ ...action,
-        startTick: action.startTick === null ? null : action.startTick + delta,
-        finishTick: action.finishTick === null ? null : action.finishTick + delta }));
-      if (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline)) {
+      const finishById = new Map<string, number>();
+      const shifted = previous.plan.actions.map(action => {
+        const availability = action.declaration.preconditions.map(fact => context.readFact(fact).availableTick ?? context.tick);
+        const startTick = Math.max(context.tick, ...availability, ...action.dependsOnActionIds.map(id => finishById.get(id) ?? context.tick));
+        const finishTick = action.declaration.duration.state === 'met' ? startTick + action.declaration.duration.value : null;
+        if (finishTick !== null) finishById.set(action.id, finishTick);
+        return { ...action, startTick, finishTick,
+          state: action.dependsOnActionIds.length ? 'waiting-actions' as const : startTick > context.tick ? 'waiting-time' as const : 'ready' as const };
+      });
+      const projected = projectGoalResources({ epoch: context.tick, initial: balances(previous.continuation, input),
+        actions: shifted.flatMap(action => action.finishTick === null ? [] : [{ action: action.declaration, startTick: action.startTick, finishTick: action.finishTick }]) });
+      if (projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
         const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted,
-          completedTick: previous.plan.completedTick === null ? null : previous.plan.completedTick + delta,
-          resourceTimeline: previous.plan.resourceTimeline.map(event => ({ ...event, tick: event.tick + delta })),
+          readyActionIds: shifted.filter(action => action.state === 'ready').map(action => action.id),
+          completedTick: previous.plan.completedTick === null ? null : Math.max(context.tick, ...finishById.values()),
+          resourceTimeline: projected.timeline,
           search: { ...previous.plan.search, work: 0 }, facts: previous.plan.facts.map(node => ({ ...node, observation: context.readFact(node.observation.fact) })) };
         plans.push(plan); entries.push({ ...previous, plan }); continue;
       }
@@ -114,6 +122,7 @@ function regressOne(state: GoalSearchMemory, input: GoalPlannerInput, providers:
   const observation = observe(state, input, request.fact);
   state.depth = Math.max(state.depth, request.depth);
   if (observation.state === 'pending') return;
+  if (observation.derived) state.requests.push(...observation.derived.allOf.map(fact => ({ fact, depth: request.depth + 1 })));
   // A currently met numeric balance can be consumed by another action. Its
   // positive-flow alternatives must remain available to repair that prefix.
   if (observation.state === 'met' && !goalQuantity(request.fact)) return;
@@ -145,13 +154,18 @@ function balances(state: GoalSearchMemory, input: GoalPlannerInput): GoalResourc
   return result;
 }
 type Satisfaction = { met: boolean; pending: boolean; bindings: GoalBindings; tick: number; producers: string[] };
-function satisfies(factInput: GoalFact, path: Path, state: GoalSearchMemory, input: GoalPlannerInput): Satisfaction {
+function satisfies(factInput: GoalFact, path: Path, state: GoalSearchMemory, input: GoalPlannerInput, parents: readonly string[] = []): Satisfaction {
   const fact = bindGoalFact(factInput, path.bindings), now = input.context.tick;
   const bounded = (result: Satisfaction): Satisfaction => 'byTick' in fact.predicate && result.tick > fact.predicate.byTick
     ? { ...result, met: false } : result;
   let binding = path.bindings;
   const producers: string[] = []; let available = now;
   const current = observe(state, input, fact);
+  if (current.derived && !parents.includes(fact.id) && parents.length < input.limits.maxDepth) {
+    const results = current.derived.allOf.map(required => satisfies(required, path, state, input, [...parents, fact.id]));
+    if (results.every(result => result.met)) return bounded({ met: true, pending: false, bindings: binding,
+      tick: Math.max(now, ...results.map(result => result.tick)), producers: [...new Set(results.flatMap(result => result.producers))].sort() });
+  }
   const quantity = goalQuantity(fact);
   if (input.context.readProjectedFact && path.steps.length && ['force-at', 'force-available', 'worker-at', 'cargo-aboard',
     'unit-available', 'interception-capability'].includes(fact.predicate.kind)) {
@@ -262,12 +276,13 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
   return { id: `goal-plan:${goal.id}`, goal, observedTick: input.context.tick,
     status: currentMet ? 'complete' : path ? 'ready' : state.phase !== 'done' || state.limitReason ? 'search-pending' : unresolved ? 'waiting-facts' : 'blocked',
     facts: state.observed.map(observation => ({ id: observation.fact.id, observation,
-      producerActionIds: steps.filter(step => goalActionContributes(step.action, observation.fact)).map(step => step.action.id) })),
+      producerActionIds: path ? satisfies(observation.fact, path, state, input).producers : [] })),
     actions, edges: actions.flatMap(action => [
       ...action.prerequisiteFactIds.map(from => ({ from, to: action.id, kind: 'requires' as const })),
       ...action.declaration.effects.filter(effect => effect.operation === 'establish').map(effect => ({ from: action.id, to: effect.fact.id, kind: 'establishes' as const })),
       ...action.dependsOnActionIds.map(from => ({ from, to: action.id, kind: 'resource-before' as const })),
-    ]), subgoals: state.observed.map(observation => ({ id: `subgoal:${observation.fact.id}`, factId: observation.fact.id,
+    ]).concat(state.observed.flatMap(observation => observation.derived?.allOf.map(fact => ({ from: fact.id, to: observation.fact.id, kind: 'requires' as const })) ?? [])),
+    subgoals: state.observed.map(observation => ({ id: `subgoal:${observation.fact.id}`, factId: observation.fact.id,
       parentGoalId: goal.id, requestedByActionIds: steps.filter(step => step.action.preconditions.some(fact => fact.id === observation.fact.id)).map(step => step.action.id),
       state: observation.state, chosenActionId: alternatives.find(alternative => alternative.factId === observation.fact.id && alternative.status === 'chosen')?.actionId ?? null,
       chosenActionIds: alternatives.filter(alternative => alternative.factId === observation.fact.id && alternative.status === 'chosen').map(alternative => alternative.actionId),

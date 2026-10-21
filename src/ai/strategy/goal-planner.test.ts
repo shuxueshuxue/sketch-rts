@@ -116,3 +116,19 @@ it('preserves pending facts, bounded search and output-reference unification wit
   const bindings = matchGoalFacts(produced, required)!;
   expect(bindings).toEqual({ hull: output }); expect(bindGoalFact(required, bindings).predicate).toMatchObject({ transport: output });
 });
+
+it('releases a cached future availability at its fixed absolute tick instead of shifting it away', () => {
+  const { input, context } = example(), original = context.readFact;
+  const clocked: GoalPlanningContext = { ...context, readFact: fact => {
+    const value = original(fact);
+    return fact.predicate.kind === 'gold' && fact.predicate.minimum === UNIT_DEFS.footman.cost
+      ? { ...value, availableTick: 100, revision: 'paid-job-ready-at-100' } : value;
+  } };
+  const first = planGoals({ ...input(), context: clocked });
+  expect(first.plans[0]!.actions.find(action => action.id === 'train')).toMatchObject({ startTick: 100, state: 'waiting-time' });
+  const at100: GoalPlannerInput = { ...input(), context: { ...clocked, tick: 100, snapshot: { ...clocked.snapshot, tick: 100 } },
+    initialBalances: input().initialBalances.map(balance => ({ ...balance, asOfTick: 100 })), work: new FactWorkQueue(100) };
+  const cached = planGoals({ ...at100, previous: JSON.parse(JSON.stringify(first.cache)) }), cold = planGoals({ ...at100, work: new FactWorkQueue(100) });
+  expect(cached.plans[0]!.actions).toEqual(cold.plans[0]!.actions);
+  expect(cached.plans[0]!.readyActionIds).toEqual(['train']); expect(cached.plans[0]!.search.work).toBe(0);
+});
