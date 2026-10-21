@@ -32,6 +32,9 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'cargo-aboard'; transport: GoalEntityReference; units: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'shore-safe'; landId: LandId; landing: Target; throughTick: number }>
   | Readonly<{ kind: 'camp-cleared'; campId: string }>
+  /** Native gathering/retreat geometry for this camp. This predicate does not
+   * assert that the camp's combat exposure is absent during the attack. */
+  | Readonly<{ kind: 'camp-staging'; campId: string; at: Target; cohort?: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'hall-complete'; mineId: string; at: Target }>
   | Readonly<{ kind: 'garrison-ready'; mineId: string; at: Target }>
   | Readonly<{ kind: 'site-safe'; site: Target; throughTick: number }>
