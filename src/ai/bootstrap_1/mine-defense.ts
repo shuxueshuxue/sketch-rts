@@ -37,6 +37,9 @@ import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { anchoredMiningDefense, miningRallyAssignment, planMiningRally, recordMiningRallyCommands, recordMiningRallyAcceptedCommands, miningRallyOwns } from './mining-rally';
 import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
+import { strategyLeaseAllows } from '../strategy/control';
+import { miningDefenseActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 import { expansionOwnsDefender, MINING_PURSUIT_RADIUS, miningLeashAssignment, miningLeashOwns, planMiningLeash, recordMiningLeashCommands, recordMiningLeashAcceptedCommands } from './mining-leash';
 
@@ -88,7 +91,7 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
     if (mountedHarassment(snapshot, intel, attackers)) continue;
-    const nearby = routeArrivals(snapshot.map, pool, hall, 'land')
+    const nearby = routeArrivals(snapshot.map, pool.filter(unit => strategyLeaseAllows(options.memory, unit.id, miningDefenseActor(hall.id))), hall, 'land')
       .filter(({ unit, ticks }) => ticks < SIM_TICKS_PER_SECOND * 1300 / unit.speed
         && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + ticks))
       .map(({ unit }) => unit);
@@ -134,8 +137,8 @@ export const mineDefense: AiScript = {
       if (order.type === 'attack' && snapshot.units.some(target => target.id === order.targetId && distance(target, post) < 450)) return false;
       return true;
     });
-    return [...charges, ...(moving.length ? [resolveAiCommandIntent(snapshot, owner,
-      { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [])];
+    return bindIncumbentCommands([...charges, ...(moving.length ? [resolveAiCommandIntent(snapshot, owner,
+      { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [])], miningDefenseActor(guard.hall.id));
   },
 };
 
@@ -165,6 +168,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     defendedHall = covered && nearestByRoute(snapshot.map, intel.ownHalls, covered.hall, 'land');
     return covered;
   })();
+  if (defendedHall && !haulingDefense) options = { ...options, strategyActor: miningDefenseActor(defendedHall.id) };
   const safeTerritory = !defense && !intel.intrusion;
   // With every front fighter borrowed, the shared planner returns before
   // setting a defense anchor. A stale forward post must not keep its casters
@@ -189,7 +193,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   // Reinforcements walk to the existing staging point. Count them in the camp's force only after they arrive.
   const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
-  let commands = attackRoadCampCommands(snapshot, owner, options, intel, false) ?? planV6Army(snapshot, owner, options, intel, {
+  const roadCamp = attackRoadCampCommands(snapshot, owner, options, intel, false);
+  let commands = roadCamp ?? planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
     expansionHandled: expansion !== undefined || options.memory.landAttack !== undefined,
     // Secure a working economy; an unfunded wish alone cannot reserve a stranded host.
@@ -257,6 +262,10 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     commands.push(...retreatV6Front(snapshot, owner, leaving, general!.target!, options)
       .map(command => ({ ...command, avoidCombat: true })));
   }
+  // Expansion, camp roads and territory help can share this script's return.
+  // Only the actual general defense branch owns this post's native orders.
+  if (roadCamp === undefined && hall && general && ['defend', 'guard'].includes(general.mode))
+    bindIncumbentCommands(commands, miningDefenseActor(hall.id));
   let assisting = false;
   if (general?.mode === 'hold') {
     const pressure = territoryPostCommands(snapshot, owner, options, intel, safeTerritory);

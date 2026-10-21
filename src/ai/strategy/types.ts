@@ -17,7 +17,11 @@ export type Evidence = Readonly<{
   certainty: 'recorded' | 'inferred' | 'unknown';
   detail: string;
 }>;
-export type Reason = Readonly<{ code: string; detail: string; evidence: readonly Evidence[] }>;
+export type Reason = Readonly<{ code: string; detail: string; evidence: readonly Evidence[];
+  /** Structured decision provenance survives projection without parsing prose. */
+  factIds?: readonly string[];
+  values?: Readonly<Record<string, string | number | boolean | null>>;
+}>;
 
 /** Component IDs use terrain connectivity, never a map ID or a home/island label. */
 export type Location =
@@ -31,17 +35,28 @@ export type Target = Readonly<{ entityId?: string; landId?: LandId; seaId?: SeaI
 export type Arrival =
   | Readonly<{ status: 'reachable'; ticks: number; landTicks: number; crossings: readonly (CrossingEta & Readonly<{ requiresNewShip: false }>)[]; evidence: readonly Evidence[] }>
   | Readonly<{ status: 'conditional'; ticks: number; landTicks: number; crossings: readonly CrossingEta[]; unmet: readonly Reason[]; evidence: readonly Evidence[] }>
-  | Readonly<{ status: 'unreachable' | 'unknown'; reason: Reason }>;
+  | Readonly<{ status: 'unreachable' | 'unknown'; reason: Reason;
+    /** Physical lower bound, not an ETA estimate or proof for a longer window. */
+    lowerBoundTicks?: number }>;
 export type CrossingEta = Readonly<{
   seaId: SeaId;
   shipId: string | null;
+  /** The exact producer used for a conditional new hull and its approach ETA. */
+  productionBuildingId?: string;
   departure: Point;
   landing: Point;
+  /** Same native boarding berth used by the execution grant. */
+  departureGround?: Point;
+  departureHeading?: number;
+  landingHeading?: number;
   /** Actual land-side unload point, distinct from the boat's water-side stop. */
   landingGround?: Point;
   /** Additional wait after the embarkation walk, excluding time already spent walking. */
   waitTicks: number;
   boardingTicks: number;
+  /** Absolute completion forecast of embarkation, evaluated in this snapshot.
+   * Absent for already loaded units or an unquoted loading schedule. */
+  expectedLoadedTick?: number;
   sailingTicks: number;
   unloadingTicks: number;
   /** A newly built ship is a method prerequisite, not an already available hull. */
@@ -70,6 +85,17 @@ export type SituationUnit = Readonly<{
   commitments: readonly Commitment[];
   arrivals: readonly Readonly<{ targetId: string; arrival: Arrival }>[];
 }>;
+/** Native production limits, distinct from current income or a staffing forecast.
+ * The cap is before upkeep. standardWorkers is an economy allocation target,
+ * not a claim that every worker produces cap / standardWorkers on every route. */
+export type MiningCapacity = Readonly<{
+  goldPerTickCap: number;
+  standardWorkers: number;
+  staffedWorkerIds: readonly string[];
+  goldPerTrip: number;
+  gatherTicks: number;
+  entryIntervalTicks: number;
+}>;
 export type Asset = Readonly<{
   id: string;
   owner: PlayerId;
@@ -80,12 +106,18 @@ export type Asset = Readonly<{
   replacementGold: number;
   remainingGold: number;
   incomeGoldPerTick: number;
+  /** Mine-only physical facts. A prospective staffing curve is quoted separately. */
+  miningCapacity?: MiningCapacity;
   discountedValueGold: number;
 }>;
 export type SiteThreat = Readonly<{
   siteId: string;
   horizonTicks: number;
-  attackers: readonly Readonly<{ unitId: string; arrival: Arrival; strength: number }>[];
+  attackers: readonly Readonly<{ unitId: string; arrival: Arrival; strength: number;
+    /** Current native activity is separate from a route the enemy could choose.
+     * One enemy has at most one actual site; other sites retain redirect risk. */
+    intent?: Readonly<{ kind: 'actual-intrusion' | 'potential-redirect'; actualSiteId: string | null; redirectGroupId: string;
+      basis: 'native-target' | 'native-destination' | 'hostile-presence' | 'potential-route' }> }> [];
   arrivedStrength: number;
   /** Not yet at the site; disjoint from arrivedStrength. */
   incomingStrength: number;
@@ -142,7 +174,11 @@ export type Effect =
   | Readonly<{ kind: 'harassment-ended'; unitId: string; siteId: string }>
   | Readonly<{ kind: 'assets-evacuated'; unitIds: readonly string[]; destination: Target }>;
 /** All terms share the evaluator's declared gold-equivalent scale and time horizon. */
-export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string }>;
+/** Catalogued unit assets represented by this numerical term. Keep identity
+ * outside prose so preserved value and permanent loss cannot charge it twice. */
+export type CatalogUnitValue = Readonly<{ unitId: string; valueGold: number }>;
+export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string;
+  catalogUnitValues?: readonly CatalogUnitValue[] }>;
 export type Utility = Readonly<{
   horizonTicks: number;
   /** Costs incurred only on success are negative benefit terms. */
@@ -155,6 +191,66 @@ export type Utility = Readonly<{
   score: number;
   evidence: readonly Evidence[];
 }>;
+/** Common valuation epoch: now through task completion plus a holding period.
+ * Every compared cash flow and alternative uses this exact window/rate. */
+export type ValuationWindow = Readonly<{ taskTicks: number; holdingTicks: number; horizonTicks: number; discountTicks: number }>;
+/** Half-open relative tick interval. Native training and research advance in
+ * independent lanes, even when they belong to the same building. */
+export type ProductionUse = Readonly<{ buildingId: string; lane: 'training' | 'research'; fromTicks: number; throughTicks: number }>;
+/** Migration-only bound on an executed old task, not its invented exact value. */
+export type ImportedLossUpperBound = Readonly<{ targetId: string; gold: number; window: ValuationWindow;
+  components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[] }>;
+/** Formal gathering displacement. Progress survives removal; loss prices only
+ * the separately proved delay, never the migration envelope or a payoff lower bound. */
+export type AssemblyDelayLossUpperBound = Readonly<{
+  targetId: string; gold: number; window: ValuationWindow; continuationUpperGold: number;
+  mode: 'scenario-delay' | 'scenario-continuation' | 'whole-value-cap';
+  components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[];
+}>;
+export type AssemblyDisplacementQuote = Readonly<{ status: 'known'; bound: AssemblyDelayLossUpperBound }>
+  | Readonly<{ status: 'unknown'; reasonCode: string }>;
+export type PricedOpportunityAlternative = Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[];
+  production?: readonly ProductionUse[]; marginalGold: number; withResourcesGold: number;
+  withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' | 'upper-bound' | 'assembly-delay-upper-bound';
+  upperBound?: ImportedLossUpperBound; assemblyDelayUpperBound?: AssemblyDelayLossUpperBound }>;
+export type OpportunityAlternative = Readonly<{
+  objectiveId: ObjectiveId;
+  unitIds: readonly string[];
+  production?: readonly ProductionUse[];
+  withResourcesGold: number;
+  withoutResourcesGold: number | null;
+  withoutResourcesStatus: 'feasible' | 'not-runnable' | 'unknown';
+  committed: boolean;
+  upperBound?: ImportedLossUpperBound;
+  assemblyDelayUpperBound?: AssemblyDelayLossUpperBound;
+}>;
+export type OpportunityCostQuote = Readonly<{ window: ValuationWindow }> & (
+  | Readonly<{ status: 'known'; gold: number; basis: 'feasible-bundle-quotes' | 'no-positive-feasible-alternative';
+    alternatives: readonly PricedOpportunityAlternative[];
+    /** All actual displacements survive portfolio deduplication for admission. */
+    displacements?: readonly PricedOpportunityAlternative[] }>
+  | Readonly<{ status: 'unknown'; objectiveIds: readonly ObjectiveId[]; reason: Readonly<{ code: string }> }>
+);
+export type OpportunityRequest = Readonly<{ objectiveId: ObjectiveId; methodId: MethodId | null;
+  unitIds: readonly string[]; production?: readonly ProductionUse[]; window: ValuationWindow }>;
+export type ValuationContext = Readonly<{
+  phase: 'gross' | 'net';
+  holdingTicks?: number;
+  discountTicks?: number;
+  /** Override when repricing an alternative in the requesting bundle's window. */
+  window?: ValuationWindow;
+  /** Requote an alternative after removing these resources. It may not silently
+   * replace them with another objective's ungranted cohort. */
+  unavailableUnitIds?: readonly string[];
+  /** Explicit original cohort when repricing a marginal alternative. */
+  allowedUnitIds?: readonly string[];
+  unavailableProduction?: readonly ProductionUse[];
+  /** Repricing may move a job in time, but cannot invent an ungranted factory. */
+  allowedProduction?: readonly Pick<ProductionUse, 'buildingId' | 'lane'>[];
+  opportunity?: (request: OpportunityRequest) => OpportunityCostQuote;
+}>;
+export type ValuationQuotation = Readonly<{ phase: 'gross' | 'net'; window: ValuationWindow;
+  unitIds: readonly string[]; production?: readonly ProductionUse[]; opportunity: OpportunityCostQuote | null }>;
 export type Objective = Readonly<{
   id: ObjectiveId;
   kind: ObjectiveKind;
@@ -172,6 +268,7 @@ export type Objective = Readonly<{
   rank: number | null;
   reasons: readonly Reason[];
   methodIds: readonly MethodId[];
+  valuation?: ValuationQuotation;
   /** Supporting objectives share the parent's payoff; do not sum it twice. */
   supportsObjectiveIds?: readonly ObjectiveId[];
   /** Different plans establishing the same effect; their payoffs are alternatives. */
@@ -198,9 +295,9 @@ export type Precondition = Readonly<{
 export type Subgoal = Readonly<{
   id: string;
   parentMethodId: MethodId;
-  kind: 'borrow-force' | 'train-force' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
+  kind: 'borrow-force' | 'assemble-force' | 'train-force' | 'train-worker' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
     | 'clear-beachhead' | 'change-landing' | 'deliver-force' | 'clear-camp' | 'deliver-workers'
-    | 'build-hall' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
+    | 'build-hall' | 'start-mining' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
   target: Target;
   demands: readonly ResourceDemand[];
   dependsOn: readonly string[];
@@ -277,6 +374,10 @@ export type DeathAttributionContext = Readonly<{
   task: Readonly<{ source: string; id: string }> | null;
   assignmentStage: Assignment['stage'] | null;
   executor: string | null;
+  action?: Readonly<{ actionId: string; generation: number }>;
+  executionPhase?: string;
+  plannedExecutor?: string;
+  allocationRevision?: number;
   provenance: 'assignment' | 'inferred' | 'unknown';
   /** Preserve conflicting old-task evidence rather than inventing one certain objective. */
   commitments: readonly Commitment[];
@@ -303,6 +404,8 @@ export type StrategyPlanTrace = Readonly<{
   tick: number;
   owner: PlayerId;
   mode: 'observe' | 'control';
+  /** Present only for the formal controller; observation assignments remain distinguishable. */
+  allocation?: import('./allocation-types').StrategyAllocationTrace;
   situation: Situation;
   objectives: readonly Objective[];
   /** Utility order over feasible quotes only; objectives above is the unique table. */
@@ -325,7 +428,9 @@ export type BlockedObjectiveQuote = Readonly<{
   prerequisiteCost: readonly Readonly<{ methodId: MethodId; knownGold: number;
     unknown: readonly Reason[]; alreadyIncludedUtilityCodes: readonly string[] }>[];
 }>;
-export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
+export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory;
+  teams?: NonNullable<GameSnapshot['teams']>;
+  valuation?: ValuationContext }>;
 /** Outcomes already accepted by the ordinary planner; no second policy pass. */
 export type SituationObservation = Readonly<{
   healing: readonly Readonly<{ unitId: string; executor: string }>[];

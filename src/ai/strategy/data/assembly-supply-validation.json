@@ -1,0 +1,1048 @@
+{
+  "calibrationId": "assembly-supply-646-joint-live-tail-v2-eeac1238909c",
+  "source": "646cf9a0513459d16e6b12007d4945148bb29651",
+  "fixedWindows": 216,
+  "actualAnchors": 30,
+  "nativeTerminalChecks": 33,
+  "nativeTickAdvances": 0,
+  "aiPlanningCalls": 0,
+  "units": "actual live native combatRating of the newly born cohort only; old-unit recovery never counted as a new birth",
+  "changedFromV1": "replaced fixed full-health birth-equivalent force with actual HP/weapon at every stock point; separate birth-equivalent diagnostic retained",
+  "maxCellScenarios": 25,
+  "fixedLomo": {
+    "2400": {
+      "0.5": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 0,
+        "observedOutcomeAndKnownCell": 176,
+        "identifiedProbabilityRows": 176,
+        "actualSuccessesInObservedKnownCell": 124,
+        "predictedSuccessCountBounds": [
+          126.3664946413348,
+          126.3664946413348
+        ],
+        "brierIdentifiedOnly": 0.061346059857565256,
+        "brierBoundsForObservedKnownCells": [
+          0.061346059857565256,
+          0.061346059857565256
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 123,
+          "maeTicks": 438.2512408370122,
+          "biasTicks": -9.536857004887695,
+          "p90AbsoluteTicks": 900
+        },
+        "positiveWithoutIdentifiedPeerTime": 1
+      },
+      "1": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 0,
+        "observedOutcomeAndKnownCell": 176,
+        "identifiedProbabilityRows": 176,
+        "actualSuccessesInObservedKnownCell": 101,
+        "predictedSuccessCountBounds": [
+          102.71960862382858,
+          102.71960862382858
+        ],
+        "brierIdentifiedOnly": 0.13392687608276255,
+        "brierBoundsForObservedKnownCells": [
+          0.13392687608276255,
+          0.13392687608276255
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 100,
+          "maeTicks": 502.10677361853834,
+          "biasTicks": -27.63004503236702,
+          "p90AbsoluteTicks": 1010.5263157894738
+        },
+        "positiveWithoutIdentifiedPeerTime": 1
+      },
+      "2": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 0,
+        "observedOutcomeAndKnownCell": 176,
+        "identifiedProbabilityRows": 176,
+        "actualSuccessesInObservedKnownCell": 66,
+        "predictedSuccessCountBounds": [
+          67.62783765680184,
+          67.62783765680184
+        ],
+        "brierIdentifiedOnly": 0.2093245025088431,
+        "brierBoundsForObservedKnownCells": [
+          0.2093245025088431,
+          0.2093245025088431
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 65,
+          "maeTicks": 429.16683316683316,
+          "biasTicks": -2.295704295704298,
+          "p90AbsoluteTicks": 900
+        },
+        "positiveWithoutIdentifiedPeerTime": 1
+      },
+      "4": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 0,
+        "observedOutcomeAndKnownCell": 176,
+        "identifiedProbabilityRows": 176,
+        "actualSuccessesInObservedKnownCell": 10,
+        "predictedSuccessCountBounds": [
+          10.488612836438923,
+          10.488612836438923
+        ],
+        "brierIdentifiedOnly": 0.055038454211738544,
+        "brierBoundsForObservedKnownCells": [
+          0.055038454211738544,
+          0.055038454211738544
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 8,
+          "maeTicks": 450,
+          "biasTicks": 0,
+          "p90AbsoluteTicks": 1050
+        },
+        "positiveWithoutIdentifiedPeerTime": 2
+      }
+    },
+    "4800": {
+      "0.5": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 4,
+        "observedOutcomeAndKnownCell": 175,
+        "identifiedProbabilityRows": 169,
+        "actualSuccessesInObservedKnownCell": 131,
+        "predictedSuccessCountBounds": [
+          131.70241596638655,
+          132.65479691876752
+        ],
+        "brierIdentifiedOnly": 0.022521908851040898,
+        "brierBoundsForObservedKnownCells": [
+          0.02174972911900521,
+          0.022617885905529343
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 124,
+          "maeTicks": 580.4411237739242,
+          "biasTicks": -31.736203220094815,
+          "p90AbsoluteTicks": 1164.7058823529412
+        },
+        "positiveWithoutIdentifiedPeerTime": 7
+      },
+      "1": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 10,
+        "observedOutcomeAndKnownCell": 170,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 120,
+        "predictedSuccessCountBounds": [
+          117.22771028701335,
+          122.30327964519141
+        ],
+        "brierIdentifiedOnly": 0.06590084593624612,
+        "brierBoundsForObservedKnownCells": [
+          0.05543424099343056,
+          0.06153146879444385
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 92,
+          "maeTicks": 734.065336837076,
+          "biasTicks": -36.30673674151936,
+          "p90AbsoluteTicks": 1600
+        },
+        "positiveWithoutIdentifiedPeerTime": 28
+      },
+      "2": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 12,
+        "observedOutcomeAndKnownCell": 169,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 103,
+        "predictedSuccessCountBounds": [
+          101.52908133710564,
+          107.28813930812012
+        ],
+        "brierIdentifiedOnly": 0.12325664715712557,
+        "brierBoundsForObservedKnownCells": [
+          0.11238583640068273,
+          0.12728424283226653
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 79,
+          "maeTicks": 926.5025480848266,
+          "biasTicks": -27.753575538385657,
+          "p90AbsoluteTicks": 2025
+        },
+        "positiveWithoutIdentifiedPeerTime": 24
+      },
+      "4": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 22,
+        "observedOutcomeAndKnownCell": 165,
+        "identifiedProbabilityRows": 140,
+        "actualSuccessesInObservedKnownCell": 56,
+        "predictedSuccessCountBounds": [
+          50.628190646381185,
+          58.37974344141224
+        ],
+        "brierIdentifiedOnly": 0.1515948438079458,
+        "brierBoundsForObservedKnownCells": [
+          0.14289511040917677,
+          0.17866718632437986
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 33,
+          "maeTicks": 744.7727272727273,
+          "biasTicks": -1.2878787878787878,
+          "p90AbsoluteTicks": 1800
+        },
+        "positiveWithoutIdentifiedPeerTime": 23
+      }
+    },
+    "7200": {
+      "0.5": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 6,
+        "observedOutcomeAndKnownCell": 175,
+        "identifiedProbabilityRows": 169,
+        "actualSuccessesInObservedKnownCell": 133,
+        "predictedSuccessCountBounds": [
+          133.08813025210085,
+          134.0405112044818
+        ],
+        "brierIdentifiedOnly": 0.02480363811079214,
+        "brierBoundsForObservedKnownCells": [
+          0.023953227661279268,
+          0.0248213844478034
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 127,
+          "maeTicks": 693.7265415475437,
+          "biasTicks": -63.49496557372587,
+          "p90AbsoluteTicks": 1387.5
+        },
+        "positiveWithoutIdentifiedPeerTime": 6
+      },
+      "1": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 13,
+        "observedOutcomeAndKnownCell": 170,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 125,
+        "predictedSuccessCountBounds": [
+          121.51973876507124,
+          126.5953081232493
+        ],
+        "brierIdentifiedOnly": 0.0519046252007819,
+        "brierBoundsForObservedKnownCells": [
+          0.04366094943359889,
+          0.04975817723461218
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 98,
+          "maeTicks": 981.3716640502355,
+          "biasTicks": -88.65552814532407,
+          "p90AbsoluteTicks": 2062.5
+        },
+        "positiveWithoutIdentifiedPeerTime": 27
+      },
+      "2": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 17,
+        "observedOutcomeAndKnownCell": 168,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 118,
+        "predictedSuccessCountBounds": [
+          113.31585677749361,
+          119.66316526610645
+        ],
+        "brierIdentifiedOnly": 0.05655042582872538,
+        "brierBoundsForObservedKnownCells": [
+          0.048135183889926964,
+          0.058066485696964175
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 93,
+          "maeTicks": 1287.4800602623184,
+          "biasTicks": -117.91696207018788,
+          "p90AbsoluteTicks": 2580
+        },
+        "positiveWithoutIdentifiedPeerTime": 25
+      },
+      "4": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 33,
+        "observedOutcomeAndKnownCell": 160,
+        "identifiedProbabilityRows": 139,
+        "actualSuccessesInObservedKnownCell": 80,
+        "predictedSuccessCountBounds": [
+          71.77619882958757,
+          81.67966673849027
+        ],
+        "brierIdentifiedOnly": 0.15457551189321556,
+        "brierBoundsForObservedKnownCells": [
+          0.134287475957231,
+          0.16419979476097335
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 59,
+          "maeTicks": 1044.70504072199,
+          "biasTicks": -32.56658595641647,
+          "p90AbsoluteTicks": 2045.454545454545
+        },
+        "positiveWithoutIdentifiedPeerTime": 21
+      }
+    },
+    "9600": {
+      "0.5": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 6,
+        "observedOutcomeAndKnownCell": 175,
+        "identifiedProbabilityRows": 169,
+        "actualSuccessesInObservedKnownCell": 133,
+        "predictedSuccessCountBounds": [
+          133.08813025210085,
+          134.0405112044818
+        ],
+        "brierIdentifiedOnly": 0.02480363811079214,
+        "brierBoundsForObservedKnownCells": [
+          0.023953227661279268,
+          0.0248213844478034
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 127,
+          "maeTicks": 693.7265415475437,
+          "biasTicks": -63.49496557372587,
+          "p90AbsoluteTicks": 1387.5
+        },
+        "positiveWithoutIdentifiedPeerTime": 6
+      },
+      "1": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 13,
+        "observedOutcomeAndKnownCell": 170,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 127,
+        "predictedSuccessCountBounds": [
+          123.09116733649982,
+          128.16673669467787
+        ],
+        "brierIdentifiedOnly": 0.037376296386738804,
+        "brierBoundsForObservedKnownCells": [
+          0.031440061078256754,
+          0.03753728887927004
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 100,
+          "maeTicks": 1144.6728021978022,
+          "biasTicks": -96.78241758241758,
+          "p90AbsoluteTicks": 2280
+        },
+        "positiveWithoutIdentifiedPeerTime": 27
+      },
+      "2": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 17,
+        "observedOutcomeAndKnownCell": 168,
+        "identifiedProbabilityRows": 143,
+        "actualSuccessesInObservedKnownCell": 121,
+        "predictedSuccessCountBounds": [
+          115.3265710632079,
+          121.67387955182073
+        ],
+        "brierIdentifiedOnly": 0.05624564132751231,
+        "brierBoundsForObservedKnownCells": [
+          0.04787575422520393,
+          0.05780705603224114
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 95,
+          "maeTicks": 1361.9692018507808,
+          "biasTicks": -183.13374783111627,
+          "p90AbsoluteTicks": 3100
+        },
+        "positiveWithoutIdentifiedPeerTime": 26
+      },
+      "4": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 33,
+        "observedOutcomeAndKnownCell": 160,
+        "identifiedProbabilityRows": 139,
+        "actualSuccessesInObservedKnownCell": 99,
+        "predictedSuccessCountBounds": [
+          91.57736057633755,
+          101.48082848524025
+        ],
+        "brierIdentifiedOnly": 0.10685123434014866,
+        "brierBoundsForObservedKnownCells": [
+          0.09282700983300415,
+          0.12273932863674651
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 77,
+          "maeTicks": 1473.125737898465,
+          "biasTicks": -49.94307640411537,
+          "p90AbsoluteTicks": 3000
+        },
+        "positiveWithoutIdentifiedPeerTime": 22
+      }
+    },
+    "12000": {
+      "0.5": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 8,
+        "observedOutcomeAndKnownCell": 173,
+        "identifiedProbabilityRows": 148,
+        "actualSuccessesInObservedKnownCell": 133,
+        "predictedSuccessCountBounds": [
+          131.58813025210085,
+          134.21428571428572
+        ],
+        "brierIdentifiedOnly": 0.00872173193601765,
+        "brierBoundsForObservedKnownCells": [
+          0.013472926742951516,
+          0.020195042071477428
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 110,
+          "maeTicks": 625.1059375407201,
+          "biasTicks": -63.87466880945142,
+          "p90AbsoluteTicks": 1312.5
+        },
+        "positiveWithoutIdentifiedPeerTime": 23
+      },
+      "1": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 15,
+        "observedOutcomeAndKnownCell": 168,
+        "identifiedProbabilityRows": 122,
+        "actualSuccessesInObservedKnownCell": 127,
+        "predictedSuccessCountBounds": [
+          121.59116733649982,
+          128.3405112044818
+        ],
+        "brierIdentifiedOnly": 0.01877718300434928,
+        "brierBoundsForObservedKnownCells": [
+          0.020129850242403997,
+          0.03292463755640421
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 83,
+          "maeTicks": 1069.9457169336688,
+          "biasTicks": -99.7120349529988,
+          "p90AbsoluteTicks": 2280
+        },
+        "positiveWithoutIdentifiedPeerTime": 44
+      },
+      "2": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 20,
+        "observedOutcomeAndKnownCell": 165,
+        "identifiedProbabilityRows": 114,
+        "actualSuccessesInObservedKnownCell": 122,
+        "predictedSuccessCountBounds": [
+          114.64799963463646,
+          123.57979691876751
+        ],
+        "brierIdentifiedOnly": 0.027222073039742212,
+        "brierBoundsForObservedKnownCells": [
+          0.024443976771239294,
+          0.042009299351565756
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 74,
+          "maeTicks": 1409.7601722601723,
+          "biasTicks": -119.54187704187706,
+          "p90AbsoluteTicks": 2760
+        },
+        "positiveWithoutIdentifiedPeerTime": 48
+      },
+      "4": {
+        "rows": 216,
+        "knownCell": 176,
+        "unknownCell": 40,
+        "actualRightCensored": 39,
+        "observedOutcomeAndKnownCell": 154,
+        "identifiedProbabilityRows": 99,
+        "actualSuccessesInObservedKnownCell": 104,
+        "predictedSuccessCountBounds": [
+          91.52755450006089,
+          106.74051120448179
+        ],
+        "brierIdentifiedOnly": 0.048655775441489725,
+        "brierBoundsForObservedKnownCells": [
+          0.043895685643007734,
+          0.09424556562459831
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 57,
+          "maeTicks": 1550.381241565452,
+          "biasTicks": -84.16377482166955,
+          "p90AbsoluteTicks": 3500
+        },
+        "positiveWithoutIdentifiedPeerTime": 47
+      }
+    }
+  },
+  "realAnchorLomo": {
+    "2400": {
+      "0.5": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 2,
+        "observedOutcomeAndKnownCell": 22,
+        "identifiedProbabilityRows": 22,
+        "actualSuccessesInObservedKnownCell": 20,
+        "predictedSuccessCountBounds": [
+          20.18095238095238,
+          20.18095238095238
+        ],
+        "brierIdentifiedOnly": 0.05967017109874253,
+        "brierBoundsForObservedKnownCells": [
+          0.05967017109874253,
+          0.05967017109874253
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 20,
+          "maeTicks": 568.3796703296704,
+          "biasTicks": -406.47967032967034,
+          "p90AbsoluteTicks": 1123
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "1": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 4,
+        "observedOutcomeAndKnownCell": 20,
+        "identifiedProbabilityRows": 20,
+        "actualSuccessesInObservedKnownCell": 14,
+        "predictedSuccessCountBounds": [
+          15.117582417582417,
+          15.117582417582417
+        ],
+        "brierIdentifiedOnly": 0.21983024728629125,
+        "brierBoundsForObservedKnownCells": [
+          0.21983024728629125,
+          0.21983024728629125
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 14,
+          "maeTicks": 591.0795968737145,
+          "biasTicks": -418.4577481342187,
+          "p90AbsoluteTicks": 1185
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "2": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 6,
+        "observedOutcomeAndKnownCell": 19,
+        "identifiedProbabilityRows": 19,
+        "actualSuccessesInObservedKnownCell": 4,
+        "predictedSuccessCountBounds": [
+          9.599267399267399,
+          9.599267399267399
+        ],
+        "brierIdentifiedOnly": 0.31782094006501177,
+        "brierBoundsForObservedKnownCells": [
+          0.31782094006501177,
+          0.31782094006501177
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 4,
+          "maeTicks": 376.75,
+          "biasTicks": -206.75,
+          "p90AbsoluteTicks": 840
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "4": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 7,
+        "observedOutcomeAndKnownCell": 19,
+        "identifiedProbabilityRows": 19,
+        "actualSuccessesInObservedKnownCell": 1,
+        "predictedSuccessCountBounds": [
+          1.0952380952380951,
+          1.0952380952380951
+        ],
+        "brierIdentifiedOnly": 0.06754982694832319,
+        "brierBoundsForObservedKnownCells": [
+          0.06754982694832319,
+          0.06754982694832319
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 0,
+          "maeTicks": null,
+          "biasTicks": null,
+          "p90AbsoluteTicks": null
+        },
+        "positiveWithoutIdentifiedPeerTime": 1
+      }
+    },
+    "4800": {
+      "0.5": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 3,
+        "observedOutcomeAndKnownCell": 22,
+        "identifiedProbabilityRows": 22,
+        "actualSuccessesInObservedKnownCell": 20,
+        "predictedSuccessCountBounds": [
+          21.2,
+          21.2
+        ],
+        "brierIdentifiedOnly": 0.04727272727272727,
+        "brierBoundsForObservedKnownCells": [
+          0.04727272727272727,
+          0.04727272727272727
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 20,
+          "maeTicks": 589.0010989010989,
+          "biasTicks": -252.65824175824176,
+          "p90AbsoluteTicks": 1268
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "1": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 5,
+        "observedOutcomeAndKnownCell": 20,
+        "identifiedProbabilityRows": 17,
+        "actualSuccessesInObservedKnownCell": 16,
+        "predictedSuccessCountBounds": [
+          18.01904761904762,
+          18.590476190476192
+        ],
+        "brierIdentifiedOnly": 0.18499132986527944,
+        "brierBoundsForObservedKnownCells": [
+          0.15724263038548753,
+          0.16268480725623582
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 13,
+          "maeTicks": 618.8850380388842,
+          "biasTicks": -350.4234995773457,
+          "p90AbsoluteTicks": 1268
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "2": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 8,
+        "observedOutcomeAndKnownCell": 19,
+        "identifiedProbabilityRows": 17,
+        "actualSuccessesInObservedKnownCell": 11,
+        "predictedSuccessCountBounds": [
+          15.774725274725276,
+          16.250915750915752
+        ],
+        "brierIdentifiedOnly": 0.3520353387903485,
+        "brierBoundsForObservedKnownCells": [
+          0.315933755210794,
+          0.3266748937714814
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 9,
+          "maeTicks": 645.5912975912976,
+          "biasTicks": -295.3177933177933,
+          "p90AbsoluteTicks": 1780
+        },
+        "positiveWithoutIdentifiedPeerTime": 2
+      },
+      "4": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 9,
+        "observedOutcomeAndKnownCell": 19,
+        "identifiedProbabilityRows": 17,
+        "actualSuccessesInObservedKnownCell": 6,
+        "predictedSuccessCountBounds": [
+          6.339560439560439,
+          7.006227106227106
+        ],
+        "brierIdentifiedOnly": 0.2750792230107033,
+        "brierBoundsForObservedKnownCells": [
+          0.24827174303750363,
+          0.26999271212689374
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 4,
+          "maeTicks": 1197.5,
+          "biasTicks": 1197.5,
+          "p90AbsoluteTicks": 2407
+        },
+        "positiveWithoutIdentifiedPeerTime": 2
+      }
+    },
+    "7200": {
+      "0.5": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 3,
+        "observedOutcomeAndKnownCell": 22,
+        "identifiedProbabilityRows": 22,
+        "actualSuccessesInObservedKnownCell": 22,
+        "predictedSuccessCountBounds": [
+          21.2,
+          21.2
+        ],
+        "brierIdentifiedOnly": 0.029090909090909098,
+        "brierBoundsForObservedKnownCells": [
+          0.029090909090909098,
+          0.029090909090909098
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 22,
+          "maeTicks": 926.6373626373627,
+          "biasTicks": -620.8711288711289,
+          "p90AbsoluteTicks": 1589.1538461538462
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "1": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 5,
+        "observedOutcomeAndKnownCell": 20,
+        "identifiedProbabilityRows": 17,
+        "actualSuccessesInObservedKnownCell": 19,
+        "predictedSuccessCountBounds": [
+          18.228571428571428,
+          18.8
+        ],
+        "brierIdentifiedOnly": 0.1011764705882353,
+        "brierBoundsForObservedKnownCells": [
+          0.08600000000000001,
+          0.0914421768707483
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 16,
+          "maeTicks": 1170.4601648351647,
+          "biasTicks": -875.5494505494505,
+          "p90AbsoluteTicks": 2973
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "2": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 9,
+        "observedOutcomeAndKnownCell": 18,
+        "identifiedProbabilityRows": 16,
+        "actualSuccessesInObservedKnownCell": 15,
+        "predictedSuccessCountBounds": [
+          15.885714285714286,
+          16.457142857142856
+        ],
+        "brierIdentifiedOnly": 0.21341836734693878,
+        "brierBoundsForObservedKnownCells": [
+          0.18970521541950114,
+          0.19877551020408163
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 12,
+          "maeTicks": 1395.8690476190477,
+          "biasTicks": -923.5796703296703,
+          "p90AbsoluteTicks": 3540
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "4": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 11,
+        "observedOutcomeAndKnownCell": 17,
+        "identifiedProbabilityRows": 15,
+        "actualSuccessesInObservedKnownCell": 11,
+        "predictedSuccessCountBounds": [
+          9.91978021978022,
+          10.872161172161173
+        ],
+        "brierIdentifiedOnly": 0.31741370473238606,
+        "brierBoundsForObservedKnownCells": [
+          0.28007091594034067,
+          0.306748253542048
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 8,
+          "maeTicks": 1261.2142857142858,
+          "biasTicks": 707.4642857142858,
+          "p90AbsoluteTicks": 2407
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      }
+    },
+    "9600": {
+      "0.5": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 3,
+        "observedOutcomeAndKnownCell": 22,
+        "identifiedProbabilityRows": 22,
+        "actualSuccessesInObservedKnownCell": 22,
+        "predictedSuccessCountBounds": [
+          21.2,
+          21.2
+        ],
+        "brierIdentifiedOnly": 0.029090909090909098,
+        "brierBoundsForObservedKnownCells": [
+          0.029090909090909098,
+          0.029090909090909098
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 22,
+          "maeTicks": 926.6373626373627,
+          "biasTicks": -620.8711288711289,
+          "p90AbsoluteTicks": 1589.1538461538462
+        },
+        "positiveWithoutIdentifiedPeerTime": 0
+      },
+      "1": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 5,
+        "observedOutcomeAndKnownCell": 20,
+        "identifiedProbabilityRows": 17,
+        "actualSuccessesInObservedKnownCell": 19,
+        "predictedSuccessCountBounds": [
+          18.62857142857143,
+          19.2
+        ],
+        "brierIdentifiedOnly": 0.09647058823529413,
+        "brierBoundsForObservedKnownCells": [
+          0.082,
+          0.0874421768707483
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 16,
+          "maeTicks": 1209.4601648351647,
+          "biasTicks": -650.5494505494505,
+          "p90AbsoluteTicks": 2973
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "2": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 10,
+        "observedOutcomeAndKnownCell": 17,
+        "identifiedProbabilityRows": 15,
+        "actualSuccessesInObservedKnownCell": 15,
+        "predictedSuccessCountBounds": [
+          15.028571428571428,
+          15.6
+        ],
+        "brierIdentifiedOnly": 0.17866666666666667,
+        "brierBoundsForObservedKnownCells": [
+          0.15764705882352942,
+          0.16725090036014406
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 12,
+          "maeTicks": 1395.8690476190477,
+          "biasTicks": -923.5796703296703,
+          "p90AbsoluteTicks": 3540
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "4": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 12,
+        "observedOutcomeAndKnownCell": 16,
+        "identifiedProbabilityRows": 14,
+        "actualSuccessesInObservedKnownCell": 11,
+        "predictedSuccessCountBounds": [
+          13.084249084249084,
+          14.036630036630036
+        ],
+        "brierIdentifiedOnly": 0.4059732644818987,
+        "brierBoundsForObservedKnownCells": [
+          0.3552266064216614,
+          0.3835712776234754
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 8,
+          "maeTicks": 1703.118131868132,
+          "biasTicks": 1534.868131868132,
+          "p90AbsoluteTicks": 5007
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      }
+    },
+    "12000": {
+      "0.5": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 3,
+        "observedOutcomeAndKnownCell": 22,
+        "identifiedProbabilityRows": 21,
+        "actualSuccessesInObservedKnownCell": 22,
+        "predictedSuccessCountBounds": [
+          21.2,
+          21.4
+        ],
+        "brierIdentifiedOnly": 0.0,
+        "brierBoundsForObservedKnownCells": [
+          0.01636363636363636,
+          0.029090909090909098
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 21,
+          "maeTicks": 745.3819989534276,
+          "biasTicks": -425.05546834118263,
+          "p90AbsoluteTicks": 1536.4285714285716
+        },
+        "positiveWithoutIdentifiedPeerTime": 1
+      },
+      "1": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 5,
+        "observedOutcomeAndKnownCell": 20,
+        "identifiedProbabilityRows": 16,
+        "actualSuccessesInObservedKnownCell": 19,
+        "predictedSuccessCountBounds": [
+          18.62857142857143,
+          19.4
+        ],
+        "brierIdentifiedOnly": 0.0625,
+        "brierBoundsForObservedKnownCells": [
+          0.068,
+          0.0874421768707483
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 15,
+          "maeTicks": 974.5575091575091,
+          "biasTicks": -378.3860805860806,
+          "p90AbsoluteTicks": 2623
+        },
+        "positiveWithoutIdentifiedPeerTime": 4
+      },
+      "2": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 10,
+        "observedOutcomeAndKnownCell": 17,
+        "identifiedProbabilityRows": 14,
+        "actualSuccessesInObservedKnownCell": 15,
+        "predictedSuccessCountBounds": [
+          15.428571428571429,
+          16.2
+        ],
+        "brierIdentifiedOnly": 0.14285714285714285,
+        "brierBoundsForObservedKnownCells": [
+          0.15529411764705883,
+          0.18607442977190877
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 12,
+          "maeTicks": 1544.6190476190477,
+          "biasTicks": -774.8296703296703,
+          "p90AbsoluteTicks": 3540
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      },
+      "4": {
+        "rows": 30,
+        "knownCell": 23,
+        "unknownCell": 7,
+        "actualRightCensored": 14,
+        "observedOutcomeAndKnownCell": 14,
+        "identifiedProbabilityRows": 11,
+        "actualSuccessesInObservedKnownCell": 12,
+        "predictedSuccessCountBounds": [
+          11.847619047619048,
+          13.0
+        ],
+        "brierIdentifiedOnly": 0.18545454545454546,
+        "brierBoundsForObservedKnownCells": [
+          0.19142857142857145,
+          0.2495367670877875
+        ],
+        "conditionalTimeIdentifiedOnly": {
+          "n": 9,
+          "maeTicks": 2408.266178266178,
+          "biasTicks": 960.9328449328449,
+          "p90AbsoluteTicks": 6007
+        },
+        "positiveWithoutIdentifiedPeerTime": 3
+      }
+    }
+  },
+  "changedStockPoints": 4472,
+  "limits": [
+    "Calibration labels are producer/observed baseline availability, not actual safe-post readiness or Conquer success.",
+    "Only producers present at the forecast anchor are credited; future buildings are not invented.",
+    "Only original native linked births after the explicit paid pipeline enter residual production. The eight ambiguous births are not assigned.",
+    "Scenario tails stop at native tick 18000, including an independently verified actual terminal sample. Right censoring stays probability mass, never known zero.",
+    "30 actual event anchors are validation only. Only 216 fixed windows train global cells; every held-map owner is excluded in LOMO.",
+    "Actual live force includes the observed injury/healing/upgrade state of these new units; birth-equivalent force is separate and never substituted as HP.",
+    "Historical candidate occupancy uses native claims/current task membership. An absent claim does not establish free interruption; current opportunity/lease checks remain necessary.",
+    "Fifteen-second step samples, correlated windows/owners, and sparse compatible feature cells remain explicit. No cross-kind or ordinal same-kind mapping.",
+    "No mean-clock continuation valuation, independence assumption, or per-map fitted parameter."
+  ]
+}

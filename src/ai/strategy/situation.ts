@@ -2,6 +2,8 @@ import { arrivalColumns, EMPTY_UNIT_ARRIVALS, unitArrivalFacts, withUnitArrivals
 import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
+import { miningCapacity } from './mining-capacity';
+import { createThreatIntentQuery } from './threat-intent';
 import { GOLD_MINE_RULES, miningIncomeRate } from '../../shared/mining';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { walkableGoal } from '../../shared/terrain';
@@ -10,7 +12,7 @@ import type { AiPolicyMemory } from '../memory';
 import { incomingLandArmy } from '../policy/land-arrivals';
 import { postRecoveryAssignments } from '../bootstrap_1/front-recovery';
 import { mobileCare } from '../bootstrap_1/mobile-care';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { distance } from '../policy/spatial';
 import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
@@ -92,7 +94,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     ? mobileCare.claimsUnits!(snapshot, owner, { ...options, memory: structuredClone(memory) }) : new Set<string>();
   const acceptedHealing = new Map(observation?.healing.map(entry => [entry.unitId, entry.executor]));
   const enemies = new Set([...new Set(live.map(unit => unit.owner).concat(snapshot.buildings.map(building => building.owner)))]
-    .filter(other => isOpponentOwner(snapshot, owner, other, options)));
+    .filter(other => strategyIsOpponent(snapshot, owner, other, teams)));
   const foe = (other: string) => enemies.has(other);
   const weapons = new Map<Unit, ReturnType<typeof combatCapability>>();
   const weapon = (unit: Unit) => { let value = weapons.get(unit); if (!value) {
@@ -129,14 +131,15 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     const hall = halls.find(hall => hall.complete && landIdAt(snapshot.map, hall) === landIdAt(snapshot.map, mine)
       && distance(hall, mine) <= GOLD_MINE_RULES.baseRange);
     const workers = hall ? live.filter(unit => unit.owner === hall.owner && unit.kind === 'worker' && !unit.deck && !unit.cabin
-      && unit.order.type === 'mine' && unit.order.resourceId === mine.id && unitLand(unit) === landIdAt(snapshot.map, mine)) : [];
+      && unit.order.type === 'mine' && unit.order.resourceId === mine.id && unitLand(unit) === landIdAt(snapshot.map, mine)
+      && (unit.mineSlot === mine.id || unit.order.phase === 'gather' || unit.order.phase === 'return')) : [];
     // Forecast current staffed income; an unowned mine has potential value but
     // does not contribute fictitious cash to the owner's budget.
     const capacity = GOLD_MINE_RULES.goldPerTrip / GOLD_MINE_RULES.entrySeconds / SIM_TICKS_PER_SECOND;
     const income = hall && mine.amount > 0 ? capacity * Math.min(1, workers.length / GOLD_MINE_RULES.workstations)
       * miningIncomeRate(snapshot.players[hall.owner]?.supplyUsed ?? 0) : 0;
     assets.push({ id: mine.id, owner: hall?.owner ?? 'neutral', kind: 'mine', target: target(mine), hp: null, complete: Boolean(hall),
-      replacementGold: 0, remainingGold: mine.amount, incomeGoldPerTick: income,
+      replacementGold: 0, remainingGold: mine.amount, incomeGoldPerTick: income, miningCapacity: miningCapacity(workers.map(worker => worker.id)),
       discountedValueGold: Math.min(mine.amount, (hall ? income : capacity) * horizonTicks) });
   }
   const opportunities: Opportunity[] = [];
@@ -148,7 +151,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
       explanationRecipe(descriptions.mine, { id: mine.id, amount: mine.remainingGold, tick })));
   }
   for (const hall of halls.filter(hall => foe(hall.owner))) {
-    const guards = live.filter(unit => unit.owner !== 'neutral' && !isOpponentOwner(snapshot, hall.owner, unit.owner, options)
+    const guards = live.filter(unit => unit.owner !== 'neutral' && !strategyIsOpponent(snapshot, hall.owner, unit.owner, teams)
       && !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && distance(unit, hall) <= STATION_RANGE);
     const kind = !hall.complete ? 'construction' : 'weak-site';
     const hallId = hall.id, complete = hall.complete, guardCount = guards.length;
@@ -268,7 +271,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     query.setCrossingShortlist([...crossings.values()].sort((a, b) => b.priority - a.priority || b.upper - a.upper
       || a.lower - b.lower || compareId(a.id, b.id)).slice(0, EXACT_CROSSING_CANDIDATES).map(entry => entry.id));
   }
-  const beyondWindow: Arrival = { status: 'unknown', reason: { code: 'beyond-evaluation-window',
+  const beyondWindow: Arrival = { status: 'unknown', lowerBoundTicks: horizonTicks, reason: { code: 'beyond-evaluation-window',
     detail: `Even a straight maximum-speed journey exceeds ${horizonTicks} ticks`, evidence: [] } };
   deferredRecord(beyondWindow.reason);
   const columns = arrivalColumns(targetEntries.map(([id]) => id));
@@ -308,6 +311,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     return row;
   });
   const threatEvidence = explanationRecipe(descriptions.threat, tick);
+  const threatIntent = createThreatIntentQuery(snapshot, owner, sites, teams);
   const threats: SiteThreat[] = sites.map(site => {
     const land = site.target.landId;
     const candidates = live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin
@@ -333,6 +337,10 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
       const capability = weapon(ship);
       if (capability.armed && distance(ship, site.target.point) <= capability.range) attackers.push({ unitId: ship.id, strength: strength(ship),
         arrival: deferredRecord({ status: 'reachable' as const, ticks: 0, landTicks: 0, crossings: [], evidence: [evidence('shared.combatCapability', 'Present working battery in potential range; firing arcs/line of fire are execution concerns')] }) });
+    }
+    for (let index = 0; index < attackers.length; index++) {
+      const attacker = attackers[index]!, unit = byId.get(attacker.unitId)!;
+      attackers[index] = { ...attacker, intent: threatIntent(unit, site.id) };
     }
     const present = attackers.filter(attacker => {
       const unit = byId.get(attacker.unitId)!;

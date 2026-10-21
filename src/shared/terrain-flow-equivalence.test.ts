@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { transformSync } from "esbuild";
 import { describe, expect, it } from "vitest";
 import type { Mover, Terrain } from "./terrain";
+import * as navigationAudit from "./navigation-audit";
 
 type Box = { left: number; top: number; width: number; height: number };
 type Arrays = { dist: Int32Array; next: Int32Array };
@@ -20,13 +21,16 @@ type FlowApi = {
 };
 
 // Compile the actual private implementation with test-only exports. Shipping terrain.ts gains no testing API.
-// Terrain has only type imports, so this local CommonJS test bundle needs no module loader or environment mocks.
+// Load the actual diagnostic boundary; routing and flow algorithms remain the compiled production source.
 const source = readFileSync(new URL("./terrain.ts", import.meta.url), "utf8");
 const compiled = transformSync(`${source}\nexport { createRuntime, growBoxInto };`, {
   loader: "ts", format: "cjs", target: "es2022", sourcefile: "terrain.ts",
 }).code;
 const commonJs = { exports: {} };
-new Function("module", "exports", compiled)(commonJs, commonJs.exports);
+new Function("module", "exports", "require", compiled)(commonJs, commonJs.exports, (specifier: string) => {
+  if (specifier === "./navigation-audit") return navigationAudit;
+  throw new Error(`Unexpected terrain dependency: ${specifier}`);
+});
 const production = commonJs.exports as FlowApi;
 
 const UNREACHED = 0x3fffffff;

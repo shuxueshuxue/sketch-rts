@@ -1,3 +1,4 @@
+import { recordNativeRouting } from './navigation-audit';
 import { unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { groundRevision, isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
@@ -17,6 +18,7 @@ import { isInCabin } from './ship-cabin';
 // share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
 // and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
 export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle, units: readonly Unit[] = [], attackRange = attacker.attackRange) {
+  recordNativeRouting('canReach');
   if (isInCabin(attacker) || ('order' in target && isInCabin(target))) return false;
   const targetDeck="order" in target && target.deck && units.find(ship=>ship.id===target.deck!.shipId);
   if (attacker.deck) {

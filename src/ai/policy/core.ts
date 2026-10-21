@@ -374,8 +374,9 @@ export function planAiCommandsFromScripts(snapshot: GameSnapshot, owner: PlayerI
   return planAiCommandEntriesFromScripts(snapshot, owner, scripts, options).map((entry) => entry.command);
 }
 
-export function planAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: PresetAiPolicyOptions = {}): AiCommandEntry[] {
+export function planAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: PresetAiPolicyOptions = {}, admission: Pick<import('./script-runner').ScriptRunnerOptions, 'admitCommands' | 'onAdmittedCommands'> = {}): AiCommandEntry[] {
   return runAiCommandEntriesFromScripts(snapshot, owner, scripts, options, {
+    ...admission,
     commandConflictBypassScriptIds: COMMAND_CONFLICT_BYPASS_SCRIPT_IDS,
     minimumAttackMoveUnits: groupAttackMoveMinimum,
   });

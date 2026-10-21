@@ -6,6 +6,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { windAt } from '../../shared/ship-wind';
+import { shipLaunchPose, shipLaunchPrototype } from '../../shared/ship-launch';
 import { fnv1a } from '../../shared/sim/checksum';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
@@ -16,6 +17,10 @@ import { landIdAt, regionIndex, seaIdAt, type RegionIndex, type Shore } from './
 import type { Arrival, CrossingEta, Evidence, Point, Reason, Target, LandId, SeaId } from './types';
 import { capturesExplanations, deferredRecord, explanationForMemory, explanationRecipe, projectedProperty, projectedValueReader } from './explanations';
 import type { StrategyObservationMemory } from './observation-memory';
+import { currentFactWork } from './fact-work';
+import { pointRoute } from './point-routes';
+import { nativeVoyageBerth } from './voyage-berth';
+import { shareShipProfile, shipProfile } from '../../shared/ship-geometry';
 
 const evidence = (tick: number, source: string, detail: string): Evidence => ({ tick, source, detail, certainty: 'inferred' });
 const nonArrivals = { unknown: new Map<string, Arrival>(), unreachable: new Map<string, Arrival>() };
@@ -44,6 +49,7 @@ const arrivalDescriptions = {
   passenger: (tick: number) => [evidence(tick, 'strategy.arrivals', 'Live passenger; terrain sea route, hull/wind rates, gangway setup and native inland steering; congestion is not forecast')],
   land: (tick: number) => [evidence(tick, 'terrain.groundDistanceField', 'Shared building-aware goal seeds and weighted grid; excludes smoothing, subcell rounding, combat and body delays')],
   ferry: (tick: number) => [evidence(tick, 'memory.naval.ferries', 'Existing crew follows its actual embarkation and landing points, not a new hypothetical voyage')],
+  fixed: (tick: number) => [evidence(tick, 'strategy.fixedVoyage', 'Current assigned hull and verified shore pair; no replacement hull, shore or stored relative ETA')],
   crossing: (tick: number) => [evidence(tick, 'strategy.crossingTable', 'Cohort departure/factory approach and sea table shared; individual walking overlaps ship preparation, followed by boarding, sailing, unload and inland walking')],
 };
 function arrivalProvenance({ base, fieldTicks, quoteTicks, tick }: { base: () => readonly Evidence[]; fieldTicks: readonly number[]; quoteTicks: readonly number[]; tick: number }) {
@@ -54,6 +60,19 @@ function storedChoices(choices: readonly CrossingChoice[]): CrossingChoice[] {
   return choices.map(choice => ({ ...choice, unmet: choice.unmet.map(explanationForMemory) }));
 }
 export const EXACT_CROSSING_CANDIDATES = 2;
+/** A retained physical voyage, independent of allocation-memory types. Land
+ * points must be the verified points of this crossing, not a new water projection. */
+export type FixedVoyage = Readonly<{
+  shipId: string; seaId: SeaId; departure: Point; landing: Point;
+  departureGround: Target & Readonly<{ landId: LandId }>;
+  landingGround: Target & Readonly<{ landId: LandId }>;
+  phase: 'loading' | 'sailing' | 'unloading' | 'return';
+}>;
+export type FixedVoyageLoading =
+  | Readonly<{ status: 'known'; forecastTick: number; walkTicks: number; approachTicks: number;
+    boardingTicks: number; expectedLoadedTick: number }>
+  | Readonly<{ status: 'already-loaded' }>
+  | Readonly<{ status: 'unknown'; reasonCode: string }>;
 const retainedTables = new WeakMap<StrategyObservationMemory, Map<string, CrossingChoice[]>>();
 export function crossingCandidateId(snapshot: GameSnapshot, unit: Unit, target: Target): string | undefined {
   const destination = target.landId ?? landIdAt(snapshot.map, target.point);
@@ -70,7 +89,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const tick = snapshot.tick;
   const descriptions = {
     passenger: explanationRecipe(arrivalDescriptions.passenger, tick), land: explanationRecipe(arrivalDescriptions.land, tick),
-    ferry: explanationRecipe(arrivalDescriptions.ferry, tick), crossing: explanationRecipe(arrivalDescriptions.crossing, tick),
+    ferry: explanationRecipe(arrivalDescriptions.ferry, tick), fixed: explanationRecipe(arrivalDescriptions.fixed, tick),
+    crossing: explanationRecipe(arrivalDescriptions.crossing, tick),
   };
   const explained = new Map<() => readonly Evidence[], Map<string, () => readonly Evidence[]>>();
   const byId = snapshotUnitIndex(snapshot).all;
@@ -88,6 +108,22 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const departuresByRegion = new Map<string, readonly Shore[]>();
   const seaTravel = createSeaTravelQuery(snapshot, seaBuildBudget, 'reuse', preparation);
   const crossingTables = new Map<string, { choices: CrossingChoice[]; pending: boolean; ages: number[]; quoteAges: number[] }>();
+  const nativeBerths = new Map<string, ReturnType<typeof nativeVoyageBerth>>();
+  function berth(unit: Unit, ship: Unit, shore: Shore) {
+    const key = JSON.stringify([shipProfile(ship)?.hull, ship.sailing?.heading ?? 0, unit.radius, shore]);
+    let result = nativeBerths.get(key);
+    if (!result) nativeBerths.set(key, result = nativeVoyageBerth(snapshot, unit, ship, shore));
+    return result;
+  }
+  function afterApproach(ship: Unit, from: Point, to: Point, future: boolean): Unit {
+    if (!preparation || !currentFactWork()) return ship;
+    const route = pointRoute(snapshot, preparation, ship, from, to, future);
+    if (route.status !== 'complete') return ship;
+    const heading = route.route.points.at(-1)?.heading ?? ship.sailing?.heading ?? 0;
+    const end = route.route.points.at(-1) ?? from;
+    const result = { ...ship, x: end.x, y: end.y, sailing: { ...ship.sailing!, heading } };
+    shareShipProfile(ship, result); return result;
+  }
   let pendingGeometry = false;
   const usedFieldTicks = new Set<number>(), usedQuoteTicks = new Set<number>();
   const reasons = new Map<string, Reason>();
@@ -126,6 +162,12 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   }
 
   function seaTime(ship: Unit, from: Point, to: Point, future = false): number | undefined {
+    if (preparation && currentFactWork()) {
+      const result = pointRoute(snapshot, preparation, ship, from, to, future);
+      if (result.status === 'pending' || result.status === 'transient-blocked') pendingGeometry = true;
+      if (result.status !== 'complete') return undefined;
+      usedQuoteTicks.add(result.computedTick); return result.ticks;
+    }
     const result = seaTravel.travel(ship, from, to, future);
     if (result.status === 'pending') pendingGeometry = true;
     if (result.status !== 'known') return undefined;
@@ -202,7 +244,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const persistent = preparation && (retainedTables.get(preparation) ?? new Map<string, CrossingChoice[]>());
   if (preparation && persistent) retainedTables.set(preparation, persistent);
   const publishedKey = (candidate: string) => `${candidate}:${logisticsVersion()}`;
-  function isPublished(candidate: string) { return preparation?.crossings.some(entry => entry.key === publishedKey(candidate)) ?? false; }
+  function isPublished(candidate: string) { return !currentFactWork() && (preparation?.crossings.some(entry => entry.key === publishedKey(candidate)) ?? false); }
   function crossingTable(unit: Unit, source: LandId, destination: LandId, target: Target): CrossingChoice[] {
     const key = `${unit.owner}:${source}:${destination}:${target.point.x}:${target.point.y}`;
     const known = crossingTables.get(key);
@@ -213,7 +255,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       return known.choices;
     }
     const publicationKey = preparation && publishedKey(crossingCandidateId(snapshot, unit, target)!);
-    const publication = preparation?.crossings.find(entry => entry.key === publicationKey);
+    const publication = !currentFactWork() && preparation?.crossings.find(entry => entry.key === publicationKey);
     if (publication && publicationKey) {
       let choices = persistent!.get(publicationKey);
       if (!choices) {
@@ -256,15 +298,25 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
             && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === sea)
             .sort((a, b) => Number(landIdAt(snapshot.map, b) === source) - Number(landIdAt(snapshot.map, a) === source)
               || distance(a, from.water) - distance(b, from.water) || a.id.localeCompare(b.id))[0];
-          const factoryPoint = yard ? walkableGoal(snapshot.map, yard.x, yard.y, 'sea') : from.water;
+          let factoryPoint = yard ? walkableGoal(snapshot.map, yard.x, yard.y, 'sea') : from.water;
           const prototypeKey = `${unit.owner}:${sea}:${factoryPoint.x}:${factoryPoint.y}`;
           let prototype = prototypes.get(prototypeKey);
-          if (!prototype) { prototype = { ...unit, id: `proposed-transport:${unit.owner}:${source}:${sea}`, kind: 'transport', ...factoryPoint,
+          if (!prototype) { prototype = currentFactWork() && yard ? structuredClone(shipLaunchPrototype(yard, 'transport')) : { ...unit, id: `proposed-transport:${unit.owner}:${source}:${sea}`, kind: 'transport', ...factoryPoint,
             speed: UNIT_DEFS.transport.speed, radius: UNIT_DEFS.transport.radius, hp: UNIT_DEFS.transport.hp, maxHp: UNIT_DEFS.transport.hp,
             shipParts: undefined, sailing: { heading: 0, speed: 0, load: 0, balance: 0 } };
           delete prototype.deckScale; delete prototype.cargoCapacity; delete prototype.fittings;
           delete prototype.variant; delete prototype.bodyRadius;
           prototypes.set(prototypeKey, prototype); }
+          if (currentFactWork() && yard) {
+            // Native production and route risk start at the same launch pose.
+            // Movable hulls are not frozen at a future launch time.
+            const launch = shipLaunchPose({ ...snapshot, units: [] }, yard, prototype);
+            if (!launch) continue;
+            factoryPoint = { x: launch.x, y: launch.y };
+            prototype.id = `route-prototype:${yard.id}`;
+            prototype.x = launch.x; prototype.y = launch.y;
+            prototype.sailing = { heading: launch.heading, speed: 0, load: 0, balance: 0 };
+          }
           for (const ship of [...actual, prototype]) {
             const requiresNewShip = ship === prototype;
             const free = requiresNewShip ? { point: factoryPoint, ticks: UNIT_DEFS.transport.trainTime,
@@ -274,19 +326,35 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
               free.unmet.push(reason('build-shipyard', `Establish production in ${sea}; worker access and funding remain prerequisites`));
             } else if (requiresNewShip && yard) free.ticks += Math.max(0, yard.complete ? 0 : yard.buildTime - yard.buildProgress)
               + yard.queue.reduce((sum, job) => sum + job.remaining, 0);
-            const approach = seaTime(ship, free.point, from.water, requiresNewShip), sailingTicks = seaTime(ship, from.water, to.water, true);
+            const nativeFrom = currentFactWork() ? berth(unit, ship, from) : undefined;
+            const nativeTo = currentFactWork() ? berth(unit, ship, to) : undefined;
+            if (nativeFrom?.status === 'static-infeasible' || nativeTo?.status === 'static-infeasible') continue;
+            const departure = nativeFrom?.status === 'known' ? nativeFrom.shore : from;
+            const landing = nativeTo?.status === 'known' ? nativeTo.shore : to;
+            const nativeAfterCost = currentFactWork() ? targetField.field.cost(landing.ground) : afterCost;
+            if (nativeAfterCost === undefined) continue;
+            const future = requiresNewShip || !!currentFactWork() && free.ticks > 0;
+            const approach = seaTime(ship, free.point, departure.water, future);
+            const cruising = afterApproach(ship, free.point, departure.water, future);
+            // The public read-only evaluator retains its exact old query
+            // admission order; control defers a dependent leg until the
+            // native approach endpoint/heading is actually published.
+            const sailingTicks = currentFactWork() && approach === undefined ? undefined
+              : seaTime(cruising, currentFactWork() ? cruising : departure.water, landing.water, true);
             if (approach === undefined || sailingTicks === undefined) continue;
-            choices.push({ from, to, afterCost, readyTicks: free.ticks + approach, unmet: free.unmet,
-              crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, departure: { ...from.water }, landing: { ...to.water }, landingGround: { ...to.ground },
+            choices.push({ from: departure, to: landing, afterCost: nativeAfterCost, readyTicks: free.ticks + approach, unmet: free.unmet,
+              crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, ...(requiresNewShip && yard ? { productionBuildingId: yard.id } : {}), departure: { ...departure.water }, landing: { ...landing.water }, landingGround: { ...landing.ground },
+                ...(nativeFrom?.status === 'known' ? { departureGround: { ...departure.ground }, departureHeading: cruising.sailing!.heading } : {}),
+                ...(nativeTo?.status === 'known' ? { landingHeading: nativeTo.heading } : {}),
                 boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks, unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip } });
           }
         }
       }
     }
     if (regions.scannedRows < regions.totalRows && !choices.length) pendingGeometry = true;
-    const finished = !pendingGeometry, result = preparation && !finished ? [] : choices;
+    const finished = !pendingGeometry, result = preparation && !finished && !currentFactWork() ? [] : choices;
     crossingTables.set(key, { choices: result, pending: pendingGeometry, ages: [...usedFieldTicks], quoteAges: [...usedQuoteTicks] });
-    if (preparation && publicationKey && finished) {
+    if (preparation && publicationKey && finished && !currentFactWork()) {
       if (preparation.crossings.length >= 32) {
         const old = preparation.crossings.shift()!; persistent!.delete(old.key);
       }
@@ -393,6 +461,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       if (sea && walk !== undefined && after !== undefined && approach !== undefined && sail !== undefined) {
         const crossing: CrossingEta & { requiresNewShip: false } = { seaId: sea, shipId, departure: { ...mission.from }, landing: { ...mission.to }, landingGround: { ...landing },
           waitTicks: Math.max(0, approach - walk), boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks: sail,
+          ...(currentFactWork() ? { expectedLoadedTick: snapshot.tick + Math.max(walk, approach) + GANGWAY_SETUP_TICKS } : {}),
           unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip: false };
         return projectedProperty({ status: 'reachable' as const, ticks: walk + crossing.waitTicks + crossing.boardingTicks + sail + crossing.unloadingTicks + after,
           landTicks: walk + after, crossings: [crossing] }, 'evidence', descriptions.ferry);
@@ -407,7 +476,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       if (!best || ticks < best.ticks) best = { choice, walk, after, wait, ticks };
     }
     if (!best) return unknown('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`);
-    const crossing = { ...best.choice.crossing, waitTicks: best.wait };
+    const crossing = { ...best.choice.crossing, waitTicks: best.wait,
+      ...(currentFactWork() ? { expectedLoadedTick: snapshot.tick + best.walk + best.wait + best.choice.crossing.boardingTicks } : {}) };
     const conditional = best.choice.unmet.length > 0 || crossing.requiresNewShip;
     const answer = projectedProperty({ status: conditional ? 'conditional' as const : 'reachable' as const, ticks: best.ticks, landTicks: best.walk + best.after }, 'evidence', descriptions.crossing);
     return conditional ? Object.assign(answer, { crossings: [crossing], unmet: best.choice.unmet }) as Extract<Arrival, { status: 'conditional' }>
@@ -419,13 +489,75 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (usedFieldTicks.size) usedFieldTicks.clear();
     if (usedQuoteTicks.size) usedQuoteTicks.clear();
   }
-  function calculate(unit: Unit, target: Target): Arrival {
-    resetGeometry();
-    const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
-    let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
-      ? unknown('crossing-candidate-not-shortlisted',
-        `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`)
-      : compute(unit, target);
+  function fixedLoading(unit: Unit, voyage: FixedVoyage): FixedVoyageLoading {
+    const ship = byId.get(voyage.shipId), source = landIdAt(snapshot.map, unit);
+    if (unit.owner !== owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land'
+      || !ship || ship.owner !== owner || ship.hp <= 0 || !isTransportKind(ship.kind))
+      return { status: 'unknown' as const, reasonCode: 'loading-member-or-hull-unavailable' };
+    if (unit.deck?.shipId === ship.id || unit.cabin?.shipId === ship.id)
+      return { status: 'already-loaded' as const };
+    if (unit.deck || unit.cabin || voyage.phase !== 'loading' || source !== voyage.departureGround.landId
+      || landIdAt(snapshot.map, voyage.departureGround.point) !== source
+      || seaIdAt(snapshot.map, ship) !== voyage.seaId || seaIdAt(snapshot.map, voyage.departure) !== voyage.seaId)
+      return { status: 'unknown' as const, reasonCode: 'loading-origin-or-phase-unverified' };
+    const walkTicks = landTime(unit, voyage.departureGround.point), approachTicks = seaTime(ship, ship, voyage.departure);
+    if (walkTicks === undefined || approachTicks === undefined)
+      return { status: 'unknown' as const, reasonCode: 'loading-route-unpublished' };
+    // Formal loading waits for the hull, then issues board. Existing incumbent
+    // ferry predictions above retain their own concurrent move/board protocol.
+    return { status: 'known' as const, forecastTick: snapshot.tick, walkTicks, approachTicks,
+      boardingTicks: GANGWAY_SETUP_TICKS, expectedLoadedTick: snapshot.tick + approachTicks + walkTicks + GANGWAY_SETUP_TICKS };
+  }
+  function fixedVoyage(unit: Unit, target: Target, voyage: FixedVoyage): Arrival {
+    const destination = target.landId ?? landIdAt(snapshot.map, target.point);
+    if (unit.owner !== owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land')
+      return unknown('voyage-member-unavailable', 'Only a live owned land passenger can consume this voyage');
+    if (!destination || destination !== voyage.landingGround.landId
+      || landIdAt(snapshot.map, target.point) !== destination
+      || landIdAt(snapshot.map, voyage.landingGround.point) !== destination
+      || landIdAt(snapshot.map, voyage.departureGround.point) !== voyage.departureGround.landId)
+      return unknown('voyage-ground-pair-mismatch', 'The retained crossing does not have the stated origin and destination ground labels');
+    const support = unit.deck?.shipId ?? unit.cabin?.shipId;
+    const source = !support && landIdAt(snapshot.map, unit);
+    // Once actually unloaded, neither a departed/dead hull nor its former phase
+    // can force the soldier back onto a speculative crossing.
+    if (source === destination) {
+      const ticks = landTime(unit, target.point);
+      return ticks === undefined ? unavailable('native-road-unreachable', 'The remaining inland road is blocked')
+        : walkingArrival(ticks, descriptions.land);
+    }
+    if (support && support !== voyage.shipId)
+      return unknown('voyage-passenger-on-other-hull', 'The passenger is physically aboard a different hull');
+    if (voyage.phase === 'return')
+      return unknown('voyage-returning', 'The retained voyage is returning instead of delivering to this target');
+    const ship = byId.get(voyage.shipId);
+    if (!ship || ship.owner !== owner || ship.hp <= 0 || !isTransportKind(ship.kind))
+      return unknown('voyage-hull-unavailable', 'The assigned physical transport is unavailable; no replacement is selected');
+    if (seaIdAt(snapshot.map, ship) !== voyage.seaId || seaIdAt(snapshot.map, voyage.departure) !== voyage.seaId
+      || seaIdAt(snapshot.map, voyage.landing) !== voyage.seaId)
+      return unknown('voyage-sea-pair-mismatch', 'The assigned hull and both retained water points must belong to the same sea');
+    if (!support && (source !== voyage.departureGround.landId || voyage.phase !== 'loading'))
+      return unknown('voyage-passenger-not-at-loading', 'An unboarded passenger cannot use a departed voyage or a different origin');
+    const after = landTime(unit, target.point, voyage.landingGround.point), loading = !support ? fixedLoading(unit, voyage) : undefined;
+    const walk = support ? 0 : loading?.status === 'known' ? loading.walkTicks : undefined;
+    const approach = support ? 0 : loading?.status === 'known' ? loading.approachTicks : undefined;
+    const cruising = support || approach === undefined ? ship : afterApproach(ship, ship, voyage.departure, false);
+    const sail = seaTime(cruising, support ? ship : currentFactWork() ? cruising : voyage.departure, voyage.landing, !support);
+    if (walk === undefined || after === undefined || approach === undefined || sail === undefined)
+      return unavailable('voyage-road-blocked', 'The fixed sailing, loading or inland leg is not available');
+    const crossing: CrossingEta & { requiresNewShip: false } = {
+      shipId: ship.id, seaId: voyage.seaId,
+      departure: support ? { x: ship.x, y: ship.y } : { ...voyage.departure }, landing: { ...voyage.landing },
+      landingGround: { ...voyage.landingGround.point }, waitTicks: approach,
+      boardingTicks: support ? 0 : GANGWAY_SETUP_TICKS, sailingTicks: sail,
+      ...(!support && currentFactWork() ? { expectedLoadedTick: snapshot.tick + approach + walk + GANGWAY_SETUP_TICKS } : {}),
+      unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip: false,
+    };
+    return projectedProperty({ status: 'reachable' as const,
+      ticks: walk + crossing.waitTicks + crossing.boardingTicks + sail + crossing.unloadingTicks + after,
+      landTicks: walk + after, crossings: [crossing] }, 'evidence', descriptions.fixed);
+  }
+  function finish(answer: Arrival): Arrival {
     if (pendingGeometry && !('ticks' in answer)) answer = unknown('geometry-refresh-pending',
       'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable');
     if ('ticks' in answer && capturesExplanations()) {
@@ -443,10 +575,28 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     }
     return answer;
   }
+  function calculate(unit: Unit, target: Target): Arrival {
+    resetGeometry();
+    const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
+    const answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
+      ? unknown('crossing-candidate-not-shortlisted',
+        `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`)
+      : compute(unit, target);
+    return finish(answer);
+  }
   return {
     crossingChoices: crossingTable,
     stats,
+    /** Stage-only projection of the same query; never substitute final arrival
+     * or a fabricated historic loading time for an unavailable forecast. */
+    fixedVoyageLoading(unit: Unit, voyage: FixedVoyage) { resetGeometry(); return fixedLoading(unit, voyage); },
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
+    fixedVoyageArrival(unit: Unit, target: Target, voyage: FixedVoyage): Arrival {
+      resetGeometry();
+      const answer = finish(fixedVoyage(unit, target, voyage));
+      return unit.expiresTick !== undefined && 'ticks' in answer && unit.expiresTick <= snapshot.tick + answer.ticks
+        ? unavailable('expires-before-arrival', `${unit.id} expires before reaching this effect`) : answer;
+    },
     arrival(unit: Unit, target: Target, origin?: LandId): Arrival {
       // Situation already resolves each actor's actual terrain component. Only
       // unmounted foreign actors on another land share this intent-only fact;

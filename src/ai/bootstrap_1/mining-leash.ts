@@ -4,6 +4,9 @@ import { activeUnitClaim, clearUnitClaim, isMineRallyClaim, recordUnitTaskClaim 
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import type { V6Intel } from '../policy/v6/intel';
+import { strategyLeaseAllows } from '../strategy/control';
+import { miningDefenseActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 // The existing mine-raid perimeter. A 200-deep fighting post still has 450 of fighting room toward the enemy.
 export const MINING_PURSUIT_RADIUS = 650;
@@ -29,6 +32,7 @@ export function miningLeashAssignment(snapshot: GameSnapshot, owner: PlayerId, o
   const units = snapshot.units.filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return unit.owner === owner && !unit.deck && unit.kind !== 'worker'
+      && strategyLeaseAllows(options.memory, unit.id, miningDefenseActor(hall.id))
       && !['board', 'cast', 'charge'].includes(unit.order.type) && !expansionOwnsDefender(snapshot, owner, options, unit)
       && distance(unit, point) > RETURN_RADIUS && claim?.targetId === hall.id
       && (claim.kind === 'mineLeash' || (claim.kind === 'mineGuard' || isMineRallyClaim(claim) && claim.arrived)
@@ -54,7 +58,8 @@ export function planMiningLeash(snapshot: GameSnapshot, owner: PlayerId, options
   proposals.set(options.memory, { tick: snapshot.tick, units: assignment.units, state: assignment.state });
   const moving = assignment.units.filter(unit => !(unit.order.type === 'move' && unit.order.avoidCombat
     && distance(unit.order, assignment.point) < 40));
-  return moving.length ? [{ type: 'move', unitIds: moving.map(unit => unit.id), ...assignment.point, avoidCombat: true }] : [];
+  return bindIncumbentCommands(moving.length ? [{ type: 'move', unitIds: moving.map(unit => unit.id), ...assignment.point, avoidCombat: true }] : [],
+    miningDefenseActor(assignment.hall.id));
 }
 
 export function recordMiningLeashAcceptedCommands(snapshot: GameSnapshot, _owner: PlayerId, options: AiPolicyContext, commands: readonly GameCommand[]) {

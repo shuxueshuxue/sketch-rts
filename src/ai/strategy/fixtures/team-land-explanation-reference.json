@@ -1,0 +1,63 @@
+{
+  "cause": "snapshot-team-relation",
+  "inputSha256": "788a6f639480f0a9ca3ca8c9d8b41b67f2a775f2ad9c599597311b789ac2eaba",
+  "previousReferenceSha256": "88657a27f148bffac1c1f6018aa760c702d397de5096b8067c79d94bd4377103",
+  "cases": [
+    {
+      "event": "L1",
+      "landSha256": "62520c98a68430c2e0a716b288a5058fd982da7e66c5690e615249cfb68c59bb",
+      "planSha256": "c4c039825225a83006b944f2fd34e3f9d6cb0be1fcbc1b65a3bdbbd79ab1afb0",
+      "observationSha256": "81ab1ade826aa2579b0726525f2b79e7e01ce928b1709dc02ac06ed6c4682bce",
+      "previousLandSha256": "62520c98a68430c2e0a716b288a5058fd982da7e66c5690e615249cfb68c59bb",
+      "changedLeaves": 0
+    },
+    {
+      "event": "L2",
+      "landSha256": "bf45f72818b4465df49d1cf6d24e8c5b04a8a5b853fa7dc3b87af3972352cc6f",
+      "planSha256": "b62d546921112280e89997fbf52c2d35c300d37b4f8cbaf978b89755186462bb",
+      "observationSha256": "2c248e25a6a184709cd793ebbe6bcc7e8599ba5f04130dab18b3ebe4377a2bec",
+      "previousLandSha256": "bf45f72818b4465df49d1cf6d24e8c5b04a8a5b853fa7dc3b87af3972352cc6f",
+      "changedLeaves": 0
+    },
+    {
+      "event": "L3",
+      "landSha256": "89281d5cae6fa42b59f9652f653ad1ffaa53e6254cdd1aa6003fa0d607cd65fd",
+      "planSha256": "198101ef189bae17e6a43a29bb137b25eb536bc290c73770884170a288e95f4c",
+      "observationSha256": "e2c5f8020227d3345f90e4d39b18ef54873bcedb90698880b7fef5afb9d377b7",
+      "previousLandSha256": "7a6aa49fddefbd351f0b659eddc6a0f602a37ef69380c84d566beae4c61cb197",
+      "changedLeaves": 230
+    },
+    {
+      "event": "L4",
+      "landSha256": "142bf2a75217e04ce508f259a456b420c311f914b2f7eac919e29076620e3831",
+      "planSha256": "9852e335195ec835b6e9bb05375061ef3dbebf564e2b1f7936c63341b2df2590",
+      "observationSha256": "0ca0b99b92e547a0caacb111b3a1281b16ccd92cdbf6f0b37fbfecb013dfc716",
+      "previousLandSha256": "94c30c6de74337d7204c24874f62b7f5be93a29f96617a760f3d0066aa39a864",
+      "changedLeaves": 364
+    },
+    {
+      "event": "L5-threat",
+      "landSha256": "c6d0a227aa9871944fd81e4cfb3e13e8b4afd25c3d96db2ec76b6c2004dc98cc",
+      "planSha256": "de8237fbc30354fe888321e56640d7b1ac956418af351cea06287c14e1deb4b5",
+      "observationSha256": "48f5a16754c572b79f91aa3ab1d64670ac02d641d518223f4eccb67b05239ad4",
+      "previousLandSha256": "e28bfb1f76d5d7c5f3ac849ff08abc674edd9ba22059badeab4ef4fdf5e7080d",
+      "changedLeaves": 364
+    },
+    {
+      "event": "L5-front",
+      "landSha256": "1d5f6bf1eaa26c31b0e31aa4825248b005f35128165354f005358d7a7765d0b0",
+      "planSha256": "7447a0f4cedff34b258672653f20bd64655260edc388666006939785353518d8",
+      "observationSha256": "e950c9c7e83460f2c0f45c7b2bdc339389c4fe7f33babeaad42931c9483dc7d2",
+      "previousLandSha256": "55cf47b8ae909a8481c7cab26249a0976a5b4790f816dd5ac831ea24f5050be6",
+      "changedLeaves": 328
+    },
+    {
+      "event": "L6",
+      "landSha256": "cc9b6b743bbe18d91e88e7022e3e4d32459bf8e84a2bc7a92445a444ec219a74",
+      "planSha256": "2d83752c491156f6bac4c4d839d0a2c9690b45dbc5e6a5280db2a916549004d6",
+      "observationSha256": "57b3f5e5ee73fec29225eabc946c17eace29231e010f7ed9349baf48f46d50a5",
+      "previousLandSha256": "cc9b6b743bbe18d91e88e7022e3e4d32459bf8e84a2bc7a92445a444ec219a74",
+      "changedLeaves": 0
+    }
+  ]
+}

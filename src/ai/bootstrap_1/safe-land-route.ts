@@ -4,13 +4,16 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { isEnemyOwner } from '../policy/ownership';
+import { isEnemyOwner, type TeamPolicyOptions } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
 import { withNavalShoreReuse } from '../policy/naval-shore-reuse';
 import { nativeLandRoad, withNativeLandRoadReuse } from '../policy/land-road';
 export { nativeLandRoad } from '../policy/land-road';
 type Threat = Unit | Building;
+/** An allocation caller can supply its already published route without
+ * invoking another native navigation query. The threat tests remain shared. */
+export type LandRoadReader = (unit: Unit, goal: Point) => ReturnType<typeof nativeLandRoad>;
 type RoadReuse = {
   checks: WeakMap<Unit, Map<string, { foes: readonly Threat[]; clear: boolean }>>;
 };
@@ -48,7 +51,7 @@ function roadClear(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readon
   return clear;
 }
 
-export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: TeamPolicyOptions) {
   return [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
     && isEnemyOwner(snapshot, owner, foe.owner, options));
 }
@@ -62,11 +65,11 @@ export function earliestThreatContactTicks(snapshot: GameSnapshot, foe: Unit, un
 }
 
 /** Check the native steering road; each task owns its destination's arrival range. */
-export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[], arrives?: (end: Point) => boolean): number | undefined {
-  const road = nativeLandRoad(snapshot, unit, goal);
+export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[], arrives?: (end: Point) => boolean, read?: LandRoadReader): number | undefined {
+  const road = read ? read(unit, goal) : nativeLandRoad(snapshot, unit, goal);
   if (!road || arrives && !arrives(road.points[road.points.length - 1]!)) return undefined;
-  return roadClear(snapshot, unit, goal, foes, false,
-    () => routeClearsDisks(road.points, landThreatDisks(snapshot, unit, foes, road.ticks))) ? road.ticks : undefined;
+  const clear = () => routeClearsDisks(road.points, landThreatDisks(snapshot, unit, foes, road.ticks));
+  return (read ? clear() : roadClear(snapshot, unit, goal, foes, false, clear)) ? road.ticks : undefined;
 }
 
 /** Check the same building-aware steering road that a recovery move will execute. */
@@ -77,17 +80,18 @@ export function retreatLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal:
 }
 
 /** A native retreat road may end beside a building; the task decides its arrival range. */
-export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]) {
-  const road = nativeLandRoad(snapshot, unit, goal);
+export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[], read?: LandRoadReader) {
+  const road = read ? read(unit, goal) : nativeLandRoad(snapshot, unit, goal);
   if (!road) return undefined;
   const { points, ticks } = road;
-  const clear = roadClear(snapshot, unit, goal, foes, true, () => {
+  const check = () => {
     const disks = foes.flatMap(foe => {
       const reach = retreatThreatReach(snapshot, foe, unit, THINK_TICKS + ticks);
       return reach > 0 ? [{ x: foe.x, y: foe.y, radius: reach + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }] : [];
     });
     return routeLeavesDisks(points, disks);
-  });
+  };
+  const clear = read ? check() : roadClear(snapshot, unit, goal, foes, true, check);
   return clear ? { points, ticks } : undefined;
 }
 

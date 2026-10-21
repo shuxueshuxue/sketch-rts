@@ -11,6 +11,9 @@ import { isEnemyOwner } from '../policy/ownership';
 import { coveredDefenseTarget } from './covered-defense';
 import { strengthOf } from '../policy/v6/strength';
 import { activeUnitClaim, isMineRallyClaim, recordUnitTaskClaim } from '../policy/claims';
+import { strategyLeaseAllows } from '../strategy/control';
+import { miningDefenseActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 export const MINING_RALLY_RADIUS = 240;
 const proposals = new WeakMap<AiPolicyMemory, { tick: number; owner: PlayerId;
@@ -24,10 +27,12 @@ export function miningRallyAssignment(snapshot: GameSnapshot, owner: PlayerId, o
   if (!hall || !known && (!intrusion || distance(intrusion.building, hall) > GOLD_MINE_RULES.baseRange
     || !snapshot.resources.some(mine => mine.amount > 0 && distance(mine, hall) <= GOLD_MINE_RULES.baseRange)
       && !snapshot.units.some(unit => unit.owner === owner && unit.kind === 'worker' && distance(unit, hall) <= GOLD_MINE_RULES.baseRange))) return undefined;
+  const actor = miningDefenseActor(hall.id);
   const available = known ? snapshot.units.filter(unit => unit.owner === owner && !unit.deck
+      && strategyLeaseAllows(options.memory, unit.id, actor)
       && isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))
       && activeUnitClaim(snapshot, owner, unit, options)?.targetId === hall.id)
-    : availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0
+    : availableV6Army(snapshot, { ...options, strategyActor: actor }, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0
       && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
       && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
   if (available.length === 0) return undefined;
@@ -99,11 +104,11 @@ export function planMiningRally(snapshot: GameSnapshot, owner: PlayerId, options
   });
   const waiting = units.filter(unit => distance(unit, state.point) <= MINING_RALLY_RADIUS
     && (!owns(unit.id) || state.phase === 'gather' && unit.order.type !== 'hold'));
-  return [
+  return bindIncumbentCommands([
     ...firing,
     ...(walking.length ? [{ type: 'move' as const, unitIds: walking.map(unit => unit.id), ...state.point, avoidCombat: true }] : []),
     ...(waiting.length ? [{ type: 'holdPosition' as const, unitIds: waiting.map(unit => unit.id) }] : []),
-  ];
+  ], miningDefenseActor(state.hallId));
 }
 
 /** The runner supplies accepted orders, so rejected rally proposals never acquire ownership. */

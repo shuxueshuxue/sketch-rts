@@ -11,14 +11,15 @@ export function planAiOwnerCommandEntriesWithDecision<Source extends string = st
   request: AiOwnerPlannerRequest<Source>, options: AiOwnerPlannerOptions = {}, families?: readonly ObjectiveFamily[]) {
   let decision: StrategyDecision | undefined;
   let observed: { context: AiPolicyContext; observation: SituationObservation } | undefined;
-  const commands = planAiOwnerCommandEntries(snapshot, request, { ...options, observeBootstrapPlan(context, entries) {
-    options.observeBootstrapPlan?.(context, entries);
+  const commands = planAiOwnerCommandEntries(snapshot, request, { ...options, strategyObservation: 'facts', observeBootstrapPlan(context, entries, actual) {
+    options.observeBootstrapPlan?.(context, entries, actual);
+    if (actual) decision = actual.decision;
     const healing = entries.flatMap(entry => ['mobileCare', 'frontRecovery'].includes(entry.scriptId ?? '') && 'unitIds' in entry.command
       ? entry.command.unitIds.map(unitId => ({ unitId, executor: entry.scriptId! })) : []);
     observed = { context, observation: { healing } };
   } });
   // The command planner's temporary road/shore scopes have now been released.
   // Its final context and accepted healing membership are the same input facts.
-  if (observed) decision = buildStrategyDecision(snapshot, request.playerId, observed.context, families, observed.observation);
+  if (!decision && observed) decision = buildStrategyDecision(snapshot, request.playerId, observed.context, families, observed.observation);
   return { commands, decision };
 }

@@ -23,6 +23,9 @@ import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { expansionGarrisonReady } from './expansion-garrison';
 import { planMiningScreen } from './expansion-mission';
 import { reinforcementCrew } from './reinforcement-ferries';
+import { strategyLeaseAllows } from '../strategy/control';
+import { islandConquestActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 function permanentLand(unit: Unit) {
   return unit.hp > 0 && !unit.deck && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined
@@ -254,6 +257,7 @@ function conquestCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   return snapshot.units.filter(unit => unit.owner === owner && permanentLand(unit) && unit.kind !== 'worker'
     && sameGround(snapshot.map, unit, mine) && !mounted.has(unit.id)
+    && strategyLeaseAllows(options.memory, unit.id, islandConquestActor(task))
     && !isDefenseTaskClaim(activeUnitClaim(snapshot, owner, unit, options)));
 }
 
@@ -277,9 +281,10 @@ export function islandConquestCommands(snapshot: GameSnapshot, owner: PlayerId, 
     delete state.general;
     if (!task.combat?.creep) delete state.creep;
     if (!task.combat?.creepRetry) delete state.creepRetry;
-    const mission = { ...options, executorTaskId: `island:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
-    commands.push(...planMiningScreen(snapshot, owner, mission, intel, task,
-      crew.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0)));
+    const actor = islandConquestActor(task);
+    const mission = { ...options, strategyActor: actor, executorTaskId: `island:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
+    commands.push(...bindIncumbentCommands(planMiningScreen(snapshot, owner, mission, intel, task,
+      crew.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0)), actor));
     task.combat = { ...(state.creep ? { creep: state.creep } : {}), ...(state.creepRetry ? { creepRetry: state.creepRetry } : {}) };
     for (const unit of crew) unitIds.add(unit.id);
   }

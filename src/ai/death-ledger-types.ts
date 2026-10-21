@@ -14,8 +14,15 @@ export type AiDeathTask = {
   targetId: string | null;
   stage: string | null;
   source: string;
-  /** Until the allocator exists this is always inferred, even when membership is explicit. */
-  attribution: 'inferred';
+  attribution: 'inferred' | 'assignment';
+  /** Present only after validating a committed assignment, its live lease and
+   * current action generation. This is not the issuer of the native order. */
+  formal?: {
+    objectiveId: string; assignmentId: string; action: { actionId: string; generation: number };
+    allocationRevision: number; executionPhase: string; plannedExecutor: string;
+    assignmentStage: 'assigned' | 'en-route' | 'on-station';
+    interruption: { kind: 'worker-safety' | 'shell-evasion' | 'retreat' | 'healing'; executor: string; sinceTick: number } | null;
+  };
   methodId: string | null;
   utility: number | null;
   combat: boolean;
@@ -30,7 +37,7 @@ export type AiDeathAssignment = {
   task: AiDeathTask | null;
   otherTaskCandidates: AiDeathTask[];
   state: 'unassigned' | 'assigned' | 'en-route' | 'on-station' | 'emergency-interruption';
-  stateAttribution: 'inferred';
+  stateAttribution: 'inferred' | 'assignment';
   evidence: string[];
   /** No formal objective acceptance range exists in the previous modules. */
   plannedBalanceRange: null;
@@ -98,7 +105,7 @@ export type AiUnitDeathRecord = {
     evacuationAssigned: boolean;
     /** Geometry/ownership is observed; absence of a transport assignment is not a proof no safe route exists. */
     escapeRoute: 'not-evaluated';
-    switches: { tick: number; from: string | null; to: string | null; attribution: 'inferred' }[];
+    switches: { tick: number; from: string | null; to: string | null; attribution: 'inferred' | 'assignment' }[];
     wornRetreatTick: number | null;
   };
   classification: AiDeathClassification;

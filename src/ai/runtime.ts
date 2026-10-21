@@ -2,7 +2,7 @@ import { buildAiPlanTrace } from './plan-trace';
 import type { AiPlanTrace } from './plan-trace';
 import { projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
 import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
-import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider } from "./planner-context";
+import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider, type AiOwnerPlannerOptions } from "./planner-context";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import { normalizeCommandFrameEntries, type CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
@@ -182,32 +182,37 @@ export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState,
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options }).commands;
 }
 
-export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider; observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
+export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: AiOwnerPlannerOptions & { observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
   return planAiCommandFrameFromSnapshot(snapshotGame(game), requests, { teams: game.teams, ...options });
 }
 
-export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider; observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
+export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: AiOwnerPlannerOptions & { observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
   if (snapshot.match.winner) return { commands: [] };
   const { memoryProvider, observer, ...policyOptions } = options;
   return { commands: normalizeCommandFrameEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider, observer)) };
 }
 
-function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider, observer?: AiThinkObserver) {
+function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: AiOwnerPlannerOptions = {}, memoryProvider?: AiMemoryProvider, observer?: AiThinkObserver) {
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
   // @@@shared-ai-frame - All requests of one think reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
     const options = { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) };
     if (observer) {
+      let strategy: import('./strategy/bootstrap-control').BootstrapStrategyOutput | undefined;
       let memory = request.memory ?? policyOptions.memory;
       const observingProvider: AiMemoryProvider = {
         get(owner) { const value = memoryProvider?.get(owner); if(owner===request.playerId && value) memory=value; return value; },
         set(owner,value) { if(owner===request.playerId)memory=value; memoryProvider?.set?.(owner,value); },
       };
       // Commit commands before touching diagnostics. An output/consumer fault must never discard a completed think.
-      planned.push(...planAiOwnerCommandEntries(snapshot,request,{...options,memoryProvider:observingProvider}));
+      planned.push(...planAiOwnerCommandEntries(snapshot,request,{...options,memoryProvider:observingProvider,
+        observeBootstrapPlan(context, entries, actual) {
+          strategy = actual; policyOptions.observeBootstrapPlan?.(context, entries, actual);
+        }}));
       try {
         const observed = memory ?? createAiPolicyMemory();
-        observer({trace:buildAiPlanTrace(snapshot,request.playerId,observed,request.version??DEFAULT_AI_PLANNER_VERSION),
+        const base = buildAiPlanTrace(snapshot,request.playerId,observed,request.version??DEFAULT_AI_PLANNER_VERSION);
+        observer({trace:strategy?.project ? { ...base, strategy: strategy.project() } : base,
           context:projectDeathThinkContext(snapshot,request.playerId,observed)});
       } catch(error) { console.error('AI plan observation failed',error); }
     } else planned.push(...planAiOwnerCommandEntries(snapshot, request, options));

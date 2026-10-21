@@ -1,3 +1,6 @@
+import type { VoyageRiskMemory } from './voyage-risk';
+import type { PointRouteMemory } from './point-routes';
+import type { FactWorkReceipt } from './fact-work';
 import { standingBodies } from '../../shared/structure-bodies';
 import { fnv1a } from '../../shared/sim/checksum';
 import type { Terrain } from '../../shared/terrain';
@@ -17,6 +20,10 @@ export type StrategyObservationMemory = {
   landBodies: string;
   fields: { land: FieldProgress[]; sea: FieldProgress[] };
   crossings: { key: string; fieldTicks: number[]; quotedTick: number }[];
+  /** Bounded native planning cursor and exposure publication; no distance-field arrays. */
+  voyageRisks?: VoyageRiskMemory;
+  pointRoutes?: PointRouteMemory;
+  factWork?: FactWorkReceipt;
   truncated?: true;
   history?: { tick: number; assets: Asset[]; lostSites: Opportunity[]; objectives: PreviousObjective[] };
 };
@@ -47,7 +54,8 @@ export function observationMemory(snapshot: GameSnapshot, owner: PlayerId, memor
   let state = memory.strategy?.observation;
   if (!state || state.version !== 1 || state.owner !== owner || state.terrain !== key) {
     state = { version: 1, owner, terrain: key, landBodies: bodies, fields: { land: [], sea: [] }, crossings: [] };
-  } else if (state.landBodies !== bodies) state = { ...state, landBodies: bodies, fields: { land: [], sea: state.fields.sea }, crossings: [] };
+  } else if (state.landBodies !== bodies) state = { ...state, landBodies: bodies, fields: { land: [], sea: state.fields.sea }, crossings: [],
+    ...(state.pointRoutes ? { pointRoutes: { entries: [] } } : {}) };
   state.crossings ??= [];
   memory.strategy = { observation: state };
   return state;
@@ -68,6 +76,12 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
     objectives: objectives.slice(0, OBSERVATION_HISTORY_LIMIT).map(({ id, sinceTick, stability, utility, rank }) =>
       ({ id, sinceTick, stability: { ...stability }, utility: { score: rank === null ? null : utility.score } })),
   };
+  boundObservationMemory(state);
+}
+
+/** Also used after control-only action targets extend the same publication
+ * ledger. Explanations or process caches never determine this trimming. */
+export function boundObservationMemory(state: StrategyObservationMemory) {
   // Explicit serialization bound, independent of map area or number of entities.
   // Drop historical quotations before useful geometry progress. A gap is retained
   // as unknown; it cannot create a recovered-site history or a zero handoff cost.
@@ -81,10 +95,11 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
     bytes -= observationJsonBytes(removed) + comma;
   };
   while (bytes > OBSERVATION_BYTE_LIMIT) {
-    if (state.history.objectives.length) discard(state.history.objectives);
-    else if (state.history.lostSites.length) discard(state.history.lostSites, true);
-    else if (state.history.assets.length) discard(state.history.assets);
+    if (state.history?.objectives.length) discard(state.history.objectives);
+    else if (state.history?.lostSites.length) discard(state.history.lostSites, true);
+    else if (state.history?.assets.length) discard(state.history.assets);
     else if (state.crossings.length) discard(state.crossings, true);
+    else if (state.pointRoutes?.entries.length) discard(state.pointRoutes.entries, true);
     else if (state.fields.land.length) discard(state.fields.land);
     else if (state.fields.sea.length) discard(state.fields.sea);
     else throw new Error('Strategy observation identity exceeds its serialization budget');

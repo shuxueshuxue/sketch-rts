@@ -40,6 +40,8 @@ export type AiPolicyContext = PresetAiPolicyOptions & {
   /** Output only; neither callback nor its records enter memory/checkpoints. */
   executorReason?: import('../executor-reasons').ExecutorReasonSink;
   executorTaskId?: string;
+  /** Explicit incumbent identity for selection; final admission checks it again. */
+  strategyActor?: import('../strategy/control').StrategyLeaseActor;
   /** The room expansion's existing force request, before optional purchases. */
   expansionRecruit?: { unit: TrainableUnitKind; count: number } | undefined;
 };
