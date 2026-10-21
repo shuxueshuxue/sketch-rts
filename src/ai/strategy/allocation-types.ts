@@ -371,6 +371,9 @@ export type ExecutorInput = Readonly<{
   execution: ExecutionAction;
   grant: ActionGrant;
   events: readonly AllocationEvent[];
+  /** The same owner-think source, including actual free cash after reserved
+   * budgets. This callback never enters serialized execution state. */
+  goalFacts?: import('./goal-planner-types').GoalFactReader;
 }>;
 export type ExecutorFeedback = Readonly<{
   action: ActionToken;
