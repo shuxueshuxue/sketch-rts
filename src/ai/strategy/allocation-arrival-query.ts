@@ -16,6 +16,12 @@ export type AllocationArrivalReader = (unit: Unit, target: Target) => DecisionFa
 export type AllocationLandRouteReader = (from: Target['point'], goal: Target['point']) =>
   Readonly<{ status: 'known'; points: readonly Target['point'][]; distance: number }>
   | Readonly<{ status: 'unknown' | 'unreachable'; reasonCode: string }>;
+let currentLandRoute: AllocationLandRouteReader | undefined;
+export function currentAllocationLandRouteReader() { return currentLandRoute; }
+export function withAllocationLandRoutes<T>(reader: AllocationLandRouteReader, run: () => T): T {
+  const previous = currentLandRoute; currentLandRoute = reader;
+  try { return run(); } finally { currentLandRoute = previous; }
+}
 
 /** One query and deterministic work allowance for every materialization and
  * gross/net counterfactual in this transaction. The callback never escapes
@@ -29,17 +35,18 @@ export function withAllocationArrivalQuery<T>(snapshot: GameSnapshot, owner: Pla
     const preparation = observationMemory(snapshot, owner, memory);
     const fields = createPlanningDistanceQuery(snapshot, fieldBudget, 'land', preparation);
     const query = createArrivalQuery(snapshot, owner, memory, fields, fieldBudget, regionIndex(snapshot.map), preparation);
+    const landRoute: AllocationLandRouteReader = (from, goal) => {
+      const published = fields.field(goal);
+      if (!published) return { status: 'unknown', reasonCode: 'assembly-rally-route-pending' };
+      const distance = published.field.cost(from), points = published.field.road(from, goal);
+      return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'assembly-rally-route-unreachable' }
+        : { status: 'known', distance, points };
+    };
     try {
-      return run((unit, target, voyage) => decisionProjection(() => query.fixedVoyageArrival(unit, target, voyage), false).facts,
+      return withAllocationLandRoutes(landRoute, () => run((unit, target, voyage) => decisionProjection(() => query.fixedVoyageArrival(unit, target, voyage), false).facts,
         (unit, voyage) => query.fixedVoyageLoading(unit, voyage),
         (unit, target) => decisionProjection(() => query.arrival(unit, target, landIdAt(snapshot.map, unit)), false).facts,
-        (from, goal) => {
-          const published = fields.field(goal);
-          if (!published) return { status: 'unknown', reasonCode: 'assembly-rally-route-pending' };
-          const distance = published.field.cost(from), points = published.field.road(from, goal);
-          return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'assembly-rally-route-unreachable' }
-            : { status: 'known', distance, points };
-        });
+        landRoute));
     } finally { boundObservationMemory(preparation); }
   }));
 }
