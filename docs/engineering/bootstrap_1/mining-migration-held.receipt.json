@@ -1,0 +1,26 @@
+{
+  "status": "withdrawn; no runtime changes retained",
+  "sdk": {
+    "passed": 10,
+    "failed": 4,
+    "sameAssertionsKept": true
+  },
+  "window": {
+    "mining-migration-parent": {
+      "tick": 25500,
+      "permanentLosses": 20,
+      "workers": 4,
+      "gold": 71.67,
+      "sha256": "e11c854c8002369135c82307a471ccdb9002a17870d95e622ea0980d35fa4277"
+    },
+    "mining-migration-candidate": {
+      "tick": 25500,
+      "permanentLosses": 20,
+      "workers": 4,
+      "gold": 71.67,
+      "sha256": "a5e2494ef0816cf630685dca5917a85a6a9954206418dd7439a30782577f4910"
+    }
+  },
+  "reason": "Native holdPosition explicitly ignores workers. Refusing a destination does not stop their existing native return order or later idle reassignment; all four covered-destination cases still die. A safe detour works, but this is not a complete miner handoff.",
+  "scope": "Original two mining settlement tests still pass. No no-death or whole-controller improvement claim. Do not reintroduce the previously rejected mining-road-only filter."
+}

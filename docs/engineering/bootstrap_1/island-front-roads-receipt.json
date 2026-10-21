@@ -1,0 +1,35 @@
+{
+  "pr": {
+    "number": 317,
+    "url": "https://github.com/shuxueshuxue/sketch-rts/pull/317",
+    "nodeId": "PR_kwDOSsxl8c8AAAABHyt74A",
+    "head": "cb9d59c112d3c65f6b6b748b712d3f01e627240a",
+    "base": "1f2c6ac9040432d96070c490b841252c1a89df0d",
+    "cpu": 38126902524,
+    "cpuAttempt": 2,
+    "merge": "7de2bac7863ce619269a9697299e369d42f0a78d",
+    "deploy": 38127729538,
+    "deployAttempt": 2,
+    "verified": true
+  },
+  "sdkChecks": {
+    "total": 149,
+    "passed": 149,
+    "existingFailures": 0
+  },
+  "stableStates": 63,
+  "commands": 167,
+  "completeMemoryIdentical": true,
+  "frozenRevision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "frozenFiles": 54,
+  "frozenArchiveCompiled": true,
+  "criticalDeploySteps": {
+    "Run npm run build:production": "success",
+    "Pack production artifact": "success",
+    "Upload artifact and deploy script": "success",
+    "Verify public game endpoint": "success",
+    "Publish GitHub production release package": "success"
+  },
+  "productionTag": "7de2bac7863ce619269a9697299e369d42f0a78d",
+  "newFormalWins": 0
+}

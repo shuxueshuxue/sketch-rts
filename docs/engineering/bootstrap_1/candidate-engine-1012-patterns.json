@@ -1,0 +1,196 @@
+{
+  "run": 38192825610,
+  "head": "0b184931ee0514238a4898e6342c2bb4d70ec23d",
+  "mode": "Description of existing recorded outcomes, no new games and no causal attribution",
+  "rows": [
+    {
+      "family": "v9_archer",
+      "status": "loss",
+      "count": 251,
+      "withExpansion": 239,
+      "withCreepLoss": 186,
+      "withItemUse": 221,
+      "medianFirstExpansionSecond": 312.05,
+      "means": {
+        "baseBuildCount": 3.7,
+        "unitsKilledByNeutral": 2.82,
+        "neutralUnitKills": 8.42,
+        "unitsLost": 64.9,
+        "peakSupply": 55.02,
+        "finalSupply": 0.52,
+        "goldMineIncome": 10263.5,
+        "itemPickupCount": 3.44,
+        "itemUseCount": 5.9,
+        "moonWellHealingHp": 708.1
+      }
+    },
+    {
+      "family": "v9_archer",
+      "status": "timeout",
+      "count": 187,
+      "withExpansion": 176,
+      "withCreepLoss": 125,
+      "withItemUse": 120,
+      "medianFirstExpansionSecond": 339.8,
+      "means": {
+        "baseBuildCount": 5.81,
+        "unitsKilledByNeutral": 2.29,
+        "neutralUnitKills": 9.6,
+        "unitsLost": 43.88,
+        "peakSupply": 86.11,
+        "finalSupply": 65.45,
+        "goldMineIncome": 15319.61,
+        "itemPickupCount": 3.35,
+        "itemUseCount": 5.74,
+        "moonWellHealingHp": 805.82
+      }
+    },
+    {
+      "family": "v9_archer",
+      "status": "win",
+      "count": 98,
+      "withExpansion": 96,
+      "withCreepLoss": 82,
+      "withItemUse": 95,
+      "medianFirstExpansionSecond": 309.425,
+      "means": {
+        "baseBuildCount": 6.68,
+        "unitsKilledByNeutral": 5.11,
+        "neutralUnitKills": 15.53,
+        "unitsLost": 25.56,
+        "peakSupply": 91.8,
+        "finalSupply": 91.13,
+        "goldMineIncome": 14873.59,
+        "itemPickupCount": 4.03,
+        "itemUseCount": 5.85,
+        "moonWellHealingHp": 527.84
+      }
+    },
+    {
+      "family": "v9_knight",
+      "status": "loss",
+      "count": 175,
+      "withExpansion": 171,
+      "withCreepLoss": 100,
+      "withItemUse": 158,
+      "medianFirstExpansionSecond": 238.55,
+      "means": {
+        "baseBuildCount": 3.65,
+        "unitsKilledByNeutral": 1.43,
+        "neutralUnitKills": 8.07,
+        "unitsLost": 60.9,
+        "peakSupply": 56.35,
+        "finalSupply": 0.69,
+        "goldMineIncome": 11082.48,
+        "itemPickupCount": 3.06,
+        "itemUseCount": 5.76,
+        "moonWellHealingHp": 532.95
+      }
+    },
+    {
+      "family": "v9_knight",
+      "status": "timeout",
+      "count": 192,
+      "withExpansion": 182,
+      "withCreepLoss": 120,
+      "withItemUse": 124,
+      "medianFirstExpansionSecond": 288.8,
+      "means": {
+        "baseBuildCount": 6.1,
+        "unitsKilledByNeutral": 2.04,
+        "neutralUnitKills": 9.57,
+        "unitsLost": 35.38,
+        "peakSupply": 84.98,
+        "finalSupply": 67.67,
+        "goldMineIncome": 15119.64,
+        "itemPickupCount": 2.85,
+        "itemUseCount": 7.92,
+        "moonWellHealingHp": 450.22
+      }
+    },
+    {
+      "family": "v9_knight",
+      "status": "win",
+      "count": 173,
+      "withExpansion": 168,
+      "withCreepLoss": 126,
+      "withItemUse": 164,
+      "medianFirstExpansionSecond": 261.05,
+      "means": {
+        "baseBuildCount": 6.04,
+        "unitsKilledByNeutral": 3.75,
+        "neutralUnitKills": 13.34,
+        "unitsLost": 25.98,
+        "peakSupply": 83.69,
+        "finalSupply": 80.5,
+        "goldMineIncome": 14425.65,
+        "itemPickupCount": 3.89,
+        "itemUseCount": 8.45,
+        "moonWellHealingHp": 495.73
+      }
+    },
+    {
+      "family": "v9_summoner",
+      "status": "loss",
+      "count": 207,
+      "withExpansion": 198,
+      "withCreepLoss": 189,
+      "withItemUse": 174,
+      "medianFirstExpansionSecond": 222.05,
+      "means": {
+        "baseBuildCount": 3.97,
+        "unitsKilledByNeutral": 6.58,
+        "neutralUnitKills": 8.14,
+        "unitsLost": 167.4,
+        "peakSupply": 54.58,
+        "finalSupply": 0.43,
+        "goldMineIncome": 10886.67,
+        "itemPickupCount": 4.02,
+        "itemUseCount": 5.14,
+        "moonWellHealingHp": 0
+      }
+    },
+    {
+      "family": "v9_summoner",
+      "status": "timeout",
+      "count": 161,
+      "withExpansion": 147,
+      "withCreepLoss": 145,
+      "withItemUse": 94,
+      "medianFirstExpansionSecond": 249.05,
+      "means": {
+        "baseBuildCount": 5.53,
+        "unitsKilledByNeutral": 8.58,
+        "neutralUnitKills": 8.87,
+        "unitsLost": 196.98,
+        "peakSupply": 72.99,
+        "finalSupply": 54.77,
+        "goldMineIncome": 15492.52,
+        "itemPickupCount": 3.45,
+        "itemUseCount": 5.04,
+        "moonWellHealingHp": 33.45
+      }
+    },
+    {
+      "family": "v9_summoner",
+      "status": "win",
+      "count": 171,
+      "withExpansion": 169,
+      "withCreepLoss": 164,
+      "withItemUse": 162,
+      "medianFirstExpansionSecond": 220.55,
+      "means": {
+        "baseBuildCount": 6.02,
+        "unitsKilledByNeutral": 11.77,
+        "neutralUnitKills": 13.2,
+        "unitsLost": 157.63,
+        "peakSupply": 77.38,
+        "finalSupply": 74.03,
+        "goldMineIncome": 14557.32,
+        "itemPickupCount": 4.81,
+        "itemUseCount": 6.83,
+        "moonWellHealingHp": 0.64
+      }
+    }
+  ]
+}

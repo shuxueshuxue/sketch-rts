@@ -1,0 +1,30 @@
+{
+  "number": 356,
+  "url": "https://github.com/shuxueshuxue/sketch-rts/pull/356",
+  "head": "e0f8251eddca5dfa98ab6b5c8102ba7492bf8d74",
+  "base": "19f53beda1bb8bc395d106e184ffa4a10517cd4a",
+  "ciRuns": [
+    {
+      "id": 38328110585,
+      "name": "Simulation CPU Check",
+      "head_sha": "e0f8251eddca5dfa98ab6b5c8102ba7492bf8d74",
+      "status": "completed",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38328110585"
+    }
+  ],
+  "merge": "3a4b02d3eeb9ba74eebc14742320b35fdbdf6b34",
+  "failedProduction": {
+    "id": 38328690091,
+    "head_sha": "3a4b02d3eeb9ba74eebc14742320b35fdbdf6b34",
+    "status": "completed",
+    "conclusion": "failure",
+    "run_attempt": 1,
+    "html_url": "https://github.com/shuxueshuxue/sketch-rts/actions/runs/38328690091",
+    "failedStep": "Test research, recovery, regrouping and ordinary reinforcement commands",
+    "failedFile": "src/ai/bootstrap_1/expansion-authority.test.ts",
+    "failures": 12,
+    "uploadSkipped": true
+  }
+}

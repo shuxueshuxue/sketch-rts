@@ -1,0 +1,10 @@
+{
+  "status": "withdrawn; no runtime changes retained",
+  "nativeCases": 4,
+  "result": "All four real partial-wall roads already contain six turns. Collinear simplification returns six commands as well, so the proposed command reduction is unproven.",
+  "sdk": {
+    "passed": 12,
+    "failed": 4
+  },
+  "scope": "Do not claim simulation performance or architecture benefit without a native road showing reduced commands and preserved execution."
+}

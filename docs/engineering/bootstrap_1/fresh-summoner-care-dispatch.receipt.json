@@ -1,0 +1,79 @@
+{
+  "candidateHead": "d510af013f1db00fa19d15c9b2db93c508d61a07",
+  "publicMerge": "ed6ee2b94ab03f01558424df148471823ab68327",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "match": {
+    "name": "greystonePass/v9_summoner/v5+v7/ember/1",
+    "mapId": "greystonePass",
+    "subject": "v9_summoner",
+    "side": 1,
+    "seed": "bootstrap_1-current-rules-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_summoner",
+        "versionLabel": "v9_summoner",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v5",
+        "versionLabel": "v5",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v7",
+        "versionLabel": "v7",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "summary": {
+    "tick": 13809,
+    "winner": "p1",
+    "owners": {
+      "p0": {
+        "gold": 14,
+        "pop": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0
+      },
+      "p1": {
+        "gold": 100,
+        "pop": 30,
+        "halls": 2,
+        "workers": 10,
+        "permanentArmy": 10
+      },
+      "p2": {
+        "gold": 70.22,
+        "pop": 52,
+        "halls": 3,
+        "workers": 13,
+        "permanentArmy": 17
+      }
+    },
+    "subjectPermanentDeaths": 28
+  },
+  "checksum": "846b513c",
+  "reportSha256": "cc0e9d315d4ff5cb2000d21f32c556d8362e90863834c5e1ba4febcfe728d0a0",
+  "commandScriptSha256": "3b389809eb29e644b43ea312dc320bc5f4e346a8905460b7ca75f698095c0e90",
+  "commandStreamSha256": "3dca9daf8aa0ec7397c68b0bf2f911c4398aac65e7a0fe34361b88f6035907c2",
+  "deathKinds": {
+    "mercenary": 2,
+    "emberRavager": 6,
+    "priest": 2,
+    "summoner": 4,
+    "worker": 14
+  },
+  "fullAcceptance": "pending",
+  "scope": "One fixed candidate from ordinary resources through native defeat. Greystone Pass / Ember / side 1 vs frozen v5+v7. No checkpoint policy swap or full sweep."
+}

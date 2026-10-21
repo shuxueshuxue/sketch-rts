@@ -1,0 +1,109 @@
+{
+  "source": "fixed ordinary game from tick zero; full native snapshot observed, not a checkpoint-injected acceptance win",
+  "candidateMerge": "798f2bc53cb6a1a9dfea9023bae56c4ac4361b45",
+  "frozen": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "match": {
+    "name": "greystonePass/v9_summoner/v5+v7/ember/1",
+    "mapId": "greystonePass",
+    "subject": "v9_summoner",
+    "side": 1,
+    "seed": "bootstrap_1-current-rules-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_summoner",
+        "versionLabel": "v9_summoner",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v5",
+        "versionLabel": "v5",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v7",
+        "versionLabel": "v7",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "maxTicks": 48000,
+    "thinkInterval": 15
+  },
+  "summary": {
+    "tick": 27400,
+    "winner": "p1",
+    "owners": {
+      "p0": {
+        "gold": 33,
+        "pop": 0,
+        "halls": 0,
+        "workers": 0,
+        "permanentArmy": 0
+      },
+      "p1": {
+        "gold": 82.67,
+        "pop": 36,
+        "halls": 2,
+        "workers": 10,
+        "permanentArmy": 13
+      },
+      "p2": {
+        "gold": 150.84,
+        "pop": 61,
+        "halls": 2,
+        "workers": 11,
+        "permanentArmy": 25
+      }
+    },
+    "subjectPermanentDeaths": 52
+  },
+  "checksum": "df8ab3a6",
+  "sourceInputs": 221,
+  "reportSha256": "00c122dfbbbdf1eaf5fe7102c9c5ef8ea00a88151781d828d1b4f6c4b0f79471",
+  "tick24000": {
+    "summary": {
+      "tick": 24000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 33,
+          "pop": 24,
+          "halls": 1,
+          "workers": 0,
+          "permanentArmy": 12
+        },
+        "p1": {
+          "gold": 150.42,
+          "pop": 44,
+          "halls": 2,
+          "workers": 10,
+          "permanentArmy": 17
+        },
+        "p2": {
+          "gold": 47,
+          "pop": 59,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 24
+        }
+      },
+      "subjectPermanentDeaths": 40
+    },
+    "spirits": 15,
+    "general": {
+      "mode": "hold",
+      "target": {
+        "x": 3504.219062143732,
+        "y": 3095.091158605484
+      },
+      "holdingSince": 21480
+    }
+  },
+  "acceptance": "FAILED one fixed cell; all1620 and unseen seeds still pending"
+}

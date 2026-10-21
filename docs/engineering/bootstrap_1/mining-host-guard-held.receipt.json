@@ -1,0 +1,27 @@
+{
+  "status": "withdrawn; never published",
+  "strandedEscortOnly": {
+    "outcome": "timeout48000",
+    "permanentDeaths": 43,
+    "workers": 0,
+    "artifactSha256": "6814e388e2cbc8d9a31473f2be736ddc4032c66e4d61f11abc8c8af2be3cc733"
+  },
+  "fixedSummonerGuard": {
+    "nativeWindow": {
+      "from": 36000,
+      "to": 40000,
+      "parentNewPermanentDeaths": 5,
+      "candidateNewPermanentDeaths": 5,
+      "parentWorkers": 0,
+      "candidateWorkers": 2,
+      "twoGuardSummonersLost": true
+    },
+    "spiritSdk": {
+      "candidatePassed": 20,
+      "parentPassed": 16,
+      "parentFailed": 4
+    },
+    "runnerSdk": "Static and moving guard prototypes failed preservation or injury assertions. Interception saved all miners in four runner scenarios but one miner took42 damage; not published."
+  },
+  "reason": "Guard count and a fixed mining-post point did not protect the complete hauling road or resist the actual full hostile spirit wave. Replaced by the existing main-army defense IR and queued miner shelter."
+}

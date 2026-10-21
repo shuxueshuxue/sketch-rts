@@ -1,0 +1,5 @@
+{
+  "name": "bootstrap_1",
+  "seed": "bootstrap_1-holdout-8d931cee9c892beb2a2b745e",
+  "rules": "All 15 layout profiles, all nine opponent groups, both races and starting directions. Never use this seed for tuning."
+}

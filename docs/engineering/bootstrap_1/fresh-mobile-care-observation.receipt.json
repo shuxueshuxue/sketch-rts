@@ -1,0 +1,1166 @@
+{
+  "mode": "One fresh ordinary current-rules 1v2 game with native 48000-tick limit, complete controllers and native victory, no mid-match policy swap. Not full acceptance or a benchmark sweep.",
+  "matchName": "pineshade/v9_knight/v8+v8/grove/0",
+  "engineRevision": "79208e49d40a60052c6ba091d4d86d4d6c4cb13d",
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "candidateRuntimeSha256": "b8d9ea4ac9db0d097320426ddb9e39cda58235849c128acd490aaf65daaedd27",
+  "reportSha256": "d7b8249816a80a231f4ec502af3ddd4ea5fb13d8b2670d850df231b9b1510511",
+  "checksum": "418b3ca0",
+  "summary": {
+    "tick": 48000,
+    "winner": null,
+    "owners": {
+      "p0": {
+        "gold": 124.27,
+        "pop": 25,
+        "halls": 3,
+        "workers": 6,
+        "permanentArmy": 8
+      },
+      "p1": {
+        "gold": 6,
+        "pop": 32,
+        "halls": 2,
+        "workers": 4,
+        "permanentArmy": 14
+      },
+      "p2": {
+        "gold": 33.66,
+        "pop": 21,
+        "halls": 2,
+        "workers": 3,
+        "permanentArmy": 6
+      }
+    },
+    "subjectPermanentDeaths": 61
+  },
+  "firstPermanentDeath": {
+    "tick": 11714,
+    "kind": "mercenary",
+    "id": "unit-p0-mercenary-1641",
+    "source": "building-p1-defenseTower-2933"
+  },
+  "samples": [
+    {
+      "tick": 1200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 55,
+          "pop": 10,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 1
+        },
+        "p1": {
+          "gold": 49,
+          "pop": 10,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 1
+        },
+        "p2": {
+          "gold": 65,
+          "pop": 10,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 2
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 2400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 5,
+          "pop": 16,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 4
+        },
+        "p1": {
+          "gold": 89,
+          "pop": 14,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 4
+        },
+        "p2": {
+          "gold": 15,
+          "pop": 16,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 3600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 360,
+          "pop": 18,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 6
+        },
+        "p1": {
+          "gold": 129,
+          "pop": 18,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 5
+        },
+        "p2": {
+          "gold": 10,
+          "pop": 17,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 5
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 4800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 59,
+          "pop": 22,
+          "halls": 2,
+          "workers": 9,
+          "permanentArmy": 6
+        },
+        "p1": {
+          "gold": 774,
+          "pop": 18,
+          "halls": 1,
+          "workers": 6,
+          "permanentArmy": 6
+        },
+        "p2": {
+          "gold": 89,
+          "pop": 23,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 5
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 6000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 239,
+          "pop": 25,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 7
+        },
+        "p1": {
+          "gold": 448,
+          "pop": 20,
+          "halls": 2,
+          "workers": 7,
+          "permanentArmy": 6
+        },
+        "p2": {
+          "gold": 79,
+          "pop": 23,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 6
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 7200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 43,
+          "pop": 31,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9
+        },
+        "p1": {
+          "gold": 97,
+          "pop": 23,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 6
+        },
+        "p2": {
+          "gold": 28,
+          "pop": 33,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 10
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 8400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 518,
+          "pop": 35,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 12
+        },
+        "p1": {
+          "gold": 6,
+          "pop": 33,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 108,
+          "pop": 35,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 11
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 9600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 234.26,
+          "pop": 44,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 16
+        },
+        "p1": {
+          "gold": 271,
+          "pop": 19,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 4
+        },
+        "p2": {
+          "gold": 88,
+          "pop": 34,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 10800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 72.92,
+          "pop": 48,
+          "halls": 3,
+          "workers": 11,
+          "permanentArmy": 17
+        },
+        "p1": {
+          "gold": 60,
+          "pop": 27,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 7
+        },
+        "p2": {
+          "gold": 217,
+          "pop": 37,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 11
+        }
+      },
+      "subjectPermanentDeaths": 0
+    },
+    {
+      "tick": 12000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 212.82,
+          "pop": 44,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 13
+        },
+        "p1": {
+          "gold": 240,
+          "pop": 37,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 12
+        },
+        "p2": {
+          "gold": 197.19,
+          "pop": 40,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 12
+        }
+      },
+      "subjectPermanentDeaths": 5
+    },
+    {
+      "tick": 13200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 190.79,
+          "pop": 47,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 15
+        },
+        "p1": {
+          "gold": 230.14,
+          "pop": 49,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 18
+        },
+        "p2": {
+          "gold": 74.05,
+          "pop": 38,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 11
+        }
+      },
+      "subjectPermanentDeaths": 9
+    },
+    {
+      "tick": 14400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 120.85,
+          "pop": 37,
+          "halls": 2,
+          "workers": 14,
+          "permanentArmy": 11
+        },
+        "p1": {
+          "gold": 323.55,
+          "pop": 43,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 15
+        },
+        "p2": {
+          "gold": 159.42,
+          "pop": 48,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 15
+        }
+      },
+      "subjectPermanentDeaths": 19
+    },
+    {
+      "tick": 15600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 8.17,
+          "pop": 43,
+          "halls": 2,
+          "workers": 13,
+          "permanentArmy": 13
+        },
+        "p1": {
+          "gold": 595.7,
+          "pop": 49,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 19
+        },
+        "p2": {
+          "gold": 93.25,
+          "pop": 36,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9
+        }
+      },
+      "subjectPermanentDeaths": 22
+    },
+    {
+      "tick": 16800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 219.96,
+          "pop": 50,
+          "halls": 2,
+          "workers": 13,
+          "permanentArmy": 17
+        },
+        "p1": {
+          "gold": 528.71,
+          "pop": 32,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 10
+        },
+        "p2": {
+          "gold": 302.04,
+          "pop": 45,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 14
+        }
+      },
+      "subjectPermanentDeaths": 22
+    },
+    {
+      "tick": 18000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 471.28,
+          "pop": 47,
+          "halls": 2,
+          "workers": 13,
+          "permanentArmy": 15
+        },
+        "p1": {
+          "gold": 533.71,
+          "pop": 39,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 13
+        },
+        "p2": {
+          "gold": 39.88,
+          "pop": 40,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 10
+        }
+      },
+      "subjectPermanentDeaths": 25
+    },
+    {
+      "tick": 19200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 180.83,
+          "pop": 49,
+          "halls": 3,
+          "workers": 16,
+          "permanentArmy": 15
+        },
+        "p1": {
+          "gold": 232.93,
+          "pop": 36,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 12
+        },
+        "p2": {
+          "gold": 7.13,
+          "pop": 47,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 14
+        }
+      },
+      "subjectPermanentDeaths": 26
+    },
+    {
+      "tick": 20400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 213.13,
+          "pop": 45,
+          "halls": 3,
+          "workers": 11,
+          "permanentArmy": 15
+        },
+        "p1": {
+          "gold": 269.83,
+          "pop": 42,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 14
+        },
+        "p2": {
+          "gold": 42.81,
+          "pop": 34,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9
+        }
+      },
+      "subjectPermanentDeaths": 32
+    },
+    {
+      "tick": 21600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 413.59,
+          "pop": 45,
+          "halls": 3,
+          "workers": 11,
+          "permanentArmy": 15
+        },
+        "p1": {
+          "gold": 304.32,
+          "pop": 36,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 102.81,
+          "pop": 40,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 13
+        }
+      },
+      "subjectPermanentDeaths": 33
+    },
+    {
+      "tick": 22800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 18.79,
+          "pop": 51,
+          "halls": 4,
+          "workers": 13,
+          "permanentArmy": 16
+        },
+        "p1": {
+          "gold": 341.84,
+          "pop": 42,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 14
+        },
+        "p2": {
+          "gold": 39.29,
+          "pop": 47,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 14
+        }
+      },
+      "subjectPermanentDeaths": 33
+    },
+    {
+      "tick": 24000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 242.49,
+          "pop": 55,
+          "halls": 4,
+          "workers": 16,
+          "permanentArmy": 17
+        },
+        "p1": {
+          "gold": 325.45,
+          "pop": 48,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 18
+        },
+        "p2": {
+          "gold": 40.88,
+          "pop": 50,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 16
+        }
+      },
+      "subjectPermanentDeaths": 33
+    },
+    {
+      "tick": 25200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 33.27,
+          "pop": 41,
+          "halls": 4,
+          "workers": 9,
+          "permanentArmy": 13
+        },
+        "p1": {
+          "gold": 182.63,
+          "pop": 52,
+          "halls": 2,
+          "workers": 12,
+          "permanentArmy": 20
+        },
+        "p2": {
+          "gold": 16.89,
+          "pop": 50,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 16
+        }
+      },
+      "subjectPermanentDeaths": 47
+    },
+    {
+      "tick": 26400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 24.27,
+          "pop": 35,
+          "halls": 3,
+          "workers": 8,
+          "permanentArmy": 10
+        },
+        "p1": {
+          "gold": 7.58,
+          "pop": 47,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 16
+        },
+        "p2": {
+          "gold": 65.43,
+          "pop": 43,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 13
+        }
+      },
+      "subjectPermanentDeaths": 52
+    },
+    {
+      "tick": 27600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 25.27,
+          "pop": 31,
+          "halls": 2,
+          "workers": 4,
+          "permanentArmy": 11
+        },
+        "p1": {
+          "gold": 96.79,
+          "pop": 47,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 18
+        },
+        "p2": {
+          "gold": 115.26,
+          "pop": 42,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 13
+        }
+      },
+      "subjectPermanentDeaths": 56
+    },
+    {
+      "tick": 28800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 65.27,
+          "pop": 31,
+          "halls": 2,
+          "workers": 4,
+          "permanentArmy": 11
+        },
+        "p1": {
+          "gold": 137.34,
+          "pop": 47,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 18
+        },
+        "p2": {
+          "gold": 146.94,
+          "pop": 44,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 14
+        }
+      },
+      "subjectPermanentDeaths": 56
+    },
+    {
+      "tick": 30000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 105.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 196,
+          "pop": 29,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 9
+        },
+        "p2": {
+          "gold": 93.66,
+          "pop": 20,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 3
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 31200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 125.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 176,
+          "pop": 31,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 10
+        },
+        "p2": {
+          "gold": 263.66,
+          "pop": 18,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 2
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 32400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 165.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 166,
+          "pop": 33,
+          "halls": 2,
+          "workers": 11,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 33.66,
+          "pop": 22,
+          "halls": 2,
+          "workers": 9,
+          "permanentArmy": 2
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 33600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 185.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 26,
+          "pop": 27,
+          "halls": 2,
+          "workers": 5,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 28.66,
+          "pop": 16,
+          "halls": 2,
+          "workers": 3,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 34800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 205.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 56,
+          "pop": 27,
+          "halls": 2,
+          "workers": 5,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 68.66,
+          "pop": 16,
+          "halls": 2,
+          "workers": 3,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 36000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 225.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 21,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 23.66,
+          "pop": 17,
+          "halls": 2,
+          "workers": 4,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 37200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 245.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 81,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 63.66,
+          "pop": 17,
+          "halls": 2,
+          "workers": 4,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 38400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 285.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 111,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 48.66,
+          "pop": 18,
+          "halls": 2,
+          "workers": 5,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 39600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 305.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 151,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 23.66,
+          "pop": 19,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 40800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 325.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 211,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 103.66,
+          "pop": 19,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 42000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 345.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 241,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 163.66,
+          "pop": 19,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 43200,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 365.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 291,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 243.66,
+          "pop": 19,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 44400,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 405.27,
+          "pop": 21,
+          "halls": 2,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 351,
+          "pop": 28,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 11
+        },
+        "p2": {
+          "gold": 303.66,
+          "pop": 19,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 4
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 45600,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 34.27,
+          "pop": 21,
+          "halls": 3,
+          "workers": 2,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 251,
+          "pop": 30,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 12
+        },
+        "p2": {
+          "gold": 38.66,
+          "pop": 24,
+          "halls": 2,
+          "workers": 6,
+          "permanentArmy": 6
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 46800,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 24.27,
+          "pop": 23,
+          "halls": 3,
+          "workers": 4,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 61,
+          "pop": 31,
+          "halls": 2,
+          "workers": 3,
+          "permanentArmy": 14
+        },
+        "p2": {
+          "gold": 3.66,
+          "pop": 21,
+          "halls": 2,
+          "workers": 3,
+          "permanentArmy": 6
+        }
+      },
+      "subjectPermanentDeaths": 61
+    },
+    {
+      "tick": 48000,
+      "winner": null,
+      "owners": {
+        "p0": {
+          "gold": 124.27,
+          "pop": 25,
+          "halls": 3,
+          "workers": 6,
+          "permanentArmy": 8
+        },
+        "p1": {
+          "gold": 6,
+          "pop": 32,
+          "halls": 2,
+          "workers": 4,
+          "permanentArmy": 14
+        },
+        "p2": {
+          "gold": 33.66,
+          "pop": 21,
+          "halls": 2,
+          "workers": 3,
+          "permanentArmy": 6
+        }
+      },
+      "subjectPermanentDeaths": 61
+    }
+  ],
+  "fullAcceptance": "pending"
+}

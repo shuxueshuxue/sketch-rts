@@ -1,0 +1,272 @@
+{
+  "revision": "19f53beda1bb8bc395d106e184ffa4a10517cd4a",
+  "match": {
+    "name": "sapphireArchipelago/v9_archer/solo/grove/0",
+    "mapId": "sapphireArchipelago",
+    "subject": "v9_archer",
+    "side": 0,
+    "seed": "bootstrap_1-solo-observation",
+    "unseen": false,
+    "agents": {
+      "p0": {
+        "version": "v9_archer",
+        "versionLabel": "v9_archer",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      }
+    },
+    "maxTicks": 12000,
+    "thinkInterval": 15
+  },
+  "mode": "One solo sandbox observation on an unchanged official map. No opponents. Native scriptedVictory suppresses immediate single-team victory; ordinary resources/stats/cadence. Not acceptance or an opponent sweep.",
+  "openingSummary": {
+    "tick": 12000,
+    "gold": 458,
+    "workers": 7,
+    "halls": 1,
+    "workingHalls": 1,
+    "islandHalls": 0,
+    "permanentArmy": 13,
+    "remainingCreeps": 30,
+    "creepsKilled": 0,
+    "ownPermanentDeaths": 0,
+    "freeMines": [
+      {
+        "id": "gold-seat1-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat2-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat3-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat4-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat5-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-0",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-1",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-2",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-3",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-4",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-5",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-0",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-1",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-2",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-3",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-4",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-5",
+        "amount": 7500,
+        "island": true
+      }
+    ]
+  },
+  "continuedSummary": {
+    "tick": 16000,
+    "gold": 445.73,
+    "workers": 11,
+    "halls": 2,
+    "workingHalls": 2,
+    "islandHalls": 1,
+    "permanentArmy": 20,
+    "remainingCreeps": 30,
+    "creepsKilled": 0,
+    "ownPermanentDeaths": 0,
+    "freeMines": [
+      {
+        "id": "gold-seat2-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat3-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat4-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-seat5-main",
+        "amount": 6000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-0",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-1",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-2",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-3",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-4",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-mainland-5",
+        "amount": 9000,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-0",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-1",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-2",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-3",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-4",
+        "amount": 7500,
+        "island": true
+      },
+      {
+        "id": "gold-satellite-5",
+        "amount": 7500,
+        "island": true
+      }
+    ]
+  },
+  "reportHashes": {
+    "solo-sapphire": "76670c685bdef92cb3725d5922253e0654f71a80d75a8a251a6fa5985238ef59",
+    "solo-sapphire-continuation": "36be34d7180c49adfd3ea72e5e5ce93d37242322d1d04ca8f2b38a260db15574",
+    "sapphire-departure-diagnose": "2507592bc849ed5a3ab70faae0ae0e9cba293d2f265b21c24d73a59163b826ed",
+    "sapphire-command-diagnose": "46ff173e81e5fa788fdb6fa1ef39043dc800e4bacedfe34cfa2370c146d98d49"
+  },
+  "departure": {
+    "from": 16000,
+    "to": 16240,
+    "fullAiShipCommands": 0,
+    "physicsOnlyEnd": {
+      "tick": 16240,
+      "x": 8592.000000000762,
+      "y": 4759.0920117485975,
+      "heading": 1.5707963267948977,
+      "speed": 52.17891760904684,
+      "order": {
+        "type": "unload",
+        "x": 5392,
+        "y": 8784
+      },
+      "first": {
+        "x": 8592,
+        "y": 5680,
+        "heading": 1.5707963267948966,
+        "exact": true
+      },
+      "age": 292,
+      "blocked": 0,
+      "startHeading": -1.3063020516275523,
+      "planning": false
+    },
+    "fullAiEnd": {
+      "tick": 16240,
+      "x": 8592.000000000762,
+      "y": 4759.0920117485975,
+      "heading": 1.5707963267948977,
+      "speed": 52.17891760904684,
+      "order": {
+        "type": "unload",
+        "x": 5392,
+        "y": 8784
+      },
+      "first": {
+        "x": 8592,
+        "y": 5680,
+        "heading": 1.5707963267948966,
+        "exact": true
+      },
+      "age": 292,
+      "blocked": 0,
+      "startHeading": -1.3063020516275523
+    },
+    "interpretation": "Both actually depart with no new ship commands. The previous single-frame inference of a stuck boat was false; no ship runtime code changed."
+  },
+  "formalAcceptance": false
+}

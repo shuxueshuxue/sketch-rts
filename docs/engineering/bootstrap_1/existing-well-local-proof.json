@@ -1,0 +1,77 @@
+{
+  "kind": "local_saved_world_comparison",
+  "engine_public_main": "03c5318b7ddb2a3d48ec78dd5b5f72c1fe1c43e5",
+  "candidate_public_main": "5e5ef89bf2fad26a3129f34d763a9d51d3bbf90c",
+  "frozen_revision": "dba796cfc152379adad9988a1314f94ffc736137",
+  "map": "grandEstuary",
+  "race": "grove",
+  "side": 1,
+  "subject": "v9_knight",
+  "opponents": [
+    "v7",
+    "v8"
+  ],
+  "input_tick": 4800,
+  "input_sha256": "1e149d0bc4c15e33a0be2a56cf69ea1b270c63e4751902a7ebc620bb25c4a985",
+  "input_note": "Saved normal opening before upstream #254; both continuations use post-#254 engine. Not current-engine fixed-opening acceptance.",
+  "human_battle_commands": 0,
+  "control": {
+    "result": {
+      "tick": 7200,
+      "winner": null
+    },
+    "halls": 2,
+    "workers": 7,
+    "army": 0,
+    "gold": 49,
+    "soldiers": []
+  },
+  "candidate": {
+    "result": {
+      "tick": 7200,
+      "winner": null
+    },
+    "halls": 2,
+    "workers": 11,
+    "army": 6,
+    "gold": 99,
+    "soldiers": [
+      {
+        "id": "unit-p0-lancer-1063",
+        "kind": "lancer",
+        "hp": 51,
+        "maxHp": 130
+      },
+      {
+        "id": "unit-p0-lancer-1156",
+        "kind": "lancer",
+        "hp": 130,
+        "maxHp": 130
+      },
+      {
+        "id": "unit-p0-lancer-1182",
+        "kind": "lancer",
+        "hp": 173,
+        "maxHp": 173
+      },
+      {
+        "id": "unit-p0-lancer-1187",
+        "kind": "lancer",
+        "hp": 54,
+        "maxHp": 130
+      },
+      {
+        "id": "unit-p0-lancer-1192",
+        "kind": "lancer",
+        "hp": 130,
+        "maxHp": 130
+      },
+      {
+        "id": "unit-p0-lancer-1311",
+        "kind": "lancer",
+        "hp": 130,
+        "maxHp": 130
+      }
+    ]
+  }
+}

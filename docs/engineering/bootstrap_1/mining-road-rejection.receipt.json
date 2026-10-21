@@ -1,0 +1,24 @@
+{
+  "published": false,
+  "reason": "Admission alone leaves workers in their attacked old lane; controlled safe-road cases pass but the same22.5second native checkpoint causes more actual losses.",
+  "base": "c0230a2b074242df4ec0f80351d44c5e0da245c2",
+  "from": 12000,
+  "to": 12450,
+  "controlledSdk": {
+    "passed": 41,
+    "failed": 0
+  },
+  "stockCommandAndMemoryEquivalence": 72,
+  "parent": {
+    "permanentDeaths": 3,
+    "gold": 184.59
+  },
+  "prototype": {
+    "permanentDeaths": 6,
+    "gold": 115.77
+  },
+  "next": "Withdrawal and useful safe placement must accompany a blocked transfer. Admission-only prototype withdrawn entirely.",
+  "parentSha256": "f00723c4b33c180e264b571465df2b21ef9daad60c59770a7b8e46ec0f1a4501",
+  "prototypeSha256": "177270a1b45ea9af6b37e2a9fb10b1dfc16edd8a3541c57bdca06e12406fc3ef",
+  "patchSha256": "95f72c1eba42306b4c3098ce7525d79d6d75b66d5d16ae14dba4bebb0c0d8d5e"
+}
