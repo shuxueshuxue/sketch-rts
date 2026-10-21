@@ -6,7 +6,8 @@ import { withNavigationAudit, withNavigationPhase } from '../../shared/navigatio
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory, type AiPolicyMemory } from '../memory';
 import { currentFactWork, FactWorkQueue } from './fact-work';
-import { goalFact } from './goal-facts';
+import { goalCampId, goalFact } from './goal-facts';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { planOwnerGoals, withGoalPlannerInput } from './goal-planner-input';
 import { planGoals } from './goal-planner';
 import type { GoalRequest } from './goal-planner-types';
@@ -176,4 +177,33 @@ it('requotes a producer delay on the same native Situation and work ledger witho
   }
   expect(known).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
   expect(() => escaped!.resolveReference({ kind: 'existing', entityId: 'producer' })).toThrow('outside its owner-think scope');
+});
+
+it('dispatches native land combat and camp staging through their domain readers in the one owner scope', () => {
+  const snapshot = snapshotGame(sketchScene('native-domain-composition').map('bareDuel').replaceDefaults()
+    .player('us', { team: 'us' }).player('foe', { team: 'foe' })
+    .townHall('us', 700, 1000, { id: 'home' }).townHall('foe', 1050, 1000, { id: 'enemy-site', hp: 20 })
+    .unit('us', 'footman', 1000, 1000, { id: 'fighter' })
+    .unit('neutral', 'ogreWarrior', 2000, 2000, { id: 'guard' }).build().createGame());
+  regionIndex(snapshot.map);
+  const memory = createAiPolicyMemory(), before = JSON.stringify(snapshot), count = situationConstructionCount();
+  const landId = landIdAt(snapshot.map, { x: 1000, y: 1000 })!;
+  const target = { entityId: 'enemy-site', landId, point: { x: 1050, y: 1000 } };
+  const campId = goalCampId(neutralCampExposure(snapshot).camps[0]!.memberIds);
+  strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory, goals: [] }, input => {
+    const options = input.context.grounding!.combatOptions!(goalFact({ kind: 'enemy-site-destroyed', site: target }));
+    expect(options.state).toBe('met');
+    if (options.state === 'met') {
+      expect(options.candidates).toHaveLength(1);
+      expect(options.candidates[0]).toMatchObject({ target, post: { point: { x: 1000, y: 1000 } },
+        cohort: [{ kind: 'existing', entityId: 'fighter' }] });
+    }
+    const staging = input.context.readFact(goalFact({ kind: 'camp-staging', campId,
+      at: { landId, point: { x: 1500, y: 1500 } }, cohort: [{ kind: 'existing', entityId: 'fighter' }] }));
+    expect(staging.reason.code).not.toBe('world-domain-port-required');
+    expect(staging.reason.code).toMatch(/staging/);
+  }));
+  expect(situationConstructionCount() - count).toBe(1);
+  expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+  expect(JSON.stringify(snapshot)).toBe(before);
 });

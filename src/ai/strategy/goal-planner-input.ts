@@ -17,10 +17,12 @@ import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
 import { goalEconomyActionProvider } from './goal-economy-provider';
 import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
+import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import type { GoalGeometryMemory } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
+import { createGoalLandCombatGrounding } from './goal-land-combat-grounding';
 import { readGoalLandCapabilityFact } from './goal-land-facts';
 import { createGoalNavalCombatGrounding } from './goal-naval-combat-grounding';
 import { readGoalSiteSafetyFact } from './goal-site-safety-facts';
@@ -156,6 +158,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
               regionAt: point => landIdAt(snapshot.map, point) ?? null,
             }), (fact, factsContext) => readGoalSiteSafetyFact(fact, factsContext, { regionAt,
               readThreatArrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
+            }), (fact, factsContext) => readGoalCampStagingFact(fact, factsContext, {
+              landRoute, readGroundPoint: arrivalPhysics.ground, resolveCohort,
             })],
           } });
         const read: GoalPlanningContext['readFact'] = fact => {
@@ -196,12 +200,20 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
             ports: physical, readFact: read });
         };
-        const combat = createGoalNavalCombatGrounding(context, { landRoute, resolveCohort,
+        const combatPorts = { landRoute, resolveCohort,
           movementRisk: request => assessGoalCombatMovementRisk({ snapshot, situation, request }),
           arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
-          ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }) });
-        const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, ...combat, resolveCohort, transportOptions } };
+          ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds })
+        } satisfies import('./goal-naval-combat-grounding').GoalNavalCombatGroundingPorts;
+        const naval = createGoalNavalCombatGrounding(context, { ...combatPorts, readGroundPoint: arrivalPhysics.ground });
+        const land = createGoalLandCombatGrounding(context, combatPorts);
+        const combatOptions: NonNullable<GoalGroundingReader['combatOptions']> = effect => {
+          const kind = effect.predicate.kind;
+          return (kind === 'enemy-site-destroyed' || kind === 'route-controlled' || kind === 'harassment-ended'
+            ? land : naval).combatOptions!(effect);
+        };
+        const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, combatOptions, resolveCohort, transportOptions } };
         return grounded;
       }
       const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);

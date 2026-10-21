@@ -5,7 +5,7 @@ import { forceSuccessProbability } from './utility';
 export type LandCombatBody = Pick<Unit | Building, 'id' | 'hp' | 'attackDamage' | 'attackCooldown'>;
 export type LandCombatFiringSource = Readonly<{
   body: LandCombatBody;
-  /** Published relative ETA. Null is the legacy on-site/static source. */
+  /** Published relative ETA. Null denotes an on-site or static source. */
   arrivalTicks: number | null;
   expiresTick: number | null;
 }>;

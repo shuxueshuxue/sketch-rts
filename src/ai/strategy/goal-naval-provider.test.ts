@@ -75,7 +75,8 @@ describe('naval provider consumes shared physical alternatives', () => {
     expect(actions[0]!.duration).toEqual(pending); expect(actions[0]!.cost).toEqual(pending);
     expect(actions[0]!.effects[0]!.fact.predicate).toMatchObject({ cohort: [reference], minimum: effectiveCombatRating(context.snapshot, assessment) });
     expect(JSON.stringify(actions)).not.toContain('private-evaluation');
-    expect(actions[0]!.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(true);
+    expect(actions[0]!.preconditions.some(fact => fact.predicate.kind === 'assembly-post')).toBe(true);
+    expect(actions[0]!.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(false);
   });
 
   it('separates hostile shore removal, defense and exact rescue effects', () => {
