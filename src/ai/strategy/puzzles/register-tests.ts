@@ -18,6 +18,8 @@ import { puzzleGeometryMeasurement } from './goal-planner-native';
 import { publicPuzzlePlanner } from './planner-binding';
 import { PUBLIC_PUZZLES, type PuzzleKey } from './scenes';
 import { runPublicPuzzle } from './run';
+import { landIdAt } from '../regions';
+import type { PuzzleStepOwnership } from './execution-ownership';
 
 const mainPassingRegressions = new Set(['ship-away/near', 'supply-tier/footmen', 'guarded-shore/weak']);
 
@@ -117,20 +119,30 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       expect(executionReady, missing).toBeTruthy();
       const directory = process.env.SKETCH_PUZZLE_EXECUTION_EVIDENCE;
       const path = directory && resolve(directory, `${puzzle.key}-${puzzle.variant}`);
-      const session = publicPuzzlePlanner.createExecution!(path ? { evidenceFile: `${path}.jsonl.gz` } : undefined);
+      const ownershipWorld = key === 'ship-away' ? puzzle.create() : undefined;
+      const ownershipScope = ownershipWorld && { targetLandId: landIdAt(ownershipWorld.game.map, ownershipWorld.mine)!,
+        targetMine: { x: ownershipWorld.mine.x, y: ownershipWorld.mine.y }, campMemberIds: ownershipWorld.guards.map(unit => unit.id) };
+      const session = publicPuzzlePlanner.createExecution!({ ...(path ? { evidenceFile: `${path}.jsonl.gz` } : {}),
+        ...(ownershipScope ? { ownershipScope } : {}) });
       let result: ReturnType<typeof runPublicPuzzle> | undefined, error: unknown;
+      let stepOwnership: PuzzleStepOwnership | undefined;
       try {
         result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner });
         expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
         expect(result.execution.checks).not.toEqual({});
         expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
         expect(session.statistics().formalCommandCount, 'physical success also requires an actual goal executor command accepted by the gateway').toBeGreaterThan(0);
+        if (ownershipScope) {
+          stepOwnership = session.ownership?.(result.initial.tick, result.execution.commands);
+          expect(stepOwnership?.passed, `every required ship step must have a goal command, native SDK application and its own observed effect: ${JSON.stringify(stepOwnership)}`).toBe(true);
+        }
       } catch (failure) { error = failure; throw failure; }
       finally {
         if (directory && path) {
           mkdirSync(directory, { recursive: true });
           writeFileSync(`${path}.result.json.gz`, gzipSync(JSON.stringify({ puzzle: `${puzzle.key}/${puzzle.variant}`,
-            result, statistics: session.statistics(), observations: session.observations(),
+            result, statistics: session.statistics(), observations: session.observations(), stepOwnership,
+            ownershipCriterion: ownershipScope ? 'per-required-step-goal-and-native-sdk-effect' : 'physical-and-any-goal-only; step matcher not wired for this puzzle yet',
             error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error ?? null })));
         }
       }
