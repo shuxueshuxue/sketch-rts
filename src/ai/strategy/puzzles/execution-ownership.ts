@@ -82,7 +82,7 @@ export function createExecutionOwnership(scope: ShipOwnershipScope) {
         entityIds = cohort;
       } else if (group.step === 'clear-camp') {
         const members = strings(p.memberIds), firstTick = group.commands[0]!.tick;
-        for (const corpse of snapshot.map.corpses ?? []) if (members.includes(corpse.unitId) && corpse.diedAtTick >= firstTick) group.dead.add(corpse.unitId);
+        for (const corpse of snapshot.corpses ?? []) if (members.includes(corpse.unitId) && corpse.diedAtTick >= firstTick) group.dead.add(corpse.unitId);
         proven = members.length > 0 && members.every(id => group.dead.has(id)); entityIds = members;
       } else if (group.step === 'build' && atPoint) {
         const hall = snapshot.buildings.find(b => b.owner === observation.owner && b.kind === p.buildingKind
