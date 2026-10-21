@@ -54,7 +54,8 @@ export type ForceAssemblyForecast = Readonly<{
   requiredForce: number; assignedForce: number; atRallyForce: number; certainForce: number; deficit: number;
   completionProbability: number; conditionalForce: number; conditionalProduction: ConditionalAssemblyProduction | null;
   fillScenarios: readonly AssemblyFillScenario[];
-  diagnostics: Readonly<{ scenarioCount: number; scenarioLimitCount: number }>;
+  diagnostics: Readonly<{ scenarioCount: number; scenarioLimitCount: number; unresolvedProbability?: number }>;
+  completionProbabilityBounds?: Readonly<{ lower: number; upper: number }>;
   conditionalSegments: readonly Readonly<{ scenarioId: string; fromTick: number; throughTick: number; forcePerTick: number; producerIds: readonly string[] }>[];
   certainReadyTick: number | null; supplies: readonly Supply[]; forceCurve: readonly ForcePoint[];
   production: readonly ProductionUse[]; missing: readonly Missing[];
@@ -177,7 +178,8 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   if (conditional && conditional.scenarios.length > ASSEMBLY_SCENARIO_LIMIT) return { ...base,
     status: 'unknown', readyTick: null, completionProbability: 0, conditionalForce: 0,
     fillScenarios: [], conditionalSegments: [], production: [],
-    diagnostics: { ...diagnostic, scenarioLimitCount: 1 },
+    diagnostics: { ...diagnostic, scenarioLimitCount: 1, unresolvedProbability: 1 },
+    completionProbabilityBounds: { lower: 0, upper: 1 },
     missing: [...missing, { code: 'scenario-limit', status: 'unknown', factIds: [conditional.calibrationId] }] };
   if (conditional) {
     for (const key of ['timeMaeTicks', 'timeP90ErrorTicks', 'sampleCount'] as const) finite(conditional[key], `conditional ${key}`);
@@ -193,6 +195,7 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   }
   type Segment = ForceAssemblyForecast['conditionalSegments'][number];
   const conditionalSegments: Segment[] = [];
+  const unresolved = new Set<string>();
   const knownForce = (tick: number) => forceCurve.filter(point => point.tick <= tick).at(-1)?.force ?? 0;
   const evaluate = (scenario: ConditionalAssemblyScenario): AssemblyFillScenario => {
     const producerIds = new Set<string>();
@@ -259,8 +262,10 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
     // A sampled series has finite support. A longer comparison window is not
     // evidence that its final inventory persists or that production continues.
     if (readyTick === null && scenario.probability > 0) for (const producer of curves)
-      if (producer.throughTick + shift(producer) < input.throughTick) missing.push({
-        code: 'assembly-conditional-support-exhausted', status: 'unknown', factIds: [scenario.id, producer.buildingId] });
+      if (producer.throughTick + shift(producer) < input.throughTick) {
+        unresolved.add(scenario.id);
+        missing.push({ code: 'assembly-conditional-support-exhausted', status: 'unknown', factIds: [scenario.id, producer.buildingId] });
+      }
     const cutoff = readyTick ?? input.throughTick;
     for (const producer of curves) if (readyTick !== null && stockForProducer(producer, readyTick) > 0 && start(producer) < cutoff)
       uses.push({ buildingId: producer.buildingId, lane: 'training', fromTicks: start(producer) - now,
@@ -278,7 +283,8 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   const filled = fillScenarios.filter(scenario => scenario.readyTick !== null && scenario.probability > 0);
   const filledProbability = filled.reduce((sum, scenario) => sum + scenario.probability, 0);
   const completionProbability = Math.min(1, filledProbability);
-  const status = atRallyForce >= requiredForce ? 'ready' : completionProbability > 0 ? 'gathering'
+  const unresolvedProbability = fillScenarios.filter(scenario => unresolved.has(scenario.id)).reduce((sum, scenario) => sum + scenario.probability, 0);
+  const status = atRallyForce >= requiredForce ? 'ready' : unresolvedProbability > 0 ? 'unknown' : completionProbability > 0 ? 'gathering'
     : missing.some(fact => fact.status === 'unknown') ? 'unknown' : 'blocked';
   if (status === 'blocked' && deficit > 0) missing.push({ code: 'needs-production', status: 'unmet', factIds: [] });
   const readyTick = status === 'ready' ? now : completionProbability > 0
@@ -288,6 +294,8 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   const conditionalForce = completionProbability > 0
     ? filled.reduce((sum, scenario) => sum + scenario.probability * scenario.conditionalForce, 0) / filledProbability : 0;
   return { ...base, status, readyTick, completionProbability: status === 'ready' ? 1 : completionProbability,
-    conditionalForce, fillScenarios, conditionalSegments, diagnostics: diagnostic,
+    conditionalForce, fillScenarios, conditionalSegments, diagnostics: { ...diagnostic, unresolvedProbability },
+    completionProbabilityBounds: status === 'ready' ? { lower: 1, upper: 1 }
+      : { lower: completionProbability, upper: Math.min(1, completionProbability + unresolvedProbability) },
     production: canonicalProductionUses(filled.flatMap(scenario => scenario.production)), missing };
 }
