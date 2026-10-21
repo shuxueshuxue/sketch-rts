@@ -106,5 +106,5 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
         workersRescued: alive(world.islandWorkers).filter(u => physicallyOnLand(world, u, world.home)).length,
         guardsAlive: alive(world.guards).length, localGuardsAlive: alive(world.localGuards).length, buildings } };
   }
-  return { sample, finish };
+  return { sample, finish, dispose: stop };
 }
