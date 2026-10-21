@@ -4,14 +4,16 @@ import { issueCommandFrame } from '../../sdk/commands/frame';
 import { createUnit } from '../../shared/map';
 import { snapshotGame, stepGame, trainingRecruitPrototype } from '../../shared/sim';
 import { assessAllocatedForce } from './allocated-force';
-import { forecastForceAssembly, type ForceAssemblyInput, type ConditionalAssemblyProduction } from './force-assembly-forecast';
+import { ASSEMBLY_SCENARIO_LIMIT, forecastForceAssembly, type ForceAssemblyInput, type ConditionalAssemblyProduction } from './force-assembly-forecast';
 import type { DecisionFacts } from './decision';
 import type { Arrival } from './types';
 
 const arrival = (ticks: number): DecisionFacts<Arrival> => ({ status: 'reachable', ticks, landTicks: ticks, crossings: [] });
 const conditional = (forcePerTick: number): ConditionalAssemblyProduction => ({ source: 'conditional-incumbent-production',
-  calibrationId: 'test-net-supply', phase: 'early', producerRates: [{ buildingId: 'barracks', postId: 'home', forcePerTick }], startsAtTick: 0,
-  completionProbability: .8, timeMaeTicks: 20, timeP90ErrorTicks: 50, sampleCount: 10 });
+  model: 'joint-hurdle', forceBasis: 'combatRating', calibrationId: 'test-net-supply', phase: 'early',
+  scenarios: [{ id: 'success', probability: .8, producers: [{ buildingId: 'barracks', postId: 'home', kind: 'conditional-rate',
+    forcePerTick, startsAtTick: 0 }] }, { id: 'zero-supply', probability: .2, producers: [] }],
+  timeMaeTicks: 20, timeP90ErrorTicks: 50, sampleCount: 10 });
 function example() {
   const game = sketchScene('assembly-supply').map('openClaims').replaceDefaults()
     .player('us', { race: 'grove' }).player('foe', { race: 'ember' })
@@ -166,5 +168,60 @@ it('keeps route unknown distinct from physical impossibility and never turns a p
   const blocked = forecastForceAssembly({ ...input, unitSupply: [{ ...input.unitSupply[0]!, arrival: unreachable }] });
   expect(blocked.status).toBe('blocked'); expect(blocked.missing[0]?.status).toBe('unmet');
   expect(() => forecastForceAssembly({ ...input, unitSupply: [...input.unitSupply, ...input.unitSupply] })).toThrow(/Duplicate/);
-  expect(() => forecastForceAssembly({ ...input, conditionalProduction: { ...conditional(.01), completionProbability: NaN } })).toThrow(/Invalid/);
+  expect(() => forecastForceAssembly({ ...input, conditionalProduction: { ...conditional(.01), scenarios: [{ id: 'invalid', probability: NaN, producers: [] }] } })).toThrow(/Invalid/);
+});
+
+it('separates joint fill probability from success-conditioned time and keeps zero-supply mass', () => {
+  const { input } = example();
+  const model = { ...conditional(.01), scenarios: [
+    { id: 'fast', probability: .4, producers: conditional(.01).scenarios[0]!.producers },
+    { id: 'slow', probability: .4, producers: conditional(.005).scenarios[0]!.producers },
+    { id: 'none', probability: .2, producers: [] }] };
+  const forecast = forecastForceAssembly({ ...input, conditionalProduction: model });
+  expect(forecast.completionProbability).toBe(.8);
+  expect(forecast.readyTick).toBe(300);
+  expect(forecast.fillScenarios.map(path => [path.id, path.readyTick])).toEqual([['fast', 200], ['none', null], ['slow', 400]]);
+});
+
+it('preserves correlated producer paths and recomputes their first passage after excluding one lane', () => {
+  const { input } = example(), other = structuredClone(input.snapshot.buildings.find(building => building.id === 'barracks')!);
+  other.id = 'second'; other.x += 300; input.snapshot.buildings.push(other);
+  const first = conditional(.01).scenarios[0]!.producers[0]!, second = { ...first, buildingId: 'second' };
+  const model: ConditionalAssemblyProduction = { ...conditional(.01), scenarios: [
+    { id: 'both', probability: .25, producers: [first, second] },
+    { id: 'first', probability: .25, producers: [first] },
+    { id: 'second', probability: .25, producers: [second] },
+    { id: 'neither', probability: .25, producers: [] }] };
+  const forecast = forecastForceAssembly({ ...input, conditionalProduction: model });
+  expect(forecast).toMatchObject({ completionProbability: .75, readyTick: 167 });
+  const excluded = forecastForceAssembly({ ...input, conditionalProduction: model,
+    allowedProduction: [{ buildingId: 'barracks', lane: 'training' }] });
+  expect(excluded).toMatchObject({ completionProbability: .5, readyTick: 200 });
+  expect(excluded.fillScenarios.map(path => path.probability)).toEqual(forecast.fillScenarios.map(path => path.probability));
+});
+
+it('keeps nonmonotonic empirical inventory, finite support and exact boundary events', () => {
+  const { input } = example();
+  input.snapshot.units.push(createUnit('late', 'us', 'footman', 1800, 1000));
+  const model: ConditionalAssemblyProduction = { ...conditional(.01), scenarios: [{ id: 'observed-stock', probability: 1,
+    producers: [{ kind: 'stock-curve', buildingId: 'barracks', postId: 'home', startsAtTick: 0, throughTick: 300,
+      points: [{ tick: 100, force: 1 }, { tick: 200, force: 0 }, { tick: 300, force: 2 }] }] }] };
+  const forecast = forecastForceAssembly({ ...input, throughTick: 300, conditionalProduction: model,
+    unitSupply: [...input.unitSupply, { unitId: 'late', postId: 'home', source: 'idle', availableTick: 0, arrival: arrival(250) }] });
+  expect(forecast.readyTick).toBe(300); // The stock at 100 is gone when the certain member arrives at 250.
+  const exhausted = forecastForceAssembly({ ...input, throughTick: 500, target: { ...input.target, requiredForce: 4 }, conditionalProduction: model });
+  expect(exhausted).toMatchObject({ status: 'unknown', readyTick: null });
+  expect(exhausted.missing.some(fact => fact.code === 'assembly-conditional-support-exhausted')).toBe(true);
+});
+
+it('limits only the affected forecast without throwing from a think or hiding the audit count', () => {
+  const { input } = example();
+  const model: ConditionalAssemblyProduction = { ...conditional(.01), scenarios: Array.from({ length: ASSEMBLY_SCENARIO_LIMIT + 1 },
+    (_, index) => ({ id: `path-${index}`, probability: 1 / (ASSEMBLY_SCENARIO_LIMIT + 1), producers: [] })) };
+  const request = { ...input, conditionalProduction: model }, before = JSON.stringify(request);
+  expect(forecastForceAssembly(request)).toMatchObject({ status: 'unknown', readyTick: null,
+    diagnostics: { scenarioCount: 65, scenarioLimitCount: 1 },
+    missing: [{ code: 'scenario-limit', status: 'unknown', factIds: [model.calibrationId] }] });
+  expect(JSON.stringify(request)).toBe(before);
+  expect(forecastForceAssembly({ ...input, conditionalProduction: conditional(.01) }).status).toBe('gathering');
 });

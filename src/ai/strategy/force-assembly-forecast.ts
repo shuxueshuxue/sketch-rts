@@ -15,13 +15,26 @@ export type AssemblyUnitSupply = Readonly<{
   recovery?: Readonly<{ serviceId: string; hp: number }>;
 }>;
 export type AssemblyJobRoute = Readonly<{ buildingId: string; jobId: string; postId: string; arrival: DecisionFacts<Arrival> | null }>;
+export type ConditionalAssemblyProducer = Readonly<{ buildingId: string; postId: string; startsAtTick: number }> & (
+  | Readonly<{ kind: 'conditional-rate'; forcePerTick: number }>
+  | Readonly<{ kind: 'stock-curve'; points: readonly Readonly<{ tick: number; force: number }>[]; throughTick: number }>
+);
+export type ConditionalAssemblyScenario = Readonly<{
+  id: string; probability: number; producers: readonly ConditionalAssemblyProducer[];
+}>;
 export type ConditionalAssemblyProduction = Readonly<{
-  source: 'conditional-incumbent-production'; calibrationId: string; phase: string;
-  /** Net available camp-force, after deaths, cancellations and other leases.
-   * This residual rate excludes the explicit recovery events below. */
-  producerRates: readonly Readonly<{ buildingId: string; postId: string; forcePerTick: number }>[];
-  startsAtTick: number; completionProbability: number;
+  source: 'conditional-incumbent-production'; model: 'joint-hurdle'; forceBasis: 'combatRating';
+  calibrationId: string; phase: string;
+  /** Joint empirical paths preserve cross-producer dependence and zero-supply
+   * mass. Rates, when supplied, are success-conditioned, never unconditional
+   * average growth divided into a deficit and penalised by failure again. */
+  scenarios: readonly ConditionalAssemblyScenario[];
   timeMaeTicks: number; timeP90ErrorTicks: number; sampleCount: number;
+}>;
+export const ASSEMBLY_SCENARIO_LIMIT = 64;
+export type AssemblyFillScenario = Readonly<{
+  id: string; probability: number; readyTick: number | null; conditionalForce: number;
+  production: readonly ProductionUse[];
 }>;
 export type ForceAssemblyInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; rallies: readonly Readonly<{ id: string; target: Target }>[]; target: AllocatedForceTarget;
@@ -40,7 +53,9 @@ export type ForceAssemblyForecast = Readonly<{
   status: 'ready' | 'gathering' | 'blocked' | 'unknown'; forecastTick: number; readyTick: number | null;
   requiredForce: number; assignedForce: number; atRallyForce: number; certainForce: number; deficit: number;
   completionProbability: number; conditionalForce: number; conditionalProduction: ConditionalAssemblyProduction | null;
-  conditionalSegments: readonly Readonly<{ fromTick: number; throughTick: number; forcePerTick: number; producerIds: readonly string[] }>[];
+  fillScenarios: readonly AssemblyFillScenario[];
+  diagnostics: Readonly<{ scenarioCount: number; scenarioLimitCount: number }>;
+  conditionalSegments: readonly Readonly<{ scenarioId: string; fromTick: number; throughTick: number; forcePerTick: number; producerIds: readonly string[] }>[];
   certainReadyTick: number | null; supplies: readonly Supply[]; forceCurve: readonly ForcePoint[];
   production: readonly ProductionUse[]; missing: readonly Missing[];
 }>;
@@ -63,7 +78,7 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   const unavailable = new Set(input.unavailableUnitIds ?? []), seen = new Set<string>();
   const rallies = new Map(input.rallies.map(post => [post.id, post.target]));
   if (rallies.size !== input.rallies.length) throw new Error('Duplicate assembly post');
-  const missing: Missing[] = [], conditionalUses: ProductionUse[] = [];
+  const missing: Missing[] = [];
   const paidUses = new Map<string, ProductionUse>();
   const events: { supply: Supply; unit: Unit }[] = [], assigned: Unit[] = [], stationed: Unit[] = [];
   const add = (supply: Supply, unit: Unit) => { events.push({ supply, unit }); };
@@ -152,70 +167,127 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       jobIds: included.flatMap(supply => supply.jobId ? [supply.jobId] : []).sort() });
     if (certainReadyTick === null && certainForce >= requiredForce) certainReadyTick = tick;
   }
-  const conditional = input.conditionalProduction;
+  const conditional = input.conditionalProduction, atRallyForce = force(stationed);
+  const deficit = Math.max(0, requiredForce - certainForce);
+  const base = { forecastTick: now, requiredForce, assignedForce: force(assigned), atRallyForce, certainForce, deficit,
+    conditionalProduction: conditional, certainReadyTick, supplies: events.map(event => event.supply), forceCurve };
+  const diagnostic = { scenarioCount: conditional?.scenarios.length ?? 0, scenarioLimitCount: 0 };
+  // This is a quote-local failure, never an exception from a player's think.
+  // Keep certain facts and the explicit cause for audit/trace aggregation.
+  if (conditional && conditional.scenarios.length > ASSEMBLY_SCENARIO_LIMIT) return { ...base,
+    status: 'unknown', readyTick: null, completionProbability: 0, conditionalForce: 0,
+    fillScenarios: [], conditionalSegments: [], production: [],
+    diagnostics: { ...diagnostic, scenarioLimitCount: 1 },
+    missing: [...missing, { code: 'scenario-limit', status: 'unknown', factIds: [conditional.calibrationId] }] };
   if (conditional) {
-    for (const key of ['startsAtTick', 'completionProbability', 'timeMaeTicks', 'timeP90ErrorTicks', 'sampleCount'] as const)
-      finite(conditional[key], `conditional ${key}`);
-    if (!conditional.calibrationId || conditional.completionProbability > 1 || conditional.startsAtTick < now)
-      throw new Error('Invalid conditional assembly calibration/epoch');
+    for (const key of ['timeMaeTicks', 'timeP90ErrorTicks', 'sampleCount'] as const) finite(conditional[key], `conditional ${key}`);
+    if (!conditional.calibrationId || conditional.model !== 'joint-hurdle' || conditional.forceBasis !== 'combatRating')
+      throw new Error('Invalid conditional assembly calibration');
+    const ids = new Set<string>(); let probability = 0;
+    for (const scenario of conditional.scenarios) {
+      finite(scenario.probability, 'scenario probability');
+      if (!scenario.id || ids.has(scenario.id) || scenario.probability > 1) throw new Error('Invalid assembly scenario');
+      ids.add(scenario.id); probability += scenario.probability;
+    }
+    if (Math.abs(probability - 1) > 1e-9) throw new Error('Invalid assembly scenario probability mass');
   }
-  // The historical rate includes ordinary queue births. Start its residual
-  // after the explicit paid pipeline so those births cannot be counted twice.
-  const startsAt = Math.max(now, conditional?.startsAtTick ?? now);
-  let readyTick = certainReadyTick, conditionalForce = 0;
-  const producerIds = new Set<string>();
-  const rates = (conditional?.producerRates ?? []).filter(rate => {
-    finite(rate.forcePerTick, 'producer growth');
-    if (producerIds.has(rate.buildingId) || !rallies.has(rate.postId)) throw new Error('Invalid conditional assembly producer/post');
-    producerIds.add(rate.buildingId);
-    const building = snapshot.buildings.find(building => building.id === rate.buildingId);
-    return building && building.owner === owner && building.hp > 0 && building.complete
-      && (!input.allowedProduction || input.allowedProduction.some(lane => lane.buildingId === rate.buildingId && lane.lane === 'training'));
-  });
-  const conditionalSegments: { fromTick: number; throughTick: number; forcePerTick: number; producerIds: string[] }[] = [];
-  if (conditional && rates.length) {
-    const boundaries = [...new Set([startsAt, input.throughTick, ...paidPipelineUntil.values(), ...forceCurve.map(point => point.tick),
+  type Segment = ForceAssemblyForecast['conditionalSegments'][number];
+  const conditionalSegments: Segment[] = [];
+  const knownForce = (tick: number) => forceCurve.filter(point => point.tick <= tick).at(-1)?.force ?? 0;
+  const evaluate = (scenario: ConditionalAssemblyScenario): AssemblyFillScenario => {
+    const producerIds = new Set<string>();
+    const producers = [...scenario.producers].sort((a, b) => compare(a.buildingId, b.buildingId)).filter(producer => {
+      finite(producer.startsAtTick, 'producer epoch');
+      if (producer.startsAtTick < now || producerIds.has(producer.buildingId) || !rallies.has(producer.postId))
+        throw new Error('Invalid conditional assembly producer/post');
+      producerIds.add(producer.buildingId);
+      if (producer.kind === 'conditional-rate') finite(producer.forcePerTick, 'conditional producer speed');
+      else {
+        finite(producer.throughTick, 'conditional support'); let last = producer.startsAtTick - 1;
+        if (producer.throughTick < producer.startsAtTick) throw new Error('Invalid assembly curve support');
+        for (const point of producer.points) {
+          finite(point.tick, 'conditional sample epoch'); finite(point.force, 'conditional sample force');
+          if (point.tick <= last || point.tick > producer.throughTick) throw new Error('Invalid assembly curve ordering/support');
+          last = point.tick;
+        }
+      }
+      const building = snapshot.buildings.find(building => building.id === producer.buildingId);
+      if (!building || building.owner !== owner || building.hp <= 0 || !building.complete
+        || input.allowedProduction && !input.allowedProduction.some(lane => lane.buildingId === building.id && lane.lane === 'training')) return false;
+      // A historical stock column cannot attribute partial-lane occupancy to
+      // individual future births. Remove that column conservatively; do not
+      // retain its stock while pricing its producer as unavailable.
+      return producer.kind !== 'stock-curve' || !productionUsesOverlap([{ buildingId: building.id, lane: 'training',
+        fromTicks: 0, throughTicks: input.throughTick - now }], excluded);
+    });
+    const start = (producer: ConditionalAssemblyProducer) => Math.max(producer.startsAtTick, paidPipelineUntil.get(producer.buildingId) ?? now);
+    const shift = (producer: ConditionalAssemblyProducer) => start(producer) - producer.startsAtTick;
+    const curves = producers.filter((producer): producer is Extract<ConditionalAssemblyProducer, { kind: 'stock-curve' }> => producer.kind === 'stock-curve');
+    const stockForProducer = (producer: typeof curves[number], tick: number) => {
+      const unshifted = tick - shift(producer);
+      if (unshifted < producer.startsAtTick || unshifted > producer.throughTick) return 0;
+      return producer.points.filter(point => point.tick <= unshifted).at(-1)?.force ?? 0;
+    };
+    const stock = (tick: number) => curves.reduce((sum, producer) => sum + stockForProducer(producer, tick), 0);
+    const boundaries = [...new Set([now, input.throughTick, ...forceCurve.map(point => point.tick),
+      ...producers.map(start), ...curves.flatMap(producer => [...producer.points.map(point => point.tick + shift(producer)),
+        producer.throughTick + shift(producer) + 1]),
       ...excluded.filter(use => use.lane === 'training').flatMap(use => [now + use.fromTicks, now + use.throughTicks])])]
-      .filter(tick => tick >= startsAt && tick <= input.throughTick).sort((a, b) => a - b);
-    let accumulated = 0;
-    for (let index = 0; index + 1 < boundaries.length; index++) {
-      const fromTick = boundaries[index]!, throughTick = boundaries[index + 1]!;
-      const available = rates.filter(rate => fromTick >= (paidPipelineUntil.get(rate.buildingId) ?? now)
-        && !productionUsesOverlap([{ buildingId: rate.buildingId, lane: 'training',
-        fromTicks: fromTick - now, throughTicks: throughTick - now }], excluded));
-      const forcePerTick = available.reduce((sum, rate) => sum + rate.forcePerTick, 0);
-      conditionalSegments.push({ fromTick, throughTick, forcePerTick, producerIds: available.map(rate => rate.buildingId).sort() });
-      const known = forceCurve.filter(point => point.tick <= fromTick).at(-1)?.force ?? 0;
-      const deficit = Math.max(0, requiredForce - known - accumulated);
-      const at = deficit === 0 ? fromTick : forcePerTick > 0 ? fromTick + Math.ceil(deficit / forcePerTick) : null;
-      if (at !== null && at <= throughTick && (readyTick === null || at < readyTick)) readyTick = at;
+      .filter(tick => tick >= now && tick <= input.throughTick).sort((a, b) => a - b);
+    const uses: ProductionUse[] = [];
+    let accumulated = 0, readyTick: number | null = null, conditionalForce = 0;
+    for (let index = 0; index < boundaries.length; index++) {
+      const fromTick = boundaries[index]!, throughTick = boundaries[index + 1] ?? fromTick;
+      const available = producers.filter((producer): producer is Extract<ConditionalAssemblyProducer, { kind: 'conditional-rate' }> =>
+        producer.kind === 'conditional-rate' && fromTick >= start(producer)
+        && !productionUsesOverlap([{ buildingId: producer.buildingId, lane: 'training', fromTicks: fromTick - now,
+          throughTicks: throughTick - now }], excluded));
+      const forcePerTick = available.reduce((sum, producer) => sum + producer.forcePerTick, 0);
+      if (throughTick > fromTick) conditionalSegments.push({ scenarioId: scenario.id, fromTick, throughTick, forcePerTick,
+        producerIds: available.map(producer => producer.buildingId).sort() });
+      const present = knownForce(fromTick) + stock(fromTick) + accumulated;
+      const remaining = Math.max(0, requiredForce - present);
+      const at = remaining === 0 ? fromTick : forcePerTick > 0 ? fromTick + Math.ceil(remaining / forcePerTick) : null;
+      if (at !== null && at <= throughTick && readyTick === null
+        && knownForce(at) + stock(at) + accumulated + forcePerTick * (at - fromTick) >= requiredForce) {
+        readyTick = at; conditionalForce = stock(at) + accumulated + forcePerTick * (at - fromTick);
+      }
       accumulated += forcePerTick * (throughTick - fromTick);
-      for (const rate of available) if (rate.forcePerTick > 0) conditionalUses.push({ buildingId: rate.buildingId,
-        lane: 'training', fromTicks: fromTick - now, throughTicks: throughTick - now });
+      for (const producer of available) if (producer.forcePerTick > 0 && throughTick > fromTick) uses.push({
+        buildingId: producer.buildingId, lane: 'training', fromTicks: fromTick - now, throughTicks: throughTick - now });
     }
-    // The final certain jump is inclusive even though occupancy intervals are
-    // half-open. There is no following segment to check the horizon boundary.
-    if (certainForce + accumulated >= requiredForce && (readyTick === null || input.throughTick < readyTick))
-      readyTick = input.throughTick;
-    if (readyTick !== null) {
-      const predictedTick = readyTick;
-      conditionalForce = Math.max(0, requiredForce - (forceCurve.filter(point => point.tick <= predictedTick).at(-1)?.force ?? 0));
-    }
-  }
-  const atRallyForce = force(stationed), deficit = Math.max(0, requiredForce - certainForce);
-  const status = atRallyForce >= requiredForce ? 'ready' : readyTick !== null ? 'gathering'
+    // A sampled series has finite support. A longer comparison window is not
+    // evidence that its final inventory persists or that production continues.
+    if (readyTick === null && scenario.probability > 0) for (const producer of curves)
+      if (producer.throughTick + shift(producer) < input.throughTick) missing.push({
+        code: 'assembly-conditional-support-exhausted', status: 'unknown', factIds: [scenario.id, producer.buildingId] });
+    const cutoff = readyTick ?? input.throughTick;
+    for (const producer of curves) if (readyTick !== null && stockForProducer(producer, readyTick) > 0 && start(producer) < cutoff)
+      uses.push({ buildingId: producer.buildingId, lane: 'training', fromTicks: start(producer) - now,
+        throughTicks: Math.min(cutoff, producer.throughTick + shift(producer)) - now });
+    const paid = events.filter(event => event.supply.source === 'paid-job' && event.supply.readyTick <= cutoff)
+      .map(event => paidUses.get(`${event.supply.buildingId}\0${event.supply.jobId}`)!);
+    const production = canonicalProductionUses([...paid, ...(conditionalForce > 0 ? uses.flatMap(use => {
+      const throughTicks = Math.min(use.throughTicks, cutoff - now);
+      return throughTicks > use.fromTicks ? [{ ...use, throughTicks }] : [];
+    }) : [])]);
+    return { id: scenario.id, probability: scenario.probability, readyTick, conditionalForce, production };
+  };
+  const fillScenarios = (conditional?.scenarios ?? [{ id: 'certain-supply', probability: 1, producers: [] }])
+    .slice().sort((a, b) => compare(a.id, b.id)).map(evaluate);
+  const filled = fillScenarios.filter(scenario => scenario.readyTick !== null && scenario.probability > 0);
+  const filledProbability = filled.reduce((sum, scenario) => sum + scenario.probability, 0);
+  const completionProbability = Math.min(1, filledProbability);
+  const status = atRallyForce >= requiredForce ? 'ready' : completionProbability > 0 ? 'gathering'
     : missing.some(fact => fact.status === 'unknown') ? 'unknown' : 'blocked';
   if (status === 'blocked' && deficit > 0) missing.push({ code: 'needs-production', status: 'unmet', factIds: [] });
-  const resolvedReadyTick = status === 'ready' ? now : readyTick, cutoff = resolvedReadyTick ?? input.throughTick;
-  const usedPaid = events.filter(event => event.supply.source === 'paid-job' && event.supply.readyTick <= cutoff)
-    .map(event => paidUses.get(`${event.supply.buildingId}\0${event.supply.jobId}`)!);
-  const usedConditional = conditionalForce > 0 ? conditionalUses.flatMap(use => {
-    const throughTicks = Math.min(use.throughTicks, cutoff - now);
-    return throughTicks > use.fromTicks ? [{ ...use, throughTicks }] : [];
-  }) : [];
-  return { status, forecastTick: now, readyTick: resolvedReadyTick, requiredForce,
-    assignedForce: force(assigned), atRallyForce, certainForce, deficit,
-    completionProbability: readyTick === null && status !== 'ready' ? 0 : conditionalForce > 0 ? conditional!.completionProbability : 1,
-    conditionalForce, conditionalProduction: conditional, conditionalSegments, certainReadyTick,
-    supplies: events.map(event => event.supply), forceCurve, production: canonicalProductionUses([...usedPaid, ...usedConditional]), missing };
+  const readyTick = status === 'ready' ? now : completionProbability > 0
+    ? Math.ceil(filled.reduce((sum, scenario) => sum + scenario.probability * scenario.readyTick!, 0) / filledProbability - 1e-9) : null;
+  // The mean is diagnostic. A continuation must price each successful path at
+  // its own time/cohort, not use a fractional mean unit or discount twice.
+  const conditionalForce = completionProbability > 0
+    ? filled.reduce((sum, scenario) => sum + scenario.probability * scenario.conditionalForce, 0) / filledProbability : 0;
+  return { ...base, status, readyTick, completionProbability: status === 'ready' ? 1 : completionProbability,
+    conditionalForce, fillScenarios, conditionalSegments, diagnostics: diagnostic,
+    production: canonicalProductionUses(filled.flatMap(scenario => scenario.production)), missing };
 }
