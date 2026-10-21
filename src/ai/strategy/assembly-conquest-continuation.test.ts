@@ -20,6 +20,8 @@ import type { AllocationArrivalReader } from './allocation-arrival-query';
 import type { AssemblyAssessmentCohort } from './assembly-supply-reader';
 import { valuationWindow } from './utility';
 import type { VoyageRiskStages } from './voyage-risk';
+import { createAssemblyFactsTransaction } from './assembly-facts-transaction';
+import type { PreparedAssemblyConquestContinuation } from './assembly-conquest-continuation';
 
 /** Quotes from native scene geometry and unit attributes; the injected route
  * facts below are port tests, not natural grants or a navigation measurement. */
@@ -92,6 +94,17 @@ function crossingFixture() {
     landTicks: unit.owner !== owner ? 20000 : unit.kind === 'worker' ? 0 : 60,
     crossings: unit.owner === owner && unit.kind !== 'worker' ? [crossing] : [] }));
   return { snapshot, situation, request, cohort, skeleton, arrival, budgets: [], executions: [], crossing, hull, otherHull };
+}
+
+function engineeringAlternatives() {
+  const input = crossingFixture(), engineerA = input.snapshot.units.find(unit => unit.id === 'assessment-test-engineer')!;
+  const engineerB = createUnit('assessment-test-engineer-b', input.situation.owner, 'worker', input.cohort.units[0]!.x, input.cohort.units[0]!.y);
+  input.snapshot.units.push(engineerB);
+  const arrival: AllocationArrivalReader = (unit, target) => unit.id === engineerB.id
+    ? { status: 'reachable', ticks: 200, landTicks: 60, crossings: [input.crossing] } : input.arrival(unit, target);
+  const request = { ...input.request, responseEligibleUnitIds: [engineerA.id, engineerB.id, input.hull.id, input.otherHull.id] };
+  const withA = request, withB = { ...request, valuation: { ...request.valuation!, unavailableUnitIds: [engineerA.id] } };
+  return { ...input, arrival, engineerA, engineerB, withA, withB };
 }
 
 describe('one-path conquest continuation preparation', () => {
@@ -172,6 +185,22 @@ describe('one-path conquest continuation preparation', () => {
     expect(prepared.settlement!.facts.forecast.workers.length).toBeLessThan(5);
   });
 
+  it('rebuilds dynamic assumptions from current facts while keeping the static preparation baseline', () => {
+    const input = fixture(); input.snapshot.players.us!.supplyCap = 0;
+    const prepared = prepareAssemblyConquestContinuation(input), physicalBefore = JSON.stringify(prepared.materializedInput);
+    // A stale presentation is not a new physical input or a native event.
+    // This checks the pure settle boundary, not a measured forecast change
+    // caused by publishing route risk (the workforce forecast reads no risk).
+    const stale = { ...prepared, assumptions: [...prepared.assumptions,
+      { code: 'earlier-forecast-view', factIds: ['producer'], values: {} }] };
+    const settled = settlePreparedAssemblyConquestContinuation(stale, new Map());
+    expect(settled.assumptions.some(fact => fact.code === 'earlier-forecast-view')).toBe(false);
+    expect(settled.assumptions.some(fact => fact.code === 'worker-supply-required')).toBe(true);
+    for (const assumption of prepared.preparationAssumptions) expect(settled.assumptions).toContainEqual(assumption);
+    expect(JSON.stringify(prepared.materializedInput)).toBe(physicalBefore);
+    expect(settlePreparedAssemblyConquestContinuation(settled, new Map()).assumptions).toEqual(settled.assumptions);
+  });
+
   it('prepares physical voyages before risk publication and purely settles the same paths after the external batch', () => {
     const input = crossingFixture(), before = JSON.stringify(input), prepared = prepareAssemblyConquestContinuation(input);
     expect(prepared.method!.voyagePlans!.length).toBeGreaterThan(0);
@@ -217,5 +246,38 @@ describe('one-path conquest continuation preparation', () => {
     expect(prepared.settlement).toBeNull();
     expect(prepared.missing).toContainEqual(expect.objectContaining({ kind: 'production', status: 'unmet',
       reason: expect.objectContaining({ code: 'assembly-continuation-ship-producer-unavailable', factIds: [yard.id] }) }));
+  });
+
+  it('binds assessment identity to the chosen engineer and its full route semantics', () => {
+    const input = engineeringAlternatives(), before = JSON.stringify(input);
+    const a = prepareAssemblyConquestContinuation({ ...input, request: input.withA });
+    const b = prepareAssemblyConquestContinuation({ ...input, request: input.withB });
+    expect(a.method!.voyagePlans).toHaveLength(1); expect(b.method!.voyagePlans).toHaveLength(2);
+    expect(a.method!.id).not.toBe(b.method!.id);
+    const changed = prepareAssemblyConquestContinuation({ ...input, request: input.withB, arrival: (unit, target) => {
+      const arrival = input.arrival(unit, target);
+      return unit.id === input.engineerB.id && 'ticks' in arrival ? { ...arrival, ticks: arrival.ticks + 50 } : arrival;
+    } });
+    expect(changed.method!.id).not.toBe(b.method!.id);
+    const clone = { ...input, request: JSON.parse(JSON.stringify(input.withB)), cohort: JSON.parse(JSON.stringify(input.cohort)) };
+    expect(prepareAssemblyConquestContinuation(clone).method).toEqual(b.method);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('keeps all engineer-specific voyages in the unique risk batch in either quote order', () => {
+    const input = engineeringAlternatives();
+    const run = (requests: readonly AssemblyFactsRequest[]) => {
+      const paths: PreparedAssemblyConquestContinuation[] = [];
+      const transaction = createAssemblyFactsTransaction({ ...input, version: 'v9_archer', committedRequest: () => null,
+        prepare: (request, cohort) => {
+          const value = prepareAssemblyConquestContinuation({ ...input, request, cohort }); paths.push(value); return value;
+        }, settle: settlePreparedAssemblyConquestContinuation });
+      for (const request of requests) transaction.read(request);
+      const wanted = [...new Set(paths.flatMap(path => path.method?.voyagePlans?.map(voyage => voyage.id) ?? []))].sort();
+      const batch = [...new Set(transaction.riskMethods().flatMap(method => method.voyagePlans?.map(voyage => voyage.id) ?? []))].sort();
+      expect(batch).toEqual(wanted); expect(batch.some(id => id.includes('/deliver-workers/'))).toBe(true);
+      return batch;
+    };
+    expect(run([input.withB, input.withA])).toEqual(run([input.withA, input.withB]));
   });
 });

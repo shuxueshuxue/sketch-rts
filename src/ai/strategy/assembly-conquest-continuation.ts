@@ -17,7 +17,7 @@ import type { DecisionFacts } from './decision';
 import { productionUsesOverlap } from './production-use';
 import { landIdAt, unitLocation } from './regions';
 import { strategicTargetCamp } from './target-camp';
-import type { Arrival, Situation, SituationUnit, ValuationWindow } from './types';
+import type { Arrival, Situation, SituationUnit, Target, ValuationWindow } from './types';
 import { valuationWindow } from './utility';
 
 export type PreparedAssemblyConquestContinuation = Readonly<{
@@ -28,6 +28,7 @@ export type PreparedAssemblyConquestContinuation = Readonly<{
   materializedInput: AllocationMethodQuoteInput | null;
   window: ValuationWindow | null; realUnitIds: readonly string[];
   preparationMissing: readonly AllocationPrecondition[];
+  preparationAssumptions: readonly AllocationReason[];
   settlement: (ConquestContinuationInput & Readonly<{ coverage: 'known-effects' }>) | null;
   missing: readonly AllocationPrecondition[]; assumptions: readonly AllocationReason[];
   coverage: 'known-effects'; completedInTicks: number | null;
@@ -68,6 +69,22 @@ function remainingWindow(window: ValuationWindow, delay: number): ValuationWindo
   const taskTicks = Math.max(0, window.taskTicks - delay);
   return { taskTicks, holdingTicks: horizonTicks - taskTicks, horizonTicks, discountTicks: window.discountTicks };
 }
+const pointKey = (point: { x: number; y: number } | undefined) => point ? [point.x, point.y] : null;
+const targetKey = (target: Target) => [target.entityId ?? null, target.landId ?? null, target.seaId ?? null, pointKey(target.point)];
+function physicalMemberKey(unit: Unit) {
+  return [unit.id, unit.owner, unit.kind, unit.x, unit.y, unit.radius, unit.speed, unit.hp, unit.maxHp, unit.level,
+    unit.attackDamage, unit.attackCooldown, unit.attackRange, unit.deck?.shipId ?? null, unit.cabin?.shipId ?? null,
+    unit.sailing ? [unit.sailing.heading, unit.sailing.speed, unit.sailing.load, unit.sailing.balance] : null];
+}
+function physicalArrivalKey(arrival: DecisionFacts<Arrival> | undefined) {
+  if (!arrival) return null;
+  if (!('ticks' in arrival)) return [arrival.status, arrival.reason.code, arrival.lowerBoundTicks ?? null];
+  return [arrival.status, arrival.ticks, arrival.landTicks, arrival.crossings.map(crossing => [crossing.seaId,
+    crossing.shipId, crossing.productionBuildingId ?? null, crossing.requiresNewShip,
+    pointKey(crossing.departure), pointKey(crossing.departureGround), crossing.departureHeading ?? null,
+    pointKey(crossing.landing), pointKey(crossing.landingGround), crossing.landingHeading ?? null,
+    crossing.waitTicks, crossing.boardingTicks, crossing.sailingTicks, crossing.unloadingTicks, crossing.expectedLoadedTick ?? null])];
+}
 
 /** Prepare one empirical path using the current transaction's readers. Only
  * assessment copies move to posts; real support assets must be named by the
@@ -80,7 +97,8 @@ export function prepareAssemblyConquestContinuation(input: Input): PreparedAssem
   const result = (patch: Partial<PreparedAssemblyConquestContinuation> = {}): PreparedAssemblyConquestContinuation => ({
     pathId: cohort.pathId, readyTick: cohort.readyTick, delayTicks: delay, method: null, materializedInput: null,
     settlement: null, window: request.valuation?.window ?? null, realUnitIds: cohort.realUnitIds,
-    preparationMissing: unique(missing), missing: unique(missing), assumptions, coverage: 'known-effects', completedInTicks: null, ...patch });
+    preparationMissing: unique(missing), preparationAssumptions: [...assumptions],
+    missing: unique(missing), assumptions, coverage: 'known-effects', completedInTicks: null, ...patch });
   const add = (code: string, ids: readonly string[], status: 'unknown' | 'unmet' = 'unknown', kind: AllocationPrecondition['kind'] = 'route') =>
     missing.push(condition(request.methodId, code, ids, status, kind));
   if (!cohort.pathId || !finite(delay) || situation.tick !== now || request.objective.kind !== 'ConquerIsland'
@@ -204,8 +222,17 @@ export function prepareAssemblyConquestContinuation(input: Input): PreparedAssem
       roles: prior?.roles ?? unitRoles(unit), expiresTick: unit.expiresTick ?? null, commitments: prior?.commitments ?? [], arrivals };
   });
   const futureSituation: DecisionFacts<Situation> = { ...situation, tick: future.tick, units: futureRows };
-  const identity = `assembly-assessment:${fnv1a(JSON.stringify([request.methodId, cohort.pathId, cohort.readyTick,
-    projected.map(unit => [unit.id, unit.x, unit.y])]))}:hulls:${[...hulls].sort().join(',') || 'none'}`;
+  // Risk methods are deduplicated by identity. In this immutable frame their
+  // physical plan depends on every selected member/support asset, its exact
+  // route, and the source action graph. An engineer is not interchangeable
+  // merely because the fighters and hull stayed the same. Keep prose outside
+  // this key, and hash long empirical identities before any native request.
+  const physicalPlan = [request.methodId, cohort.pathId, cohort.readyTick, targetKey(request.campTarget),
+    [...new Set(selected)].sort().map(id => [physicalMemberKey(futureActors.get(id)!), physicalArrivalKey(routeRows.get(id))]),
+    input.skeleton.kind, [...input.skeleton.actions].sort(byId).map(action => [action.id, action.executor, action.intent,
+      targetKey(action.target), [...action.dependsOn].sort(), [...(action.unitIds ?? [])].sort(), action.demands,
+      action.production ?? null, [...action.spendIds].sort()])];
+  const identity = `assembly-assessment:${fnv1a(JSON.stringify(physicalPlan))}:hulls:${[...hulls].sort().join(',') || 'none'}`;
   // The caller retains the original full skeleton. Rebuilding here would
   // choose posts again and could invoke native reachability outside our reader.
   const built = input.skeleton;
@@ -256,7 +283,7 @@ export function settlePreparedAssemblyConquestContinuation(prepared: PreparedAss
   // A staffed partial curve is a known effect, as in the formal conquest
   // quote. Missing optional extra workers cannot erase its measured income;
   // facts.unknown still blocks a missing capacity or wholly unknown curve.
-  const assumptions = [...new Map([...prepared.assumptions, ...facts.forecast.unknown.map(fact =>
+  const assumptions = [...new Map([...prepared.preparationAssumptions, ...facts.forecast.unknown.map(fact =>
     reason(fact.code, fact.entityIds, { coverage: 'known-effects' }))]
     .map(fact => [JSON.stringify([fact.code, fact.factIds]), fact])).values()];
   const actual = facts.battle.ourForce, required = facts.battle.requiredForce;
