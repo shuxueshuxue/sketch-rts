@@ -48,3 +48,5 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 工厂保留 pointRoute 的 source ID、pending/transient/static 状态和精确起始 heading。生产或地面端点服务缺失不会触发原生求路回退。当前测试核原始快照、共享字段注入、有限 work/JSON、独立前缀 oracle 和未来元数据边界；统一总 reader、端点服务、真实调度与执行题库仍由共同接线验收。
 
 船上出发的岸对枚举只按 sea 与目标岸点排序，稳定请求键不含当前船位；同海域内行进不会重启未公布的岸点扫描。船位和 heading 仍进入真实 seaLeg 的物理请求，陆地出发的距离排序仍保留其起点。
+
+工厂接受独立 `shoreGeometryRevision`（省略时兼容 `geometryRevision`），由总 source 绑定已备地形岸点索引版本。动态船位、交通或施工体变化可失效泊位与航段，不重启与其无关的岸点枚举。

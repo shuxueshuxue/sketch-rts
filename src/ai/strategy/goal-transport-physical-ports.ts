@@ -14,6 +14,8 @@ type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['de
 export type GoalTransportPhysicalInput = Readonly<{
   snapshot: GameSnapshot; owner: string; tick: number; byTick: number; regions: RegionIndex;
   geometry: GoalGeometryReader; geometryRevision: string; readFact: GoalFactReader;
+  /** Prepared terrain/coast-index version, independent of moving bodies. */
+  shoreGeometryRevision?: string;
   resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>;
   productionOptions: GoalGroundingReader['productionOptions'];
   resolveProducedHull?: (option: GoalProductionOption, unitKind: 'transport' | 'carrier') => GoalPublishedValue<GoalHullCandidate>;
@@ -61,7 +63,7 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       // pose is consumed by seaLeg, not by this finite coast enumeration.
       const originKey = from.landId ? from : { seaId: from.seaId };
       const key = `shore-pairs:${goalValueKey([originKey, to, limit])}`;
-      const read = input.geometry<State, { pairs: GoalShorePair[]; count: number; considered: number }>({ key, revision: input.geometryRevision,
+      const read = input.geometry<State, { pairs: GoalShorePair[]; count: number; considered: number }>({ key, revision: input.shoreGeometryRevision ?? input.geometryRevision,
         initialState: { sea: 0, scan: 0, phase: 'departures', departure: 0, landing: 0, count: 0, considered: 0, starts: [], ends: [], best: [] },
         advance(state, allowance) {
           let work = 0;
