@@ -1,0 +1,53 @@
+{
+  "source": "d819a3f896977bcd15382b93da75c7b44d138490",
+  "production": "36c243a03bb33692491d9a2b307776e46881c1e3",
+  "operation": "Read-only byte-for-byte copy of original gzip member and original result/cold snapshot carrier; no planner, sim, fact queries or replay.",
+  "trace": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-d819a3f8/runtime/ship-away-far.jsonl.gz",
+  "traceSha256": "b3f44b83851fe40507cd64b11ef20abf21c67917015c3f6d44d0f784d05457cb",
+  "completedMembers": 156,
+  "lastMember": {
+    "offset": 25287089,
+    "length": 224927,
+    "plainSha256": "a5c7a2e0a985d46750f1f21216aa6054cf640808e78f917ce6cccd9a32b9014e",
+    "tick": 2340,
+    "beforeMemoryAvailable": true,
+    "afterMemoryAvailable": true
+  },
+  "failedAttempt": {
+    "think": 157,
+    "completeMemberAvailable": false,
+    "beforeMemoryRecorded": false,
+    "afterMemoryRecorded": false,
+    "explanation": "Owner call threw before observeBootstrapPlan; the recorder writes only within that callback. No missing snapshot or memory is reconstructed.",
+    "statistics": {
+      "plannedThinks": 157,
+      "observedThinks": 156,
+      "firstReadyTick": 90,
+      "firstFormalCommandTick": 135,
+      "formalCommandCount": 23
+    },
+    "error": {
+      "name": "Error",
+      "message": "Strategy allocation byte limit exceeded: 262763",
+      "stack": "Error: Strategy allocation byte limit exceeded: 262763\n    at Module.assertStrategyAllocationBounds (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/control.ts:83:55)\n    at Module.pruneAllocationProvenance (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-lifecycle.ts:310:3)\n    at Module.allocateStrategy (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocator.ts:627:12)\n    at controlledAllocation (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:94:22)\n    at executeControlledBootstrapCommands (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:134:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:128:26\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)"
+    }
+  },
+  "files": {
+    "far-original-cold-frame.json.gz": {
+      "sha256": "cf22af861ae88e4c2ba89332806a743bb0616daf4e35693cf1f80bb48d5f772f",
+      "bytes": 1947424
+    },
+    "far-original.result.json.gz": {
+      "sha256": "d0fc5c4776de58dfa2319c801fae9aa7bde3df125022001fca1b42caff526ed6",
+      "bytes": 252356
+    },
+    "far-think156.jsonl.gz": {
+      "sha256": "374ac16738ffab2a906a39a5aea35ab71b714c0daaca77b93e51ccd3ae289c2c",
+      "bytes": 224927
+    },
+    "snapshot-identity.json": {
+      "sha256": "b4da9908aa6d70e99e7737e00f62b1b653c20e17d9b8bccb78376d08e34124e6",
+      "bytes": 595
+    }
+  }
+}
