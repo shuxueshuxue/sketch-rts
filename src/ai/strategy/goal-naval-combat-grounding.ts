@@ -23,6 +23,9 @@ type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['de
 export type GoalCombatMovementRequest = Readonly<{
   effect: GoalFact; cohort: readonly GoalCohortMember[]; from: Target; target: Target;
   routes: readonly GoalFactObservation[]; arrivalTicks: GoalEstimate<number>; throughTick: number;
+  /** Only the named camp's contact exposure belongs to the camp battle model.
+   * The exact on-post prerequisite remains a condition, never current arrival. */
+  campContact?: Readonly<{ campId: string; stagingFact: GoalFact }>;
 }>;
 export type GoalNavalCombatGroundingPorts = Readonly<{
   arrival: AllocationArrivalReader; landRoute: AllocationLandRouteReader;
@@ -278,12 +281,20 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       && (safety.availableTick ?? context.tick) <= context.tick && safety.threats !== undefined
       && !safety.threats.unitIds.length && !safety.threats.campIds.length && safety.threats.requiredForce === 0
       && !safety.derived?.allOf.length;
-    const cost: GoalCombatOption['cost'] = quiet ? known([], ids) : unquoted;
-    const successProbability = quiet ? known(1, ids) : unquoted;
+    const derived = safety.derived?.allOf ?? [];
+    const clearedWindow = safety.state === 'unmet' && safety.reason.code === 'observed-safety-threats-present'
+      && safety.fact.id === safetyFact.id && safety.observedTick === context.tick
+      && (safety.availableTick ?? context.tick) <= context.tick && safety.threats !== undefined
+      && !safety.threats.unitIds.length && safety.threats.requiredForce === 0 && safety.threats.campIds.length > 0
+      && derived.length > 0 && derived.every(fact => fact.predicate.kind === 'camp-cleared')
+      && safety.threats.campIds.every(campId => derived.some(fact => fact.predicate.kind === 'camp-cleared' && fact.predicate.campId === campId));
+    const proof = sorted([...ids, ...(clearedWindow ? derived.map(fact => fact.id) : [])]);
+    const cost: GoalCombatOption['cost'] = quiet || clearedWindow ? known([], proof) : unquoted;
+    const successProbability = quiet || clearedWindow ? known(1, proof) : unquoted;
     return { state: 'met', candidates: [{ id: `combat-garrison:${goalValueKey([effect.id, post, group.map(m => m.reference)])}`,
       target: post, from, cohort: group.map(m => m.reference), requiredForce, byTick: throughTick,
       duration: known(Math.max(0, throughTick - context.tick), ids), cost, successProbability,
-      preconditions: [safety.fact], factIds: ids }], factIds: ids };
+      preconditions: [safety.fact], factIds: proof }], factIds: proof };
   }
   function clearCamp(effect: GoalFact, group: readonly GoalCohortMember[], from: Target, campId: string, throughTick: number): GoalCandidates<GoalCombatOption> {
     const resolved = resolveGoalCamp(context.snapshot, campId);
@@ -331,10 +342,12 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       : missing.length ? pending('combat-camp-contact-route-pending', routes.map(row => row.fact.id), missing.flatMap(row => row.state === 'pending' ? [row.requestId] : []))
       : valid ? known(Math.max(0, ...routes.map(row => row.route!.ticks!)), routes.map(row => row.fact.id))
       : pending('combat-camp-contact-clock-pending', routes.map(row => row.fact.id));
-    const request: GoalCombatMovementRequest = { effect, cohort: staged, from: staging, target, routes, arrivalTicks, throughTick };
+    const stagingFact = goalFact({ kind: 'camp-staging', campId, at: staging, cohort: group.map(member => member.reference) });
+    const request: GoalCombatMovementRequest = { effect, cohort: staged, from: staging, target, routes, arrivalTicks, throughTick,
+      campContact: { campId, stagingFact } };
     const result = assessGoalCampCombatOption({ snapshot: context.snapshot, situation: context.situation, effect, cohort: group,
       from, target, staging, campId, byTick: throughTick, routes, arrivalTicks, movementRisk: movement(request),
-      stagingFacts: [context.readFact(goalFact({ kind: 'camp-staging', campId, at: staging, cohort: group.map(member => member.reference) }))] });
+      stagingFacts: [context.readFact(stagingFact)] });
     return result.state === 'met' ? { ...result, candidates: result.candidates.map(option => ({ ...option,
       factIds: sorted([...option.factIds, ...facts]) })), factIds: sorted([...result.factIds, ...facts]),
       ...(unresolved.length ? { deferred: [{ id: `combat-camp-staging-alternatives:${campId}`, requestIds: sorted(unresolved),
