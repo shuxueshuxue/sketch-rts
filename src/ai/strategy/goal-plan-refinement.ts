@@ -1,10 +1,11 @@
+import { boundCache, touchCache, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { discoverGoalActions } from './goal-provider-candidates';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningContext } from './goal-planner-types';
 
-type Entry = { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
+type Entry = CacheUse & { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
   exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number] };
-export type GoalRefinementMemory = { revision: number; entries: Entry[] };
+export type GoalRefinementMemory = { revision: number; entries: Entry[]; capacities?: Record<string, CacheCapacity> };
 export type GoalExactPreparation = Readonly<{ plan: GoalPlan; deferActionIds: readonly string[]; changed: boolean }>;
 /** Clock deadlines do not create a new physical proposal. Actual geometry,
  * actors and quoted bounds still participate, so a moved/changed choice cannot
@@ -18,6 +19,8 @@ function proposalKey(action: GoalActionDeclaration): string {
     return value;
   };
   return goalValueKey(semantic({ kind: action.kind, preconditions: action.preconditions, effects: action.effects,
+    preconditionWindows: action.preconditionWindows?.map(window => ({ through: window.through,
+      predicate: action.preconditions.find(fact => fact.id === window.factId)?.predicate })),
     executor: action.executor, demands: action.demands, flows: action.flows,
     duration: action.duration, cost: action.cost, successProbability: action.successProbability }));
 }
@@ -57,6 +60,7 @@ const value = (action: GoalActionDeclaration) => ({ duration: action.duration.st
   probability: action.successProbability.state === 'met' ? action.successProbability.value : null });
 const sameExecutionProof = (coarse: GoalActionDeclaration, exact: GoalActionDeclaration) => {
   const proof = (action: GoalActionDeclaration) => ({ id: action.id, kind: action.kind, preconditions: action.preconditions,
+    preconditionWindows: action.preconditionWindows,
     effects: action.effects, demands: action.demands, flows: action.flows, duration: action.duration, cost: action.cost,
     successProbability: action.successProbability, executor: action.executor, outputs: action.outputs });
   return goalValueKey(proof(coarse)) === goalValueKey(proof(exact));
@@ -79,31 +83,46 @@ export function createGoalPlanRefiner(input: Readonly<{
   /** Reuse already priced alternatives for the same active action/actors.
    * Geometry pins still follow only the currently selected graph. */
   maxAlternativeQuotes?: number;
+  thinkSequence?: () => number;
 }>) {
   const { memory } = input;
   return (plan: GoalPlan): GoalPlan => {
-    // Actor/world revisions retire old prices. A bounded set of already
-    // priced alternatives for active actors must survive switching choices;
-    // otherwise two equivalent region-pool proposals can refine forever.
+    // Retire invalid evidence, then apply the same pin/LRU policy as physical
+    // publication caches. Earlier selected quotes in this think stay pinned
+    // across same-snapshot re-regression; insertion order cannot starve them.
     const invalidated = new Set<string>();
-    let alternatives = 0;
+    const sequence = input.thinkSequence?.() ?? plan.observedTick;
+    const matchingNode = (entry: Entry) => plan.actions.find(node => entry.exact.some(exact => exact.id === node.declaration.id)
+      || proposalKey(entry.coarse) === proposalKey(node.declaration));
+    const bound = () => {
+      const owned = memory.entries.filter(entry => entry.planId === undefined || entry.planId === plan.id);
+      const referenced = owned.filter(entry => !!matchingNode(entry));
+      for (const entry of referenced) { entry.planId = plan.id; touchCache(entry, sequence, [plan.goal.id]); }
+      const result = boundCache({ kind: 'refinement', entries: owned, id: entry => entry.coarse.id,
+        lastUsed: entry => entry.lastUsedThink ?? -1, plans: entry => entry.lastUsedThink === sequence ? entry.planIds ?? [] : [],
+        maxEntries: referenced.length + (input.maxAlternativeQuotes ?? 0), thinkSequence: sequence,
+        capacity: memory.capacities?.[plan.id] });
+      const removed = new Set(result.evicted);
+      memory.entries = memory.entries.filter(entry => !removed.has(entry));
+      memory.revision += result.evicted.filter(entry => entry.state !== 'pending').length;
+      (memory.capacities ??= {})[plan.id] = result.capacity;
+      return result.capacity.pressure;
+    };
     if (plan.actions.length) memory.entries = memory.entries.filter(entry => {
       if (entry.planId !== undefined && entry.planId !== plan.id) return true;
-      const node = plan.actions.find(node => entry.exact.some(exact => exact.id === node.declaration.id)
-        || proposalKey(entry.coarse) === proposalKey(node.declaration));
-      if (!node && entry.state === 'known' && entry.exact.length && alternatives < (input.maxAlternativeQuotes ?? 0)
-        && entry.sourceRevision === input.sourceRevision?.(entry.coarse)
+      const node = matchingNode(entry);
+      const valid = entry.sourceRevision === input.sourceRevision?.(node?.declaration ?? entry.coarse);
+      const relevant = !!node || entry.state === 'known' && entry.exact.length > 0
         && plan.actions.some(node => entry.coarse.refinementFor && node.declaration.refinementFor
           && entry.coarse.refinementFor.providerId === node.declaration.refinementFor.providerId
-          && sameChoice(entry.coarse, node.declaration))) { alternatives++; return true; }
-      const retain = !!node && entry.sourceRevision === input.sourceRevision?.(node.declaration);
-      if (retain) entry.planId = plan.id;
-      else if (entry.state !== 'pending') {
-        memory.revision++;
-        if (node) invalidated.add(node.id);
-      }
-      return retain;
+          && sameChoice(entry.coarse, node.declaration));
+      if (valid && relevant) return true;
+      if (entry.state !== 'pending') { memory.revision++; if (node) invalidated.add(node.id); }
+      return false;
     });
+    const pressure = plan.actions.length ? bound() : undefined;
+    if (pressure) return { ...plan, status: 'search-pending', readyActionIds: [], capacityPressure: [pressure],
+      reasons: [{ code: 'goal-refinement-pinned-capacity', factIds: pressure.requestIds, values: { entries: pressure.entries ?? 0 } }] };
     const first = new Set(plan.actions.filter(node => !node.dependsOnActionIds.length).map(node => node.id));
     let selected = plan.actions.filter(node => first.has(node.id)
       || node.dependsOnActionIds.length && node.dependsOnActionIds.every(id => first.has(id)));
@@ -130,6 +149,7 @@ export function createGoalPlanRefiner(input: Readonly<{
         entry = { planId: plan.id, coarse: action, ...(sourceRevision === undefined ? {} : { sourceRevision }), state: 'pending', exact: [], reason: { code: 'selected-exact-facts-pending', factIds: [], values: {} } };
         memory.entries.push(entry);
       }
+      touchCache(entry, sequence, [plan.goal.id]);
       if (entry.state !== 'pending') continue;
       const discovered = discoverGoalActions(provider, request.effect, context);
       const compatible = discovered.actions.filter(exact => sameChoice(action, exact));
@@ -183,6 +203,9 @@ export function createGoalPlanRefiner(input: Readonly<{
           ? { delta: { durationTicks: exact.duration - coarse.duration, costGold: exact.cost - coarse.cost,
             successProbability: exact.probability - coarse.probability } } : {}) } };
     });
+    const finalPressure = bound();
+    if (finalPressure) return { ...plan, actions, status: 'search-pending', readyActionIds: [], capacityPressure: [finalPressure],
+      reasons: [{ code: 'goal-refinement-pinned-capacity', factIds: finalPressure.requestIds, values: { entries: finalPressure.entries ?? 0 } }] };
     const ready = actions.filter(node => plan.readyActionIds.includes(node.id) && node.declaration.precision !== 'coarse' && node.state === 'ready');
     return { ...plan, actions, readyActionIds: changed ? [] : ready.map(node => node.id),
       status: plan.status === 'complete' ? 'complete' : changed || !ready.length ? 'waiting-facts' : plan.status,

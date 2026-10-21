@@ -1,3 +1,4 @@
+import { boundCache, readCacheMap, retainCacheMap } from './bounded-cache';
 import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
@@ -38,11 +39,10 @@ const landArrivals = new Map<number, Arrival>();
 const noCrossings = Object.freeze([]);
 function walkingArrival(ticks: number, explain: () => readonly Evidence[]): Arrival {
   if (capturesExplanations()) return projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks, crossings: [] }, 'evidence', explain);
-  let value = landArrivals.get(ticks);
+  let value = readCacheMap(landArrivals, ticks);
   if (!value) {
-    if (landArrivals.size >= 4096) landArrivals.delete(landArrivals.keys().next().value!);
-    landArrivals.set(ticks, value = Object.freeze(projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks,
-      crossings: noCrossings }, 'evidence', explain)));
+    retainCacheMap(landArrivals, ticks, value = Object.freeze(projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks,
+      crossings: noCrossings }, 'evidence', explain)), 4096);
   }
   return value;
 }
@@ -295,8 +295,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     }
     const publicationKey = preparation && publishedKey(crossingCandidateId(snapshot, unit, target)!);
     const publication = !currentFactWork() && preparation?.crossings.find(entry => entry.key === publicationKey);
+    if (publication) publication.lastUsedThink = snapshot.tick;
     if (publication && publicationKey) {
-      let choices = persistent!.get(publicationKey);
+      let choices = readCacheMap(persistent!, publicationKey);
       if (!choices) {
         // A saved publication is authoritative. A cold process reconstructs its
         // pure numeric table from identical facts, without changing admission.
@@ -304,8 +305,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
         const complete = createArrivalQuery(snapshot, owner, memory, undefined, Infinity, regions);
         choices = complete.crossingChoices(unit, source, destination, target).map(choice => ({ ...choice,
           unmet: choice.unmet.map(value => { const reason = explanationForMemory(value); return { ...reason, evidence: reason.evidence.map(item => ({ ...item, tick: publication.quotedTick })) }; }) }));
-        if (persistent!.size >= 32) persistent!.delete(persistent!.keys().next().value!);
-        persistent!.set(publicationKey, storedChoices(choices));
+        retainCacheMap(persistent!, publicationKey, storedChoices(choices), 32);
       } else stats.persistentHits++;
       choices = choices.map(choice => ({ ...choice, unmet: choice.unmet.map(value => deferredRecord({ ...value }, true)) }));
       for (const tick of publication.fieldTicks) usedFieldTicks.add(tick);
@@ -419,12 +419,16 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     crossingTables.set(key, { choices: result, pending: pendingGeometry, ages: [...usedFieldTicks], quoteAges: [...usedQuoteTicks],
       ...(planningPhysics ? { requestIds: [...pendingPhysicsIds] } : {}) });
     if (preparation && publicationKey && finished && !currentFactWork()) {
-      if (preparation.crossings.length >= 32) {
-        const old = preparation.crossings.shift()!; persistent!.delete(old.key);
-      }
       preparation.crossings.push({ key: publicationKey, fieldTicks: [...usedFieldTicks].sort((a, b) => a - b), quotedTick: snapshot.tick });
-      if (persistent!.size >= 32) persistent!.delete(persistent!.keys().next().value!);
-      persistent!.set(publicationKey, storedChoices(choices));
+      const bounded = boundCache({ kind: 'crossing', entries: preparation.crossings, id: entry => entry.key,
+        lastUsed: entry => entry.lastUsedThink ?? entry.quotedTick, plans: entry => entry.planIds ?? [],
+        maxEntries: 32, thinkSequence: snapshot.tick, capacity: preparation.cacheCapacities?.crossing });
+      preparation.crossings = bounded.entries;
+      (preparation.cacheCapacities ??= {}).crossing = bounded.capacity;
+      for (const entry of bounded.evicted) persistent!.delete(entry.key);
+      const active = new Set(preparation.crossings.map(entry => entry.key));
+      for (const key of persistent!.keys()) if (!active.has(key)) persistent!.delete(key);
+      retainCacheMap(persistent!, publicationKey, storedChoices(choices), 32);
     }
     return result;
   }

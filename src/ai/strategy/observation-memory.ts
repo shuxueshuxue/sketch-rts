@@ -1,3 +1,4 @@
+import { boundCache, type CacheCapacity, type CacheUse } from './bounded-cache';
 import type { VoyageRiskMemory } from './voyage-risk';
 import type { PointRouteMemory } from './point-routes';
 import type { FactWorkReceipt } from './fact-work';
@@ -13,14 +14,14 @@ import { explanationForMemory } from './explanations';
 
 export type PreviousObjective = Pick<Objective, 'id' | 'sinceTick' | 'stability'> & { utility: Pick<Objective['utility'], 'score'> };
 export type SituationHistory = Pick<Situation, 'tick' | 'owner' | 'assets' | 'opportunities'>;
-export type FieldProgress = { goal: Point; work: number; readyTick: number | null; readyThink?: number };
+export type FieldProgress = CacheUse & { goal: Point; work: number; readyTick: number | null; readyThink?: number };
 export type StrategyObservationMemory = {
   version: 1;
   owner: PlayerId;
   terrain: string;
   landBodies: string;
   fields: { land: FieldProgress[]; sea: FieldProgress[] };
-  crossings: { key: string; fieldTicks: number[]; quotedTick: number }[];
+  crossings: (CacheUse & { key: string; fieldTicks: number[]; quotedTick: number })[];
   /** Bounded native planning cursor and exposure publication; no distance-field arrays. */
   voyageRisks?: VoyageRiskMemory;
   pointRoutes?: PointRouteMemory;
@@ -28,6 +29,7 @@ export type StrategyObservationMemory = {
   thinkSequence?: number;
   factWork?: FactWorkReceipt;
   goalGeometry?: GoalGeometryMemory;
+  cacheCapacities?: Record<string, CacheCapacity>;
   truncated?: true;
   history?: { tick: number; assets: Asset[]; lostSites: Opportunity[]; objectives: PreviousObjective[] };
 };
@@ -86,29 +88,43 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
 /** Also used after control-only action targets extend the same publication
  * ledger. Explanations or process caches never determine this trimming. */
 export function boundObservationMemory(state: StrategyObservationMemory) {
-  // Explicit serialization bound, independent of map area or number of entities.
-  // Drop historical quotations before useful geometry progress. A gap is retained
-  // as unknown; it cannot create a recovered-site history or a zero handoff cost.
-  let bytes = observationJsonBytes(state) + 16; // {"observation": ... }
-  if (bytes > OBSERVATION_BYTE_LIMIT && !state.truncated) {
-    state.truncated = true; bytes = observationJsonBytes(state) + 16;
-  }
-  const discard = (values: unknown[], first = false) => {
-    const comma = values.length > 1 ? 1 : 0;
-    const removed = first ? values.shift() : values.pop();
-    bytes -= observationJsonBytes(removed) + comma;
+  type Item = { id: string; use: CacheUse; value: unknown; group: string };
+  const items: Item[] = [];
+  const add = (group: string, values: readonly unknown[], id: (value: any, index: number) => string,
+    use: (value: any) => CacheUse = value => value) => values.forEach((value, index) => items.push({ id: `${group}:${id(value, index)}`, use: use(value), value, group }));
+  add('objectives', state.history?.objectives ?? [], value => value.id, () => ({}));
+  add('lostSites', state.history?.lostSites ?? [], value => value.id, () => ({}));
+  add('assets', state.history?.assets ?? [], value => value.id, () => ({}));
+  add('crossings', state.crossings, value => value.key);
+  add('pointRoutes', state.pointRoutes?.entries ?? [], value => value.key);
+  add('goalGeometry', state.goalGeometry?.entries ?? [], value => value.key);
+  add('land', state.fields.land, value => `${value.goal.x}:${value.goal.y}`);
+  add('sea', state.fields.sea, value => `${value.goal.x}:${value.goal.y}`);
+  const payload = (entries: readonly Item[]) => {
+    const group = (name: string) => entries.filter(entry => entry.group === name).map(entry => entry.value);
+    const { cacheCapacities: _diagnostics, ...rest } = state;
+    return { ...rest, fields: { land: group('land'), sea: group('sea') }, crossings: group('crossings'),
+      ...(state.history ? { history: { ...state.history, objectives: group('objectives'), lostSites: group('lostSites'), assets: group('assets') } } : {}),
+      ...(state.pointRoutes ? { pointRoutes: { entries: group('pointRoutes') } } : {}),
+      ...(state.goalGeometry ? { goalGeometry: { ...state.goalGeometry, entries: group('goalGeometry') } } : {}) };
   };
-  while (bytes > OBSERVATION_BYTE_LIMIT) {
-    if (state.history?.objectives.length) discard(state.history.objectives);
-    else if (state.history?.lostSites.length) discard(state.history.lostSites, true);
-    else if (state.history?.assets.length) discard(state.history.assets);
-    else if (state.crossings.length) discard(state.crossings, true);
-    else if (state.pointRoutes?.entries.length) discard(state.pointRoutes.entries, true);
-    else if (state.goalGeometry?.entries.length) discard(state.goalGeometry.entries, true);
-    else if (state.fields.land.length) discard(state.fields.land);
-    else if (state.fields.sea.length) discard(state.fields.sea);
-    else throw new Error('Strategy observation identity exceeds its serialization budget');
+  const result = boundCache({ kind: 'observation', entries: items, id: entry => entry.id,
+    lastUsed: entry => entry.use.lastUsedThink ?? -1, plans: entry => entry.use.planIds ?? [],
+    maxBytes: OBSERVATION_BYTE_LIMIT, bytes: entries => observationJsonBytes(payload(entries)) + 16,
+    thinkSequence: state.thinkSequence ?? state.factWork?.tick ?? 0, capacity: state.cacheCapacities?.observation });
+  const retained = new Set(result.entries.map(entry => entry.value));
+  if (result.evicted.length) state.truncated = true;
+  if (state.history) {
+    state.history.objectives = state.history.objectives.filter(value => retained.has(value));
+    state.history.lostSites = state.history.lostSites.filter(value => retained.has(value));
+    state.history.assets = state.history.assets.filter(value => retained.has(value));
   }
+  state.crossings = state.crossings.filter(value => retained.has(value));
+  if (state.pointRoutes) state.pointRoutes.entries = state.pointRoutes.entries.filter(value => retained.has(value));
+  if (state.goalGeometry) state.goalGeometry.entries = state.goalGeometry.entries.filter(value => retained.has(value));
+  state.fields.land = state.fields.land.filter(value => retained.has(value));
+  state.fields.sea = state.fields.sea.filter(value => retained.has(value));
+  (state.cacheCapacities ??= {}).observation = result.capacity;
 }
 
 /** Called once by the owner-think boundary, never by nested fact readers. */

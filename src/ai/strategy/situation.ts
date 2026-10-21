@@ -1,3 +1,4 @@
+import { readCacheMap, retainCacheMap } from './bounded-cache';
 import { arrivalColumns, EMPTY_UNIT_ARRIVALS, unitArrivalFacts, withUnitArrivals, type UnitArrivalFacts } from './unit-arrivals';
 import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
@@ -34,14 +35,13 @@ function stableUnitFacts(snapshot: GameSnapshot, unit: Unit, location: Situation
   const key = snapshot.map.terrain ?? snapshot.map;
   let values = cacheable ? idleUnitFacts.get(key) : undefined;
   if (cacheable && !values) idleUnitFacts.set(key, values = new Map());
-  const old = prior ?? values?.get(unit.id), expiresTick = unit.expiresTick ?? null;
+  const old = prior ?? (values ? readCacheMap(values, unit.id) : undefined), expiresTick = unit.expiresTick ?? null;
   if (old && old.owner === unit.owner && old.kind === unit.kind && old.location === location && old.hp === unit.hp
     && old.maxHp === unit.maxHp && old.strength === strength && old.roles === roles && old.expiresTick === expiresTick && old.commitments === commitments && unitArrivalFacts(old) === arrivals) return old;
   const row: SituationUnit = withUnitArrivals({ id: unit.id, owner: unit.owner, kind: unit.kind, location, hp: unit.hp, maxHp: unit.maxHp,
     strength, roles, expiresTick, commitments }, arrivals);
   if (values) {
-    if (!old && values.size >= 2048) values.delete(values.keys().next().value!);
-    values.set(unit.id, row);
+    retainCacheMap(values, unit.id, row, 2048);
   }
   return row;
 }
@@ -324,13 +324,12 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   let priorUnits = capturesExplanations() ? undefined : decisionUnitFacts.get(memory);
   if (!capturesExplanations() && !priorUnits) decisionUnitFacts.set(memory, priorUnits = new Map());
   const units = live.map(unit => {
-    const old = priorUnits?.get(unit.id);
+    const old = priorUnits ? readCacheMap(priorUnits, unit.id) : undefined;
     const row = stableUnitFacts(snapshot, unit, locations.get(unit.id)!, strength(unit), unitRoles(unit),
       unitCommitments(unit, recovering.get(unit.id), mobilePatients.has(unit.id), acceptedHealing.get(unit.id)),
       arrivalsFor(unit, old && unitArrivalFacts(old)), old);
     if (priorUnits && row.location.kind !== 'unknown') {
-      if (!old && priorUnits.size >= 2048) priorUnits.delete(priorUnits.keys().next().value!);
-      priorUnits.set(unit.id, row);
+      retainCacheMap(priorUnits, unit.id, row, 2048);
     }
     return row;
   });

@@ -27,6 +27,7 @@ import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
 import { createDefaultGoalCampBattleModel, type GoalCampModelObserver } from './goal-camp-default-model';
 import { goalAssemblyPostSource } from './goal-naval-actions';
+import { ASSEMBLY_RANGE } from './assembly-posts';
 import { goalStartedCohortGroups, type GoalStartedCohortReader } from './goal-started-cohort';
 import type { Point, Target } from './types';
 
@@ -519,7 +520,22 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
         else if (assessed.state === 'pending') deferred.push({ id, requestIds: assessed.requestIds, reason: assessed.reason });
         else rejected ??= assessed;
       } else {
-        const option = atOrigin(movingOption(travel(effect, group, from, target, throughTick)), origin);
+        const refs = group.map(member => member.reference);
+        const actualPost = p.kind === 'force-at' && !origin.preconditions.length && group.every(member => {
+          const unit = member.reference.kind === 'existing' ? actors.get(member.reference.entityId) : undefined;
+          return !!unit && !unit.deck && !unit.cabin && landIdAt(context.snapshot.map, unit) === target.landId
+            && gap(unit, target.point) <= ASSEMBLY_RANGE;
+        });
+        const presence = actualPost ? context.readFact(goalFact({ ...p, cohort: refs } as Extract<GoalFact['predicate'], { kind: 'force-at' }>)) : null;
+        // Arrival means the native post tolerance, just as the world reader
+        // and assembler completion do. Already present members need no march
+        // to its mathematical centre. The paired pool/post flows still claim
+        // the exact group; this observation does not add any opening balance.
+        const present = presence?.state === 'met' && (presence.availableTick ?? context.tick) <= context.tick;
+        const option = atOrigin(present ? { id: `combat-present:${presence.fact.id}`, from, target, cohort: refs,
+          requiredForce: 0, byTick: throughTick, duration: known(0, [presence.fact.id]), cost: known([], [presence.fact.id]),
+          successProbability: known(1, [presence.fact.id]), preconditions: [], factIds: [presence.fact.id] }
+          : movingOption(travel(effect, group, from, target, throughTick)), origin);
         if ((p.kind === 'force-at' || p.kind === 'force-available') && p.metric === 'camp-force') {
           const camp = resolveGoalCamp(context.snapshot, p.campId);
           if (camp.status !== 'present') { rejected ??= unmet('combat-camp-binding-invalid', [p.campId]); continue; }

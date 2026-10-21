@@ -165,6 +165,10 @@ export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: rea
  * planned producer slots, never invented world IDs or allocation leases. */
 export type GoalActionDeclaration = Readonly<{
   id: string; kind: GoalActionKind; preconditions: readonly GoalFact[];
+  /** Admission evidence covers this action's scheduled completion, rather
+   * than its goal's deadline. The scheduler rewrites these fact IDs whenever
+   * the action is delayed; persistent protection effects keep their own clock. */
+  preconditionWindows?: readonly Readonly<{ factId: string; through: 'finish' }>[];
   /** Coarse declarations are search proposals, never execution authority. */
   precision?: 'coarse' | 'exact';
   effects: readonly GoalFactEffect[]; demands: readonly GoalResourceDemand[];
@@ -317,9 +321,8 @@ export type GoalPlanCacheEntry = Readonly<{
   /** Finite declarative frontier only; no callbacks, snapshots or task state. */
   continuation?: import('./goal-search-state').GoalSearchMemory;
 }>;
-export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: readonly GoalPlanCacheEntry[]; truncated?: true }>;
-export type GoalCapacityPressure = Readonly<{ kind: 'geometry'; thinkSequence: number; bytes: number; limitBytes: number;
-  planIds: readonly string[]; requestIds: readonly string[]; overflowCount: number }>;
+export type GoalPlannerCache = Readonly<import('./cache-payload').CachePayload<GoalPlanCacheEntry> & { version: 1; owner: PlayerId; declarationRevision?: string; capacity?: import('./bounded-cache').CacheCapacity; truncated?: true }>;
+export type GoalCapacityPressure = import('./bounded-cache').CachePressure;
 export type GoalPlannerInput = Readonly<{
   campModelUsage?: () => Readonly<import('./goal-camp-default-model').GoalCampModelUsage>;
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];

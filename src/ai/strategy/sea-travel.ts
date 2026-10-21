@@ -1,3 +1,4 @@
+import { retainCacheMap, readCacheMap } from './bounded-cache';
 import { shareShipProfile } from '../../shared/ship-geometry';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { coursePerformance, windAt } from '../../shared/ship-wind';
@@ -17,7 +18,7 @@ const facts = new WeakMap<Terrain, SeaFacts>();
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 const angleGap = (a: number, b: number) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
 function retain<T>(values: Map<string, T>, key: string, value: T, limit: number) {
-  values.delete(key); if (values.size >= limit) values.delete(values.keys().next().value!); values.set(key, value);
+  retainCacheMap(values, key, value, limit);
 }
 
 /** Pricing is a pure projection of endpoints, motion rates, rig and uniform wind.
@@ -46,14 +47,14 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     if (!field) return pending;
     const localHit = cache === 'reuse' && local.get(key);
     if (localHit) { stats.localHits++; return localHit; }
-    const hit = cache === 'reuse' && fixed ? shared?.prices.get(key) : undefined;
+    const hit = cache === 'reuse' && fixed ? shared ? readCacheMap(shared.prices, key) : undefined : undefined;
     if (hit !== undefined) {
       stats.priceHits++; retain(shared!.prices, key, hit, 1024);
       const result: Estimate = { status: 'known', ticks: hit, geometryTick: field.builtTick, computedTick: snapshot.tick };
       local.set(key, result); return result;
     }
     const knownRoad = cache === 'reuse' && shared?.roads.has(roadKey);
-    let road = knownRoad ? shared!.roads.get(roadKey) : undefined;
+    let road = knownRoad ? readCacheMap(shared!.roads, roadKey) : undefined;
     const geometryTick = field.builtTick;
     if (!fixed || !knownRoad) {
       road = field.field.road(from, to);

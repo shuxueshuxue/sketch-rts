@@ -134,6 +134,90 @@ it('releases a cached future availability at its fixed absolute tick instead of 
   expect(cached.plans[0]!.readyActionIds).toEqual(['train']); expect(cached.plans[0]!.search.work).toBe(0);
 });
 
+it('retimes a safety precondition after release and rechecks the later window on cached replay', () => {
+  const { input, context, actions } = example(), at = { point: { x: 2000, y: 2000 } };
+  const safe = goalFact({ kind: 'site-safe', site: at, throughTick: 10 });
+  const release = goalFact({ kind: 'camp-cleared', campId: 'release-at-100' });
+  const done = goalFact({ kind: 'hall-complete', mineId: 'ore', at });
+  const declared: GoalActionDeclaration = { ...actions[0]!, id: 'released-delivery', kind: 'transport-worker',
+    precision: 'exact', preconditions: [release, safe], preconditionWindows: [{ factId: safe.id, through: 'finish' }],
+    effects: [{ fact: done, operation: 'establish', at: 'finish' }], flows: [], demands: [],
+    duration: { state: 'met', value: 10, factIds: [safe.id] }, cost: { state: 'met', value: [], factIds: [safe.id] },
+    successProbability: { state: 'met', value: 1, factIds: [safe.id] } };
+  const reader = (fact: GoalFact): GoalFactObservation => ({ fact, state: fact.predicate.kind === 'site-safe'
+    ? fact.predicate.throughTick <= 120 ? 'met' : 'unmet' : fact.id === release.id ? 'met' : 'unmet',
+    observedTick: 0, revision: fact.id, availableTick: fact.id === release.id ? 100 : 0,
+    evidence: [], reason: { code: 'fixed-support-window', factIds: [fact.id], values: {} } });
+  const request: GoalPlannerInput = { ...input(), context: { ...context, readFact: reader }, initialBalances: [],
+    goals: [{ ...input().goals[0]!, effects: [done] }], providers: [{ id: 'delivery', actionsFor: () => [declared] }] };
+  const first = planGoals(request), node = first.plans[0]!.actions[0]!;
+  const through110 = goalFact({ ...safe.predicate as Extract<GoalFact['predicate'], { kind: 'site-safe' }>, throughTick: 110 });
+  expect(node).toMatchObject({ startTick: 100, finishTick: 110, state: 'waiting-time' });
+  expect(node.declaration.preconditions.map(fact => fact.id)).toContain(through110.id);
+  expect(node.declaration.preconditionWindows).toEqual([{ factId: through110.id, through: 'finish' }]);
+  expect(node.declaration.duration).toMatchObject({ factIds: [through110.id] });
+  expect(node.declaration.cost).toMatchObject({ factIds: [through110.id] });
+  const replay = (tick: number) => planGoals({ ...request, previous: JSON.parse(JSON.stringify(first.cache)),
+    context: { ...request.context, tick, snapshot: { ...context.snapshot, tick } }, work: new FactWorkQueue(tick) });
+  const at100 = replay(100);
+  expect(at100.readyActions.map(row => row.action.id)).toEqual(['released-delivery']);
+  expect(at100.plans[0]!.facts.find(fact => fact.id === through110.id)?.observation.state).toBe('met');
+  const tooLate = replay(200);
+  expect(tooLate.readyActions).toEqual([]);
+  expect(tooLate.plans[0]!.facts.some(fact => fact.observation.fact.predicate.kind === 'site-safe'
+    && fact.observation.fact.predicate.throughTick === 210 && fact.observation.state === 'unmet')).toBe(true);
+});
+
+it('retimes admission after an exclusive actor releases without shortening a persistent obligation', () => {
+  const { input, context, actions } = example(), site = { point: { x: 2000, y: 2000 } };
+  const staged = goalFact({ kind: 'camp-cleared', campId: 'stage' }), done = goalFact({ kind: 'hall-complete', mineId: 'ore', at: site });
+  const safe = goalFact({ kind: 'site-safe', site, throughTick: 10 });
+  const held = goalFact({ kind: 'route-controlled', at: site, throughTick: 1000 });
+  const demands: GoalActionDeclaration['demands'] = [{ resource: { kind: 'unit', unitId: 'same-ship' }, quantity: 1, from: 'start', until: 'finish' }];
+  const first: GoalActionDeclaration = { ...actions[0]!, id: 'stage', precision: 'exact', preconditions: [], flows: [], demands,
+    effects: [{ fact: staged, operation: 'establish', at: 'start' }, { fact: held, operation: 'establish', at: 'finish' }],
+    duration: { state: 'met', value: 40, factIds: [] }, cost: { state: 'met', value: [], factIds: [] } };
+  const next: GoalActionDeclaration = { ...first, id: 'next', preconditions: [staged, safe],
+    preconditionWindows: [{ factId: safe.id, through: 'finish' }], effects: [{ fact: done, operation: 'establish', at: 'finish' }],
+    duration: { state: 'met', value: 10, factIds: [] } };
+  const output = planGoals({ ...input(), initialBalances: [], context: { ...context, readFact: fact => ({
+    fact, state: fact.predicate.kind === 'site-safe' ? 'met' : 'unmet', observedTick: 0, revision: fact.id, evidence: [],
+    reason: { code: 'world-window', factIds: [], values: {} } }) },
+    goals: [{ ...input().goals[0]!, effects: [done] }], providers: [{ id: 'shared-actor', actionsFor: () => [first, next] }] });
+  const schedule = output.plans[0]!.actions;
+  expect(schedule.find(node => node.id === 'next')).toMatchObject({ startTick: 40, finishTick: 50,
+    declaration: { preconditions: expect.arrayContaining([goalFact({ kind: 'site-safe', site, throughTick: 50 })]) } });
+  expect(schedule.find(node => node.id === 'stage')!.declaration.effects[1]!.fact).toEqual(held);
+});
+
+it('keeps an already-present zero-time force transfer in the prefix without leasing it beside departure', () => {
+  const { input, actions, context } = example(), at = { landId: 'land:1' as const, point: { x: 2000, y: 2000 } };
+  const cohort = [{ kind: 'existing' as const, entityId: 'guard' }];
+  const pool = { kind: 'force' as const, at, scope: 'pool' as const, metric: 'combat-rating' as const };
+  const post = { ...pool, scope: 'post' as const };
+  const available = goalFact({ kind: 'force-available', at, cohort, minimum: 4, metric: 'combat-rating', byTick: 1000 });
+  const present = goalFact({ kind: 'force-at', at, cohort, minimum: 4, metric: 'combat-rating', byTick: 1000 });
+  const done = goalFact({ kind: 'camp-cleared', campId: 'transported' });
+  const assembly: GoalActionDeclaration = { ...actions[0]!, id: 'claim-current-post', kind: 'assemble', precision: 'exact',
+    preconditions: [available], effects: [{ fact: present, operation: 'establish', at: 'finish' }],
+    duration: { state: 'met', value: 0, factIds: [present.id] }, cost: { state: 'met', value: [], factIds: [] },
+    demands: [{ resource: { kind: 'unit', unitId: 'guard' }, quantity: 1, from: 'start', until: 'finish' }],
+    flows: [{ resource: pool, delta: -4, at: 'start', factIds: [present.id] },
+      { resource: post, delta: 4, at: 'finish', factIds: [present.id] }] };
+  const transport: GoalActionDeclaration = { ...assembly, id: 'depart', kind: 'transport-force', preconditions: [present],
+    effects: [{ fact: done, operation: 'establish', at: 'finish' }], duration: { state: 'met', value: 10, factIds: [] },
+    flows: [{ resource: post, delta: -4, at: 'start', factIds: [present.id] }] };
+  const output = planGoals({ ...input(), context: { ...context, readFact: fact => ({ fact,
+    state: fact.id === available.id || fact.id === present.id ? 'met' : 'unmet', observedTick: 0, revision: fact.id, evidence: [],
+    reason: { code: 'actual-native-presence', factIds: [fact.id], values: {} } }) },
+    goals: [{ ...input().goals[0]!, effects: [done] }], providers: [{ id: 'departure', actionsFor: () => [assembly, transport] }],
+    initialBalances: [{ resource: pool, quantity: 4, asOfTick: 0, factIds: [] }] });
+  expect(output.plans[0]!.actions.find(node => node.id === assembly.id)).toMatchObject({ startTick: 0, finishTick: 0, state: 'world-effects-met' });
+  expect(output.readyActions.map(row => row.action.id)).toEqual(['depart']);
+  expect(output.plans[0]!.resourceTimeline.every(event => event.after >= 0)).toBe(true);
+  expect(output.plans[0]!.resourceTimeline.filter(event => event.actionId === assembly.id)).toHaveLength(2);
+});
+
 
 it('consumes an arrival-offset effect while its producer still holds its actor, equally after JSON cache reuse', () => {
   const { input, actions, context } = example(), at = { landId: 'land:1' as const, point: { x: 2000, y: 2000 } };

@@ -1,3 +1,4 @@
+import { boundCache } from './bounded-cache';
 import { fnv1a } from '../../shared/sim/checksum';
 import { factPublicationPending, type FactWorkQueue } from './fact-work';
 import { goalValueKey } from './goal-facts';
@@ -159,32 +160,24 @@ export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Ent
     return { version: memory.version, entries, ...(references?.length ? { references } : {}),
       ...(memory.nextReference === undefined ? {} : { nextReference: memory.nextReference }) };
   };
-  const size = () => observationJsonBytes(payload(memory.entries));
-  const pinned = () => memory.entries.filter(entry => entry.planIds?.length);
-  const compare = (a: Entry, b: Entry) => (a.lastUsedThink ?? a.requestedTick) - (b.lastUsedThink ?? b.requestedTick)
-    || (entryRequestId(a) < entryRequestId(b) ? -1 : entryRequestId(a) > entryRequestId(b) ? 1 : 0);
-  while (memory.entries.length > maxEntries || size() > maxBytes) {
-    const oldest = memory.entries.filter(entry => !entry.planIds?.length && entry !== retain).sort(compare)[0];
-    if (!oldest) break;
-    memory.entries.splice(memory.entries.indexOf(oldest), 1);
-  }
+  const result = boundCache({ kind: 'geometry', entries: memory.entries, id: entryRequestId,
+    lastUsed: entry => entry.lastUsedThink ?? entry.requestedTick,
+    plans: entry => entry.planIds ?? [],
+    maxEntries, maxBytes, bytes: entries => observationJsonBytes(payload(entries)),
+    thinkSequence: capacity?.thinkSequence ?? 0, capacity });
+  memory.entries = result.entries;
   if (memory.references) {
     const used = new Set(memory.entries.flatMap(entry => entry.references ?? []));
     memory.references = memory.references.filter(item => used.has(item.id));
     if (!memory.references.length) delete memory.references;
   }
   if (!capacity) return;
-  const pins = pinned(), bytes = observationJsonBytes(payload(pins));
-  capacity.pinnedBytes = bytes; capacity.pinnedEntries = pins.length;
-  capacity.peakPinnedBytes = Math.max(capacity.peakPinnedBytes, bytes);
-  capacity.peakResidentBytes = Math.max(capacity.peakResidentBytes, size());
-  if (pins.length > maxEntries || bytes > maxBytes) {
-    if (!capacity.pressure) capacity.overflowCount++;
-    capacity.pressure = { kind: 'geometry', thinkSequence: capacity.thinkSequence, bytes, limitBytes: maxBytes,
-      planIds: [...new Set(pins.flatMap(entry => entry.planIds ?? []))].sort(),
-      requestIds: pins.map(entryRequestId).sort(),
-      overflowCount: capacity.overflowCount };
-  } else delete capacity.pressure;
+  capacity.pinnedBytes = result.pinnedBytes; capacity.pinnedEntries = result.pins.length;
+  capacity.peakPinnedBytes = Math.max(capacity.peakPinnedBytes, result.pinnedBytes);
+  capacity.peakResidentBytes = Math.max(capacity.peakResidentBytes, result.bytes);
+  capacity.overflowCount = result.capacity.overflowCount;
+  if (result.capacity.pressure) capacity.pressure = result.capacity.pressure;
+  else delete capacity.pressure;
 }
 
 /** Remove pins only when their owning goal is no longer part of the current

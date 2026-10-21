@@ -1,3 +1,5 @@
+import { readCachePayload, storeCachePayload } from './cache-payload';
+import { boundCache } from './bounded-cache';
 import type { AllocationReason } from './allocation-types';
 import { bindGoalAction, bindGoalFact, goalActionContributes, goalBindingsKey, goalQuantity, matchGoalFacts, type GoalBindings } from './goal-fact-matching';
 import { goalResourceKey, goalValueKey } from './goal-facts';
@@ -6,6 +8,7 @@ import { observationJsonBytes } from './observation-json-bytes';
 import { discountGold } from './utility';
 import { discoverGoalActions } from './goal-provider-candidates';
 import { goalActionPresentCost } from './goal-action-value';
+import { retimeGoalActionPreconditions } from './goal-action-facts';
 import type { GoalSearchMemory, GoalSearchPath as Path, GoalSearchStep as Step } from './goal-search-state';
 export type { GoalSearchMemory } from './goal-search-state';
 import type { GoalActionDeclaration, GoalActionNode, GoalAlternative, GoalFact, GoalFactObservation, GoalPlan,
@@ -38,12 +41,15 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
 }
 function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlannerOutput {
   const { context, work } = input, plans: GoalPlan[] = [], entries: GoalPlannerOutput['cache']['entries'][number][] = [];
+  const previousEntries = input.previous?.owner === context.owner
+    && (input.previous.declarationRevision === undefined || input.previous.declarationRevision === input.declarationRevision)
+    ? readCachePayload(input.previous) : [];
   const providers = [...input.providers].sort((a, b) => order(a.id, b.id));
   const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number }[] = [];
   for (const goal of [...input.goals].sort((a, b) => order(a.id, b.id))) {
     const goalKey = goalValueKey(['discounted-action-costs-v1', goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
-    const previous = input.previous?.owner === context.owner ? input.previous.entries.find(entry => entry.goalKey === goalKey
-      && entry.declarationRevision === input.declarationRevision) : undefined;
+    const previous = previousEntries.find(entry => entry.goalKey === goalKey
+      && entry.declarationRevision === input.declarationRevision);
     const unchanged = previous && !previous.continuation?.deferred?.length && work.withConsumer(goal.id, previous.plan.valueGold, () => previous.dependencies.every(dependency => {
       const prior = previous.plan.facts.find(node => node.id === dependency.factId)?.observation
         ?? previous.continuation?.observed.find(observed => observed.fact.id === dependency.factId);
@@ -70,7 +76,9 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
       if (scheduleValid && projected.state === 'met' && goal.effects.every(fact => { const result = satisfies(fact, replay, refreshed, input);
         return result.met && (deadline === null || result.tick <= deadline); })) {
         const valueGold = pathValue(replay, goal, refreshed, input), profitable = valueGold > 0;
-        const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted, valueGold,
+        const plan: GoalPlan = replay.steps.some(step => step.action.preconditionWindows?.length)
+          ? projectPlan({ ...refreshed, solutions: [replay], phase: 'done' }, input, goal, 0)
+          : { ...previous.plan, observedTick: context.tick, actions: shifted, valueGold,
           status: previous.plan.status === 'complete' ? 'complete' : profitable ? 'ready' : 'blocked',
           reasons: profitable ? [] : [reason('goal-plan-net-nonpositive', [], { valueGold })],
           readyActionIds: profitable ? shifted.filter(action => action.state === 'ready').map(action => action.id) : [],
@@ -97,7 +105,10 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     if (unchanged && previous.continuation?.phase !== 'done') {
       const delta = context.tick - previous.plan.observedTick;
       for (const path of [...state.frontier, ...state.solutions, ...(state.active ? [state.active.path] : [])])
-        for (const step of path.steps) { step.startTick += delta; step.finishTick += delta; }
+        for (const step of path.steps) {
+          step.startTick += delta; step.finishTick += delta;
+          step.action = retimeGoalActionPreconditions(step.action, step.finishTick) ?? step.action;
+        }
     }
     const beforeWork = state.expansions;
     work.withConsumer(goal.id, previous?.plan.valueGold ?? null, () => work.register({ key: `${input.searchScope ?? 'goal-search'}:${goal.id}`,
@@ -124,18 +135,6 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
       dependencies: state.observed.map(observed => ({ factId: observed.fact.id, revision: observed.revision, state: observed.state })),
       plan, continuation: state });
   }
-  // A capacity gap is explicit and cannot turn an incomplete graph into a
-  // ready bundle. Preserve the pinned evidence and continuation for resumption.
-  for (let index = 0; index < plans.length; index++) {
-    const plan = plans[index]!, pressure = input.capacityPressure?.().filter(item => item.planIds.includes(plan.goal.id)) ?? [];
-    if (!pressure.length) continue;
-    const paused: GoalPlan = { ...plan, status: 'search-pending', readyActionIds: [], capacityPressure: structuredClone(pressure),
-      reasons: [reason('goal-geometry-pinned-capacity', pressure.flatMap(item => item.requestIds), {
-        bytes: Math.max(...pressure.map(item => item.bytes)), limitBytes: Math.min(...pressure.map(item => item.limitBytes)) })] };
-    plans[index] = paused;
-    const indexInCache = entries.findIndex(entry => entry.plan.goal.id === plan.goal.id);
-    if (indexInCache >= 0) entries[indexInCache] = { ...entries[indexInCache]!, plan: paused };
-  }
   for (let index = 0; index < plans.length; index++) {
     const coarse = plans[index]!;
     const refined = work.withConsumer(coarse.goal.id, coarse.valueGold, () => input.refineSelected?.(coarse) ?? coarse);
@@ -147,10 +146,47 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     if (cached >= 0) entries[cached] = { ...entries[cached]!, plan: gated };
   }
   input.retainFactRequests?.(plans);
+  // A capacity gap is explicit and cannot turn an incomplete graph into a
+  // ready bundle. Preserve the pinned evidence and continuation for resumption.
+  for (let index = 0; index < plans.length; index++) {
+    const plan = plans[index]!, pressure = [...(plan.capacityPressure ?? []), ...(input.capacityPressure?.() ?? [])].filter(item => item.planIds.includes(plan.goal.id));
+    if (!pressure.length) continue;
+    const paused: GoalPlan = { ...plan, status: 'search-pending', readyActionIds: [], capacityPressure: structuredClone(pressure),
+      reasons: [reason(pressure.every(item => item.kind === 'geometry') ? 'goal-geometry-pinned-capacity' : 'goal-cache-pinned-capacity', pressure.flatMap(item => item.requestIds), {
+        bytes: Math.max(...pressure.map(item => item.bytes)), limitBytes: Math.min(...pressure.map(item => item.limitBytes)) })] };
+    plans[index] = paused;
+    const indexInCache = entries.findIndex(entry => entry.plan.goal.id === plan.goal.id);
+    if (indexInCache >= 0) entries[indexInCache] = { ...entries[indexInCache]!, plan: paused };
+  }
+
   plans.sort((a, b) => order(a.goal.id, b.goal.id));
-  const retained = [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id));
-  while (observationJsonBytes(retained) > 256 * 1024) retained.pop();
-  const output: GoalPlannerOutput = { plans, ...(input.campModelUsage ? { campModelUsage: input.campModelUsage() } : {}), cache: { version: 1, owner: context.owner, entries: retained,
+  let payloadEntries: readonly GoalPlannerOutput['cache']['entries'][number][] | undefined;
+  let payload: ReturnType<typeof storeCachePayload<GoalPlannerOutput['cache']['entries'][number]>>;
+  const stored = (rows: readonly GoalPlannerOutput['cache']['entries'][number][]) => {
+    if (!payloadEntries || rows.length !== payloadEntries.length || rows.some((entry, index) => entry !== payloadEntries![index])) {
+      payloadEntries = [...rows]; payload = storeCachePayload(rows);
+    }
+    return payload;
+  };
+  const bounded = boundCache({ kind: 'search', entries: [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id)),
+    id: entry => entry.plan.goal.id, lastUsed: entry => entry.plan.observedTick,
+    plans: entry => [entry.plan.goal.id], maxBytes: 256 * 1024, thinkSequence: work.receipt.thinkSequence ?? context.tick,
+    capacity: input.previous?.capacity, bytes: entries => observationJsonBytes({ version: 1, owner: context.owner,
+      declarationRevision: input.declarationRevision, ...stored(entries) }) });
+  const retained = bounded.entries;
+  if (bounded.capacity.pressure) {
+    for (let index = 0; index < plans.length; index++) {
+      const plan = plans[index]!, pressure = bounded.capacity.pressure;
+      if (!pressure.planIds.includes(plan.goal.id)) continue;
+      const paused = { ...plan, status: 'search-pending' as const, readyActionIds: [],
+        capacityPressure: [...(plan.capacityPressure ?? []), pressure],
+        reasons: [...plan.reasons, reason('goal-search-pinned-capacity', pressure.requestIds, { bytes: pressure.bytes, limitBytes: pressure.limitBytes })] };
+      plans[index] = paused;
+      const cached = retained.findIndex(entry => entry.plan.goal.id === plan.goal.id);
+      if (cached >= 0) retained[cached] = { ...retained[cached]!, plan: paused };
+    }
+  }
+  const output: GoalPlannerOutput = { plans, ...(input.campModelUsage ? { campModelUsage: input.campModelUsage() } : {}), cache: { version: 1, owner: context.owner, ...stored(retained), declarationRevision: input.declarationRevision, capacity: bounded.capacity,
     ...(retained.length < entries.length ? { truncated: true as const } : {}) }, readyActions: plans.flatMap(plan => plan.actions
     .filter(action => plan.readyActionIds.includes(action.id)).map(action => ({ goalId: plan.goal.id, planId: plan.id, action }))) };
   const revision = input.refinementRevision?.();
@@ -164,8 +200,9 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
       searchScope: `${input.searchScope ?? 'goal-search'}:refine:${refinementPass + 1}:${revision}` }, refinementPass + 1);
     const combined = next.plans.map(plan => ({ ...plan, search: { ...plan.search,
       work: plan.search.work + (plans.find(prior => prior.id === plan.id)?.search.work ?? 0) } }));
-    return { ...next, plans: combined, cache: { ...next.cache, entries: next.cache.entries.map(entry => ({ ...entry,
-      plan: combined.find(plan => plan.id === entry.plan.id) ?? entry.plan })) } };
+    const { entries: _entries, packedEntries: _packed, ...header } = next.cache;
+    return { ...next, plans: combined, cache: { ...header, ...storeCachePayload(readCachePayload(next.cache).map(entry => ({ ...entry,
+      plan: combined.find(plan => plan.id === entry.plan.id) ?? entry.plan }))) } };
   }
   return output;
 }
@@ -422,40 +459,65 @@ function scheduleAction(path: Path, action: GoalActionDeclaration, state: GoalSe
   input: GoalPlannerInput, goal: GoalRequest): { step: Step; bindings: GoalBindings } | null {
   let bindings = path.bindings, startTick = input.context.tick;
   const dependencies = new Set<string>();
-  for (const fact of action.preconditions) {
+  const relative = new Set(action.preconditionWindows?.map(window => window.factId));
+  for (const fact of action.preconditions.filter(fact => !relative.has(fact.id))) {
     const result = satisfies(fact, { ...path, bindings }, state, input);
     if (!result.met) return null;
     bindings = result.bindings; startTick = Math.max(startTick, result.tick);
     result.producers.forEach(id => dependencies.add(id));
   }
-  const bound = bindGoalAction(action, bindings);
+  let bound = bindGoalAction(action, bindings);
   if (!validEstimate(bound) || bound.duration.state !== 'met') return null;
   // Exclusive demands are interval constraints, distinct from consumable flows.
   for (const prior of path.steps) if (bound.demands.some(demand => prior.action.demands.some(other =>
     goalValueKey(demand.resource) === goalValueKey(other.resource)))) {
     startTick = Math.max(startTick, prior.finishTick); dependencies.add(prior.action.id);
   }
-  const finishTick = startTick + bound.duration.value;
-  if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && startTick > goal.deadlineTick) return null;
-  const step: Step = { action: bound, startTick, finishTick, dependsOn: [...dependencies].sort() };
-  let projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
-  if (projection.state === 'unmet' && startTick < finish(path, input.context.tick)) {
-    step.startTick = finish(path, input.context.tick); step.finishTick = step.startTick + bound.duration.value;
-    step.dependsOn = path.steps.map(prior => prior.action.id).sort();
-    projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
+  // A later prerequisite, exclusive actor or cash release can move departure.
+  // Re-prove relative windows at that actual completion, never at a prototype
+  // time. Strictly later releases iterate within the existing search bound.
+  for (let attempt = 0; attempt <= input.limits.maxDepth; attempt++) {
+    if (bound.duration.state !== 'met') return null;
+    const finishTick = startTick + bound.duration.value;
+    if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && startTick > goal.deadlineTick) return null;
+    const retimed = retimeGoalActionPreconditions(bound, finishTick);
+    if (!retimed) return null;
+    bound = retimed;
+    let releasedTick = startTick;
+    for (const window of bound.preconditionWindows ?? []) {
+      const fact = bound.preconditions.find(fact => fact.id === window.factId)!;
+      const result = satisfies(fact, { ...path, bindings }, state, input);
+      if (!result.met) return null;
+      bindings = result.bindings; releasedTick = Math.max(releasedTick, result.tick);
+      result.producers.forEach(id => dependencies.add(id));
+    }
+    if (releasedTick > startTick) { startTick = releasedTick; bound = bindGoalAction(bound, bindings); continue; }
+    const step: Step = { action: bound, startTick, finishTick, dependsOn: [...dependencies].sort() };
+    const projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
+    if (projection.state === 'unmet' && startTick < finish(path, input.context.tick)) {
+      startTick = finish(path, input.context.tick);
+      path.steps.forEach(prior => dependencies.add(prior.action.id)); continue;
+    }
+    if (projection.state !== 'met') return null;
+    return { step, bindings };
   }
-  if (projection.state !== 'met' || goal.deadlineTick !== null && step.startTick > goal.deadlineTick) return null;
-  return { step, bindings };
+  return null;
 }
 function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
   const currentReady = step.action.preconditions.every(fact => {
     const current = input.context.readFact(fact);
     return current.state === 'met';
   });
+  // A validated zero-time assembly may only transfer already-present force
+  // from its pool into a post in the prefix ledger. Its world effects are
+  // current evidence, so it needs no second lease beside the departing atom.
+  const presentAssembly = currentReady && step.startTick <= input.context.tick && step.action.precision === 'exact' && step.action.kind === 'assemble'
+    && step.action.duration.state === 'met' && step.action.duration.value === 0 && step.action.effects.length > 0
+    && step.action.effects.every(effect => effect.operation === 'establish' && input.context.readFact(effect.fact).state === 'met');
   return { id: step.action.id, declaration: step.action,
     prerequisiteFactIds: step.action.preconditions.map(fact => fact.id), dependsOnActionIds: step.dependsOn,
     startTick: step.startTick, finishTick: step.finishTick,
-    state: currentReady ? step.startTick > input.context.tick ? 'waiting-time' : 'ready' : 'waiting-actions', reasons: [] };
+    state: presentAssembly ? 'world-effects-met' : currentReady ? step.startTick > input.context.tick ? 'waiting-time' : 'ready' : 'waiting-actions', reasons: [] };
 }
 
 function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest, work: number): GoalPlan {

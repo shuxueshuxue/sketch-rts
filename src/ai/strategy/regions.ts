@@ -1,3 +1,4 @@
+import { readCacheMap, retainCacheMap } from './bounded-cache';
 import { unitMover } from '../../shared/catalog';
 import { groundWholeAt, groundRegionIndex, type GroundRegionIndex, type GroundShore } from '../../shared/terrain';
 import type { GameMap, Unit } from '../../shared/types';
@@ -37,7 +38,7 @@ export function unitLocation(map: GameMap, unit: Unit, units: ReadonlyMap<string
   const namespace = map.terrain ?? map;
   let values = locations.get(namespace);
   if (!values) locations.set(namespace, values = new Map());
-  const previous = values.get(unit.id);
+  const previous = readCacheMap(values, unit.id);
   if ((!shipId || ship) && previous?.x === x && previous.y === y && previous.mover === mover
     && previous.shipId === shipId && previous.cabin === cabin) return previous.location;
   const point = { x, y };
@@ -53,8 +54,7 @@ export function unitLocation(map: GameMap, unit: Unit, units: ReadonlyMap<string
     if (landId) location = { kind: 'land', landId, point };
   }
   if (location) {
-    if (values.size >= 2048) values.delete(values.keys().next().value!);
-    values.set(unit.id, { x, y, mover, shipId, cabin, location }); return location;
+    retainCacheMap(values, unit.id, { x, y, mover, shipId, cabin, location }, 2048); return location;
   }
   return { kind: 'unknown', point, reason: deferredRecord({ code: shipId ? 'passenger-support-unknown' : 'terrain-component-unknown',
     detail: shipId ? `Supporting ship ${shipId} is absent or outside navigable water` : 'No traversable terrain label at the unit position',

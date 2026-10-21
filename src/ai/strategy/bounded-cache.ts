@@ -21,10 +21,11 @@ export function boundCache<T>(input: Readonly<{
   const victims = entries.filter(entry => !input.plans(entry).length).sort((a, b) => input.lastUsed(a) - input.lastUsed(b)
     || (input.id(a) < input.id(b) ? -1 : input.id(a) > input.id(b) ? 1 : 0));
   const evicted: T[] = [];
-  while ((entries.length > maxEntries || size(entries) > maxBytes) && victims.length) {
-    const entry = victims.shift()!; entries.splice(entries.indexOf(entry), 1); evicted.push(entry);
+  let bytes = size(entries);
+  while ((entries.length > maxEntries || bytes > maxBytes) && victims.length) {
+    const entry = victims.shift()!; entries.splice(entries.indexOf(entry), 1); evicted.push(entry); bytes = size(entries);
   }
-  const pinnedBytes = size(pins), bytes = size(entries), prior = input.capacity;
+  const pinnedBytes = pins.length === entries.length ? bytes : size(pins), prior = input.capacity;
   const overflow = pins.length > maxEntries || pinnedBytes > maxBytes;
   const overflowCount = (prior?.overflowCount ?? 0) + (overflow && !prior?.pressure ? 1 : 0);
   const pressure: CachePressure | undefined = overflow ? { kind: input.kind, thinkSequence: input.thinkSequence,

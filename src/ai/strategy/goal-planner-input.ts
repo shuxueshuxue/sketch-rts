@@ -1,3 +1,5 @@
+import { retainGoalCohortCommitments, type GoalCohortCommitments } from './goal-cohort-commitments';
+import { boundCache, touchCache, retainCachePins, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { setBuildingBodies, withGoalDistanceFieldLease } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import { shareShipProfile } from '../../shared/ship-geometry';
@@ -45,12 +47,12 @@ import { chooseGoalCoarseShore, createGoalSelectedBerths, type GoalSelectedBerth
 import { createGoalCoarseTransport } from './goal-coarse-transport';
 import { applyGoalRefinements, createGoalPlanRefiner, type GoalRefinementMemory } from './goal-plan-refinement';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
-import { createGoalVoyageRiskReader, type GoalVoyageRiskMemory } from './goal-voyage-risk-source';
-import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
+import { retainGoalVoyageRiskPublications, createGoalVoyageRiskReader, type GoalVoyageRiskMemory } from './goal-voyage-risk-source';
+import { retainGoalWorldFactMemory, worldCampCacheId, createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
 import { observationJsonBytes } from './observation-json-bytes';
 import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
 import { generateStrategyObjectives } from './plan';
-import { pointRoute } from './point-routes';
+import { boundPointRouteMemory, pointRoute } from './point-routes';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 import { evaluateSituation } from './situation';
 import type { Objective, SituationObservation, StrategyPlanTrace } from './types';
@@ -62,7 +64,9 @@ export type GoalPlannerRuntimeMemory = {
   voyageRisk?: GoalVoyageRiskMemory;
   refinements?: GoalRefinementMemory;
   selectedBerths?: GoalSelectedBerthMemory;
-  requotes?: Readonly<{ key: string; cache: GoalPlannerCache }>[];
+  requotes?: ({ key: string; cache: GoalPlannerCache } & CacheUse)[];
+  requoteCapacity?: CacheCapacity;
+  startedCohorts?: GoalCohortCommitments;
 };
 export type GoalPlannerOwnerInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; version: BootstrapAiVersion; memory: AiPolicyMemory;
@@ -113,11 +117,17 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         retained = { version: 1, owner, world: createGoalWorldFactMemory(owner) };
         memory.goalPlanning = retained;
       }
+      retainGoalCohortCommitments(retained.startedCohorts ??= {}, memory.strategyAllocation, snapshot, owner);
+      const startedCohort: import('./goal-started-cohort').GoalStartedCohortReader = () => {
+        const goal = work.consumerPlanIds().find(id => retained!.startedCohorts?.[id]);
+        return goal ? retained!.startedCohorts![goal]!.cohort : undefined;
+      };
       retained.geometry ??= preparation.goalGeometry ?? { version: 1, entries: [] };
       delete preparation.goalGeometry; // migrate older memories before observation trimming
       const rawGeometry = createGoalGeometryReader({ tick: snapshot.tick, work, memory: retained.geometry,
         ...(input.geometryMeasurement ? { measurement: true } : {}) });
       const readVoyageRisk = createGoalVoyageRiskReader({ snapshot, owner, work, observation: preparation,
+        cacheUse: { thinkSequence: work.receipt.thinkSequence ?? snapshot.tick, planIds: () => work.consumerPlanIds() },
         memory: retained.voyageRisk ??= { model: { version: 1, owner, tick: -1, routeIds: [], entries: [] }, publications: [] } });
       const worldGeometry = [preparation.terrain, preparation.landBodies,
         snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])];
@@ -203,6 +213,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
           precision: mode, ...(precision === 'coarse' ? { planThroughTick: snapshot.tick + STRATEGY_PARAMETERS.knownThreatHorizonTicks } : {}), readFact: fact => read(fact) };
         const worldReader = (worldSnapshot: GameSnapshot) => createGoalFactReader({ ...context, snapshot: worldSnapshot, memory: retained!.world,
+          cacheUse: { thinkSequence: work.receipt.thinkSequence ?? snapshot.tick, planIds: () => mode === 'exact' && selected.length ? work.consumerPlanIds() : [] },
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }),
           ports: { geometry, geometryRevision, regionAt, reservedGold: reserved,
@@ -220,7 +231,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
                 const points = [predicate.from.point, ...result.route.points];
                 const distance = points.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y), 0);
                 return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
-                  reason: { code: 'native-sea-route-published', factIds: [fact.id], values: {} }, route: { distance, ticks: result.ticks, points } };
+                  reason: { code: 'native-sea-route-published', factIds: [fact.id, ...(result.cacheId ? [result.cacheId] : [])], values: {} }, route: { distance, ticks: result.ticks, points } };
               }
               if (precision === 'coarse' && mode === 'exact') {
                 const sea = seaIdAt(snapshot.map, predicate.from.point);
@@ -347,7 +358,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
             ports: physical, readFact: read });
         };
-        const transportCohorts = createGoalTransportCohorts(context, { transportOptions,
+        const transportCohorts = createGoalTransportCohorts(context, { transportOptions, startedCohort,
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds }) });
         const cohortOptions: NonNullable<GoalGroundingReader['cohortOptions']> = effect => {
@@ -357,7 +368,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             factIds: posts.flatMap(post => post.factIds), ...(landings.state === 'met' && landings.deferred ? { deferred: landings.deferred }
               : landings.state === 'pending' ? { deferred: [{ id: `post-alternative:${effect.id}`, requestIds: landings.requestIds, reason: landings.reason }] } : {}) };
         };
-        const combatPorts = { landRoute, resolveCohort, coarseSeaTicks,
+        const combatPorts = { landRoute, resolveCohort, coarseSeaTicks, startedCohort,
           movementRisk: request => mode === 'coarse' ? { state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 }, factIds: ['coarse-movement-bound'] }
             : assessGoalCombatMovementRisk({ snapshot, situation, request }),
           arrival: (unit, target) => mode === 'coarse' ? { status: 'unknown', lowerBoundTicks: 0,
@@ -382,13 +393,18 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
       const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
+      for (const id of Object.keys(retained.startedCohorts ?? {})) if (!goals.some(goal => goal.id === id)) delete retained.startedCohorts![id];
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
       berthBindings.retain(goals.map(goal => `goal-plan:${goal.id}`));
       const refinements = retained.refinements ??= { revision: 0, entries: [] };
+      const activePlans = new Set(goals.map(goal => `goal-plan:${goal.id}`));
+      refinements.entries = refinements.entries.filter(entry => entry.planId === undefined || activePlans.has(entry.planId));
+      for (const id of Object.keys(refinements.capacities ?? {})) if (!activePlans.has(id)) delete refinements.capacities![id];
       const baseProviders = [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider];
       // A resident reference handle may be collected when no geometry task
       // uses it. Quote validity follows the native geometry bytes, not that
       // handle's allocation/lifetime in the bounded publication cache.
+      const cohortRevision = () => Object.entries(retained.startedCohorts ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([goal, entry]) => [goal, entry.cohort]);
       const actorRevision = createGoalRefinementRevision(snapshot, owner, goalValueKey(worldGeometry));
       const sourceRevision = (action: import('./goal-planner-types').GoalActionDeclaration) => {
         const transport = action.executor.parameters.transport as GoalEntityReference | undefined;
@@ -396,10 +412,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           entry.id.startsWith(`${transport.entityId}:`) && entry.readyTick !== null).map(entry => [entry.id, entry.readyTick, entry.readyThink]) : [];
         const fields = transport ? preparation.fields.sea.filter(entry => entry.readyTick !== null)
           .map(entry => [entry.goal, entry.readyTick, entry.readyThink]) : [];
-        return goalValueKey([actorRevision(action), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
+        return goalValueKey([actorRevision(action), cohortRevision(), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
       };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
-        maxAlternativeQuotes: input.limits?.maxPlans ?? 8,
+        maxAlternativeQuotes: input.limits?.maxPlans ?? 8, thinkSequence: () => work.receipt.thinkSequence ?? snapshot.tick,
         exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
         prepareExact: (plan, selected, context) => {
           for (const node of selected) {
@@ -415,22 +431,50 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return contactPreparation.get(context)?.(plan, selected);
         } });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
-      const quoteRevision = () => `goal-domain-v3:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
+      const quoteRevision = () => `goal-domain-v4:${goalValueKey(cohortRevision())}:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
         campModelUsage: () => ({ ...campModelUsage.counts }),
         ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),
         retainFactRequests: plans => {
           if (precision !== 'coarse') return;
           const ids = (value: unknown, found = new Set<string>()): Set<string> => {
-            if (typeof value === 'string' && value.startsWith('goal-geometry:')) found.add(value);
+            if (typeof value === 'string') found.add(value);
             else if (Array.isArray(value)) value.forEach(item => ids(item, found));
             else if (value && typeof value === 'object') Object.values(value).forEach(item => ids(item, found));
             return found;
           };
-          retainGoalGeometryRequests(retained.geometry!, plans.map(plan => ({ planId: plan.goal.id,
-            requestIds: [...ids([plan.actions, plan.deferredCandidates ?? [], berthBindings.requests(plan.id)])] })), work.receipt.thinkSequence ?? snapshot.tick);
+          const references = new Map(plans.map(plan => {
+            const used = new Set(plan.actions.flatMap(node => [...node.prerequisiteFactIds, ...node.declaration.effects.map(effect => effect.fact.id)]));
+            for (;;) {
+              const before = used.size;
+              for (const node of plan.facts) if (used.has(node.id)) for (const fact of node.observation.derived?.allOf ?? []) used.add(fact.id);
+              if (before === used.size) break;
+            }
+            return [plan.goal.id, ids([plan.actions, plan.facts.filter(node => used.has(node.id)), plan.deferredCandidates ?? [], berthBindings.requests(plan.id)])] as const;
+          }));
+          const sequence = work.receipt.thinkSequence ?? snapshot.tick;
+          retainGoalGeometryRequests(retained.geometry!, [...references].map(([planId, requestIds]) => ({ planId, requestIds: [...requestIds] })), sequence);
+          for (const plan of plans) {
+            const refs = references.get(plan.goal.id)!;
+            for (const fact of plan.facts) if (refs.has(fact.id)) {
+              refs.add(`world:${fact.id}`);
+              if (fact.observation.fact.predicate.kind === 'camp-cleared') refs.add(worldCampCacheId(fact.observation.fact.predicate.campId));
+            }
+          }
+          retainGoalWorldFactMemory(retained.world, references, sequence);
+          if (retained.voyageRisk) retainGoalVoyageRiskPublications(retained.voyageRisk, references, sequence);
+          for (const mover of ['land', 'sea'] as const) retainCachePins(preparation.fields[mover], references,
+            entry => `field:${mover}:${entry.goal.x}:${entry.goal.y}`, sequence);
+          if (preparation.pointRoutes) {
+            retainCachePins(preparation.pointRoutes.entries, references, entry => `point:${entry.key}`, sequence);
+            boundPointRouteMemory(preparation.pointRoutes, sequence);
+          }
+          boundObservationMemory(preparation);
         },
-        capacityPressure: () => retained.geometry?.capacity?.pressure ? [retained.geometry.capacity.pressure] : [],
+        capacityPressure: () => [retained.geometry?.capacity?.pressure, ...Object.values(refinements.capacities ?? {}).map(value => value.pressure),
+          retained.requoteCapacity?.pressure, retained.voyageRisk?.publicationCapacity?.pressure, retained.voyageRisk?.batchCapacity?.pressure,
+          ...Object.values(retained.world.capacity ?? {}).map(value => value.pressure), preparation.pointRoutes?.capacity?.pressure,
+          ...Object.values(preparation.cacheCapacities ?? {}).map(value => value.pressure)].filter((value): value is import('./goal-planner-types').GoalCapacityPressure => !!value && value.thinkSequence === (work.receipt.thinkSequence ?? snapshot.tick)),
         providers: precision === 'coarse' ? baseProviders.map(provider => applyGoalRefinements(provider, refinements, sourceRevision)) : baseProviders, initialBalances,
         ...(precision === 'coarse' ? { refineSelected: refiner, contextForPrefix: prefix => {
           let context = prefixContexts.get(prefix);
@@ -484,10 +528,16 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             initialBalances: initialGoalBalances(context, allowed, input.interruptedUnitIds),
             searchScope: `goal-requote:${key}`, ...(previous ? { previous } : {}) });
           const saved = [...(retained!.requotes ?? []).filter(entry => entry.key !== key), { key, cache: result.cache }];
-          // Counterfactual continuations have their own finite evidence segment.
-          // Eviction loses proof and resumes pending; it never creates zero loss.
-          while (saved.length > 8 || observationJsonBytes(saved) > 256 * 1024) saved.shift();
-          retained!.requotes = saved;
+          const current = saved[saved.length - 1]!;
+          touchCache(current, work.receipt.thinkSequence ?? snapshot.tick, [plan.goal.id]);
+          const bounded = boundCache({ kind: 'requote', entries: saved, id: entry => entry.key,
+            lastUsed: entry => entry.lastUsedThink ?? -1,
+            plans: entry => entry.lastUsedThink === (work.receipt.thinkSequence ?? snapshot.tick) ? entry.planIds ?? [] : [],
+            maxEntries: 8, maxBytes: 256 * 1024, thinkSequence: work.receipt.thinkSequence ?? snapshot.tick,
+            capacity: retained!.requoteCapacity });
+          retained!.requotes = bounded.entries; retained!.requoteCapacity = bounded.capacity;
+          if (bounded.capacity.pressure) return { state: 'pending', reason: { code: 'goal-requote-pinned-capacity',
+            factIds: [plan.id], values: { bytes: bounded.capacity.pressure.bytes, limitBytes: bounded.capacity.pressure.limitBytes } } };
           const updated = result.plans[0];
           return updated?.status === 'ready' || updated?.status === 'complete' ? { state: 'known', plan: updated }
             : { state: updated?.status === 'blocked' ? 'unmet' : 'pending',
