@@ -128,11 +128,17 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       let stepOwnership: PuzzleStepOwnership | undefined;
       try {
         result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner,
+          ...((key === 'ship-away' || key === 'navy-zero') ? { workerSafety: true } : {}),
           ...(ownershipScope ? { onCommand: event => session.applied?.(event) } : {}) });
         expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
         expect(result.execution.checks).not.toEqual({});
         expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
         expect(session.statistics().formalCommandCount, 'physical success also requires an actual goal executor command accepted by the gateway').toBeGreaterThan(0);
+        if (key === 'ship-away' || key === 'navy-zero') {
+          const proof = session.statistics().hallSafety;
+          expect(proof?.length, 'accepted hall must retain original logical mine and exact-site safety').toBeGreaterThan(0);
+          expect(proof?.every(p => p.passed), 'native build safety requires both current finish-window facts and the actual worker lease').toBe(true);
+        }
         if (ownershipScope) {
           stepOwnership = session.ownership?.(result.initial.tick, result.execution.commands);
           expect(stepOwnership?.passed, `every required ship step must have a goal command, native SDK application and its own observed effect: ${JSON.stringify(stepOwnership)}`).toBe(true);

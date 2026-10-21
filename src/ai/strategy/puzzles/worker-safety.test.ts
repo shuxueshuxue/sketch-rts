@@ -44,4 +44,14 @@ describe('public puzzle worker safety uses native transitions', () => {
     expect(result.campDamage.some(d => d.damage > 0 && d.target.id === worker.id)).toBe(true);
     expect(result.workerDeaths.some(d => d.unit.id === worker.id && d.reason === 'death')).toBe(true);
   });
+  it('does not treat a native lost-quarry attack/reset transition as an active pursuit disk', () => {
+    const game = scene(850), victim = game.units.find(u => u.kind === 'worker')!;
+    game.spawnUnit(PUZZLE_OWNER, 'worker', 1200, 800);
+    for (let i = 0; i < 400 && game.units.includes(victim); i++) stepGame(game);
+    expect(game.units.includes(victim)).toBe(false);
+    expect(game.units.find(u => u.owner === 'neutral')?.order).toMatchObject({ type: 'attack', targetId: victim.id });
+    const observer = observePuzzleWorkerSafety(game, PUZZLE_OWNER);
+    observer.sample(); stepGame(game); observer.sample(); observer.dispose();
+    expect(observer.finish()).toMatchObject({ passed: true, exposedSamples: 0, campDamage: [], workerDeaths: [] });
+  });
 });

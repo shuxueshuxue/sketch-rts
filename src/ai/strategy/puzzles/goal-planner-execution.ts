@@ -6,6 +6,7 @@ import { withNavigationAudit } from '../../../shared/navigation-audit';
 import { snapshotGame } from '../../../shared/sim';
 import type { PuzzleExecutionObservation, PuzzlePlannerExecution } from './planner-binding';
 import { createExecutionOwnership, type ShipOwnershipScope } from './execution-ownership';
+import { readAcceptedHallSafety } from './worker-safety';
 
 /** The ordinary owner entry selects goals, plans, allocates and executes in
  * its native scope. The adapter supplies no goals, facts, rewards or grants. */
@@ -16,6 +17,7 @@ export function createExecution(options: { evidenceFile?: string; ownershipScope
   let first: PuzzleExecutionObservation | undefined, latest: PuzzleExecutionObservation | undefined;
   let plannedThinks = 0, observedThinks = 0, formalCommandCount = 0;
   let firstReadyTick: number | null = null, firstFormalCommandTick: number | null = null;
+  const hallSafety: ReturnType<typeof readAcceptedHallSafety> = [];
   if (options.evidenceFile) { mkdirSync(dirname(options.evidenceFile), { recursive: true }); writeFileSync(options.evidenceFile, ''); }
   if (sdkEvidence) { mkdirSync(dirname(sdkEvidence), { recursive: true }); writeFileSync(sdkEvidence, ''); }
   return {
@@ -55,6 +57,7 @@ export function createExecution(options: { evidenceFile?: string; ownershipScope
           const observation: PuzzleExecutionObservation = structuredClone({ tick: snapshot.tick, owner,
             output, allocation, commands });
           ownership?.observe(snapshot, observation);
+          hallSafety.push(...readAcceptedHallSafety(snapshot, observation, context.memory.strategyAllocation!));
           observedThinks++;
           latest = observation;
           if (!first && output.plans.length) first = observation;
@@ -70,7 +73,7 @@ export function createExecution(options: { evidenceFile?: string; ownershipScope
       return entries;
     },
     observations() { return first && latest && first !== latest ? [first, latest] : latest ? [latest] : []; },
-    statistics() { return { plannedThinks, observedThinks, firstReadyTick, firstFormalCommandTick, formalCommandCount }; },
+    statistics() { return { plannedThinks, observedThinks, firstReadyTick, firstFormalCommandTick, formalCommandCount, hallSafety }; },
     ownership(initialTick, commands) { return ownership?.finish(initialTick, commands); },
     applied(event) {
       ownership?.applied(event);
