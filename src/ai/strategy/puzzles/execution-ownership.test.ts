@@ -41,7 +41,8 @@ function complete(f: ReturnType<typeof fixture>) {
 }
 function issue(f: ReturnType<typeof fixture>, scriptId = 'goal.build') {
   observe(f, f.command, scriptId);
-  issueCommandFrame(f.game, [{ playerId: 'us', scriptId, command: f.command }]);
+  issueCommandFrame(f.game, [{ playerId: 'us', scriptId, command: f.command }], {
+    afterIssue(e) { f.tracker.applied({tick:f.game.tick,owner:e.playerId,scriptId:e.scriptId,command:e.command}); } });
 }
 
 describe('per-step native SDK ownership', () => {
@@ -77,6 +78,14 @@ describe('per-step native SDK ownership', () => {
         steps: [{ status: 'older-code-completed', goalCommandCount: 1, sdkAppliedCount: 0 }] });
     } finally { f.stop(); }
   });
+  it('keeps an identical old-producer SDK application from crediting an unissued goal receipt', () => {
+    const f=fixture(); try {
+      observe(f,f.command);
+      issue(f,'v6Economy');complete(f);
+      expect(f.tracker.finish(f.start,f.commands,['build'])).toMatchObject({passed:false,
+        steps:[{status:'older-code-completed',goalCommandCount:1,sdkAppliedCount:0}]});
+    } finally {f.stop();}
+  });
   it('requires the specified native corpse after a clear command, not merely a missing live unit', () => {
     const f=fixture(); try {
       const guard=f.game.spawnUnit('neutral','murlocPeon',f.at.x+20,f.at.y);
@@ -84,7 +93,8 @@ describe('per-step native SDK ownership', () => {
       f.tracker=createExecutionOwnership({targetMine:f.at,targetLandId:landIdAt(f.game.map,f.at)!,campMemberIds:[guard.id]});
       const command:GameCommand={type:'attack',unitIds:crew.map(u=>u.id),targetId:guard.id};
       observe(f,command,'goal.clear-camp',{memberIds:[guard.id],cohort:crew.map(u=>({kind:'existing',entityId:u.id}))});
-      issueCommandFrame(f.game,[{playerId:'us',scriptId:'goal.clear-camp',command}]);
+      issueCommandFrame(f.game,[{playerId:'us',scriptId:'goal.clear-camp',command}],{
+        afterIssue(e){f.tracker.applied({tick:f.game.tick,owner:e.playerId,scriptId:e.scriptId,command:e.command});}});
       const without= snapshotGame(f.game);without.units=without.units.filter(u=>u.id!==guard.id);
       f.tracker.observe(without,{owner:'us',allocation:{revision:1,objectives:[],assignments:[],executions:[],budget:[],voyages:[],vacancies:[],blocked:[],unmet:[],events:[],budgetProjection:[]},commands:[]});
       expect(f.tracker.finish(f.start,f.commands,['clear-camp']).passed).toBe(false);
