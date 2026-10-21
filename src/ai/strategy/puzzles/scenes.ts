@@ -3,7 +3,7 @@ import { seconds } from '../../../shared/time';
 import { boardUnit } from '../../../shared/decks';
 import { stepGame } from '../../../shared/sim';
 import { HOME, ISLAND, MAINLAND, PUZZLE_OWNER, PUZZLE_OPPONENT, TARGET_MINE, camp, findMine, finishWorld, homeEconomy,
-  neutralGroup, puzzleBuilder, soldiers, targetMine, terrainWorld, type PuzzleWorld } from './world';
+  cliffCoast, neutralGroup, puzzleBuilder, soldiers, targetMine, terrainWorld, type PuzzleWorld } from './world';
 
 export type PuzzleKey = 'ship-away' | 'supply-tier' | 'navy-zero' | 'defense-window' | 'guarded-shore' | 'negative-return' | 'evacuate';
 export type PuzzleVariant = 'far' | 'near' | 'knight' | 'footmen' | 'default' | 'urgent' | 'later' | 'strong' | 'weak';
@@ -51,12 +51,17 @@ export function guardedShoreScene(strong = true) {
   const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); const mine = { x: 3104, y: 1824 }, guard = { x: 3264, y: 1888 };
   targetMine(b, mine); camp(b, WEAK_GUARD, guard);
-  const beach = { x: 2448, y: 768 };
+  const beach = { x: 2400, y: 768 };
   camp(b, ['ogreLord', 'ogreMage', 'ogreWarrior'], beach);
   // One-number variant: only the count changes, not weapon, upgrades or camp.
   soldiers(b, 'footman', strong ? 8 : 3, { x: 1184, y: 704 });
-  const world = finishWorld(terrainWorld(b, [MAINLAND, { ...ISLAND, bottom: 3264 }], 4096, 3584), mine, guard,
-    { x: 1664, y: 768 });
+  const island = { ...ISLAND, bottom: 3264 };
+  const game = terrainWorld(b, [MAINLAND, island], 4096, 3584);
+  cliffCoast(game, island, [
+    { left: island.left - 64, right: island.left + 96, top: 704, bottom: 832 },
+    { left: 3040, right: 3168, top: island.bottom - 96, bottom: island.bottom + 64 },
+  ]);
+  const world = finishWorld(game, mine, guard, { x: 1664, y: 768 });
   world.beachGuards = neutralGroup(world.game, beach);
   world.landing = strong ? { x: 2368, y: 768 } : { x: 3104, y: 3200 };
   return world;
