@@ -3,7 +3,7 @@ import { goalNavyFixture } from './ai-goal-navy.test-fixture';
 import { GOAL_CARD, goalGraphLayout } from './ai-goal-plan-layout';
 import { goalGoldEvents, goalResourceBand } from './ai-goal-plan-resources';
 import { goalPlanGraph } from './ai-goal-plan';
-import { goalTimeAxis, goalTimeX } from './ai-goal-plan-time';
+import { goalFactTime, goalTimeAxis, goalTimeX } from './ai-goal-plan-time';
 
 it('reads the branched navy plan left to right, merging shared ship and money prerequisites without changing native edges', () => {
   const {plan,trace}=goalNavyFixture(), before=JSON.stringify(plan), graph=goalGraphLayout(plan,'regression');
@@ -68,4 +68,14 @@ it('separates unscheduled actions and pending facts instead of assigning a zero 
   for(const node of [action,fact]){expect(node.time).toBeNull();expect(node.y).toBeGreaterThan(layout.untimedY!);}
   expect(goalPlanGraph(unknown,trace)).toContain('时间未记录 · 不放入预计时序');
   expect(layout.nodes.find(row=>row.id==='$goal')!.time).toBeNull();
+});
+
+it('places projected effects at start, finish or offset, and waits for every quantitative contributor ETA',()=>{
+  const {plan,buildYard}=goalNavyFixture(),fact=plan.facts.find(row=>row.producerActionIds.includes(buildYard.id))!;
+  for(const [at,expected] of [['start',200],['finish',440],[{offsetTicks:90},290]] as const){
+    const action={...buildYard,declaration:{...buildYard.declaration,effects:buildYard.declaration.effects.map(effect=>({...effect,at}))}};
+    expect(goalFactTime({...plan,actions:[action]},fact)).toBe(expected);
+  }
+  const pending={...buildYard,id:'pending',finishTick:null};
+  expect(goalFactTime({...plan,actions:[buildYard,pending]}, {...fact,producerActionIds:[buildYard.id,pending.id]})).toBeNull();
 });

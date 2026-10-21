@@ -1,5 +1,5 @@
 import type { GoalPlan } from '../ai/strategy/goal-planner-types';
-import { goalTimeAxis, goalTimeX, type GoalTimeAxis } from './ai-goal-plan-time';
+import { goalFactTime, goalTimeAxis, goalTimeX, type GoalTimeAxis } from './ai-goal-plan-time';
 
 export type GoalGraphOrder = 'time' | 'regression';
 type Node = { id: string; recordId: string; kind: 'goal' | 'fact' | 'action'; x: number; y: number; reference?: boolean; time?:number|null };
@@ -57,14 +57,7 @@ function regressionLayout(plan: GoalPlan): GoalGraphLayout {
 function timedLayout(plan:GoalPlan):GoalGraphLayout {
   const old=timeCache.get(plan);if(old)return old;
   const axis=goalTimeAxis(plan);
-  const availability=new Map(plan.facts.map(row=>{
-    const observation=row.observation;
-    const produced=plan.actions.filter(action=>row.producerActionIds.includes(action.id)
-      ||action.declaration.effects.some(effect=>effect.operation==='establish'&&effect.fact.id===observation.fact.id))
-      .flatMap(action=>action.finishTick==null?[]:[action.finishTick]);
-    const time=observation.availableTick??(produced.length?Math.max(...produced):observation.state==='met'?observation.observedTick:null);
-    return [row.id,time] as const;
-  }));
+  const availability=new Map(plan.facts.map(row=>[row.id,goalFactTime(plan,row)]));
   const goalTimes=plan.facts.filter(row=>plan.goal.effects.some(effect=>effect.id===row.observation.fact.id))
     .map(row=>availability.get(row.id)).filter((tick):tick is number=>tick!=null);
   const complete=plan.completedTick??(goalTimes.length===plan.goal.effects.length&&goalTimes.length?Math.max(...goalTimes):null);
