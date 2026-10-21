@@ -1,0 +1,172 @@
+{
+  "scope": "11 original cold snapshots plus two original runtime snapshots and actual memoryBefore. No simulation, tick edits or valuation changes.",
+  "entries": [
+    {
+      "name": "defense-window/later",
+      "owner": "planner",
+      "file": "defense-window-later.snapshot.json.gz",
+      "gzipSha256": "74dd48da0403d09740e336aee676765f9c8d92ad354d3671256b1a9bd99f9c6e",
+      "snapshotSha256": "95e7f36fc5193ecf5bab9a7a06b7201e22b91a162d39604327cd9b68b4b63e93",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/defense-window-later.json.gz",
+        "gzipSha256": "8ce50ba9a2b050c96320e5ff84fb2014e040cf1d7a24612ee7082e8ddb107fdd"
+      }
+    },
+    {
+      "name": "defense-window/urgent",
+      "owner": "planner",
+      "file": "defense-window-urgent.snapshot.json.gz",
+      "gzipSha256": "2b0c42d22ba808ed69584865ecbbdb2736deb452f50437287c4de0755c6bcfa5",
+      "snapshotSha256": "ab78cfb37cb20f65d85b6d2878af79a9e6c31ec90a618c55711ca2a0b8b25b3a",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/defense-window-urgent.json.gz",
+        "gzipSha256": "aebd0abb5408aef1bb2c7c6ee09dd6e459f213734f5c7826f834f265549f7851"
+      }
+    },
+    {
+      "name": "evacuate/default",
+      "owner": "planner",
+      "file": "evacuate-default.snapshot.json.gz",
+      "gzipSha256": "7b6e3b7cdbdd266d203db3728ac31ed6cc5244b07d6c8aa5d7df03b46b860c01",
+      "snapshotSha256": "c5aa7cc49d9882878a691975e3c4da3c41cead4663736536035b38db4b81197a",
+      "tick": 2,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/evacuate-default.json.gz",
+        "gzipSha256": "3b6fc7777403175223a42de2aca1ee8fe1447314026e3ce07a3ad2562bc82402"
+      }
+    },
+    {
+      "name": "guarded-shore/strong",
+      "owner": "planner",
+      "file": "guarded-shore-strong.snapshot.json.gz",
+      "gzipSha256": "d2601663acb9c9459e9600acbbc6c08317b35a9f6742c22faef85c832193b43a",
+      "snapshotSha256": "0a692db16a83920f5e1dce9cd41d9c96ceba3d6f32ebdb450f29d582aee66aed",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/guarded-shore-strong.json.gz",
+        "gzipSha256": "e85cb7ac23db7b56146cef8e56647d855da09a0cb3822a67f12f3ea91f7b4891"
+      }
+    },
+    {
+      "name": "guarded-shore/weak",
+      "owner": "planner",
+      "file": "guarded-shore-weak.snapshot.json.gz",
+      "gzipSha256": "cee07fde5227aa9ead1ba255abb593c50039dcabcd5ed897ecc19e6bb00313cd",
+      "snapshotSha256": "5df5c3e4e368914011c3348c5a0d18dcd2d89b36983868eaf6b8f0e41dbdbf60",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/guarded-shore-weak.json.gz",
+        "gzipSha256": "13337492bc5a48752beb9f739e015c2ba5843bc72da5aad5ab813d23e1b0df89"
+      }
+    },
+    {
+      "name": "navy-zero/default",
+      "owner": "planner",
+      "file": "navy-zero-default.snapshot.json.gz",
+      "gzipSha256": "19362687f6011a9ffd026436c89d3515afcdb6d3aeed22cc1766148e6fb240c3",
+      "snapshotSha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/navy-zero-default.json.gz",
+        "gzipSha256": "56167a1ef0e1b1266b41c475849adaed56b49919a2501dce5959b0542ed8a8ca"
+      }
+    },
+    {
+      "name": "negative-return/default",
+      "owner": "planner",
+      "file": "negative-return-default.snapshot.json.gz",
+      "gzipSha256": "c524e9ecb0a5d7519f892c7be2c1d0edd35048187a4993c502812ab6b500480d",
+      "snapshotSha256": "9ba34970d2f18893c8aecb1bfd5f63af75739afe05dfa0d17988abb73b4b8e7f",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/negative-return-default.json.gz",
+        "gzipSha256": "8581fc87950154810930b721e63e6fa661e237c3bb5e87324fbe603b6c96f078"
+      }
+    },
+    {
+      "name": "ship-away/far",
+      "owner": "planner",
+      "file": "ship-away-far.snapshot.json.gz",
+      "gzipSha256": "356b09995b071195f816507e158606c390a63d0c9ed3fa8b71b745ebb7493c48",
+      "snapshotSha256": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/ship-away-far.json.gz",
+        "gzipSha256": "efd4ca93405f32d5314c286a14862cd114d6747c15110428d7e4c3b1814e95bf"
+      }
+    },
+    {
+      "name": "ship-away/near",
+      "owner": "planner",
+      "file": "ship-away-near.snapshot.json.gz",
+      "gzipSha256": "c756dcfba9291b0d82d38a9cbd69045b89c81080c00bb84c6d472c0bd6b345fd",
+      "snapshotSha256": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/ship-away-near.json.gz",
+        "gzipSha256": "6a94bd71372af01e9db0a60a94df3ef82c45514b73d0917cceb624802dbb9d6e"
+      }
+    },
+    {
+      "name": "supply-tier/footmen",
+      "owner": "planner",
+      "file": "supply-tier-footmen.snapshot.json.gz",
+      "gzipSha256": "e82926a3b9dcbd83f4668eacb56c672f58acbc3c5004b2469fc45d9be5fe0590",
+      "snapshotSha256": "5dfa98f69a187b549b19bbc27f0f0c0381783e930a086940c04584a9195432e4",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/supply-tier-footmen.json.gz",
+        "gzipSha256": "2fcd27fb65f7539d4b6664aa835826f048a900b6b4bd442d0104f21f105e1738"
+      }
+    },
+    {
+      "name": "supply-tier/knight",
+      "owner": "planner",
+      "file": "supply-tier-knight.snapshot.json.gz",
+      "gzipSha256": "3069d92a225fd02f204d4ddfec5e20488163e31d4f2640e8b999b4ba1b185f0a",
+      "snapshotSha256": "2f4a017b40b3b9eeb98a94e12c02a50d3f9056864a4791e2241f6000e5f32f8b",
+      "tick": 1,
+      "original": {
+        "source": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+        "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/supply-tier-knight.json.gz",
+        "gzipSha256": "42a7f28d5c243bf575f962817286f21446fa92484a5ad35343028985cff1f343"
+      }
+    },
+    {
+      "name": "far7485",
+      "owner": "planner",
+      "file": "far7485.input.json.gz",
+      "gzipSha256": "d5545ec8ae9c0ab853bdc7207f44f6b24a19b5c8c89d6f9bdb440228ee545870",
+      "tick": 7485,
+      "original": {
+        "path": "/tmp/goal-73d-interim-blockers-20-42/far.original-member.jsonl.gz",
+        "gzipSha256": "e09af3e1a1780739cd45578474419ed339179945d6e252e2c741d7bba4594f91"
+      },
+      "memory": "actual memoryBefore; no fabricated empty state"
+    },
+    {
+      "name": "near1725",
+      "owner": "planner",
+      "file": "near1725.input.json.gz",
+      "gzipSha256": "93d8b4c58987504a837645417a7eb35c084f93ed3fb330193edae157fa15ed4e",
+      "tick": 1725,
+      "original": {
+        "path": "/tmp/goal-324-camp-outcomes/near/all-target-camp-members-nonpositive-or-absent/actual-frame.jsonl.gz",
+        "gzipSha256": "de15257ac240866179a432cb63891255cf56cc57ba213f50b04555aa2557692b"
+      },
+      "memory": "actual memoryBefore; no fabricated empty state"
+    }
+  ]
+}

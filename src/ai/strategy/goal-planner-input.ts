@@ -82,6 +82,9 @@ export type GoalPlannerOwnerInput = Readonly<{
   geometryMeasurement?: boolean;
   /** Capture explanations from this evaluation, without another observer pass. */
   captureTrace?: boolean;
+  /** Transient invariant diagnostics; never written into cached publications. */
+  onRefinementRevision?: (change: import('./goal-plan-refinement').GoalRefinementChange) => void;
+  onFactObservation?: (observation: GoalFactObservation, view: string) => void;
   observation?: SituationObservation;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
   precision?: 'coarse' | 'exact';
@@ -268,7 +271,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             })],
           } });
         const baseRead = worldReader(snapshot);
-        const read: GoalPlanningContext['readFact'] = fact => {
+        const readBase: GoalPlanningContext['readFact'] = fact => {
           const guard = readGoalGuardFact(fact, context, memory.strategyAllocation, allowedUnitIds, interruptedUnitIds);
           if (guard?.state === 'met') return guard;
           const p = fact.predicate;
@@ -290,6 +293,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           const availableTick = Math.max(value.availableTick ?? snapshot.tick, ...occupied.map(use => snapshot.tick + use.throughTicks));
           return { ...value, availableTick, revision: goalValueKey([value.revision, occupied]),
             reason: { code: 'counterfactual-production-occupied-until', factIds: [fact.id], values: { availableTick } } };
+        };
+        const read: GoalPlanningContext['readFact'] = fact => {
+          const observation = readBase(fact);
+          input.onFactObservation?.(observation, goalValueKey([mode, allowedUnitIds, interruptedUnitIds, reserved, unavailableProduction]));
+          return observation;
         };
         const resolveSnapshotCohort = (worldSnapshot: GameSnapshot, references: Parameters<NonNullable<GoalGroundingReader['resolveCohort']>>[0]): ReturnType<NonNullable<GoalGroundingReader['resolveCohort']>> => {
           const members: GoalCohortMember[] = [];
@@ -421,6 +429,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         return goalValueKey(['action-finish-safety-capital-v1', actorRevision(action), cohortRevision(), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
       };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
+        ...(input.onRefinementRevision ? { onRevision: input.onRefinementRevision } : {}),
         maxAlternativeQuotes: input.limits?.maxPlans ?? 8, thinkSequence: () => work.receipt.thinkSequence ?? snapshot.tick,
         exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [],
           memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, plan.goal.id) : 0, 'exact', plan.actions.map(node => node.declaration)),
@@ -495,7 +504,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           retained.requoteCapacity?.pressure, retained.voyageRisk?.publicationCapacity?.pressure, retained.voyageRisk?.batchCapacity?.pressure,
           ...Object.values(retained.world.capacity ?? {}).map(value => value.pressure), preparation.pointRoutes?.capacity?.pressure,
           ...Object.values(preparation.cacheCapacities ?? {}).map(value => value.pressure)].filter((value): value is import('./goal-planner-types').GoalCapacityPressure => !!value && value.thinkSequence === (work.receipt.thinkSequence ?? snapshot.tick)),
-        providers: precision === 'coarse' ? baseProviders.map(provider => applyGoalRefinements(provider, refinements, sourceRevision)) : baseProviders, initialBalances,
+        providers: precision === 'coarse' ? baseProviders.map(provider => applyGoalRefinements(provider, refinements, sourceRevision,
+          () => work.consumerPlanIds().map(id => `goal-plan:${id}`))) : baseProviders, initialBalances,
         ...(precision === 'coarse' ? { refineSelected: refiner, contextForPrefix: prefix => {
           let context = prefixContexts.get(prefix);
           if (!context) { context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'coarse', [], prefix); prefixContexts.set(prefix, context); }

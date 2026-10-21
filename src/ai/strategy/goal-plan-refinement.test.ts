@@ -77,7 +77,7 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
     refineSelected(second.plans[0]!);
     expect(refinement.entries).toHaveLength(count - 1);
     expect(refinement.entries.some(entry => entry.planId === 'another-plan')).toBe(true);
-    const { planIds: _pins, lastUsedThink: _used, ...unreferenced } = retained;
+    const { planIds: _pins, lastUsedThink: _used, preferredExactIndex: _confirmed, ...unreferenced } = retained;
     const alias = { ...unreferenced, lastUsedThink: -1, coarse: { ...retained.coarse, executor: { ...retained.coarse.executor,
       parameters: { ...retained.coarse.executor.parameters, alias: 'same-region-other-logical-target' } },
       refinementFor: { providerId: provider.id, effect: facts[2]! } },

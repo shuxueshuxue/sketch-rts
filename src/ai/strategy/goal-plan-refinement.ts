@@ -4,20 +4,29 @@ import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningContext } from './goal-planner-types';
 
 type Entry = CacheUse & { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
-  exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number] };
+  exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number]; preferredExactIndex?: number };
 export type GoalRefinementMemory = { revision: number; entries: Entry[]; capacities?: Record<string, CacheCapacity> };
 export type GoalExactPreparation = Readonly<{ plan: GoalPlan; deferActionIds: readonly string[]; changed: boolean }>;
+/** Optional transient diagnostic. Never retained in owner memory or authority. */
+export type GoalRefinementChange = Readonly<{ revision: number; planId: string; actionId: string;
+  kind: GoalActionDeclaration['kind']; reason: string; factIds: readonly string[];
+  proposalRevision: string;
+  sourceRevision?: string; currentSourceRevision?: string;
+  selected: readonly Readonly<{ kind: GoalActionDeclaration['kind']; parameters: GoalActionDeclaration['executor']['parameters'];
+    effectId?: string }>[] }>;
 /** Clock deadlines do not create a new physical proposal. Actual geometry,
  * actors and quoted bounds still participate, so a moved/changed choice cannot
  * borrow another proposal's exact validation. */
-function proposalKey(action: GoalActionDeclaration): string {
-  const semantic = (value: unknown): unknown => {
+const semantic = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(semantic);
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value)
       .filter(([key]) => !['id', 'byTick', 'throughTick', 'factIds', 'reasons', 'precision', 'refinementFor'].includes(key))
       .map(([key, item]) => [key, semantic(item)]));
     return value;
   };
+const choiceFamily = (action: GoalActionDeclaration) => goalValueKey([action.kind,
+  action.refinementFor?.providerId, semantic(action.refinementFor?.effect.predicate)]);
+function proposalKey(action: GoalActionDeclaration): string {
   return goalValueKey(semantic({ kind: action.kind, preconditions: action.preconditions, effects: action.effects,
     preconditionWindows: action.preconditionWindows?.map(window => ({ through: window.through,
       predicate: action.preconditions.find(fact => fact.id === window.factId)?.predicate })),
@@ -84,9 +93,22 @@ export function createGoalPlanRefiner(input: Readonly<{
    * Geometry pins still follow only the currently selected graph. */
   maxAlternativeQuotes?: number;
   thinkSequence?: () => number;
+  onRevision?: (change: GoalRefinementChange) => void;
 }>) {
   const { memory } = input;
   return (plan: GoalPlan): GoalPlan => {
+    const revise = (entry: Entry, reason: string, factIds: readonly string[] = [], currentSourceRevision?: string) => {
+      memory.revision++;
+      input.onRevision?.({ revision: memory.revision, planId: plan.id, actionId: entry.coarse.id,
+        kind: entry.coarse.kind, reason, factIds,
+        proposalRevision: proposalKey(entry.coarse),
+        ...(entry.sourceRevision === undefined ? {} : { sourceRevision: entry.sourceRevision }),
+        ...(currentSourceRevision === undefined ? {} : { currentSourceRevision }),
+        selected: plan.actions.filter(node => node.declaration.kind === entry.coarse.kind).map(node => ({ kind: node.declaration.kind,
+          parameters: Object.fromEntries(Object.entries(node.declaration.executor.parameters).filter(([key]) =>
+            ['cohort', 'transport', 'unitKind', 'buildingKind', 'campId', 'garrisonMineId'].includes(key))),
+          ...(node.declaration.refinementFor ? { effectId: node.declaration.refinementFor.effect.id } : {}) })) });
+    };
     // Retire invalid evidence, then apply the same pin/LRU policy as physical
     // publication caches. Earlier selected quotes in this think stay pinned
     // across same-snapshot re-regression; insertion order cannot starve them.
@@ -96,7 +118,9 @@ export function createGoalPlanRefiner(input: Readonly<{
       || proposalKey(entry.coarse) === proposalKey(node.declaration));
     const bound = () => {
       const owned = memory.entries.filter(entry => entry.planId === undefined || entry.planId === plan.id);
-      const referenced = owned.filter(entry => !!matchingNode(entry));
+      const referenced = owned.filter(entry => !!matchingNode(entry)
+        || entry.preferredExactIndex !== undefined && entry.preferredExactIndex >= 0
+          && plan.actions.some(node => choiceFamily(node.declaration) === choiceFamily(entry.coarse)));
       for (const entry of referenced) { entry.planId = plan.id; touchCache(entry, sequence, [plan.goal.id]); }
       const result = boundCache({ kind: 'refinement', entries: owned, id: entry => entry.coarse.id,
         lastUsed: entry => entry.lastUsedThink ?? -1, plans: entry => entry.lastUsedThink === sequence ? entry.planIds ?? [] : [],
@@ -104,7 +128,7 @@ export function createGoalPlanRefiner(input: Readonly<{
         capacity: memory.capacities?.[plan.id] });
       const removed = new Set(result.evicted);
       memory.entries = memory.entries.filter(entry => !removed.has(entry));
-      memory.revision += result.evicted.filter(entry => entry.state !== 'pending').length;
+      for (const entry of result.evicted) if (entry.state !== 'pending') revise(entry, 'unselected-quote-evicted');
       (memory.capacities ??= {})[plan.id] = result.capacity;
       return result.capacity.pressure;
     };
@@ -119,8 +143,14 @@ export function createGoalPlanRefiner(input: Readonly<{
         && plan.actions.some(node => entry.coarse.refinementFor && node.declaration.refinementFor
           && entry.coarse.refinementFor.providerId === node.declaration.refinementFor.providerId
           && sameChoice(entry.coarse, node.declaration));
-      if (valid && relevant) return true;
-      if (entry.state !== 'pending') { memory.revision++; if (node) invalidated.add(node.id); }
+      // A newly selected exact quote may make a different coarse alternative
+      // look cheaper. Keep both published answers under the shared pin/LRU
+      // bound; discarding the loser here makes regression alternate forever.
+      if (valid && (relevant || entry.state === 'invalid' || entry.state === 'known' && entry.exact.length > 0)) return true;
+      if (entry.state !== 'pending') {
+        revise(entry, valid ? 'quote-no-longer-selected' : 'quote-source-changed', [], input.sourceRevision?.(entry.coarse));
+        if (node) invalidated.add(node.id);
+      }
       return false;
     });
     const pressure = plan.actions.length ? bound() : undefined;
@@ -172,9 +202,10 @@ export function createGoalPlanRefiner(input: Readonly<{
             && Math.abs(exactTime - coarseTime) > coarseTime * .5 } };
       if (known.length) {
         entry.exact = known.map(exact => ({ ...exact, precision: 'exact', refinementFor: request }));
-        entry.state = 'known'; entry.reason = reason; memory.revision++; changed ||= !identical;
+        entry.state = 'known'; entry.reason = reason; revise(entry, 'exact-quote-published', known.flatMap(action =>
+          [action.duration, action.cost, action.successProbability].flatMap(estimate => estimate.state === 'met' ? estimate.factIds : []))); changed ||= !identical;
       } else if (!discovered.deferred.length && !feasible.length) {
-        entry.state = 'invalid'; entry.reason = reason; memory.revision++; changed = true;
+        entry.state = 'invalid'; entry.reason = reason; revise(entry, 'exact-proposal-disproved', reason.factIds); changed = true;
       } else entry.reason = reason;
       annotations.set(node.id, { state: entry.state, coarse: action, ...(entry.exact[0] ? { exact: entry.exact[0] } : {}), reason });
       deferred.push(...discovered.deferred.map(item => ({ ...item, factId: request.effect.id })));
@@ -183,7 +214,7 @@ export function createGoalPlanRefiner(input: Readonly<{
       if (invalidated.has(node.id)) return { ...node, state: 'waiting-facts' as const, refinement: {
         state: 'pending' as const, coarse: node.refinement?.coarse ?? node.declaration,
         reason: { code: 'selected-exact-source-changed', factIds: [], values: {} } } };
-      const entry = memory.entries.find(entry => entry.sourceRevision === input.sourceRevision?.(node.declaration) && entry.exact.some(exact => exact.id === node.declaration.id));
+      const entry = memory.entries.find(entry => entry.sourceRevision === input.sourceRevision?.(entry.coarse) && entry.exact.some(exact => exact.id === node.declaration.id));
       const annotation = annotations.get(node.id);
       if (annotation) {
         const exact = annotation.exact;
@@ -196,6 +227,11 @@ export function createGoalPlanRefiner(input: Readonly<{
         return { ...node, refinement: annotation, state: 'waiting-facts' as const };
       }
       if (!entry) return node;
+      if (node.state === 'ready') {
+        for (const other of memory.entries) if (other.planId === entry.planId && choiceFamily(other.coarse) === choiceFamily(entry.coarse))
+          delete other.preferredExactIndex;
+        entry.preferredExactIndex = entry.exact.findIndex(exact => exact.id === node.declaration.id);
+      }
       const coarse = value(entry.coarse), exact = value(node.declaration);
       const proof = selected.some(candidate => candidate.id === node.id) ? node.declaration.preconditions.map(context.readFact) : [];
       const ready = node.state === 'ready' && proof.every(fact => fact.state === 'met' && (fact.availableTick ?? context.tick) <= context.tick);
@@ -218,12 +254,22 @@ export function createGoalPlanRefiner(input: Readonly<{
 }
 
 export function applyGoalRefinements(provider: GoalActionProvider, memory: GoalRefinementMemory,
-  sourceRevision?: (action: GoalActionDeclaration) => string): GoalActionProvider {
+  sourceRevision?: (action: GoalActionDeclaration) => string, currentPlans?: () => readonly string[]): GoalActionProvider {
   return { id: provider.id, actionsFor(effect, context) {
     const coarse = provider.actionsFor(effect, context);
     return coarse.flatMap(action => {
       const entry = memory.entries.find(entry => proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision?.(action));
-      return !entry || entry.state === 'pending' ? [action] : entry.state === 'invalid' ? [] : entry.exact.map(exact => refreshClock(exact, entry.coarse, action));
+      const owns = (candidate: Entry) => candidate.planId === undefined || !currentPlans || currentPlans().includes(candidate.planId);
+      const incumbent = memory.entries.find(candidate => candidate.preferredExactIndex !== undefined
+        && candidate.preferredExactIndex >= 0 && owns(candidate) && choiceFamily(candidate.coarse) === choiceFamily(action));
+      if (!entry || entry.state === 'pending') return [{ ...action, ...(incumbent ? { reasons: [...action.reasons,
+        { code: 'goal-exact-challenger-awaits-quote', factIds: action.refinementFor ? [action.refinementFor.effect.id] : [], values: {} }] } : {}) }];
+      if (entry.state === 'invalid') return [];
+      return entry.exact.map((exact, index) => {
+        const current = refreshClock(exact, entry.coarse, action);
+        return owns(entry) && entry.preferredExactIndex === index ? { ...current, reasons: [...current.reasons,
+          { code: 'goal-exact-incumbent-choice', factIds: [], values: {} }] } : current;
+      });
     });
   } };
 }

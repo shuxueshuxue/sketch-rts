@@ -8,6 +8,7 @@ import { observationJsonBytes } from './observation-json-bytes';
 import { discountGold } from './utility';
 import { discoverGoalActions } from './goal-provider-candidates';
 import { goalActionPresentCost } from './goal-action-value';
+import { compareConfirmedGoalChoices } from './goal-quote-comparison';
 import { retimeGoalActionPreconditions } from './goal-action-facts';
 import type { GoalSearchMemory, GoalSearchPath as Path, GoalSearchStep as Step } from './goal-search-state';
 export type { GoalSearchMemory } from './goal-search-state';
@@ -415,7 +416,7 @@ function composeCoarseOne(state: GoalSearchMemory, input: GoalPlannerInput, goal
     frame.options = state.candidates.filter(action => validEstimate(action) && goalActionContributes(action, frame.fact))
       .map(action => ({ action, unmet: action.preconditions.filter(fact => !satisfies(fact, search.path, state, input).met).length }))
       .sort(({ action: a, unmet: first }, { action: b, unmet: second }) => complete(b) - complete(a) || first - second
-        || cost(a) - cost(b) || probability(b) - probability(a)
+        || compareConfirmedGoalChoices(a, b, goal.rewardGold) || cost(a) - cost(b) || probability(b) - probability(a)
         || (a.duration.state === 'met' ? a.duration.value : Infinity) - (b.duration.state === 'met' ? b.duration.value : Infinity)
         || order(a.id, b.id)).map(({ action }) => action.id);
     if (observe(state, input, frame.fact).derived?.allOf.length) frame.options.unshift('@derived');
