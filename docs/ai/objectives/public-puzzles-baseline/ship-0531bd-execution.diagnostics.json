@@ -1,0 +1,4936 @@
+{
+  "cold": [
+    {
+      "puzzle": "ship-away/far",
+      "firstFailedPointEntries": {},
+      "progress": [
+        {
+          "think": 1,
+          "readyCount": 0,
+          "error": null,
+          "queueUsed": 5038,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1232,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1280,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":752}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}"
+                      ],
+                      "values": {
+                        "pendingReasons": "combat-route-pending,combat-route-pending,combat-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":1488,\"y\":688},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 1,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 2,
+          "readyCount": 0,
+          "error": null,
+          "queueUsed": 4807,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "known",
+                    "reason": {
+                      "code": "selected-exact-action-requires-regression",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":1488,\"y\":688},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 2,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 3,
+          "readyCount": 0,
+          "error": null,
+          "queueUsed": 5016,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 3,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 4,
+          "readyCount": 0,
+          "error": null,
+          "queueUsed": 5021,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 4,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "firstFailedPointEntries": {},
+      "progress": [
+        {
+          "think": 1,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5038,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1232,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1280,\"y\":704}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}",
+                        "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":752}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}}}"
+                      ],
+                      "values": {
+                        "pendingReasons": "combat-route-pending,combat-route-pending,combat-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":1488,\"y\":688},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 1,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 2,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5007,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "known",
+                    "reason": {
+                      "code": "selected-exact-action-requires-regression",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":1488,\"y\":688},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 2,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 3,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 3,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 4,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5119,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 4,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 5,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5120,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 5,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 6,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5021,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 6,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 7,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5120,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 7,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 8,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5120,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 8,
+            "pinnedBytes": 44,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 44,
+            "peakResidentBytes": 44,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 9,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5314,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 9,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 10,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 10,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 11,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 11,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 12,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 12,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 13,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 13,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 14,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 14,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 15,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 15,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 16,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 5307,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 16,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 17,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 754,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [
+                        "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":176,\"y\":816},false]"
+                      ],
+                      "values": {
+                        "pendingReasons": "native-point-route-pending,native-point-route-pending,native-point-route-pending"
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 17,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 18,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 407,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 18,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 19,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 407,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 19,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        },
+        {
+          "think": 20,
+          "readyCount": 0,
+          "error": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+          "queueUsed": 407,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "actions": [
+                {
+                  "index": 0,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 1,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-source-changed",
+                      "factIds": [],
+                      "values": {}
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 2,
+                  "kind": "position-transport",
+                  "precision": "coarse",
+                  "state": "waiting-facts",
+                  "dependsOn": [
+                    0
+                  ],
+                  "refinement": {
+                    "state": "pending",
+                    "reason": {
+                      "code": "selected-exact-facts-pending",
+                      "factIds": [],
+                      "values": {
+                        "pendingReasons": ""
+                      }
+                    },
+                    "delta": null
+                  },
+                  "ready": false
+                },
+                {
+                  "index": 3,
+                  "kind": "transport-force",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    2,
+                    0
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 4,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 5,
+                  "kind": "clear-camp",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 6,
+                  "kind": "transport-worker",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    2,
+                    0,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 7,
+                  "kind": "build",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    5,
+                    6
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 8,
+                  "kind": "assemble",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                },
+                {
+                  "index": 9,
+                  "kind": "hold-position",
+                  "precision": "coarse",
+                  "state": "waiting-actions",
+                  "dependsOn": [
+                    7,
+                    8,
+                    1,
+                    4,
+                    5,
+                    3
+                  ],
+                  "refinement": null,
+                  "ready": false
+                }
+              ]
+            }
+          ],
+          "projectionState": "met",
+          "deficits": [],
+          "capacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 20,
+            "pinnedBytes": 45,
+            "pinnedEntries": 0,
+            "peakPinnedBytes": 45,
+            "peakResidentBytes": 45,
+            "overflowCount": 0
+          }
+        }
+      ]
+    }
+  ],
+  "runtime": [
+    {
+      "puzzle": "ship-away/far",
+      "firstPressure": {
+        "think": 483,
+        "tick": 7245,
+        "kind": "geometry",
+        "thinkSequence": 483,
+        "bytes": 34297,
+        "limitBytes": 33776,
+        "planIds": [
+          "ConquerIsland:planner:resource-1"
+        ],
+        "overflowCount": 2,
+        "requestCount": 24
+      },
+      "lastPressure": {
+        "think": 560,
+        "tick": 8400,
+        "kind": "geometry",
+        "thinkSequence": 560,
+        "bytes": 34297,
+        "limitBytes": 33776,
+        "planIds": [
+          "ConquerIsland:planner:resource-1"
+        ],
+        "overflowCount": 79,
+        "requestCount": 24
+      },
+      "pressurePlanOccurrences": 78,
+      "searchCounterOccurrences": [
+        {
+          "work": 0,
+          "expansions": 0,
+          "depth": 0,
+          "limitReason": null,
+          "count": 78
+        },
+        {
+          "work": 2048,
+          "expansions": 2048,
+          "depth": 4,
+          "limitReason": "expansion-limit",
+          "count": 19
+        },
+        {
+          "work": 2048,
+          "expansions": 2048,
+          "depth": 5,
+          "limitReason": "expansion-limit",
+          "count": 200
+        },
+        {
+          "work": 2048,
+          "expansions": 2048,
+          "depth": 6,
+          "limitReason": "expansion-limit",
+          "count": 65
+        },
+        {
+          "work": 407,
+          "expansions": 407,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 417,
+          "expansions": 417,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 418,
+          "expansions": 418,
+          "depth": 4,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 420,
+          "expansions": 420,
+          "depth": 4,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 426,
+          "expansions": 426,
+          "depth": 4,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 428,
+          "expansions": 428,
+          "depth": 4,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 430,
+          "expansions": 430,
+          "depth": 4,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 431,
+          "expansions": 431,
+          "depth": 5,
+          "limitReason": null,
+          "count": 105
+        },
+        {
+          "work": 432,
+          "expansions": 432,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 435,
+          "expansions": 435,
+          "depth": 5,
+          "limitReason": null,
+          "count": 44
+        },
+        {
+          "work": 435,
+          "expansions": 435,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 439,
+          "expansions": 439,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 441,
+          "expansions": 441,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 443,
+          "expansions": 443,
+          "depth": 6,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 445,
+          "expansions": 445,
+          "depth": 6,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 447,
+          "expansions": 447,
+          "depth": 6,
+          "limitReason": null,
+          "count": 4
+        },
+        {
+          "work": 504,
+          "expansions": 504,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 520,
+          "expansions": 520,
+          "depth": 6,
+          "limitReason": null,
+          "count": 5
+        },
+        {
+          "work": 573,
+          "expansions": 573,
+          "depth": 5,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 575,
+          "expansions": 575,
+          "depth": 5,
+          "limitReason": null,
+          "count": 4
+        },
+        {
+          "work": 583,
+          "expansions": 583,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 589,
+          "expansions": 589,
+          "depth": 5,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 591,
+          "expansions": 591,
+          "depth": 5,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 597,
+          "expansions": 597,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 604,
+          "expansions": 604,
+          "depth": 7,
+          "limitReason": null,
+          "count": 4
+        }
+      ],
+      "selectedNodeOccurrences": {
+        "position-transport": 68,
+        "assemble": 277,
+        "transport-force": 34,
+        "clear-camp": 50,
+        "transport-worker": 195,
+        "build": 199,
+        "hold-position": 199,
+        "wait-income": 93
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "firstPressure": {
+        "think": 199,
+        "tick": 2985,
+        "kind": "geometry",
+        "thinkSequence": 199,
+        "bytes": 34776,
+        "limitBytes": 33776,
+        "planIds": [
+          "ConquerIsland:planner:resource-1"
+        ],
+        "overflowCount": 2,
+        "requestCount": 38
+      },
+      "lastPressure": {
+        "think": 374,
+        "tick": 5610,
+        "kind": "geometry",
+        "thinkSequence": 374,
+        "bytes": 34777,
+        "limitBytes": 33776,
+        "planIds": [
+          "ConquerIsland:planner:resource-1"
+        ],
+        "overflowCount": 177,
+        "requestCount": 38
+      },
+      "pressurePlanOccurrences": 176,
+      "searchCounterOccurrences": [
+        {
+          "work": 0,
+          "expansions": 0,
+          "depth": 0,
+          "limitReason": null,
+          "count": 176
+        },
+        {
+          "work": 2048,
+          "expansions": 2048,
+          "depth": 4,
+          "limitReason": "expansion-limit",
+          "count": 48
+        },
+        {
+          "work": 2048,
+          "expansions": 2048,
+          "depth": 6,
+          "limitReason": "expansion-limit",
+          "count": 2
+        },
+        {
+          "work": 239,
+          "expansions": 239,
+          "depth": 4,
+          "limitReason": null,
+          "count": 19
+        },
+        {
+          "work": 241,
+          "expansions": 241,
+          "depth": 4,
+          "limitReason": null,
+          "count": 21
+        },
+        {
+          "work": 243,
+          "expansions": 243,
+          "depth": 4,
+          "limitReason": null,
+          "count": 47
+        },
+        {
+          "work": 245,
+          "expansions": 245,
+          "depth": 4,
+          "limitReason": null,
+          "count": 37
+        },
+        {
+          "work": 302,
+          "expansions": 302,
+          "depth": 4,
+          "limitReason": null,
+          "count": 3
+        },
+        {
+          "work": 304,
+          "expansions": 304,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 306,
+          "expansions": 306,
+          "depth": 4,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 313,
+          "expansions": 313,
+          "depth": 4,
+          "limitReason": null,
+          "count": 4
+        },
+        {
+          "work": 316,
+          "expansions": 316,
+          "depth": 4,
+          "limitReason": null,
+          "count": 4
+        },
+        {
+          "work": 317,
+          "expansions": 317,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 318,
+          "expansions": 318,
+          "depth": 4,
+          "limitReason": null,
+          "count": 2
+        },
+        {
+          "work": 322,
+          "expansions": 322,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 407,
+          "expansions": 407,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 408,
+          "expansions": 408,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 415,
+          "expansions": 415,
+          "depth": 6,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 418,
+          "expansions": 418,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 420,
+          "expansions": 420,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        },
+        {
+          "work": 422,
+          "expansions": 422,
+          "depth": 4,
+          "limitReason": null,
+          "count": 1
+        }
+      ],
+      "selectedNodeOccurrences": {
+        "position-transport": 154,
+        "assemble": 171,
+        "transport-force": 6,
+        "clear-camp": 23,
+        "transport-worker": 148,
+        "build": 148,
+        "hold-position": 148,
+        "wait-income": 110
+      }
+    }
+  ]
+}
