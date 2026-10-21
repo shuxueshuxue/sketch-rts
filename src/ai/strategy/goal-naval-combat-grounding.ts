@@ -27,7 +27,7 @@ import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
 import { createDefaultGoalCampBattleModel, type GoalCampModelObserver } from './goal-camp-default-model';
 import { goalAssemblyPostSource } from './goal-naval-actions';
-import type { Target } from './types';
+import type { Point, Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
 export type GoalCombatMovementRequest = Readonly<{
@@ -44,6 +44,9 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
    * actual HP/weapons; these locations become usable only via their pool facts. */
   cohortOptions?: GoalGroundingReader['cohortOptions'];
   transportFacts?: Pick<GoalTransportFactPorts, 'seaLeg'>;
+  /** Read-only coarse travel time from the same owner's published sea field;
+   * this port must not request geometry or start a route query. */
+  coarseSeaTicks?: (ship: Unit, from: Point, to: Point, future: boolean) => GoalEstimate<number>;
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
   /** Same replaceable camp model for coarse discovery and exact refinement. */
   campBattleModel?: GoalCampBattleModel;
@@ -418,10 +421,12 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       if (context.precision === 'coarse') {
         const route = goalFact({ kind: 'route', mover: 'sea', actor: p.transport, from, to: p.at,
           ...(actor.sailing?.heading === undefined ? {} : { fromHeading: actor.sailing.heading }) });
+        const duration = gap(actor, p.at.point) <= p.tolerance ? known(0, [effect.id])
+          : ports.coarseSeaTicks?.(actor, from.point, p.at.point, false)
+            ?? known(Math.ceil(gap(actor, p.at.point) / Math.max(1, actor.speed) * SIM_TICKS_PER_SECOND), [effect.id]);
         return { state: 'met', factIds: [effect.id], candidates: [{ id: `coarse-hull:${effect.id}`, target: p.at, from,
           cohort: [p.transport], requiredForce: 0, byTick: p.byTick,
-          duration: known(gap(actor, p.at.point) <= p.tolerance ? 0
-            : Math.ceil(gap(actor, p.at.point) / Math.max(1, actor.speed) * SIM_TICKS_PER_SECOND), [effect.id]),
+          duration,
           cost: known([], [effect.id]), successProbability: known(1, [effect.id]), preconditions: [route], factIds: [effect.id, route.id] }] };
       }
       const hull: GoalHullCandidate = { id: actor.id, reference: p.transport, assessment: actor, seaId: sea, availableTick: context.tick,
