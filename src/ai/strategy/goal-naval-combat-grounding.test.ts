@@ -127,7 +127,8 @@ describe('naval combat grounding on actual observation cohorts', () => {
       .toMatchObject({ minimum: measured, cohort });
     expect(action.flows.filter(flow => flow.resource.kind === 'force').every(flow => flow.resource.kind === 'force' && flow.resource.metric === 'combat-rating')).toBe(true);
     expect(action.preconditions.find(fact => fact.predicate.kind === 'force-available')?.predicate).toMatchObject({ metric: 'combat-rating' });
-    expect(action.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(true);
+    expect(action.preconditions.some(fact => fact.predicate.kind === 'assembly-post')).toBe(true);
+    expect(action.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(false);
   });
 
   it('does not recruit interrupted/excluded/foreign members, substitute private future IDs, or ignore an unreachable road', () => {

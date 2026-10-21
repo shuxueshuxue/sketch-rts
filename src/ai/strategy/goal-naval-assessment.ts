@@ -113,8 +113,9 @@ function costs(lossGold: number, movement: GoalMovementRisk, factIds: readonly s
  * a post, cohort, route, reinforcement intention or a new fact/query service. */
 export function assessGoalCampCombatOption(input: GoalCampCombatInput): GoalCandidates<GoalCombatOption> {
   const init = initial(input); if ('state' in init) return init;
-  if (!input.stagingFacts.some(row => row.fact.predicate.kind === 'site-safe'
-    && goalValueKey(row.fact.predicate.site) === goalValueKey(input.staging)))
+  if (!input.stagingFacts.some(row => row.fact.predicate.kind === 'camp-staging' && row.fact.predicate.campId === input.campId
+    && goalValueKey(row.fact.predicate.at) === goalValueKey(input.staging)
+    && goalValueKey(row.fact.predicate.cohort) === goalValueKey(init.members.map(member => member.reference))))
     return pending('combat-staging-facts-unquoted', [input.campId]);
   init.factIds.push(...input.stagingFacts.map(row => row.fact.id));
   if (!['camp-cleared', 'gold'].includes(input.effect.predicate.kind)
