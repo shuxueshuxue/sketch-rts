@@ -4,7 +4,8 @@ import { goalFact, goalValueKey } from './goal-facts';
 import { declareGoalGarrison } from './goal-garrison-action';
 import { declareGoalAssembly, declareGoalCampClearing, declareGoalDefense, declareGoalEvacuation,
   declareGoalForceTransport, declareGoalShoreClearing, declareGoalTransportReposition,
-  declareGoalWorkerTransport, type GoalNavalEstimates, type GoalNavalMember } from './goal-naval-actions';
+  declareGoalWorkerTransport, goalAssemblyPostSource, type GoalNavalEstimates, type GoalNavalMember } from './goal-naval-actions';
+import { effectiveCombatRating } from '../policy/v6/strength';
 import type { GoalActionDeclaration, GoalActionProvider, GoalCombatOption, GoalFact, GoalPlanningContext } from './goal-planner-types';
 
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
@@ -15,13 +16,15 @@ function resolved(option: GoalCombatOption, context: GoalPlanningContext): reado
     .sort((a, b) => order(goalValueKey(a.reference), goalValueKey(b.reference)));
   if (goalValueKey(selected.map(member => goalValueKey(member.reference))) !== goalValueKey([...new Set(option.cohort.map(goalValueKey))].sort())) return null;
   const from = option.from;
-  const conditional = from?.landId && option.preconditions.some(fact => {
+  const force = selected.reduce((sum, member) => sum + effectiveCombatRating(context.snapshot, member.assessment), 0);
+  const conditional = from?.landId && (goalAssemblyPostSource(option.preconditions, from,
+    selected.map(member => member.reference), force) || option.preconditions.some(fact => {
     const p = fact.predicate;
     return p.kind === 'force-available' && p.at.landId === from.landId && p.cohort
       && goalValueKey([...new Set(p.cohort.map(goalValueKey))].sort()) === goalValueKey(selected.map(member => goalValueKey(member.reference)))
       || p.kind === 'worker-at' && p.at.landId === from.landId && selected.length === 1 && p.worker
         && goalValueKey(p.worker) === goalValueKey(selected[0]!.reference);
-  });
+  }));
   if (conditional && selected.every(member => member.reference.kind === 'existing')) {
     return selected.flatMap(member => {
       const actual = context.snapshot.units.find(unit => member.reference.kind === 'existing' && unit.id === member.reference.entityId);

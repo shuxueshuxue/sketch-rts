@@ -103,6 +103,43 @@ describe('grounded naval world-effect declarations', () => {
     expect(action.preconditions).toContainEqual(input.route);
   });
 
+  it('moves a proved exact cohort from post to post without spending its pool force twice', () => {
+    const input = frame(), next = { ...input.at, point: { x: 1900, y: 1700 } };
+    const first = declareGoalAssembly({ ...input, routes: [input.route],
+      safePost: goalFact({ kind: 'assembly-post', at: input.at }) })!;
+    const source = first.effects.find(effect => effect.fact.predicate.kind === 'force-at'
+      && effect.fact.predicate.metric === 'combat-rating')!.fact;
+    const secondInput = { ...input, from: input.at, at: next,
+      safePost: goalFact({ kind: 'assembly-post', at: next }) };
+    const second = strict(() => declareGoalAssembly({ ...secondInput, routes: [source] }))!;
+    const force = first.flows.find(flow => flow.resource.kind === 'force' && flow.delta > 0)!.delta;
+    const initial = [{ resource: { kind: 'force' as const, at: input.from, scope: 'pool' as const,
+      metric: 'combat-rating' as const }, quantity: force, asOfTick: 0, factIds: [] }];
+    const project = (action: GoalActionDeclaration) => projectGoalResources({ epoch: 0, initial, actions: [
+      { action: first, startTick: 0, finishTick: 100 }, { action, startTick: 100, finishTick: 200 },
+    ] });
+    const result = project(second);
+    expect(result.state).toBe('met');
+    if (result.state === 'pending') throw Error(result.reason.code);
+    expect(result.balances.filter(balance => balance.quantity !== 0)).toEqual([
+      expect.objectContaining({ resource: { kind: 'force', at: next, scope: 'post', metric: 'combat-rating' }, quantity: force }),
+    ]);
+    expect(second.preconditions).toContainEqual(source);
+    expect(second.preconditions.some(fact => fact.predicate.kind === 'force-available')).toBe(false);
+    expect(second.flows.filter(flow => flow.resource.kind === 'force').map(flow => [flow.resource.kind === 'force' && flow.resource.scope, flow.delta]))
+      .toEqual([['post', -force], ['post', force]]);
+    const fallback = declareGoalAssembly({ ...secondInput, routes: [] })!;
+    expect(project(fallback).state).toBe('unmet'); expect(second.id).not.toBe(fallback.id);
+    expect(JSON.parse(JSON.stringify(second))).toEqual(second);
+    if (source.predicate.kind !== 'force-at') throw Error('source');
+    for (const invalid of [
+      goalFact({ ...source.predicate, metric: 'field-strength' }),
+      goalFact({ ...source.predicate, at: { ...input.at, point: { x: 1701, y: 1700 } } }),
+      goalFact({ ...source.predicate, cohort: [{ kind: 'existing', entityId: 'fighter-a' }] }),
+      goalFact({ ...source.predicate, minimum: force / 2 }),
+    ]) expect(project(declareGoalAssembly({ ...secondInput, routes: [invalid] })!).state).toBe('unmet');
+  });
+
   it('establishes only the cleared landing, while defense and evacuation express different world effects', () => {
     const input = frame(), landing = { ...input.at, point: { x: 1800, y: 1100 } };
     const shore = strict(() => declareGoalShoreClearing({ ...input, landing, threatIds: ['foe'], requiredForce: 1,
