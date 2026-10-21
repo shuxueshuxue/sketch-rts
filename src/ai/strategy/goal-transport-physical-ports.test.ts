@@ -76,6 +76,17 @@ it('keeps an aboard coast request stable while its hull moves within the same se
  if(first.state==='pending'&&moved.state==='pending')expect(first.requestIds).toEqual(moved.requestIds);
 });
 
+it('versions coast scans by the prepared shore index independently of dynamic berth geometry',()=>{
+ const f=frame();
+ const first=f.think(0,0,{shoreGeometryRevision:'terrain-a',geometryRevision:'bodies-a'}).ports.shores(f.from,f.to);
+ const dynamic=f.think(1,0,{shoreGeometryRevision:'terrain-a',geometryRevision:'bodies-b'}).ports.shores(f.from,f.to);
+ const terrain=f.think(2,0,{shoreGeometryRevision:'terrain-b',geometryRevision:'bodies-b'}).ports.shores(f.from,f.to);
+ expect(first.state).toBe('pending');expect(dynamic.state).toBe('pending');expect(terrain.state).toBe('pending');
+ if(first.state==='pending'&&dynamic.state==='pending'&&terrain.state==='pending'){
+  expect(dynamic.requestIds).toEqual(first.requestIds);expect(terrain.requestIds).not.toEqual(first.requestIds);
+ }
+});
+
 it('keeps current hulls usable alongside missing future metadata, then accepts only explicit symbolic native shapes',()=>{
  const f=frame(), producer:GoalProductionOption={id:'real-yard',buildingKind:'shipyard',producer:{kind:'existing',entityId:'yard'},at:{seaId:'sea:1',point:f.from.point},availableTick:null,preconditions:[],factIds:['yard']};
  const productionOptions:GoalTransportPhysicalInput['productionOptions']=kind=>choices(kind==='transport'?[producer]:[]);
