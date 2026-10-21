@@ -46,6 +46,15 @@ function issue(f: ReturnType<typeof fixture>, scriptId = 'goal.build') {
 }
 
 describe('per-step native SDK ownership', () => {
+  it('projects a real SDK context without cloning or retaining its live game', () => {
+    const f=fixture();try{
+      const before=JSON.stringify(snapshotGame(f.game));
+      const sdkEvent={tick:f.game.tick,owner:'us',scriptId:'goal.build',command:f.command,game:f.game};
+      expect(()=>f.tracker.applied(sdkEvent)).not.toThrow();
+      expect(f.tracker.finish(f.start,[],['build']).nativeApplications[0]).not.toHaveProperty('game');
+      expect(JSON.stringify(snapshotGame(f.game))).toBe(before);
+    }finally{f.stop();}
+  });
   it('does not credit a physically complete old-script hall to the planner', () => {
     const f=fixture(); try {
       issue(f, 'v6Economy'); complete(f);
