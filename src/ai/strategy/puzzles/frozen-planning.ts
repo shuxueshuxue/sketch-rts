@@ -93,8 +93,9 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       finalFailure = failure;
       const prior = thinks.at(-2);
       stable = hash !== null && prior?.planHash === hash;
-      // Repeated blocked/pending graphs must not stop publication early.
-      if (stable && record.passed && prior?.passed) break;
+      // A complete coarse graph can still await exact facts. Keep observing
+      // ready=0 through K, so publication is measured after graph acceptance.
+      if (stable && record.executable && prior?.executable) break;
     }
     return { thinks, stable, finalFailure,
       firstReadyActionThink: thinks.find(think => think.readyActionCount > 0)?.think ?? null,
