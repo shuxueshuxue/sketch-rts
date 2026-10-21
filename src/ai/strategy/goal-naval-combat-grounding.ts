@@ -25,6 +25,7 @@ import { seaIdAt } from './regions';
 import type { GoalHullCandidate, GoalTransportFactPorts } from './goal-grounding-ports';
 import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
+import { goalAssemblyPostSource } from './goal-naval-actions';
 import type { Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
@@ -166,7 +167,12 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
             || p.kind === 'worker-at' && refs.length === 1 && p.at.landId === option.from.landId
               && p.worker && goalValueKey(p.worker) === goalValueKey(refs[0]);
         });
-        if (!option.from.landId || !poolFact) {
+        const force = option.members.reduce((sum, member) => {
+          const actor = member.reference.kind === 'existing' ? actors.get(member.reference.entityId) : undefined;
+          return sum + (actor ? effectiveCombatRating(context.snapshot, actor) : 0);
+        }, 0);
+        const postFact = goalAssemblyPostSource(option.preconditions, option.from, refs, force);
+        if (!option.from.landId || !poolFact && !postFact) {
           deferred.push({ id: option.id, requestIds: [option.id], reason: reason('combat-conditional-origin-pool-unproved', [effect.id, ...option.factIds]) }); continue;
         }
         const members = option.members.flatMap(member => {

@@ -146,6 +146,41 @@ describe('naval combat grounding on actual observation cohorts', () => {
       .toMatchObject({ state: 'pending', requestIds: [requestId] });
   });
 
+  it('retains a conditional post origin and its exact source proof through the provider', () => {
+    const f = fixture(), refs = [ref('fighter-a'), ref('fighter-b')];
+    const from = { landId: f.at.landId, point: { x: 1200, y: 1100 } };
+    const members = refs.map(reference => {
+      const unit = f.snapshot.units.find(unit => reference.kind === 'existing' && unit.id === reference.entityId)!;
+      return { reference, assessment: { ...unit, x: from.point.x, y: from.point.y } };
+    });
+    const force = members.reduce((sum, member) => sum + effectiveCombatRating(f.snapshot, member.assessment), 0);
+    const source = goalFact({ kind: 'force-at', at: from, minimum: force,
+      metric: 'combat-rating', cohort: refs, byTick: 900 });
+    const effect = goalFact({ kind: 'force-at', at: f.at, minimum: force, metric: 'combat-rating', cohort: refs, byTick: 900 });
+    const make = (proof: typeof source) => {
+      const ports = { ...f.ports, cohortOptions: () => ({ state: 'met' as const, candidates: [
+        { id: 'selected-prefix-post', from, members, preconditions: [proof], availableTick: null, factIds: [proof.id] },
+      ], factIds: [proof.id] }) };
+      const context = { ...f.context, precision: 'coarse' as const };
+      const factory = createGoalNavalCombatGrounding(context, ports);
+      const grounding = { ...f.context.grounding!, ...factory };
+      return strict(() => goalNavalActionProvider.actionsFor(effect, { ...context, grounding }));
+    };
+    const before = JSON.stringify(f.snapshot), actions = make(source);
+    const selected = actions.find(action => action.preconditions.some(fact => fact.id === source.id))!;
+    expect(selected).toBeDefined();
+    expect(selected.executor.parameters.from).toEqual(from);
+    expect(selected.executor.parameters.fromScope).toBe('post');
+    expect(selected.preconditions.some(fact => fact.predicate.kind === 'force-available')).toBe(false);
+    expect(selected.flows.filter(flow => flow.resource.kind === 'force').map(flow => flow.resource))
+      .toEqual([{ kind: 'force', at: from, scope: 'post', metric: 'combat-rating' },
+        { kind: 'force', at: f.at, scope: 'post', metric: 'combat-rating' }]);
+    if (source.predicate.kind !== 'force-at') throw Error('source');
+    const wrong = goalFact({ ...source.predicate, at: f.at });
+    expect(make(wrong).some(action => action.preconditions.some(fact => fact.id === wrong.id))).toBe(false);
+    expect(JSON.stringify(f.snapshot)).toBe(before); expect(f.work.receipt.used).toBe(0);
+  });
+
   it('offers exact real aboard and land manifests to transport grounding without an invented departure shore or cross-water road', () => {
     const { snapshot, owner }: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
       new URL('./fixtures/sapphire-control-p4-4180.json.gz', import.meta.url))).toString());

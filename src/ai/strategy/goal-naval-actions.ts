@@ -80,6 +80,19 @@ function poolFacts(units: readonly Unit[], at: Target, byTick: number): GoalFact
 function rating(snapshot: GameSnapshot, units: readonly Unit[]) {
   return units.reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
 }
+/** A post inventory is conditional on this exact group's combat-rating at
+ * this exact post. A same-land pool, another metric or a subset is not proof. */
+export function goalAssemblyPostSource(preconditions: readonly GoalFact[], from: Target,
+  cohort: readonly GoalEntityReference[], force: number): GoalFact | undefined {
+  const refsKey = goalValueKey([...new Set(cohort.map(goalValueKey))].sort());
+  return preconditions.find(fact => {
+    const p = fact.predicate;
+    return p.kind === 'force-at' && p.metric === 'combat-rating' && p.cohort
+      && goalValueKey(p.at) === goalValueKey(from)
+      && goalValueKey([...new Set(p.cohort.map(goalValueKey))].sort()) === refsKey
+      && Number.isFinite(p.minimum) && p.minimum + 1e-9 * Math.max(1, force) >= force;
+  });
+}
 function movementFlows(units: readonly Unit[], from: Target, to: Target, force: number,
   factIds: readonly string[], fromScope: 'pool' | 'post' = 'post', toScope: 'pool' | 'post' = 'post'): GoalResourceFlow[] {
   if (JSON.stringify(canonical(from)) === JSON.stringify(canonical(to)) && fromScope === toScope) return [];
@@ -121,6 +134,7 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
   if (!units || input.from.landId && input.at.landId && input.from.landId !== input.at.landId
     || units.some(unit => unit.deck || unit.cabin)) return null;
   const cohort = units.map(unit => reference(input, unit)), force = rating(input.snapshot, units);
+  const postSource = goalAssemblyPostSource(input.routes, input.from, cohort, force);
   const forceAvailable = goalFact({ kind: 'force-available', at: input.from, minimum: force,
     metric: 'combat-rating', cohort, byTick: input.byTick });
   const effects = [establish(goalFact({ kind: 'force-at', at: input.at, minimum: force,
@@ -136,10 +150,11 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
       metric: 'camp-force', campId: input.campId, cohort, byTick: input.byTick })));
   }
   const post = input.campId ? goalFact({ kind: 'camp-staging', campId: input.campId, at: input.at, cohort }) : input.safePost;
-  const preconditions = [...poolFacts(units, input.from, input.byTick), forceAvailable, post, ...input.routes];
+  const preconditions = [...poolFacts(units, input.from, input.byTick), postSource ?? forceAvailable, post, ...input.routes];
   return declaration('assemble', 'strategy.assemble', { cohort, from: input.from,
-    at: input.at, byTick: input.byTick, ...(input.campId ? { campId: input.campId } : {}) }, input, preconditions, effects,
-  demands(input, units), movementFlows(units, input.from, input.at, force, preconditions.map(fact => fact.id), 'pool'));
+    at: input.at, byTick: input.byTick, fromScope: postSource ? 'post' : 'pool',
+    ...(input.campId ? { campId: input.campId } : {}) }, input, preconditions, effects,
+  demands(input, units), movementFlows(units, input.from, input.at, force, preconditions.map(fact => fact.id), postSource ? 'post' : 'pool'));
 }
 
 /** Clearing earns only the remaining guards' native bounties. Each guard is
