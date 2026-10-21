@@ -1,0 +1,9 @@
+{
+  "sha256": "f11134ec7ff14e695cef3ef521c3d95b43d9e062b2cc173267feba7aae249f7b",
+  "bytes": 156966038,
+  "name": "public-planner-puzzles-ship-488cfd83-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "pr": 585
+}

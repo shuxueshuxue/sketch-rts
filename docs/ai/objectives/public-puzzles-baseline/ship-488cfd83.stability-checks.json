@@ -1,0 +1,40 @@
+{
+  "source": "746bec4931bd7379fa8b2595b600a07e575974ba",
+  "scope": "Next-round structural criterion only; original488 runtime remains2478 and is not rerun.",
+  "checks": {
+    "root": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "."
+      ],
+      "exitCode": 0
+    },
+    "tools-ai": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tools/ai/tsconfig.json"
+      ],
+      "exitCode": 0
+    },
+    "unit-and-boundary": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/ai/strategy/puzzles/plan-stability.test.ts",
+        "src/sdk/package-boundaries.test.ts",
+        "--maxWorkers",
+        "1",
+        "--minWorkers",
+        "1"
+      ],
+      "exitCode": 0
+    }
+  }
+}
