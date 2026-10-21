@@ -1,6 +1,6 @@
 # 共同规划器栈上的题库接线
 
-#585 已 rebase 到 `feat/strategy-goal-planner` 的 `b5c7654c126ac2a223fb672ff4244570054097c4`。
+#585 已 rebase 到 `feat/strategy-goal-planner` 的 `acb138251d943097fe55d9d48d059710b1bb4d81`，绑定首个真实搜索导出。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
 ## 判法使用的正式合同
@@ -14,10 +14,10 @@
 
 ## 尚未实现的能力与开启方法
 
-32 确认的正式入口是 `goal-planner.ts/planGoals(input)` 和 `goal-world-facts.ts/createGoalFactReader(...)`；在上述固定 SHA 中，这两个模块尚不存在。
-[planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts) 按实际模块和导出检测能力，缺失原因写入测试名称；文件存在但导出不是函数会直接报错。
+`goal-planner.ts/planGoals(input)` 已由 32 在 `acb13825` 导出。[planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts) 静态导入这个真实函数，绑定测试检查函数引用相同，不再把搜索本身当作可缺省能力。
+`goal-world-facts.ts/createGoalFactReader(...)` 尚不存在；其能力仍按实际模块和导出检测，缺失原因写入测试名称。文件存在但导出不是函数会直接报错。
 
-原生接线文件 `puzzles/goal-planner-native.ts` 也尚未建立，需要真实 source/搜索/owner-think 接口确定后实现以下三个口：
+原生接线文件 `puzzles/goal-planner-native.ts` 也尚未建立，需要真实 source/owner-think 接口确定后实现以下三个口：
 
 | 导出 | 输入/输出与责任 |
 | --- | --- |
@@ -35,9 +35,10 @@
 SKETCH_REQUIRE_GOAL_PLANNER=1 npx vitest run src/ai/strategy/puzzles --maxWorkers 1 --minWorkers 1
 ```
 
-## 当前验证
+## 先前合同验证（b5c7654c）
 
 A100，Node 24.22.0。正式合同接线代码提交 `9ac0276da24b3867a78c42a61eb9f4c6937a75a6`；后续 `4431c9b7` 只补充旧基线拒绝执行的说明，未改场景、判法或生产规则。
+这一版的源码保留在 `archive/public-puzzles-shared-contracts-20261021`，下面的收据仍对应当时的固定 SHA。
 
 | 检查 | 结果 |
 | --- | --- |
@@ -51,11 +52,26 @@ A100，Node 24.22.0。正式合同接线代码提交 `9ac0276da24b3867a78c42a61e
 
 未运行全量 src。原始日志、源码哈希和退出码见 [shared-stack.evidence.json](shared-stack.evidence.json)。
 
+## 首个真实搜索导出的验证（acb13825）
+
+接线代码 `b24f54945667bdf8a988517ec4b717559b1a47d2`，A100 / Node 24.22.0：
+
+| 检查 | 结果 |
+| --- | --- |
+| 根与 tools/ai tsc | 均 exit 0 |
+| 题库、全部 goal 合同测试、SDK 边界 | 16 文件，77 通过、22 明确跳过，exit 0 |
+| 真实搜索导出绑定 | 题库绑定与 `goal-planner.ts` 导出的函数是同一引用 |
+| 原生人工合法解 | 11/11 通过，不计作搜索器的行为成绩 |
+| 严格冷帧入口 smoke | 预期 exit 1，两项仅因事实源/原生接线缺失失败，搜索导出已存在 |
+
+没有给搜索器手填 Situation 或事实，也没有用它自带的小声明域算法测试冒充真实题库通过。未运行全量 src。
+原始日志与源码哈希见 [search-entry.evidence.json](search-entry.evidence.json)。
+
 重跑可行性与合同检查：
 
 ```sh
-SKETCH_PUZZLE_WITNESS=1 npx vitest run src/ai/strategy/puzzles src/ai/strategy/goal-facts.test.ts src/ai/strategy/goal-resource-ledger.test.ts src/ai/strategy/goal-economy-actions.test.ts src/ai/strategy/goal-land-actions.test.ts src/ai/strategy/goal-naval-actions.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
+SKETCH_PUZZLE_WITNESS=1 npx vitest run src/ai/strategy/puzzles src/ai/strategy/goal-*.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
 ```
 
 重模拟继续放 A100/mac1。共同栈上的 witness 脚本输出 `mainBaseline: null`；历史三个房间流派要在已归档分支 `archive/public-puzzles-main-baseline-20261021` 或原始证据的源码提交上重跑。
-本 PR 继续保持 draft，等真实规划器首版后再作为第一道验收。
+本 PR 继续保持 draft，等真实事实源与运行接线齐备后再作为第一道验收。只有搜索函数已导出，不代表真实题库已经通过。
