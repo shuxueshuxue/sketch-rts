@@ -297,6 +297,7 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
     challengerId: memory.objectives[objective.id]?.challengerId ?? null,
     challengerThinks: memory.objectives[objective.id]?.challengerThinks ?? 0,
     committedUtilityGold: offer.net?.status === 'feasible' ? offer.net.utility.score : null,
+    ...(offer.net?.valuationBasis ? { valuationBasis: offer.net.valuationBasis } : {}),
     force: offer.net?.force ?? offer.gross.force } } };
   const capital = reserveAllocationSpends({ memory: next, method, actions: Object.values(next.executions).filter(action => action.methodId === method.id),
     cashGold: situation.economy.cashGold, tick });
@@ -412,7 +413,8 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
         allowedUnitIds: offer.unitIds, unavailableUnitIds: offer.unitIds.filter(id => !ids.includes(id)),
         ...(offer.gross.valuation?.production ? { allowedProduction: offer.gross.valuation.production } : {}),
         ...(unavailableProduction ? { unavailableProduction } : {}) });
-      return result.quote.status === 'feasible' ? { status: 'feasible', score: result.quote.utility.score, coverage: 'complete' }
+      return result.quote.status === 'feasible' ? { status: 'feasible', score: result.quote.utility.score,
+        coverage: result.quote.valuationBasis?.kind === 'proven-lower-bound' ? 'known-effects' : 'complete' }
         : { status: result.quote.missingPreconditions.some(condition => condition.status === 'unknown') ? 'unknown' : 'not-runnable', reasonCode: result.quote.reason.code };
     },
   }));
@@ -552,7 +554,19 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
         methods: Object.fromEntries(Object.entries(memory.methods).filter(([id]) => id !== replacing!.methodId)),
         executions: Object.fromEntries(Object.entries(memory.executions).filter(([, action]) => action.methodId !== replacing!.methodId)) };
     }
+    const renewal = !!memory.objectives[offer.objective.id] && !terminal(memory.objectives[offer.objective.id]!.status);
     memory = assignMethod(input, memory, offer); selected.add(offer.objective.id);
+    if (quote.valuationBasis) {
+      const basis = quote.valuationBasis, action = offer.method.actions[0] && memory.executions[offer.method.actions[0].id]?.token;
+      const counts = memory.decisionCounts;
+      memory = { ...memory, decisionCounts: { lowerBoundSelections: (counts?.lowerBoundSelections ?? 0) + 1,
+        lowerBoundInitialSelections: (counts?.lowerBoundInitialSelections ?? 0) + Number(!renewal) } };
+      if (action) memory = appendAllocationEvent(memory, { objectiveId: offer.objective.id, methodId: offer.method.id, action,
+        kind: 'valuation-bound-selected', basis, scoreGold: quote.utility.score, renewal,
+        reason: { code: 'selected-proven-lower-bound', factIds: offer.unitIds,
+          values: { probabilityLower: basis.probabilityLower, probabilityUpper: basis.probabilityUpper,
+            unresolvedProbability: basis.unresolvedProbability } } }, tick);
+    }
     for (const effect of offer.objective.effects) effects.add(allocationEffectKey(effect));
   }
   // Failed/unknown quotes remain explicit unmet prerequisites; no zero-score

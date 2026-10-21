@@ -139,6 +139,29 @@ describe('deterministic whole-bundle allocation', () => {
       stage: 'assigned', eta: { status: 'known', arrivalTick: 5 } }]);
   });
 
+  it('counts selected lower-bound decisions once per think and retains their trace basis rather than counting trial quotes', () => {
+    const { input, provider } = fixture(), calls: string[] = [];
+    const basis = { kind: 'proven-lower-bound' as const, probabilityLower: .5, probabilityUpper: 1, unresolvedProbability: .5 };
+    const bounded: AllocationMethodProvider = { ...provider, quote(request) {
+      calls.push(request.valuation?.phase ?? 'gross');
+      const quote = provider.quote(request);
+      return quote.status === 'feasible' ? { ...quote, valuationBasis: basis } : quote;
+    } };
+    const request = { ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1), providers: [bounded] };
+    const result = allocateStrategy(request);
+    expect(calls.length).toBeGreaterThan(1);
+    expect(result.memory.decisionCounts).toEqual({ lowerBoundSelections: 1, lowerBoundInitialSelections: 1 });
+    expect(result.events.filter(event => event.kind === 'valuation-bound-selected')).toMatchObject([{ basis, renewal: false }]);
+    expect(result.memory.objectives.single!.valuationBasis).toEqual(basis);
+    expect(allocateStrategy({ ...request, previous: result.memory }).memory).toEqual(result.memory);
+    const later = allocateStrategy({ ...request, previous: result.memory, snapshot: { ...request.snapshot, tick: 15 },
+      situation: { ...request.situation, tick: 15 } });
+    expect(later.memory.decisionCounts).toEqual({ lowerBoundSelections: 2, lowerBoundInitialSelections: 1 });
+    expect(later.events.filter(event => event.kind === 'valuation-bound-selected')).toMatchObject([{ basis, renewal: true }]);
+    expect(allocateStrategy({ ...request, previous: JSON.parse(JSON.stringify(result.memory)), snapshot: { ...request.snapshot, tick: 15 },
+      situation: { ...request.situation, tick: 15 } })).toEqual(later);
+  });
+
   it('publishes loading-stage epochs without requiring later legs and preserves them after actual boarding', () => {
     const { input, method } = fixture(), tick = 100;
     const departure = { point: { x: 1000, y: 1000 }, landId: 'land:1' as const };
