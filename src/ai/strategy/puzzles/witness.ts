@@ -29,6 +29,7 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
     };
     const ship = game.units.find(u => u.owner === owner && u.kind === 'transport' && u.hp > 0);
     const army = live(world.army), workers = live(world.workers).filter(u => !world.islandWorkers.includes(u));
+    const expedition = puzzle.key === 'defense-window' ? [...army, ...workers.slice(0, 1)] : army;
     const moveShip = (tag: string, at: { x: number; y: number }) => {
       if (ship && Math.hypot(ship.x - at.x, ship.y - at.y) > 80) send(tag, { type: 'move', unitIds: [ship.id], ...at });
     };
@@ -86,20 +87,20 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
       if (urgent && live(world.attackers).length) {
         // Meet the attack at the mine, not halfway across the map.
         if (live(world.attackers).some(u => Math.hypot(u.x - world.home.x, u.y - world.home.y) < 450)) attack(army, world.attackers, 'defend');
-      } else if (stage === 'army-load' && load(army, pickup, 'army')) stage = 'army-cross';
-      if (stage === 'army-cross' && unload(army, world.landing, 'army-unload')) stage = 'clear';
+      } else if (stage === 'army-load' && load(expedition, pickup, 'army')) stage = 'army-cross';
+      if (stage === 'army-cross' && unload(expedition, world.landing, 'army-unload')) stage = 'clear';
       if (stage === 'clear') {
         const beach = puzzle.key === 'guarded-shore' && puzzle.variant === 'strong' && live(world.beachGuards).length;
         if (beach) attack(army, world.beachGuards, 'beach');
         else if (live(world.guards).length) attack(army, world.guards, 'camp');
-        else stage = 'worker-load';
+        else stage = puzzle.key === 'defense-window' ? 'hall' : 'worker-load';
       }
       if (stage === 'worker-load' && load(workers.slice(0, 1), pickup, 'worker')) stage = 'worker-cross';
       if (stage === 'worker-cross' && unload(workers.slice(0, 1), world.landing, 'worker-unload')) stage = 'hall';
       if (stage === 'hall') {
         buildHall(world.mine, workers[0]);
         if (puzzle.key === 'defense-window' && puzzle.variant === 'later'
-          && game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && b.complete && Math.hypot(b.x - world.mine.x, b.y - world.mine.y) < 300)) stage = 'return-load';
+          && game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && Math.hypot(b.x - world.mine.x, b.y - world.mine.y) < 300)) stage = 'return-load';
       }
       if (stage === 'return-load' && load(army, { x: world.landing.x, y: 1984 }, 'return')) stage = 'return-cross';
       if (stage === 'return-cross' && unload(army, world.departure, 'return-unload')) stage = 'defend';
