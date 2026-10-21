@@ -1,0 +1,167 @@
+{
+  "source": "d37c34d7939f18252c8aa99a602417cff40469c0",
+  "sharedBase": "12ecbfcc9cffe71d89af3ba5179c3cc7d1ec3d22",
+  "derived": true,
+  "semantics": "Verbatim original selected assertions from two independent native Vitest processes. Other-variant pattern-filtered skips remain in each original JSON and are not double-counted. Scenarios, verdicts, K20,8400 ticks and6144 native allowance unchanged.",
+  "reviewProjection": "Names/status/duration and truncated failure previews only. Complete native reports and verbatim derived aggregate remain in the evidence artifact.",
+  "cases": [
+    {
+      "variant": "far",
+      "command": {
+        "argv": [
+          "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "src/ai/strategy/puzzles/ship-away.scene.test.ts",
+          "--maxWorkers",
+          "1",
+          "--minWorkers",
+          "1",
+          "--testNamePattern",
+          "public planner puzzle: ship-away/far(?:\\s|$)",
+          "--reporter=json",
+          "--outputFile=/codegeex/jeffry/sketch-public-puzzles/evidence/ship-d37c34d7/tests-far.original.json"
+        ],
+        "exitCode": 1
+      },
+      "originalReport": {
+        "variant": "far",
+        "path": "tests-far.original.json",
+        "sha256": "a429331a078b43f950a6532cd2c7cd11bc6d1b414b2f0978bd0b14b6b190544a",
+        "nativeCounts": {
+          "numTotalTestSuites": 3,
+          "numPassedTestSuites": 1,
+          "numFailedTestSuites": 2,
+          "numPendingTestSuites": 0,
+          "numTotalTests": 12,
+          "numPassedTests": 4,
+          "numFailedTests": 1,
+          "numPendingTests": 7,
+          "numTodoTests": 0
+        },
+        "selectedAssertionCount": 6,
+        "filteredOtherVariantAssertionsRetainedInOriginalReport": true
+      },
+      "selectedAssertions": [
+        {
+          "fullName": "public planner puzzle: ship-away/far constructs a deterministic cold frame using native entities, catalogue prices and connected terrain",
+          "status": "passed",
+          "duration": 81.06884099999934,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/far exposes the intended prerequisite through native geometry, camp grouping and command admission",
+          "status": "passed",
+          "duration": 45.00762600000053,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/far native owner-think scope diagnostic only (not puzzle acceptance)",
+          "status": "passed",
+          "duration": 53.53987699999925,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/far frozen-world dependency graph: persistent memory and at most 20 native thinks",
+          "status": "passed",
+          "duration": 26086.997382,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/far goal-planner execution through the real runtime [ready]",
+          "status": "failed",
+          "duration": 3895562.389871,
+          "failurePreview": [
+            "AssertionError: {\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"farm-complete\":1465,\"shipyard-complete\":2799},\"commands\":[{\"tick\":17,\"command\":{\"type\":"
+          ]
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/far authored legal witness proves the physical scene is solvable (not an AI verdict)",
+          "status": "skipped",
+          "duration": null,
+          "failurePreview": []
+        }
+      ]
+    },
+    {
+      "variant": "near",
+      "command": {
+        "argv": [
+          "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "src/ai/strategy/puzzles/ship-away.scene.test.ts",
+          "--maxWorkers",
+          "1",
+          "--minWorkers",
+          "1",
+          "--testNamePattern",
+          "public planner puzzle: ship-away/near(?:\\s|$)",
+          "--reporter=json",
+          "--outputFile=/codegeex/jeffry/sketch-public-puzzles/evidence/ship-d37c34d7/tests-near.original.json"
+        ],
+        "exitCode": 1
+      },
+      "originalReport": {
+        "variant": "near",
+        "path": "tests-near.original.json",
+        "sha256": "2755a402f9a13b024026af9ab94a61758ab8529b275aa490c1f2a4c4bab790d6",
+        "nativeCounts": {
+          "numTotalTestSuites": 3,
+          "numPassedTestSuites": 1,
+          "numFailedTestSuites": 2,
+          "numPendingTestSuites": 0,
+          "numTotalTests": 12,
+          "numPassedTests": 3,
+          "numFailedTests": 2,
+          "numPendingTests": 7,
+          "numTodoTests": 0
+        },
+        "selectedAssertionCount": 6,
+        "filteredOtherVariantAssertionsRetainedInOriginalReport": true
+      },
+      "selectedAssertions": [
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] constructs a deterministic cold frame using native entities, catalogue prices and connected terrain",
+          "status": "passed",
+          "duration": 75.22452299999986,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] exposes the intended prerequisite through native geometry, camp grouping and command admission",
+          "status": "passed",
+          "duration": 47.287922000000435,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] native owner-think scope diagnostic only (not puzzle acceptance)",
+          "status": "passed",
+          "duration": 39.218792000001486,
+          "failurePreview": []
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] frozen-world dependency graph: persistent memory and at most 20 native thinks",
+          "status": "failed",
+          "duration": 24551.192453000003,
+          "failurePreview": [
+            "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) } ] to have a length of +0 but got 1\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vi"
+          ]
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] goal-planner execution through the real runtime [ready]",
+          "status": "failed",
+          "duration": 3825468.232084,
+          "failurePreview": [
+            "AssertionError: {\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"farm-complete\":1465,\"shipyard-complete\":2799},\"commands\":[{\"tic"
+          ]
+        },
+        {
+          "fullName": "public planner puzzle: ship-away/near [main-passing overaction regression] authored legal witness proves the physical scene is solvable (not an AI verdict)",
+          "status": "skipped",
+          "duration": null,
+          "failurePreview": []
+        }
+      ]
+    }
+  ]
+}
