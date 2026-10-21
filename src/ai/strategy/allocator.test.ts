@@ -9,6 +9,8 @@ import { recordAllocationCommands } from './allocation-ledger';
 import type { DecisionFacts } from './decision';
 import type { Objective, Situation } from './types';
 import { resolveValuation, valuationWindow } from './utility';
+import type { AssemblyFactsRequest } from './assembly-facts';
+import { forecastForceAssembly } from './force-assembly-forecast';
 
 function fixture() {
   const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: [] }));
@@ -53,6 +55,29 @@ function fixture() {
 }
 
 describe('deterministic whole-bundle allocation', () => {
+  it('binds assembly facts to each actual gross/net bundle and its current resource exclusions', () => {
+    const { input, provider } = fixture();
+    const expected: AssemblyFactsRequest[] = [], seen: AssemblyFactsRequest[] = [];
+    const wrapped: AllocationMethodProvider = { ...provider, quote(request) {
+      expected.push({ objective: request.objective, methodId: request.method.id, campTarget: request.objective.target,
+        requiredForce: 3, posts: [], unitIds: request.unitIds,
+        ...(request.valuation ? { valuation: request.valuation } : {}),
+        ...(request.responseEligibleUnitIds ? { responseEligibleUnitIds: request.responseEligibleUnitIds } : {}) });
+      request.assemblyFacts!({ objective: input.objectives[0]!, methodId: 'stale-method', campTarget: request.objective.target,
+        requiredForce: 3, posts: [], unitIds: ['ungranted-member'] });
+      return provider.quote(request);
+    } };
+    allocateStrategy({ ...input, providers: [wrapped], assemblyFacts: request => {
+      seen.push(request);
+      return { forecast: forecastForceAssembly({ snapshot: input.snapshot, owner: input.situation.owner,
+        rallies: [], target: { metric: 'field-strength', requiredForce: 3 }, unitSupply: [], paidJobRoutes: [],
+        throughTick: 1000, conditionalProduction: null }), continuation: null, missing: [] };
+    } });
+    expect(seen).toEqual(expected);
+    expect(new Set(seen.map(request => request.valuation?.phase))).toEqual(new Set(['gross', 'net']));
+    expect(seen.every(request => !request.unitIds.includes('ungranted-member'))).toBe(true);
+  });
+
   it('compares nonlinear complete cohorts and grants the better marginal use exactly once', () => {
     const { input } = fixture(), before = JSON.stringify(input.snapshot);
     const result = allocateStrategy(input);
