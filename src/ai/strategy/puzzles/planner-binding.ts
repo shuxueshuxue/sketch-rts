@@ -10,6 +10,7 @@ import { createGoalFactReader } from '../goal-world-facts';
 import { withGoalPlannerInput } from '../goal-planner-input';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import { withInput } from './goal-planner-native';
+import type { ShipOwnershipScope, PuzzleStepOwnership } from './execution-ownership';
 
 export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
@@ -30,11 +31,12 @@ export type PuzzlePlannerExecution = {
     plannedThinks: number; observedThinks: number; firstReadyTick: number | null;
     firstFormalCommandTick: number | null; formalCommandCount: number;
   }>;
+  ownership?(initialTick: number, commands: readonly { tick: number; command: import('../../../shared/sim/observation').Observed<import('../../../shared/types').GameCommand> }[]): PuzzleStepOwnership | undefined;
 };
 export type NativePuzzleModule = {
   withInput: NativePuzzleInputScope;
   allocation(input: GoalPlannerInput, output: GoalPlannerOutput): StrategyAllocationTrace | null;
-  createExecution(options?: { evidenceFile?: string }): PuzzlePlannerExecution;
+  createExecution(options?: { evidenceFile?: string; ownershipScope?: ShipOwnershipScope }): PuzzlePlannerExecution;
 };
 
 type Available<T> = { value: T; unavailable?: never } | { value?: never; unavailable: string };

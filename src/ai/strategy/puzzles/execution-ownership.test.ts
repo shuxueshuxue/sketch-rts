@@ -1,0 +1,79 @@
+import { describe, expect, it } from 'vitest';
+import { sketchScene } from '../../../sdk/scene';
+import { issueCommandFrame } from '../../../sdk/commands/frame';
+import { observeSimulation, snapshotGame, stepGame, type Game } from '../../../shared/sim';
+import type { GameCommand } from '../../../shared/types';
+import type { Observed } from '../../../shared/sim/observation';
+import type { StrategyAllocationTrace } from '../allocation-types';
+import { landIdAt } from '../regions';
+import { createExecutionOwnership } from './execution-ownership';
+import { legalBuildingSite } from './world';
+
+// Receipt matcher contracts use real SDK construction and snapshots. The
+// allocation envelopes below exercise attribution only, not planner success.
+function fixture() {
+  const game = sketchScene('ownership-contract').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove' }).playerState('us', { gold: 3000 }).worker('us', 800, 1000).build().createGame();
+  game.scriptedVictory = true;
+  const at = legalBuildingSite(game, 'townHall', { x: 1000, y: 1000 });
+  const worker = game.units.find(u => u.owner === 'us' && u.kind === 'worker')!;
+  const tracker = createExecutionOwnership({ targetMine: at, targetLandId: landIdAt(game.map, at)!, campMemberIds: [] });
+  const commands: { tick: number; command: Observed<GameCommand> }[] = [];
+  const start = game.tick, stop = observeSimulation(game, { command(e) { commands.push({ tick: e.tick-start, command: e.command }); } });
+  const command: GameCommand = { type: 'build', unitId: worker.id, buildingKind: 'townHall', ...at };
+  return { game, at, worker, tracker, commands, start, stop, command };
+}
+function observe(f: ReturnType<typeof fixture>, command?: GameCommand, scriptId = 'goal.build') {
+  const token = { actionId: 'receipt', generation: 1 };
+  const allocation: StrategyAllocationTrace = { revision: 1, objectives: [], assignments: [], budget: [], voyages: [], vacancies: [], blocked: [], unmet: [], events: [], budgetProjection: [],
+    executions: command && scriptId === 'goal.build' ? [{ token, objectiveId: 'goal', methodId: 'method', executor: scriptId,
+      intent: { kind: 'goal-action', goalId: 'goal', declarationId: 'decl', actionKind: 'build',
+        parameters: { buildingKind: 'townHall', at: { point: f.at }, worker: { kind: 'existing', entityId: f.worker.id }, foundationId: null }, outputs: [] },
+      target: { point: f.at }, dependsOn: [], completionEffects: [], status: 'active', phase: 'build', sinceTick: f.game.tick, lastProgressTick: f.game.tick, state: {} }] : [],
+    commandAdmissions: command && scriptId === 'goal.build' ? [{ commandId: 'sdk-receipt', source: 'executor', executor: scriptId, action: token,
+      allocationRevision: 1, purpose: 'task', command, status: 'accepted', admittedTick: f.game.tick, queuedTick: null }] : [] };
+  f.tracker.observe(snapshotGame(f.game), { owner: 'us', allocation, commands: command ? [{ playerId: 'us', scriptId, command }] : [] });
+}
+function complete(f: ReturnType<typeof fixture>) {
+  for (let i=0; i<1200 && !f.game.buildings.some(b => b.kind === 'townHall' && b.complete); i++) { stepGame(f.game); observe(f); }
+  expect(f.game.buildings.some(b => b.kind === 'townHall' && b.complete)).toBe(true);
+}
+function issue(f: ReturnType<typeof fixture>, scriptId = 'goal.build') {
+  observe(f, f.command, scriptId);
+  issueCommandFrame(f.game, [{ playerId: 'us', scriptId, command: f.command }]);
+}
+
+describe('per-step native SDK ownership', () => {
+  it('does not credit a physically complete old-script hall to the planner', () => {
+    const f=fixture(); try {
+      issue(f, 'v6Economy'); complete(f);
+      expect(f.tracker.finish(f.start, f.commands, ['build'])).toMatchObject({ passed: false,
+        steps: [{ step: 'build', status: 'older-code-completed', goalCommandCount: 0, scriptIds: ['v6Economy'] }] });
+    } finally { f.stop(); }
+  });
+  it('requires native application, not only a gateway acceptance envelope', () => {
+    const f=fixture(); try {
+      observe(f, f.command);
+      expect(f.tracker.finish(f.start, [], ['build'])).toMatchObject({ passed: false,
+        steps: [{ status: 'unconfirmed', goalCommandCount: 1, sdkAppliedCount: 0 }] });
+    } finally { f.stop(); }
+  });
+  it('requires the actual building effect after native application', () => {
+    const f=fixture(); try {
+      issue(f);
+      expect(f.tracker.finish(f.start, f.commands, ['build']).passed).toBe(false);
+      complete(f);
+      expect(f.tracker.finish(f.start, f.commands, ['build'])).toMatchObject({ passed: true,
+        steps: [{ status: 'goal-confirmed', goalCommandCount: 1, sdkAppliedCount: 1, scriptIds: ['goal.build'] }] });
+      expect(f.tracker.finish(f.start, f.commands).passed, 'one successful step cannot stand in for every required step').toBe(false);
+    } finally { f.stop(); }
+  });
+  it('cannot attach a later goal receipt to an earlier old-script application', () => {
+    const f=fixture(); try {
+      issue(f, 'v6Economy'); complete(f); stepGame(f.game);
+      observe(f, f.command);
+      expect(f.tracker.finish(f.start, f.commands, ['build'])).toMatchObject({ passed: false,
+        steps: [{ status: 'older-code-completed', goalCommandCount: 1, sdkAppliedCount: 0 }] });
+    } finally { f.stop(); }
+  });
+});
