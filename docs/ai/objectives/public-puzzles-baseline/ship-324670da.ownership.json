@@ -1,0 +1,767 @@
+{
+  "source": "13b28abb793a956f37e49203095033a04ea22f85",
+  "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+  "instruction": "Commander182 2026-10-21 19:34; required steps need goal command plus native SDK effect. Older code completion cannot pass the planner.",
+  "derivationOnly": true,
+  "originalRuntimePredicateChanged": false,
+  "oldPassed": 2,
+  "newPassed": 0,
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "originalRuntimeAccepted": true,
+      "originalPhysicalPassed": true,
+      "newStepOwnershipPassed": false,
+      "disqualifyingStep": "build",
+      "stepResult": "older-code-completed",
+      "goalBuildCommandCount": 0,
+      "goalHoldPositionCommandCount": 0,
+      "originalTownHallCommand": {
+        "source": "13b28abb793a956f37e49203095033a04ea22f85",
+        "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "variant": "far",
+        "event": "first-returned-townhall-build-command",
+        "think": 499,
+        "tick": 7485,
+        "compressedOffset": 110399446,
+        "compressedBytes": 360460,
+        "compressedSha256": "589a837d30d804747f63d813480bc242e62724eecf3755edd0c240ec1bafd2b1",
+        "plainSha256": "d65af90f5c92e22a5a526ccd27fc8711e1a1951f286e0dc55273a643a0c0371f",
+        "owner": "planner",
+        "gold": 619,
+        "newTownHalls": [],
+        "returnedTownHallCommands": [
+          {
+            "playerId": "planner",
+            "source": "internal-ai",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "build",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "buildingKind": "townHall",
+              "x": 2928,
+              "y": 688
+            }
+          }
+        ],
+        "townHallAdmissions": [
+          {
+            "commandId": "planner:strategy-command:7485:499:1",
+            "source": "script",
+            "executor": "v6Economy",
+            "action": null,
+            "allocationRevision": null,
+            "purpose": "task",
+            "command": {
+              "type": "build",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "buildingKind": "townHall",
+              "x": 2928,
+              "y": 688
+            },
+            "status": "accepted",
+            "admittedTick": 7485,
+            "queuedTick": null
+          }
+        ],
+        "semantics": "Original complete CRC member, SDK commands and actual snapshot only. No AI/source/navigation/sim. A returned build command does not by itself prove payment or goal.build attribution."
+      },
+      "physicalHallCompleteRelativeTick": 8150,
+      "otherFirstAcceptedGoalSteps": {
+        "assemble": {
+          "think": 10,
+          "tick": 150,
+          "executor": "goal.assemble",
+          "admission": {
+            "commandId": "planner:strategy-command:150:10:0",
+            "source": "executor",
+            "executor": "goal.assemble",
+            "action": {
+              "actionId": "goal-ref:action:v6",
+              "generation": 2
+            },
+            "allocationRevision": 10,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "x": 1488,
+              "y": 688,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 150,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v6",
+              "generation": 2
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.assemble",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v5",
+              "actionKind": "assemble",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v4"
+            },
+            "target": {
+              "landId": "land:1",
+              "point": {
+                "x": 1488,
+                "y": 688
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "assembling",
+            "sinceTick": 150,
+            "lastProgressTick": 150,
+            "state": {}
+          }
+        },
+        "position-transport": {
+          "think": 15,
+          "tick": 225,
+          "executor": "goal.position-transport",
+          "admission": {
+            "commandId": "planner:strategy-command:225:15:0",
+            "source": "executor",
+            "executor": "goal.position-transport",
+            "action": {
+              "actionId": "goal-ref:action:v9",
+              "generation": 3
+            },
+            "allocationRevision": 15,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "unit-planner-transport-1000"
+              ],
+              "x": 1552,
+              "y": 688,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 225,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v9",
+              "generation": 3
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.position-transport",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v8",
+              "actionKind": "position-transport",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v7"
+            },
+            "target": {
+              "seaId": "sea:1",
+              "point": {
+                "x": 1552,
+                "y": 688
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "positioning",
+            "sinceTick": 225,
+            "lastProgressTick": 225,
+            "state": {}
+          }
+        },
+        "transport-force": {
+          "think": 106,
+          "tick": 1590,
+          "executor": "goal.transport-force",
+          "admission": {
+            "commandId": "planner:strategy-command:1590:106:1",
+            "source": "executor",
+            "executor": "goal.transport-force",
+            "action": {
+              "actionId": "goal-ref:action:v25",
+              "generation": 8
+            },
+            "allocationRevision": 106,
+            "purpose": "task",
+            "command": {
+              "type": "board",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "transportId": "unit-planner-transport-1000"
+            },
+            "status": "accepted",
+            "admittedTick": 1590,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v25",
+              "generation": 8
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.transport-force",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v24",
+              "actionKind": "transport-force",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v23"
+            },
+            "target": {
+              "entityId": "resource-1",
+              "point": {
+                "x": 2976,
+                "y": 896
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "loading",
+            "sinceTick": 1590,
+            "lastProgressTick": 1590,
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          }
+        },
+        "clear-camp": {
+          "think": 220,
+          "tick": 3300,
+          "executor": "goal.clear-camp",
+          "admission": {
+            "commandId": "planner:strategy-command:3300:220:0",
+            "source": "executor",
+            "executor": "goal.clear-camp",
+            "action": {
+              "actionId": "goal-ref:action:v37",
+              "generation": 12
+            },
+            "allocationRevision": 220,
+            "purpose": "task",
+            "command": {
+              "type": "attack",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+            },
+            "status": "accepted",
+            "admittedTick": 3300,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v37",
+              "generation": 12
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.clear-camp",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v36",
+              "actionKind": "clear-camp",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v35"
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.432452537461,
+                "y": 870.6336733966539
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "engage",
+            "sinceTick": 3300,
+            "lastProgressTick": 3300,
+            "state": {
+              "goalCampObserved": true,
+              "staging": {
+                "x": 2792.432452537461,
+                "y": 870.6336733966539
+              },
+              "refuge": {
+                "x": 2792.432452537461,
+                "y": 870.6336733966539
+              },
+              "remainingPlayerThreatIds": []
+            }
+          }
+        },
+        "transport-worker": {
+          "think": 419,
+          "tick": 6285,
+          "executor": "goal.transport-worker",
+          "admission": {
+            "commandId": "planner:strategy-command:6285:419:0",
+            "source": "executor",
+            "executor": "goal.transport-worker",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "allocationRevision": 419,
+            "purpose": "task",
+            "command": {
+              "type": "board",
+              "unitIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ],
+              "transportId": "unit-planner-transport-1000"
+            },
+            "status": "accepted",
+            "admittedTick": 6285,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.transport-worker",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v46",
+              "actionKind": "transport-worker",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v45"
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "loading",
+            "sinceTick": 6285,
+            "lastProgressTick": 6285,
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          }
+        }
+      },
+      "scope": "The new predicate certainly fails because required build has no goal command. Other steps are not promoted solely from this summary; original native domain audits remain separate."
+    },
+    {
+      "puzzle": "ship-away/near",
+      "originalRuntimeAccepted": true,
+      "originalPhysicalPassed": true,
+      "newStepOwnershipPassed": false,
+      "disqualifyingStep": "build",
+      "stepResult": "older-code-completed",
+      "goalBuildCommandCount": 0,
+      "goalHoldPositionCommandCount": 0,
+      "originalTownHallCommand": {
+        "source": "13b28abb793a956f37e49203095033a04ea22f85",
+        "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "variant": "near",
+        "event": "first-returned-townhall-build-command",
+        "think": 405,
+        "tick": 6075,
+        "compressedOffset": 88241791,
+        "compressedBytes": 360413,
+        "compressedSha256": "1de72579750c22ae1e43ac7825f62338676dc1fe39614fb5413eabc283b65081",
+        "plainSha256": "d28a3c37e7db0e1d6cd4ddc21b459d18ef156385f07e5703bf82362df94244f9",
+        "owner": "planner",
+        "gold": 409,
+        "newTownHalls": [],
+        "returnedTownHallCommands": [
+          {
+            "playerId": "planner",
+            "source": "internal-ai",
+            "scriptId": "v6Economy",
+            "command": {
+              "type": "build",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "buildingKind": "townHall",
+              "x": 2928,
+              "y": 688
+            }
+          }
+        ],
+        "townHallAdmissions": [
+          {
+            "commandId": "planner:strategy-command:6075:405:1",
+            "source": "script",
+            "executor": "v6Economy",
+            "action": null,
+            "allocationRevision": null,
+            "purpose": "task",
+            "command": {
+              "type": "build",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "buildingKind": "townHall",
+              "x": 2928,
+              "y": 688
+            },
+            "status": "accepted",
+            "admittedTick": 6075,
+            "queuedTick": null
+          }
+        ],
+        "semantics": "Original complete CRC member, SDK commands and actual snapshot only. No AI/source/navigation/sim. A returned build command does not by itself prove payment or goal.build attribution."
+      },
+      "physicalHallCompleteRelativeTick": 6740,
+      "otherFirstAcceptedGoalSteps": {
+        "assemble": {
+          "think": 8,
+          "tick": 120,
+          "executor": "goal.assemble",
+          "admission": {
+            "commandId": "planner:strategy-command:120:8:0",
+            "source": "executor",
+            "executor": "goal.assemble",
+            "action": {
+              "actionId": "goal-ref:action:v6",
+              "generation": 2
+            },
+            "allocationRevision": 8,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "x": 1520,
+              "y": 720,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 120,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v6",
+              "generation": 2
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.assemble",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v5",
+              "actionKind": "assemble",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v4"
+            },
+            "target": {
+              "landId": "land:1",
+              "point": {
+                "x": 1520,
+                "y": 720
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "assembling",
+            "sinceTick": 120,
+            "lastProgressTick": 120,
+            "state": {}
+          }
+        },
+        "transport-force": {
+          "think": 14,
+          "tick": 210,
+          "executor": "goal.transport-force",
+          "admission": {
+            "commandId": "planner:strategy-command:210:14:0",
+            "source": "executor",
+            "executor": "goal.transport-force",
+            "action": {
+              "actionId": "goal-ref:action:v10",
+              "generation": 3
+            },
+            "allocationRevision": 14,
+            "purpose": "task",
+            "command": {
+              "type": "board",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "transportId": "unit-planner-transport-1000"
+            },
+            "status": "accepted",
+            "admittedTick": 210,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v10",
+              "generation": 3
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.transport-force",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v9",
+              "actionKind": "transport-force",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v8"
+            },
+            "target": {
+              "entityId": "resource-1",
+              "point": {
+                "x": 2976,
+                "y": 896
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "loading",
+            "sinceTick": 210,
+            "lastProgressTick": 210,
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          }
+        },
+        "position-transport": {
+          "think": 78,
+          "tick": 1170,
+          "executor": "goal.position-transport",
+          "admission": {
+            "commandId": "planner:strategy-command:1170:78:0",
+            "source": "executor",
+            "executor": "goal.position-transport",
+            "action": {
+              "actionId": "goal-ref:action:v16",
+              "generation": 5
+            },
+            "allocationRevision": 78,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "unit-planner-transport-1000"
+              ],
+              "x": 112,
+              "y": 880,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 1170,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v16",
+              "generation": 5
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.position-transport",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v15",
+              "actionKind": "position-transport",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v14"
+            },
+            "target": {
+              "seaId": "sea:1",
+              "point": {
+                "x": 112,
+                "y": 880
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "positioning",
+            "sinceTick": 1170,
+            "lastProgressTick": 1170,
+            "state": {}
+          }
+        },
+        "clear-camp": {
+          "think": 105,
+          "tick": 1575,
+          "executor": "goal.clear-camp",
+          "admission": {
+            "commandId": "planner:strategy-command:1575:105:0",
+            "source": "executor",
+            "executor": "goal.clear-camp",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "allocationRevision": 105,
+            "purpose": "task",
+            "command": {
+              "type": "attack",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+            },
+            "status": "accepted",
+            "admittedTick": 1575,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.clear-camp",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v21",
+              "actionKind": "clear-camp",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v20"
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "engage",
+            "sinceTick": 1575,
+            "lastProgressTick": 1575,
+            "state": {
+              "goalCampObserved": true,
+              "staging": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              },
+              "refuge": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              },
+              "remainingPlayerThreatIds": []
+            }
+          }
+        },
+        "transport-worker": {
+          "think": 281,
+          "tick": 4215,
+          "executor": "goal.transport-worker",
+          "admission": {
+            "commandId": "planner:strategy-command:4215:281:0",
+            "source": "executor",
+            "executor": "goal.transport-worker",
+            "action": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "allocationRevision": 281,
+            "purpose": "task",
+            "command": {
+              "type": "board",
+              "unitIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ],
+              "transportId": "unit-planner-transport-1000"
+            },
+            "status": "accepted",
+            "admittedTick": 4215,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.transport-worker",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v37",
+              "actionKind": "transport-worker",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v36"
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "loading",
+            "sinceTick": 4215,
+            "lastProgressTick": 4215,
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          }
+        }
+      },
+      "scope": "The new predicate certainly fails because required build has no goal command. Other steps are not promoted solely from this summary; original native domain audits remain separate."
+    }
+  ]
+}
