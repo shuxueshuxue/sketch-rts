@@ -1,0 +1,9 @@
+{
+  "sha256": "afb76383eb469d96b47e80c6d7b975b438dfb7fb789dd569e6e05921ca80726e",
+  "bytes": 2285495,
+  "name": "public-planner-puzzles-k20-a0db-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "0615cf078469a59ee8b43e7cf42a461afadf7d0e",
+  "pr": 585
+}
