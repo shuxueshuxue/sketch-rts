@@ -22,6 +22,8 @@
 
 所有执行器只读 `ActionGrant` 指定的租用，不从全军补兵。甲板和船舱乘客不兑现为陆地到岗。命令只是提案，真正接纳由统一闸口记录；执行器的计划名称不是实际下令来源。
 
+正式集结、清营（含不足后的退路）、采矿入口、撤离和工人救命观察也使用同一 landRoute scope。未公布的道路只产生 pending，不推出“不可达／没有逃路”。撤离和 worker safety 继续复用原有威胁圆、离开覆盖与终点安全检查；`allocationLandRoadReader` 只把已发布道路转换成这些检查使用的点与路程，不再请求原生 steering。不同道路事实不复用旧 native road-clear 的判断缓存。已证明的救命移动保留 `life-saving` 命令用途；未知 steering 不伪造一个已知路线段。scope 外的旧安全模块保持原执行路径。grant 场景把整个执行调用置于诊断总闸下，任何未获授权的 native 求路都会抛错；正式运行没有诊断 observer 时不新增异常。
+
 守矿执行保留固定矿口，已到的部队可在兵力足够或受保护资产遭攻击时接敌，迟到成员继续赶路。追击以受保护矿厅为中心，650 外回矿口。塔下方法需要真实完整且能覆盖等待点的塔。撤离需要有效自有避难建筑和实际安全陆路，跨海避难仍须明确运输前置。
 
 `assets-evacuated.unitIds` 是具名撤离对象，不能替换成同数量的其他工人。具体化、报价和执行共用 `evacuationSubjectIds`，缺少具名对象的 grant 报 `evacuation-subject-not-granted`，不向替代者发令，也不兑现完成效果。Ne 17991 原帧的 worker-3 / worker-1980 反例锁住此边界；没有具名效果的 DefendSite 撤离备选仍仅指挥自己的工人 grant。

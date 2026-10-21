@@ -7,6 +7,8 @@ import { neutralCampExposure } from '../../situation/neutral-camp-exposure';
 import { assessPresentCampEngagement } from '../allocated-force';
 import type { ExecutorFeedback, JsonValue, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, sameAction, validExecutorGrant } from '../executor-grants';
+import { currentAllocationLandRouteReader } from '../allocation-arrival-query';
+import type { Point } from '../types';
 
 function point(value: JsonValue | undefined): { x: number; y: number } | undefined {
   return value && typeof value === 'object' && 'x' in value && 'y' in value
@@ -19,6 +21,9 @@ export const clearCampExecutor: StrategyExecutor = {
     if (!validExecutorGrant(input)) return blockedExecutor(input, 'invalid-action-grant');
     if (input.execution.intent.kind !== 'clear-camp') return blockedExecutor(input, 'clearing-intent-required');
     const { snapshot, owner, execution } = input, base = executorFeedback(input);
+    const read = currentAllocationLandRouteReader();
+    const route = (from: Point, goal: Point) => read ? read(from, goal).status
+      : walkingDistance(snapshot.map, from, goal) === undefined ? 'unreachable' : 'known';
     const ids = new Set(input.execution.intent.memberIds);
     const cohort = grantedUnits(input).filter(unit => unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && unit.attackDamage > 0
       && unit.kind !== 'worker' && sameGround(snapshot.map, unit, execution.target.point)
@@ -37,9 +42,12 @@ export const clearCampExecutor: StrategyExecutor = {
       disposition: power.sufficient ? 'shrink' : 'pause' }));
     const fail = (reason: string): ExecutorFeedback => {
       const refuge = point(execution.state.staging) ?? point(execution.state.refuge);
+      const pending: string[] = [];
       const leaving = engaged && refuge ? cohort.filter(unit => unit.order.type !== 'cast' && unit.order.type !== 'charge'
-        && walkingDistance(snapshot.map, unit, refuge) !== undefined) : [];
-      return { ...blockedExecutor(input, reason, cohort.map(unit => unit.id)), handoffs,
+        && (() => { const status = route(unit, refuge); if (status === 'unknown') pending.push(unit.id); return status === 'known'; })()) : [];
+      const blocked = blockedExecutor(input, reason, cohort.map(unit => unit.id));
+      return { ...blocked, handoffs, reasons: [...blocked.reasons, ...(pending.length ? [{ executor: this.id,
+        outcome: 'paused' as const, reason: 'clearing-retreat-route-pending', unitIds: pending }] : [])],
         ...(leaving.length && refuge ? { phase: 'retreat', commands: leaving.filter(unit => !(unit.order.type === 'move'
           && unit.order.avoidCombat && distance(unit.order, refuge) < 40)).map(unit => ({ command: {
             type: 'move' as const, unitIds: [unit.id], ...refuge, avoidCombat: true }, purpose: 'life-saving' as const })) } : {}) };
@@ -55,9 +63,14 @@ export const clearCampExecutor: StrategyExecutor = {
     const refuge = point(execution.state.refuge) ?? (transport?.kind === 'transport' ? transport.landing : from);
     const home = walkableGoal(snapshot.map, refuge.x, refuge.y);
     if (!sameGround(snapshot.map, home, center)) return fail('clearing-refuge-on-wrong-land');
-    const staging = point(execution.state.staging) ?? (creeps.length ? bootstrapCampApproach(snapshot, home, cohort, camp, from, all)?.staging
-      : walkingDistance(snapshot.map, from, center) !== undefined ? walkableGoal(snapshot.map, center.x, center.y) : undefined);
-    if (!staging) return fail('clearing-geometry-blocked');
+    let pending = false;
+    const planning = read && ((start: Point, goal: Point) => {
+      const answer = read(start, goal); pending ||= answer.status === 'unknown'; return answer;
+    });
+    const staging = point(execution.state.staging) ?? (creeps.length ? bootstrapCampApproach(snapshot, home, cohort, camp, from, all, planning)?.staging
+      : (() => { const status = route(from, center); pending ||= status === 'unknown';
+        return status === 'known' ? walkableGoal(snapshot.map, center.x, center.y) : undefined; })());
+    if (!staging) return fail(pending ? 'clearing-route-pending' : 'clearing-geometry-blocked');
     if (engaged && ![...creeps, ...hostile].some(unit => distance(unit, center) <= 650)
       && !power.towers.length) return fail('clearing-target-outside-beachhead-leash');
     const ready = cohort.filter(unit => distance(unit, staging) <= V7_GATHERED_RANGE && unit.hp >= unit.maxHp * .35);

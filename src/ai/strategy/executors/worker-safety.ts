@@ -2,9 +2,12 @@ import { forceFor } from '../../policy/v7/creep';
 import { armedFoes, nativeLandRoad } from '../../bootstrap_1/safe-land-route';
 import { workerEscapeDestination, workerThreatAt } from '../../bootstrap_1/worker-safety';
 import { neutralCampExposure } from '../../situation/neutral-camp-exposure';
-import type { ExecutorFeedback, ExecutorInput, SafetyBlockedQuote, SafetyObstacle, AllocationReason } from '../allocation-types';
+import type { ExecutorFeedback, ExecutorInput, SafetyBlockedQuote, SafetyObstacle, AllocationReason, AllocationPrecondition } from '../allocation-types';
 import { executorFeedback, grantedUnits, sameAction, validExecutorGrant } from '../executor-grants';
 import { strategyTeamOptions } from '../ownership';
+import { currentAllocationLandRouteReader } from '../allocation-arrival-query';
+import type { Point } from '../types';
+import { allocationLandRoadReader } from '../allocation-land-road';
 
 const reason = (code: string, factIds: readonly string[] = []): AllocationReason => ({ code, factIds, values: {} });
 
@@ -32,20 +35,24 @@ export function observeWorkerSafetyInterruption(input: ExecutorInput): ExecutorF
       ? { x: actualOrder.x, y: actualOrder.y }
       : actualOrder.type === 'mine' ? snapshot.resources.find(mine => mine.id === actualOrder.resourceId)
       : actualOrder.type === 'repair' ? snapshot.buildings.find(building => building.id === actualOrder.buildingId) : undefined;
-    const road = actualGoal && nativeLandRoad(snapshot, worker, actualGoal);
+    const read = currentAllocationLandRouteReader(), pending: { goal: Point; reasonCode: string }[] = [];
+    const planning = allocationLandRoadReader((_id, goal, reasonCode) => pending.push({ goal, reasonCode }));
+    const road = actualGoal && (planning ? planning(worker, actualGoal) : nativeLandRoad(snapshot, worker, actualGoal));
     const segment = road?.points.slice(0, 2) ?? [worker, worker];
     const obstacles: SafetyObstacle[] = [
       ...camps.map(camp => ({ kind: 'camp' as const, memberIds: camp.memberIds,
         point: { point: camp.camp.center } })),
       ...threats.filter(foe => !('order' in foe)).map(tower => ({ kind: 'enemy-tower' as const,
         towerId: tower.id, point: { entityId: tower.id, point: { x: tower.x, y: tower.y } } })),
-      { kind: 'route-segment', from: { point: { x: segment[0]!.x, y: segment[0]!.y } },
+      ...(!read || road ? [{ kind: 'route-segment' as const, from: { point: { x: segment[0]!.x, y: segment[0]!.y } },
         to: { point: { x: segment.at(-1)!.x, y: segment.at(-1)!.y } },
-        reason: reason('worker-current-steering-segment-exposed', threats.map(foe => foe.id)) },
+        reason: reason('worker-current-steering-segment-exposed', threats.map(foe => foe.id)) }] : []),
     ];
-    const escape = workerEscapeDestination(snapshot, owner, worker, foes, options);
+    const beforeEscape = pending.length;
+    const escape = workerEscapeDestination(snapshot, owner, worker, foes, options, planning);
     if (escape) commands.push({ command: { type: 'move', unitIds: [worker.id], ...escape.shelter, avoidCombat: true }, purpose: 'life-saving' });
-    const why = reason(escape ? 'parent-action-interrupted-by-worker-safety' : 'worker-safety-has-no-safe-escape', threats.map(foe => foe.id));
+    const why = reason(escape ? 'parent-action-interrupted-by-worker-safety' : pending.length > beforeEscape
+      ? 'worker-safety-escape-route-pending' : 'worker-safety-has-no-safe-escape', threats.map(foe => foe.id));
     blocked.push({ id: `${execution.token.actionId}:${execution.token.generation}:safety:${worker.id}`,
       parent: execution.token, objectiveId: execution.objectiveId, methodId: execution.methodId,
       interruptedCommandId: order.commandId, interruptedExecutor: order.executor, interruptedTick: snapshot.tick,
@@ -53,11 +60,14 @@ export function observeWorkerSafetyInterruption(input: ExecutorInput): ExecutorF
       heldLeaseIds: grant.leases.filter(lease => lease.resourceKey === `unit:${worker.id}`).map(lease => lease.id),
       unpaidBudgetIds: grant.budgets.filter(budget => budget.state === 'reserved' && budget.amountGold > budget.paidGold).map(budget => budget.id),
       obstacles, potentialUtility: null,
-      missingPreconditions: camps.length ? camps.map(camp => ({ id: `${execution.token.actionId}/clear:${camp.memberIds.join(',')}`,
-        kind: 'force', status: 'unmet', reason: why, subgoalIds: [],
+      missingPreconditions: [...(camps.length ? camps.map<AllocationPrecondition>(camp => ({ id: `${execution.token.actionId}/clear:${camp.memberIds.join(',')}`,
+        kind: 'force' as const, status: 'unmet' as const, reason: why, subgoalIds: [],
         demand: { kind: 'force', metric: 'camp-force', strength: forceFor(camp.camp), roles: ['frontline', 'ranged'],
           at: { point: camp.camp.center }, neededByTick: null, permanent: true } }))
-        : [{ id: `${execution.token.actionId}/safe-worker-route`, kind: 'route', status: 'unmet', reason: why, demand: null, subgoalIds: [] }],
+        : pending.length && !escape ? [] : [{ id: `${execution.token.actionId}/safe-worker-route`, kind: 'route' as const, status: 'unmet' as const, reason: why, demand: null, subgoalIds: [] }]),
+        ...pending.map((route, i) => ({ id: `${execution.token.actionId}/worker-route-pending:${worker.id}:${i}`, kind: 'route' as const,
+          status: 'unknown' as const, demand: null, subgoalIds: [], reason: { code: route.reasonCode, factIds: [worker.id],
+            values: { goalX: route.goal.x, goalY: route.goal.y } } }))],
       alternatives: (['continue', 'reassign', 'clear-obstacle', 'abandon'] as const).map(kind => ({ kind, methodId: null,
         estimatedGold: null, estimatedTicks: null, includedSpendIds: [], reason: reason(`${kind}-requires-allocation-quote`, threats.map(foe => foe.id)) })),
       reason: { executor: 'strategy.worker-safety', outcome: 'blocked', reason: why.code,

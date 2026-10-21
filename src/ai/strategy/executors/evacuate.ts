@@ -6,6 +6,7 @@ import type { ExecutorFeedback, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, validExecutorGrant } from '../executor-grants';
 import { evacuationSubjectIds } from '../evacuation-subjects';
 import { strategyTeamOptions } from '../ownership';
+import { allocationLandRoadReader } from '../allocation-land-road';
 
 export const evacuateExecutor: StrategyExecutor = {
   id: 'strategy.evacuate',
@@ -23,12 +24,16 @@ export const evacuateExecutor: StrategyExecutor = {
     if (destination.entityId && !shelter) return { ...base, status: 'failed', reasons: [{ executor: this.id,
       outcome: 'abandoned', reason: 'evacuation-shelter-no-longer-valid', taskId: execution.token.actionId }] };
     const foes = armedFoes(snapshot, owner, strategyTeamOptions(snapshot)), commands: ExecutorFeedback['commands'][number][] = [];
+    let pending = false;
+    const read = allocationLandRoadReader(() => { pending = true; });
     for (const worker of workers) {
       if (worker.deck || worker.cabin || !sameGround(snapshot.map, worker, destination.point)) return blockedExecutor(input, 'evacuation-requires-transport', workers.map(unit => unit.id));
       if (foes.some(foe => workerThreatAt(snapshot, worker, destination.point, foe))) return blockedExecutor(input, 'evacuation-shelter-exposed', workers.map(unit => unit.id));
       if (distance(worker, destination.point) <= 240) continue;
-      const road = retreatLandRoad(snapshot, worker, destination.point, foes);
-      if (!road || distance(road.points.at(-1)!, destination.point) > 240) return blockedExecutor(input, 'evacuation-route-blocked', workers.map(unit => unit.id));
+      pending = false;
+      const road = retreatLandRoad(snapshot, worker, destination.point, foes, read);
+      if (!road || distance(road.points.at(-1)!, destination.point) > 240) return blockedExecutor(input,
+        pending ? 'evacuation-route-pending' : 'evacuation-route-blocked', workers.map(unit => unit.id));
       if (!(worker.order.type === 'move' && worker.order.avoidCombat && distance(worker.order, destination.point) < 40))
         commands.push({ command: { type: 'move', unitIds: [worker.id], ...destination.point, avoidCombat: true }, purpose: 'life-saving' });
     }

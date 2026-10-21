@@ -7,6 +7,7 @@ import { activeUnitClaim, recordUnitTaskClaim } from '../policy/claims';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { armedFoes, retreatLandRoad, retreatThreatReach, safeLandTravelTicks } from './safe-land-route';
+import type { LandRoadReader } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
 import { THINK_TICKS } from './mounted-micro';
 import { mineClaimedByAlly } from '../policy/mine-claims';
@@ -29,7 +30,7 @@ function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y:
   return foes.some(foe => workerThreatAt(snapshot, worker, point, foe));
 }
 
-export function workerEscapeDestination(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: readonly Threat[], options: TeamPolicyOptions) {
+export function workerEscapeDestination(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: readonly Threat[], options: TeamPolicyOptions, read?: LandRoadReader) {
   const posts = snapshot.buildings.filter(post => post.owner === owner && post.complete && post.hp >= post.maxHp * .5
     && (post.kind === 'townHall' || post.kind === 'defenseTower'));
   const shelters = posts.flatMap(post => {
@@ -38,9 +39,11 @@ export function workerEscapeDestination(snapshot: GameSnapshot, owner: PlayerId,
     const depth = post.radius + worker.radius + ARRIVAL;
     const goal = gap ? { x: post.x + (post.x - nearest!.x) * depth / gap,
       y: post.y + (post.y - nearest!.y) * depth / gap } : post;
-    const points = groundSteeringRoute(snapshot.map, worker, goal), point = points[points.length - 1]!;
+    const points = read ? read(worker, goal)?.points : groundSteeringRoute(snapshot.map, worker, goal);
+    if (!points?.length) return [];
+    const point = points[points.length - 1]!;
     if (distance(point, goal) > ARRIVAL || endangered(snapshot, worker, point, foes)) return [];
-    const road = retreatLandRoad(snapshot, worker, point, foes);
+    const road = retreatLandRoad(snapshot, worker, point, foes, read);
     return road ? [{ point, ticks: road.ticks }] : [];
   }).sort((a, b) => a.ticks - b.ticks);
   const shelter = shelters[0]?.point;
@@ -48,7 +51,10 @@ export function workerEscapeDestination(snapshot: GameSnapshot, owner: PlayerId,
   const mines = snapshot.resources.filter(mine => mine.amount > 0 && !mineClaimedByAlly(snapshot, owner, mine, options)
     && posts.some(post => post.kind === 'townHall' && distance(post, mine) <= GOLD_MINE_RULES.baseRange)
     && !endangered(snapshot, worker, mine, foes));
-  const safeMine = nearestByRoute(snapshot.map, mines.filter(mine =>
+  const safeMine = read ? mines.flatMap(mine => {
+    const ticks = safeLandTravelTicks(snapshot, { ...worker, ...shelter }, mine, foes, undefined, read);
+    return ticks === undefined ? [] : [{ mine, ticks }];
+  }).sort((a, b) => a.ticks - b.ticks)[0]?.mine : nearestByRoute(snapshot.map, mines.filter(mine =>
     safeLandTravelTicks(snapshot, { ...worker, ...shelter }, mine, foes) !== undefined), shelter, 'land');
   return { shelter, ...(safeMine ? { safeResourceId: safeMine.id } : {}) };
 }
