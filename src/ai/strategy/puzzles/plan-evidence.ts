@@ -9,7 +9,7 @@ import type { PublicPuzzleCase } from './scenes';
 export type PuzzleThinkEvidence = {
   think: number; calls: number; snapshotUntouched: boolean; passed: boolean;
   error: ReturnType<typeof puzzleFailure>; planHash: string | null;
-  work: FactWorkReceipt | null; scoped?: string; memoryAfter?: string;
+  work: FactWorkReceipt | null; memoryThinkSequence: number | null; scoped?: string; memoryAfter?: string;
 };
 export function puzzleFailure(error: unknown) {
   return error instanceof Error ? { name: error.name, message: error.message, stack: error.stack }
@@ -42,6 +42,7 @@ export function writePuzzlePlanEvidence(puzzle: PublicPuzzleCase, snapshot: Game
     maxThinks: 10, firstThink: thinks[0]?.think ?? null, finalThink: final?.think ?? null,
     stable, passed: !failure && !!final?.passed && !!thinks.at(-2)?.passed && stable, error: failure,
     thinks: thinks.map(({ scoped, memoryAfter, ...think }) => ({ ...think,
+      phase: !scoped ? 'assembly' : 'plan-verdict',
       observed: scoped ? JSON.parse(scoped) as unknown : null,
       memoryAfter: memoryAfter ? JSON.parse(memoryAfter) as unknown : null })) };
   writeFileSync(resolve(directory, `${puzzle.key}-${puzzle.variant}.json.gz`), gzipSync(JSON.stringify(record)));
