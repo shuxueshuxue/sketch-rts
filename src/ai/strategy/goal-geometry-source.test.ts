@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { FactWorkQueue } from './fact-work';
 import { createGoalGeometryReader, GOAL_GEOMETRY_BYTES, GOAL_GEOMETRY_ENTRIES } from './goal-geometry-source';
 import type { GoalGeometryMemory, GoalGeometryRequest } from './goal-grounding-ports';
+import { recordNativeRouting, withNavigationAudit } from '../../shared/navigation-audit';
 
 const scan = (key: string, count: number, revision = 'terrain-a'): GoalGeometryRequest<number, readonly number[]> => ({
   key, revision, initialState: 0, advance: (cursor, allowance) => {
@@ -60,4 +61,15 @@ it('keeps finite JSON retention and invalid cursors pending rather than inventin
   pending(bad); next.flush();
   expect(next.receipt.used).toBe(0);
   expect(pending(bad)).toMatchObject({ state: 'pending', reason: { code: 'goal-geometry-work-invalid' } });
+});
+
+it('isolates a failed domain cursor while keeping diagnostic audit failures visible', () => {
+  const retained = memory(), work = new FactWorkQueue(0, 3), read = createGoalGeometryReader({ tick: 0, work, memory: retained });
+  const request = { ...scan('domain-failure', 5), advance: () => { throw new Error('malformed domain cursor'); } };
+  read(request); expect(() => work.flush()).not.toThrow();
+  expect(work.receipt.used).toBe(3);
+  expect(read(request)).toMatchObject({ state: 'pending', reason: { code: 'goal-geometry-advance-failed' } });
+  const diagnostic = new FactWorkQueue(15, 3), diagnostics = createGoalGeometryReader({ tick: 15, work: diagnostic, memory: memory() });
+  diagnostics({ ...scan('audit-failure', 1), advance: () => { recordNativeRouting('diagnostic-native-route'); return { state: 1, work: 1, done: true, value: [] }; } });
+  expect(() => withNavigationAudit(() => { throw new Error('audit rejection'); }, () => diagnostic.flush())).toThrow('audit rejection');
 });

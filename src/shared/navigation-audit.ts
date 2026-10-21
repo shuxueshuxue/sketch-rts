@@ -5,6 +5,7 @@ export type NavigationAuditEvent = Readonly<{ operation: string; phase: 'strateg
 let observer: ((event: NavigationAuditEvent) => void) | undefined;
 let phase: NavigationAuditEvent['phase'] = null;
 let authorization: NavigationAuditEvent['authorization'] = null;
+export function navigationAuditActive() { return observer !== undefined; }
 export function withNavigationAudit<T>(observe: (event: NavigationAuditEvent) => void, run: () => T): T {
   const previous = observer; observer = observe;
   try { return run(); } finally { observer = previous; }

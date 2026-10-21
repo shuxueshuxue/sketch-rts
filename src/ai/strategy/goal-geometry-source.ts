@@ -3,6 +3,7 @@ import { goalValueKey } from './goal-facts';
 import type { GoalGeometryMemory, GoalGeometryReader, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalParameter } from './goal-planner-types';
 import { observationJsonBytes } from './observation-json-bytes';
+import { navigationAuditActive } from '../../shared/navigation-audit';
 
 export const GOAL_GEOMETRY_ENTRIES = 32;
 export const GOAL_GEOMETRY_BYTES = 16 * 1024;
@@ -43,7 +44,15 @@ export function createGoalGeometryReader(input: Readonly<{
     work.register({ key: requestId, tier: 'background-field', minimum: 1, run: allowance => {
       if (!memory.entries.includes(record)) return { work: 0, done: true };
       const slice = Math.min(SLICE, allowance);
-      const result = request.advance(structuredClone(record.state) as never, slice);
+      let result: ReturnType<typeof request.advance>;
+      try { result = request.advance(structuredClone(record.state) as never, slice); }
+      catch (error) {
+        // Diagnostic observers must still expose forbidden native calls. A
+        // domain failure in production cannot terminate the whole AI think.
+        if (navigationAuditActive()) throw error;
+        record.errorCode = 'goal-geometry-advance-failed'; record.work += slice;
+        return { work: slice, done: true }; // conservatively charge the reserved slice
+      }
       if (!Number.isSafeInteger(result.work) || result.work < 0 || result.work > slice) {
         record.errorCode = 'goal-geometry-work-invalid';
         return { work: 0, done: true };
