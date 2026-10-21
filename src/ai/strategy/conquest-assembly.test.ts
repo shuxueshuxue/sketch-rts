@@ -44,9 +44,15 @@ const window: ValuationWindow = { taskTicks: 1000, holdingTicks: 1400, horizonTi
 /** Explicit quotation fixture. It does not stand in for calibrated supply,
  * native routing or a naturally selected grant. The continuation is already delayed. */
 function facts(input: AllocationMethodQuoteInput): AssemblyFacts {
+  const intent = input.method.actions[0]!.intent;
+  if (intent.kind !== 'assemble-force') throw new Error('Expected coordinator');
   return { forecast: { status: 'gathering', forecastTick: input.snapshot.tick, readyTick: input.snapshot.tick + 1000,
-    requiredForce: 10, assignedForce: 1, atRallyForce: 0, certainForce: 1, deficit: 9,
+    requiredForce: intent.requiredForce, assignedForce: 1, atRallyForce: 0, certainForce: 1, deficit: intent.requiredForce - 1,
     completionProbability: .5, conditionalForce: 9, conditionalProduction: null, conditionalSegments: [],
+    fillScenarios: [{ id: 'fill', probability: .5, readyTick: input.snapshot.tick + 1000, conditionalForce: 9,
+      production: [{ buildingId: 'producer', lane: 'training', fromTicks: 0, throughTicks: 1000 }] },
+    { id: 'no-fill', probability: .5, readyTick: null, conditionalForce: 0, production: [] }],
+    diagnostics: { scenarioCount: 2, scenarioLimitCount: 0 },
     certainReadyTick: null, supplies: [], forceCurve: [], missing: [],
     production: [{ buildingId: 'producer', lane: 'training', fromTicks: 0, throughTicks: 1000 }] },
   continuation: { assemblyDelayApplied: true, window,
@@ -111,6 +117,8 @@ describe('persistent conquest assembly quotation and handoff', () => {
     expect(quoted.status).toBe('blocked'); expect(quoted.utility).toBeNull();
     expect(quoted.missingPreconditions.map(condition => [condition.reason.code, condition.status]))
       .toEqual([['needs-production', 'unmet']]);
+    expect(quoted.missingPreconditions[0]!.reason.values).toEqual({ requiredForce: supplied.forecast.requiredForce,
+      certainForce: 1, deficit: supplied.forecast.deficit });
   });
 
   it('retains missing facts and rejects stale forecasts, mismatched windows and unpriced displacement', () => {
@@ -146,6 +154,27 @@ describe('persistent conquest assembly quotation and handoff', () => {
     expect(full.actions.find(action => action.intent.kind === 'build-hall')?.unitIds).toEqual(['engineer']);
     expect(full.spends.some(spend => spend.amountGold === 400)).toBe(true);
     expect(full.actions.flatMap(action => action.unitIds ?? []).every(id => more.unitIds.includes(id))).toBe(true);
+    const interruptedUnitIds = more.unitIds.filter(id => id !== 'fighter-0');
+    const interrupted = conquestMethodProvider.materialize!({ ...more, method: approaching, interruptedUnitIds });
+    expect(interrupted.stage).toBe('assembly');
+    let observed: AssemblyFactsRequest | undefined;
+    const quoted = conquestMethodProvider.quote({ ...more, method: interrupted, interruptedUnitIds,
+      assemblyFacts: request => { observed = request; return facts({ ...more, method: interrupted }); } });
+    expect(observed?.interruptedUnitIds).toBe(interruptedUnitIds);
+    expect(quoted.force?.onStationUnitIds).toEqual(['fighter-0']);
+    expect(quoted.force?.unavailableUnitIds).toEqual(interruptedUnitIds.filter(id => id !== 'engineer').sort());
+  });
+
+  it('retains a bounded scenario-limit leaf and its count without quoting an unavailable continuation', () => {
+    const input = example(), supplied = facts(input);
+    const quoted = conquestMethodProvider.quote({ ...input, assemblyFacts: () => ({ ...supplied, continuation: null,
+      forecast: { ...supplied.forecast, status: 'unknown', readyTick: null, completionProbability: 0,
+        diagnostics: { scenarioCount: 65, scenarioLimitCount: 1 },
+        missing: [{ code: 'assembly-scenario-limit', status: 'unknown', factIds: [] }] } }) });
+    expect(quoted.status).toBe('blocked');
+    expect(quoted.missingPreconditions.map(condition => condition.reason.code)).toEqual(['assembly-scenario-limit']);
+    expect(quoted.reason.values.scenarioCount).toBe(65);
+    expect(quoted.reason.values.scenarioLimitCount).toBe(1);
   });
 });
 
