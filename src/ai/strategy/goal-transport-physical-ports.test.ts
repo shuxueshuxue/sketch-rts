@@ -123,4 +123,8 @@ it('requests existing voyage risk only for a published exact native sea leg and 
  expect(request.id.length).toBeLessThanOrEqual(256);
  const delayed=f.think(0,6144,{readVoyageRisk,readPointRoute:()=>({id:'pending-point',fact:{status:'pending',reasonCode:'shared-pending',work:0}})});
  expect(strict(()=>delayed.ports.seaLeg(actual,from,to,false)).state).toBe('pending');expect(readVoyageRisk).toHaveBeenCalledTimes(1);
+ const nearby={x:to.x-1,y:to.y,heading:from.heading};
+ const endpoint=f.think(0,6144,{readVoyageRisk,readPointRoute:()=>({id:'legal-short-endpoint',fact:{status:'complete',route:{partial:false,points:[nearby]},ticks:20,computedTick:f.snapshot.tick,work:0,basis:'continued-native-search'}})});
+ expect(strict(()=>endpoint.ports.seaLeg(actual,from,to,false)).state).toBe('met');
+ expect(readVoyageRisk.mock.calls[1]![0].destination).toEqual({x:nearby.x,y:nearby.y});
 });

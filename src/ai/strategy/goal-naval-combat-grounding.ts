@@ -1,6 +1,9 @@
 import { unitMover } from '../../shared/catalog';
 import { isOpenGround } from '../../shared/terrain';
 import type { Unit } from '../../shared/types';
+import { shipProfile } from '../../shared/ship-geometry';
+import { bodyMass } from '../../shared/physical-body';
+import { isTransportKind } from '../../shared/transport-role';
 import { MINING_RALLY_RADIUS } from '../bootstrap_1/mining-rally';
 import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import { bootstrapCampApproach, type CampApproachPointReader } from '../bootstrap_1/camp-geometry';
@@ -17,6 +20,9 @@ import type { GoalCandidates, GoalCohortMember, GoalCohortOption, GoalCombatOpti
   GoalFact, GoalFactObservation, GoalGroundingReader, GoalPlanningContext } from './goal-planner-types';
 import { strategyIsOpponent } from './ownership';
 import { landIdAt } from './regions';
+import { seaIdAt } from './regions';
+import type { GoalHullCandidate, GoalTransportFactPorts } from './goal-grounding-ports';
+import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import type { Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
@@ -33,6 +39,7 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
   /** Same-source conditional landing origins. Existing actors retain their
    * actual HP/weapons; these locations become usable only via their pool facts. */
   cohortOptions?: GoalGroundingReader['cohortOptions'];
+  transportFacts?: Pick<GoalTransportFactPorts, 'seaLeg'>;
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
   readGroundPoint?: GoalNativeGroundReader;
   /** Only potential redirect scenarios need a counterfactual response. The
@@ -355,6 +362,30 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
   }
   function options(effect: GoalFact): GoalCandidates<GoalCombatOption> {
     const p = effect.predicate;
+    if (p.kind === 'transport-at') {
+      if (p.transport.kind !== 'existing') return pending('combat-actual-transport-binding-pending', [effect.id]);
+      const actor = actors.get(p.transport.entityId);
+      if (!actor || actor.owner !== context.owner || actor.hp <= 0 || !isTransportKind(actor.kind)
+        || allowed && !allowed.has(actor.id) || interrupted.has(actor.id)) return unmet('combat-transport-not-available', [effect.id]);
+      const sea = seaIdAt(context.snapshot.map, actor), profile = shipProfile(actor);
+      if (!sea || !p.at.seaId || !profile) return pending('combat-transport-region-pending', [effect.id]);
+      if (sea !== p.at.seaId) return unmet('combat-transport-other-basin', [effect.id]);
+      const cargo = context.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === actor.id);
+      const from: Target = { seaId: sea, point: { x: actor.x, y: actor.y } };
+      const hull: GoalHullCandidate = { id: actor.id, reference: p.transport, assessment: actor, seaId: sea, availableTick: context.tick,
+        capacity: profile.loadCapacity - cargo.reduce((mass, unit) => mass + bodyMass(unit), 0),
+        cargoUnitIds: sorted(cargo.map(unit => unit.id)), preconditions: [], factIds: [actor.id] };
+      const heading = actor.sailing?.heading;
+      const leg = Number.isFinite(heading) ? ports.transportFacts?.seaLeg(hull, { ...from.point, heading: heading! }, p.at.point, false)
+        ?? pending('combat-transport-sea-leg-unpublished', [effect.id]) : pending('combat-transport-heading-pending', [effect.id]);
+      const valuation = valueGoalSeaLeg({ snapshot: context.snapshot, owner: context.owner, hull, leg });
+      const route = goalFact({ kind: 'route', mover: 'sea', actor: p.transport, from, to: p.at,
+        ...(heading === undefined ? {} : { fromHeading: heading }) });
+      return { state: 'met', candidates: [{ id: `combat-hull:${goalValueKey([effect.id, p.transport])}`, target: p.at, from,
+        cohort: [p.transport], requiredForce: 0, byTick: p.byTick,
+        duration: leg.state === 'met' ? known(leg.value.ticks, leg.factIds) : leg, ...valuation,
+        preconditions: [route], factIds: sorted([effect.id, route.id, ...(leg.state === 'met' ? leg.factIds : leg.reason.factIds)]) }], factIds: [effect.id] };
+    }
     if (!['site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'garrison-ready', 'camp-cleared', 'gold'].includes(p.kind)) return unmet('not-naval-combat-effect', [effect.id]);
     if (p.kind === 'camp-cleared' || p.kind === 'gold') {
       const camps = p.kind === 'camp-cleared' ? [p.campId] : neutralCampExposure(context.snapshot).camps.map(camp => goalCampId(camp.memberIds)).sort();
