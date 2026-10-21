@@ -63,7 +63,8 @@ export function createAiThinkHost() {
           const observations=requests.map(request=>{
             const base=buildAiPlanTrace(snapshot,request.playerId,request.memory,request.version??DEFAULT_AI_PLANNER_VERSION);
             const strategy=strategies.get(request.playerId);
-            const trace=strategy?.project?{...base,strategy:strategy.project()}:base;
+            const trace={...(strategy?.project?{...base,strategy:strategy.project()}:base),
+              ...(strategy?.goalPlanner?{goalPlanner:strategy.goalPlanner}:{})};
             const previous=session.observed!.previous.get(trace.owner);
             const result={delta:diffAiPlan(previous,trace,message.observe!),context:projectDeathThinkContext(snapshot,trace.owner,request.memory)};
             session.observed!.previous.set(trace.owner,trace);return result;

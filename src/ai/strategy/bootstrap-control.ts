@@ -2,22 +2,16 @@ import type { BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId } from '..
 import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
 import { planAiCommandEntriesFromScripts } from '../policy/core';
 import { bootstrapDoctrineContext, prepareBootstrapLandMission, prepareBootstrapSites } from '../bootstrap_1/policy';
-import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace,
-  type ObservedStrategyDecision, type StrategyDecision } from './decision';
+import type { StrategyDecision } from './decision';
 import type { AllocationPrecondition, AllocationReason, CommandAdmission, ExecutorFeedback, ExecutorInput,
-  ExecutableMethod, PlannedVoyage, StrategyAllocationMemory } from './allocation-types';
+  PlannedVoyage } from './allocation-types';
 import type { VoyageRiskStages } from './voyage-risk';
 import type { StrategyPlanTrace, Target } from './types';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
 import { recordAllocationCommands } from './allocation-ledger';
 import { projectStrategyAllocation } from './allocation-trace';
-import { withAllocationArrivalQuery, withAllocationLandRoutes, type AllocationLandRouteReader } from './allocation-arrival-query';
-import { withAllocationMethodArrivals } from './method-arrivals';
-import { prepareAllocationVoyageRisks, publishedVoyageRiskReader } from './allocation-voyage-risk';
-import { defenseMethodProvider } from './defense-methods';
-import { conquestMethodProvider } from './conquest-methods';
-import { defenseAndConquestExecutors } from './executors';
+import { withAllocationLandRoutes } from './allocation-arrival-query';
 import { observeWorkerSafetyInterruption } from './executors/worker-safety';
 import { createStrategyAllocationMemory } from './control';
 import { importExecutedIncumbents, incumbentTasks, withFormalCommitments } from './incumbent-import';
@@ -28,13 +22,16 @@ import { createStrategyCommandGateway, type StrategyCommandProposal } from './co
 import { FactWorkQueue, withFactWork } from './fact-work';
 import { beginObservationThink, boundObservationMemory, observationMemory } from './observation-memory';
 import { isLifeSavingScript, recordScriptSafetyInterruptions } from './script-safety';
-import { createAssemblyFactsTransaction } from './assembly-facts-transaction';
-import { prepareAssemblyConquestContinuation, settlePreparedAssemblyConquestContinuation,
-  type PreparedAssemblyConquestContinuation } from './assembly-conquest-continuation';
-import type { AssemblyFactsRequest } from './assembly-facts';
-import { allocationResponseCandidates } from './allocation-eligibility';
-import { withConquestAssemblyPlanning } from './conquest-rallies';
 import { withNavigationPhase } from '../../shared/navigation-audit';
+import { withGoalPlannerInput, type GoalPlannerNativeFrame } from './goal-planner-input';
+import { planGoals } from './goal-planner';
+import type { GoalPlannerInput, GoalPlannerOutput } from './goal-planner-types';
+import { createGoalPlanMethods } from './goal-plan-methods';
+import { goalEconomyExecutors } from './executors/goal-economy';
+import { goalLandExecutors } from './executors/goal-land';
+import { goalNavalExecutors } from './goal-naval-executors';
+import { goalTrainingReader, observeGoalTraining } from './goal-training-ledger';
+const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
@@ -46,8 +43,7 @@ export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodI
 export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace;
   /** Same-think sidecar; never stored in memory or the plan trace. */
   candidateRequests?: readonly AllocationCandidateRequest[];
-  assemblyFacts?: ReturnType<ReturnType<typeof createAssemblyFactsTransaction>['project']> }>;
-const providers = [defenseMethodProvider, conquestMethodProvider];
+  goalPlanner?: GoalPlannerOutput }>;
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 
 function scriptProposals(scriptId: string, commands: readonly GameCommand[],
@@ -80,111 +76,32 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
     finally { preparation.factWork = work.flush(); boundObservationMemory(preparation); }
   });
 }
-function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
-  options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
-  const policy = options.memory;
-  const observed = observation === 'trace';
-  // No scripts have been admitted in this think yet. Native follow/retreat
-  // orders and retained memberships remain facts; do not preview the old
-  // medical selectors just to predict which new order they might issue.
-  const services = { healing: [] };
-  const evaluation = observed ? buildObservedStrategyDecision(snapshot, owner, options, undefined, services)
-    : buildStrategyDecision(snapshot, owner, options, undefined, services);
+function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
+  observation: 'none' | 'facts' | 'trace', planning: GoalPlannerInput, frame: GoalPlannerNativeFrame) {
+  const policy = options.memory, evaluation = frame.decision;
   const imported = importExecutedIncumbents(snapshot, policy, evaluation.situation,
-    policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick));
+    observeGoalTraining(policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick), snapshot));
   policy.strategyAllocation = imported;
-  const occupied = withFormalCommitments(evaluation.situation, imported);
-  const methods: ExecutableMethod[] = [];
-  let situation = occupied;
+  const situation = withFormalCommitments(evaluation.situation, imported);
+  const goalPlanner = planGoals(planning); policy.goalPlanning!.cache = goalPlanner.cache;
+  const bundle = createGoalPlanMethods({ snapshot, objectives: evaluation.objectives, output: goalPlanner,
+    resolve: frame.resolveReference, requote: frame.requote });
   const candidateRequests = observation === 'none' ? undefined : new Map<string, AllocationCandidateRequest>();
-  const recordCandidate = (request: AllocationCandidateRequest) => candidateRequests?.set(JSON.stringify(request), request);
   let handoffPolicy: typeof policy | undefined;
-  let assemblyProjection: BootstrapStrategyOutput['assemblyFacts'];
-  let landRouteReader: AllocationLandRouteReader | undefined;
-  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading, arrival, landRoute) => withConquestAssemblyPlanning(landRoute, () => {
-    landRouteReader = landRoute;
-    methods.push(...evaluation.objectives.filter(objective => !['complete', 'failed', 'abandoned'].includes(objective.status))
-    .flatMap(objective => providers.flatMap(provider => provider.buildMethods({ snapshot,
-    situation: occupied, objective, previous: imported.objectives[objective.id] ?? null,
-    executions: Object.values(imported.executions), blocked: Object.values(imported.blocked) }))));
-    situation = withAllocationMethodArrivals(snapshot, owner, policy, occupied, methods);
-  if (candidateRequests) for (const method of methods) recordCandidate({ objectiveId: method.objectiveId, methodId: method.id,
-    phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
-      unitIds: action.unitIds ?? null })), voyages: [], quotation: null, stageRisks: [] });
-
-    const requests = new Map<string, AssemblyFactsRequest>();
-    const requestKey = (objectiveId: string, methodId: string, unitIds: readonly string[]) =>
-      JSON.stringify([objectiveId, methodId, [...unitIds].sort(compare)]);
-    const assembly = createAssemblyFactsTransaction<PreparedAssemblyConquestContinuation>({ snapshot, situation, version, arrival,
-      committedObjectiveIds: Object.values(imported.objectives).filter(goal => !['complete', 'failed', 'abandoned'].includes(goal.status))
-        .map(goal => goal.objectiveId),
-      committedAssemblies: Object.values(imported.objectives).filter(goal => !['complete', 'failed', 'abandoned'].includes(goal.status)
-        && imported.methods[goal.methodId]?.stage === 'assembly').map(goal => ({ objectiveId: goal.objectiveId, methodId: goal.methodId,
-        unitIds: Object.values(imported.assignments).filter(assignment => assignment.objectiveId === goal.objectiveId).map(assignment => assignment.unitId) })),
-      prepare(request, cohort) {
-        // Retain the original complete method graph. A materialized gathering
-        // coordinator is not a priced execution continuation.
-        const skeleton = methods.find(method => method.id === request.methodId);
-        if (!skeleton) {
-          const missing = [{ id: `${request.methodId}/assembly-continuation-skeleton-unquoted`, kind: 'force' as const,
-            status: 'unknown' as const, reason: { code: 'assembly-continuation-skeleton-unquoted', factIds: [request.methodId], values: {} },
-            demand: null, subgoalIds: [] }];
-          return { pathId: cohort.pathId, readyTick: cohort.readyTick, delayTicks: cohort.readyTick - snapshot.tick,
-            method: null, materializedInput: null, settlement: null, missing, preparationMissing: missing,
-            assumptions: [], preparationAssumptions: [], coverage: 'known-effects', completedInTicks: null,
-            window: request.valuation?.window ?? null, realUnitIds: cohort.realUnitIds };
-        }
-        return prepareAssemblyConquestContinuation({ snapshot, situation, request, cohort, skeleton,
-          executions: Object.values(imported.executions).filter(action => action.methodId === request.methodId),
-          budgets: Object.values(imported.budgets).filter(budget => budget.methodId === request.methodId), arrival, fixedVoyageArrival });
-      },
-      settle: settlePreparedAssemblyConquestContinuation,
-      committedRequest(objectiveId, methodId, unitIds) {
-        const quoted = requests.get(requestKey(objectiveId, methodId, unitIds));
-        if (quoted) return quoted;
-        const objective = evaluation.objectives.find(goal => goal.id === objectiveId);
-        const action = imported.methods[methodId]?.actions.find(action => action.intent.kind === 'assemble-force');
-        if (!objective || action?.intent.kind !== 'assemble-force') return null;
-        return { objective, methodId, campTarget: action.intent.campTarget, requiredForce: action.intent.requiredForce,
-          posts: action.intent.posts, unitIds, responseEligibleUnitIds: allocationResponseCandidates(snapshot, situation, imported),
-          interruptedUnitIds: Object.values(imported.assignments).filter(assignment => assignment.interruption).map(assignment => assignment.unitId) };
-      } });
-    const decision = allocateStrategy({ snapshot,
-    situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival, fixedVoyageLoading,
-    assemblyFacts: request => {
-      const key = requestKey(request.objective.id, request.methodId, request.unitIds);
-      // Keep the original gross resource boundary for the committed plan;
-      // counterfactual/net trial exclusions must not replace its source pool.
-      if (request.valuation?.phase === 'gross' && !request.valuation.unavailableUnitIds?.length
-        && !request.valuation.unavailableProduction?.length && !requests.has(key)) requests.set(key, request);
-      return assembly.read(request);
-    },
-    assemblyDelayLossUpperBound: assembly.delayUpperBound,
+  const allocation = allocateStrategy({ snapshot, situation, objectives: evaluation.objectives,
+    methods: bundle.methods, providers: [bundle.provider], previous: imported,
     importedUpperBound: (objectiveId, window) => {
       const targetId = imported.objectives[objectiveId]?.target.entityId;
       return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;
     },
-    ...(candidateRequests ? { observeCandidate: request => recordCandidate({ objectiveId: request.objectiveId,
-      methodId: request.method.id, phase: request.phase, unitIds: request.unitIds,
-      actions: request.method.actions.map(action => ({ actionId: action.id, target: action.target, unitIds: action.unitIds ?? null })),
-      voyages: request.method.voyagePlans ?? [],
-      quotation: { status: request.quote.status, score: request.quote.utility?.score ?? null, reason: request.quote.reason,
-        missingPreconditions: request.quote.missingPreconditions },
-      stageRisks: (request.method.voyagePlans ?? []).map(voyage => ({ voyageId: voyage.id, risk: request.voyageRisks?.get(voyage.id) ?? null })) }) }
-      : {}),
-    prepareVoyageRisks: (materialized, quotes) => {
-      assembly.prepareDisplacements(materialized.flatMap((method, index) => {
-        const quote = quotes[index], valuation = quote?.valuation;
-        if (!valuation || quote.status === 'blocked' && quote.missingPreconditions.some(condition => condition.status === 'unmet')) return [];
-        return [{ objectiveId: method.objectiveId, unitIds: valuation.unitIds, window: valuation.window,
-          production: valuation.production ?? [] }];
-      }));
-      assembly.prioritizeFacts();
-      const all = [...materialized, ...assembly.riskMethods()];
-      const published = prepareAllocationVoyageRisks(snapshot, owner, policy,
-        all, quotes);
-      assembly.publishRisks(published, publishedVoyageRiskReader(snapshot, policy, all, published)); return published;
-    },
+    ...(candidateRequests ? { observeCandidate: request => {
+      const row: AllocationCandidateRequest = { objectiveId: request.objectiveId, methodId: request.method.id,
+        phase: request.phase, unitIds: request.unitIds,
+        actions: request.method.actions.map(action => ({ actionId: action.id, target: action.target, unitIds: action.unitIds ?? null })),
+        voyages: [], quotation: { status: request.quote.status, score: request.quote.utility?.score ?? null,
+          reason: request.quote.reason, missingPreconditions: request.quote.missingPreconditions }, stageRisks: [] };
+      candidateRequests.set(JSON.stringify(row), row);
+    } } : {}),
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
       const draft = structuredClone(policy), acknowledgements = [];
@@ -197,17 +114,22 @@ function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, version: 
       }
       handoffPolicy = draft; return acknowledgements;
     },
-    });
-    if (observation !== 'none') assemblyProjection = assembly.project();
-    return decision;
-  }));
-  return { policy, observed, evaluation, imported, situation, candidateRequests, handoffPolicy, allocation, assemblyProjection,
-    landRouteReader: landRouteReader! };
+  });
+  return { policy, evaluation, situation, candidateRequests, handoffPolicy, allocation, goalPlanner };
 }
 function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
-  const { policy, observed, evaluation, situation, candidateRequests, handoffPolicy, allocation, assemblyProjection, landRouteReader }
-    = withNavigationPhase('strategy-planning', () => controlledAllocation(snapshot, owner, version, options, observation));
+  return withNavigationPhase('strategy-planning', () => withGoalPlannerInput({ snapshot, owner, version, memory: options.memory,
+    captureTrace: observation === 'trace', interruptedUnitIds: Object.values(options.memory.strategyAllocation?.assignments ?? {})
+      .filter(assignment => assignment.interruption).map(assignment => assignment.unitId) },
+    (planning, frame) => executeControlledBootstrapCommands(snapshot, owner, version, scripts, options, observation, planning, frame)));
+}
+function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
+  scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace',
+  planning: GoalPlannerInput, frame: GoalPlannerNativeFrame) {
+  const { policy, evaluation, situation, candidateRequests, handoffPolicy, allocation, goalPlanner }
+    = controlledAllocation(snapshot, owner, options, observation, planning, frame);
+  const landRouteReader = frame.landRoute;
   if (handoffPolicy) for (const key of ['unitClaims', 'landExpansion', 'expansionGarrisons', 'naval'] as const) {
     // Only the producer's acknowledged membership transaction is adopted.
     if (handoffPolicy[key] === undefined) delete policy[key];
@@ -237,6 +159,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     prepareBootstrapLandMission(snapshot, owner, context); return context;
   });
   const authority = policy.strategyAllocation!, grants = allocationGrants(authority);
+  const goalFacts = frame.executionFacts(authority);
   let sequence = 0;
   const nextId = () => `${owner}:strategy-command:${snapshot.tick}:${authority.revision}:${sequence++}`;
   const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null });
@@ -250,12 +173,13 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
   }));
   const feedbacks: ExecutorFeedback[] = [], formal: StrategyCommandProposal[] = [];
   for (const grant of grants) {
-    const execution = authority.executions[grant.action.actionId]!, executor = defenseAndConquestExecutors.find(executor => executor.id === execution.executor);
+    const execution = authority.executions[grant.action.actionId]!, executor = goalExecutors.find(executor => executor.id === execution.executor);
     const objective = evaluation.objectives.find(objective => objective.id === grant.objectiveId), method = authority.methods[grant.methodId];
     // Imported producers run through the script adapter above, not a second
     // execution of their old module with a reconstructed target.
     if (!executor || !objective || !method) continue;
-    const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events };
+    const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events,
+      goalFacts, goalTraining: goalTrainingReader(authority, snapshot) };
     const { task, safety } = withNavigationPhase('strategy-planning', () => withAllocationLandRoutes(landRouteReader,
       () => ({ task: executor.execute(input), safety: observeWorkerSafetyInterruption(input) })));
     const feedback = safety ? { ...task, status: safety.status, blocked: safety.blocked,
@@ -286,8 +210,8 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
   const admissions = [...rejected, ...result.admissions];
   const entries: AiCommandEntry[] = result.accepted.map(item => ({ scriptId: item.executor, command: item.command }));
   const output: BootstrapStrategyOutput = { decision: { ...evaluation, mode: 'control', situation },
-    ...(assemblyProjection ? { assemblyFacts: assemblyProjection } : {}),
-    ...(candidateRequests ? { candidateRequests: [...candidateRequests.values()] } : {}), ...(observed ? { project: () => ({
-    ...projectStrategyTrace(evaluation as ObservedStrategyDecision), mode: 'control', allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
+    goalPlanner,
+    ...(candidateRequests ? { candidateRequests: [...candidateRequests.values()] } : {}), ...(frame.project ? { project: () => ({
+    ...frame.project!(), mode: 'control', allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
   return { entries, context, strategy: output };
 }

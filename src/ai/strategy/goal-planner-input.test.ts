@@ -6,6 +6,7 @@ import { withNavigationAudit, withNavigationPhase } from '../../shared/navigatio
 import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory, type AiPolicyMemory } from '../memory';
 import { currentFactWork, FactWorkQueue } from './fact-work';
+import { createStrategyAllocationMemory } from './control';
 import { goalCampId, goalFact } from './goal-facts';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { planOwnerGoals, withGoalPlannerInput } from './goal-planner-input';
@@ -206,4 +207,20 @@ it('dispatches native land combat and camp staging through their domain readers 
   expect(situationConstructionCount() - count).toBe(1);
   expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
   expect(JSON.stringify(snapshot)).toBe(before);
+});
+
+it('reads executor free gold after this think reserves capital and rejects another authority epoch', () => {
+  const game = scene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
+  strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory, goals: [] }, (input, frame) => {
+    const fact = goalFact({ kind: 'gold', minimum: 400, byTick: snapshot.tick });
+    expect(input.context.readFact(fact).state).toBe('met');
+    const authority: import('./allocation-types').StrategyAllocationMemory = {
+      ...createStrategyAllocationMemory('us', snapshot.tick), evaluatedTick: snapshot.tick,
+      budgets: { hall: { id: 'hall', spendId: 'hall', objectiveId: 'other-goal', methodId: 'other-method',
+        action: { actionId: 'build', generation: 1 }, amountGold: 2800, paidGold: 0, state: 'reserved',
+        sinceTick: snapshot.tick, releasedTick: null, includedUtilityTermCodes: [], externalReservationIds: [] } } };
+    expect(frame.executionFacts(authority)(fact)).toMatchObject({ state: 'unmet', quantity: 200, observedTick: snapshot.tick });
+    expect(() => frame.executionFacts({ ...authority, evaluatedTick: snapshot.tick - 1 })).toThrow('epoch mismatch');
+    expect(input.context.readFact(fact).state).toBe('met'); // allocation never rewrites the earlier planning observation
+  }));
 });

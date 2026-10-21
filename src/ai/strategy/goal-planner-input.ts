@@ -4,14 +4,14 @@ import { shareShipProfile } from '../../shared/ship-geometry';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { withAllocationLandRoutes, type AllocationLandRouteReader } from './allocation-arrival-query';
-import type { AllocationMethodQuoteInput } from './allocation-types';
+import type { AllocationMethodQuoteInput, StrategyAllocationMemory } from './allocation-types';
 import type { GoalPlanRequotation } from './goal-plan-methods';
 import { reservedAllocationGold } from './allocation-ledger';
 import { createArrivalPlanningPhysics } from './arrival-planning-physics';
 import { createArrivalQuery } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { decisionProjection } from './explanations';
-import type { DecisionFacts } from './decision';
+import type { DecisionFacts, StrategyDecision } from './decision';
 import { currentFactWork, FactWorkQueue, withFactWork } from './fact-work';
 import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
@@ -35,12 +35,12 @@ import { groundGoalTransportOptions } from './goal-transport-grounding';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
 import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
 import { observationJsonBytes } from './observation-json-bytes';
-import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory } from './observation-memory';
+import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
 import { generateStrategyObjectives } from './plan';
 import { pointRoute } from './point-routes';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 import { evaluateSituation } from './situation';
-import type { Objective, SituationObservation } from './types';
+import type { Objective, SituationObservation, StrategyPlanTrace } from './types';
 
 export type GoalPlannerRuntimeMemory = {
   version: 1; owner: PlayerId; world: GoalWorldFactMemory; cache?: GoalPlannerCache;
@@ -57,12 +57,16 @@ export type GoalPlannerOwnerInput = Readonly<{
   work?: FactWorkQueue; limits?: GoalSearchLimits;
   /** Diagnostic capacity measurement only; publication and the 6144 work allowance remain unchanged. */
   geometryMeasurement?: boolean;
+  /** Capture explanations from this evaluation, without another observer pass. */
+  captureTrace?: boolean;
   observation?: SituationObservation;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
 }>;
 
 /** Same-think services for allocation and execution; never persist this frame. */
 export type GoalPlannerNativeFrame = Readonly<{
+  decision: StrategyDecision; project?: () => StrategyPlanTrace;
+  executionFacts: (authority: StrategyAllocationMemory) => GoalPlanningContext['readFact'];
   objectives: readonly DecisionFacts<Objective>[]; landRoute: AllocationLandRouteReader;
   resolveReference: (reference: GoalEntityReference) => Extract<GoalEntityReference, { kind: 'existing' }> | null;
   requote: (request: Pick<AllocationMethodQuoteInput, 'unitIds' | 'valuation'>, plan: GoalPlan) => GoalPlanRequotation;
@@ -113,26 +117,30 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       // This is the sole Situation evaluation. In an actual owner think the
       // caller supplies the ordinary planner's accepted healing observations;
       // an isolated cold frame has none, and never previews old selectors.
-      const observed = decisionProjection(() => {
+      const projection = decisionProjection(() => {
         const situation = evaluateSituation(snapshot, owner, memory, observationHistory(preparation),
           snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances, arrivals, projectGround });
         const objectives = input.objectives ?? (input.goals === undefined
           ? generateStrategyObjectives(situation, { snapshot, owner, memory, ...(snapshot.teams ? { teams: snapshot.teams } : {}) }, preparation.history?.objectives)
             .map(entry => entry.objective) : []);
-        return { situation, objectives };
-      }, false).facts;
+        retainObservationHistory(preparation, situation, objectives as readonly Objective[]);
+        return { schemaVersion: 1 as const, tick: snapshot.tick, owner, mode: 'control' as const, situation, objectives,
+          feasibleObjectiveIds: [], blockedObjectives: [], methods: [], assignments: [], preemptions: [], budget: [], idleForces: [],
+          limitations: situation.limitations } satisfies StrategyDecision;
+      }, input.captureTrace === true);
+      const observed = projection.facts;
       const { situation } = observed;
       const regionAt = (point: { x: number; y: number }, mover: 'land' | 'sea') => mover === 'land'
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
       function makeContext(allowedUnitIds?: readonly string[], interruptedUnitIds?: readonly string[],
-        unavailableProduction: readonly import('./types').ProductionUse[] = []): GoalPlanningContext {
+        unavailableProduction: readonly import('./types').ProductionUse[] = [], reserved = reservedGold): GoalPlanningContext {
         const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
           readFact: fact => read(fact) };
         const baseRead = createGoalFactReader({ ...context, memory: retained!.world,
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }),
-          ports: { geometry, geometryRevision, regionAt, reservedGold,
+          ports: { geometry, geometryRevision, regionAt, reservedGold: reserved,
             landRoute,
             seaRoute: (predicate, actor) => {
               const fact = goalFact(predicate), ship = { ...actor, sailing: { ...actor.sailing!,
@@ -227,7 +235,17 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         ...(retained.cache ? { previous: retained.cache } : {}), work };
       let active = true;
       const assertActive = () => { if (!active || currentFactWork() !== work) throw Error('Goal native frame is outside its owner-think scope'); };
-      const frame: GoalPlannerNativeFrame = { objectives: observed.objectives, landRoute,
+      const frame: GoalPlannerNativeFrame = { decision: observed,
+        ...(projection.explain ? { project: (): StrategyPlanTrace => {
+          const result = projection.explain!();
+          return { ...result, objectives: result.objectives as readonly Objective[] };
+        } } : {}),
+        objectives: observed.objectives, landRoute,
+        executionFacts(authority) {
+          assertActive();
+          if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
+          return makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedAllocationGold(authority)).readFact;
+        },
         resolveReference(reference) {
           assertActive();
           if (reference.kind === 'existing') return [...snapshot.units, ...snapshot.buildings].some(entity =>

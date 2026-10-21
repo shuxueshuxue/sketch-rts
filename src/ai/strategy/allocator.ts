@@ -230,7 +230,9 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       : unit.location.kind === 'aboard' || moving ? 'en-route' : 'assigned';
     leases[key] = { id: before?.id ?? `lease:${id}`, resourceKey: key, objectiveId: objective.id, methodId: method.id,
       action: token, sinceTick: before?.sinceTick ?? tick,
-      minimumStayUntilTick: before?.minimumStayUntilTick ?? tick + STRATEGY_PARAMETERS.minimumStayTicks,
+      minimumStayUntilTick: Math.max(before?.minimumStayUntilTick ?? tick + STRATEGY_PARAMETERS.minimumStayTicks,
+        action.intent.kind === 'goal-action' && ['hold-position', 'defend'].includes(action.intent.actionKind)
+          && typeof action.intent.parameters.throughTick === 'number' ? action.intent.parameters.throughTick : tick),
       origin: 'allocator', incumbentTask: null };
     assignments[assignmentId] = { authority: 'committed', id: assignmentId, leaseId: leases[key]!.id, unitId: id,
       role: unit.roles[0] ?? 'frontline', objectiveId: objective.id, methodId: method.id, action: token, target,
