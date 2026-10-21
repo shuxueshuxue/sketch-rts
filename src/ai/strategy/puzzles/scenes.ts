@@ -59,11 +59,11 @@ export function guardedShoreScene(strong = true) {
   const game = terrainWorld(b, [MAINLAND, island], 4096, 3584);
   cliffCoast(game, island, [
     { left: island.left - 64, right: island.left + 96, top: 704, bottom: 832 },
-    { left: 3040, right: 3168, top: island.bottom - 96, bottom: island.bottom + 64 },
+    { left: island.left - 64, right: island.left + 96, top: 2880, bottom: 3008 },
   ]);
   const world = finishWorld(game, mine, guard, { x: 1664, y: 768 });
   world.beachGuards = neutralGroup(world.game, beach);
-  world.landing = strong ? { x: 2368, y: 768 } : { x: 3104, y: 3200 };
+  world.landing = strong ? { x: 2368, y: 768 } : { x: 2368, y: 2944 };
   return world;
 }
 export function negativeReturnScene() {
