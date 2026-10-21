@@ -9,8 +9,9 @@ export default async function (s: Scene) {
     return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
   });
   s.must(!/SwiftShader|llvmpipe/i.test(gpu), `Software GPU: ${gpu}`);
-  const base = new URL(s.page.url()).origin;
-  await s.page.goto(`${base}/docs/ai/plan-viz/goal-dependency.html`, { waitUntil: 'networkidle' });
+  // The deliverable is opened directly from its folder, independent of SPA routing.
+  const file = pathToFileURL(`${process.cwd()}/docs/ai/plan-viz/goal-dependency.html`).href;
+  await s.page.goto(file, { waitUntil: 'load' });
   await s.page.waitForSelector('[data-node="camp-action"]');
   await s.page.click('[data-node="camp-action"]');
   const detail = await s.page.locator('#node-detail').innerText();
@@ -33,7 +34,7 @@ export default async function (s: Scene) {
   s.must((await s.page.locator('#node-detail').innerText()).includes('世界中观测到矿厅完工'), 'Missing final effect proof');
   await s.shot('goal-dependency-result');
   // A double-clicked static HTML file must work without a dev server or modules.
-  await s.page.goto(pathToFileURL(`${process.cwd()}/docs/ai/plan-viz/goal-dependency.html`).href, { waitUntil: 'load' });
+  await s.page.goto(file, { waitUntil: 'load' });
   await s.page.waitForSelector('[data-node="camp-action"]');
   await s.page.click('[data-moment="490"]');
   s.must(await s.page.locator('body').getAttribute('data-sample-moment') === '490', 'file:// prototype did not work');
