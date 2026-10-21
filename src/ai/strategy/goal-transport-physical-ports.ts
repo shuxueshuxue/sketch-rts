@@ -1,5 +1,8 @@
 import { bodyMass } from '../../shared/physical-body';
-import { shareShipProfile, shipProfile } from '../../shared/ship-geometry';
+import { distanceToHull, shareShipProfile, shipProfile } from '../../shared/ship-geometry';
+import { BOARDING_GAP } from '../../shared/naval';
+import { hullFits } from '../../shared/ship-navigation';
+import { isWalkable } from '../../shared/terrain';
 import { isTransportKind } from '../../shared/transport-role';
 import { fnv1a } from '../../shared/sim/checksum';
 import type { GameSnapshot, Unit } from '../../shared/types';
@@ -8,7 +11,7 @@ import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalGeometryReader, GoalHullCandidate, GoalPublishedValue, GoalShorePair, GoalTransportFactPorts } from './goal-grounding-ports';
 import type { GoalCandidates, GoalFactReader, GoalGroundingReader, GoalProductionOption } from './goal-planner-types';
 import type { PointRouteFact } from './point-routes';
-import { seaIdAt, type RegionIndex } from './regions';
+import { landIdAt, seaIdAt, type RegionIndex } from './regions';
 import type { Point, Target } from './types';
 import type { VoyageRisk, VoyageRiskRequest } from './voyage-risk';
 
@@ -49,7 +52,7 @@ function candidates<T>(known: readonly T[], deferred: readonly Deferred[], factI
  * owns no Situation/query/work allowance and invokes no private pathfinder. */
 export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput): GoalTransportFactPorts {
   const nativeBerth = createGoalBoardingGeometry(input);
-  const berth: GoalTransportFactPorts['berth'] = (passenger, hull, shore) => {
+  const scanBerth: GoalTransportFactPorts['berth'] = (passenger, hull, shore) => {
     if (input.berthOrientation !== 'shore') return nativeBerth(passenger, hull, shore);
     // Only the proposal's preferred heading changes. The finite native scan
     // still proves hull fit, shared boarding gap and the exact land/sea pair.
@@ -57,6 +60,52 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       heading: Math.atan2(shore.water.y - shore.ground.y, shore.water.x - shore.ground.x) } };
     shareShipProfile(hull.assessment, assessment);
     return nativeBerth(passenger, { ...hull, assessment }, shore);
+  };
+  const berth: GoalTransportFactPorts['berth'] = (passenger, hull, shore, preferredPose) => {
+    if (!preferredPose) return scanBerth(passenger, hull, shore);
+    const pose = { x: preferredPose.x, y: preferredPose.y, heading: preferredPose.heading };
+    const ground = { x: shore.ground.x, y: shore.ground.y }, profile = shipProfile(hull.assessment);
+    const contact = { landId: shore.landId, seaId: shore.seaId, ground, water: { ...shore.water } };
+    const tag = `preferred-boarding-pose:${goalValueKey([hull.reference, pose, passenger.radius, contact])}`;
+    const pending = (code: string): GoalPublishedValue<never> => ({ state: 'pending', requestIds: [tag],
+      reason: reason(code, hull.factIds) });
+    if (![pose.x, pose.y, pose.heading, ground.x, ground.y, shore.water.x, shore.water.y, passenger.radius].every(Number.isFinite)
+      || passenger.radius < 0) return pending('preferred-boarding-pose-invalid');
+    if (!profile) return pending('preferred-boarding-profile-unpublished');
+    if (input.regions.scannedRows < input.regions.totalRows) return pending('preferred-boarding-regions-unpublished');
+    const shapeVersion = input.geometry.reference?.(`preferred-boarding-hull:${hull.assessment.kind}`, { hull: profile.hull });
+    const shoreVersion = input.geometry.reference?.('preferred-boarding-shore', contact);
+    const references = shapeVersion && shoreVersion ? [shapeVersion, shoreVersion] : undefined;
+    const key = `preferred-boarding-pose:${goalValueKey(references
+      ? [hull.reference, pose, passenger.radius, shapeVersion, shoreVersion]
+      : [hull.reference, pose, passenger.radius, profile.hull, contact])}`;
+    const read = input.geometry<{ step: number }, { valid: boolean }>({ key, revision: input.geometryRevision,
+      ...(references ? { references } : {}), initialState: { step: 0 },
+      advance(state, allowance) {
+        const dock = { ...hull.assessment, x: pose.x, y: pose.y,
+          sailing: { ...hull.assessment.sailing!, heading: pose.heading } };
+        shareShipProfile(hull.assessment, dock);
+        // Each check is one bounded native geometry primitive, as in the
+        // shared nearest-pose cursor. There is no search or route here.
+        const checks = [
+          () => isWalkable(input.snapshot.map, ground.x, ground.y, 'land'),
+          () => isWalkable(input.snapshot.map, pose.x, pose.y, 'sea'),
+          () => landIdAt(input.snapshot.map, ground) === shore.landId,
+          () => seaIdAt(input.snapshot.map, pose) === shore.seaId,
+          () => hullFits(input.snapshot.map, dock, pose),
+          () => distanceToHull(dock, ground) <= passenger.radius + BOARDING_GAP,
+        ];
+        let work = 0;
+        while (work < allowance && state.step < checks.length) {
+          const valid = checks[state.step++]!(); work++;
+          if (!valid) return { state, work, done: true, value: { valid: false } };
+        }
+        return { state, work, done: state.step === checks.length,
+          ...(state.step === checks.length ? { value: { valid: true } } : {}) };
+      } });
+    if (read.state !== 'met') return read;
+    return read.value.valid ? { state: 'met', value: { water: { x: pose.x, y: pose.y }, ground, heading: pose.heading },
+      factIds: unique([...hull.factIds, ...read.factIds]) } : scanBerth(passenger, hull, shore);
   };
   return {
     berth,

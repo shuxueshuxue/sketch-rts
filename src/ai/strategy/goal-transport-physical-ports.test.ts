@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, it, vi } from 'vitest';
 import { bodyMass } from '../../shared/physical-body';
-import { shipProfile } from '../../shared/ship-geometry';
+import { distanceToHull, shareShipProfile, shipProfile } from '../../shared/ship-geometry';
+import { boardingBerth, BOARDING_GAP } from '../../shared/naval';
+import { hullFits } from '../../shared/ship-navigation';
+import { isWalkable } from '../../shared/terrain';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import type { GameSnapshot } from '../../shared/types';
 import { FactWorkQueue } from './fact-work';
@@ -10,7 +13,7 @@ import { createGoalGeometryReader } from './goal-geometry-source';
 import type { GoalGeometryMemory, GoalHullCandidate } from './goal-grounding-ports';
 import type { GoalCandidates, GoalEntityReference, GoalFactReader, GoalProductionOption } from './goal-planner-types';
 import { createGoalTransportFactPorts, type GoalTransportPhysicalInput } from './goal-transport-physical-ports';
-import { regionIndex } from './regions';
+import { regionIndex, seaIdAt } from './regions';
 const choices = <T>(candidates: readonly T[]): GoalCandidates<T> => ({ state: 'met', candidates, factIds: ['actual-domain'] });
 const strict = <T>(run: () => T) => withNavigationAudit(event => {
   if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation);
@@ -33,6 +36,100 @@ function frame() {
  }
  return {snapshot,owner,regions,worker,hull,from,to,cohort,think};
 }
+
+function preferredFixture() {
+ const f=frame(), coast=f.regions.shoresByLand.get(f.from.landId)!.get('sea:1')![0]!;
+ const dock={...f.hull,...coast.water};shareShipProfile(f.hull,dock);
+ // Independent native placement oracle, outside the measured/guarded port.
+ const native=boardingBerth(f.snapshot.map,{...f.worker,...coast.ground},dock);
+ if(!native?.shore||native.heading===undefined)throw Error('fixture needs a native target dock');
+ const shore={...coast,ground:{x:native.shore.x,y:native.shore.y}},pose={x:native.x,y:native.y,heading:native.heading};
+ const hull:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',
+  availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:['fixture-hull']};
+ return {...f,shore,pose,candidate:hull};
+}
+
+it('publishes a given target pose after six budgeted native checks and JSON turns, without routes or current arrival',()=>{
+ const f=preferredFixture(), before=JSON.stringify(f.snapshot);
+ const exact=vi.fn(()=>{throw Error('single target-pose check requested route/projection');});
+ for(let turn=0;turn<6;turn++){
+  const t=f.think(turn,1,{readFact:exact,readGroundPoint:exact}),read=strict(()=>t.ports.berth(f.worker,f.candidate,f.shore,f.pose));
+  expect(read.state).toBe('pending');t.finish();expect(t.work.receipt.used).toBe(1);
+  expect(strict(()=>t.ports.berth(f.worker,f.candidate,f.shore,f.pose)).state).toBe('pending');
+ }
+ const t=f.think(6,0,{readFact:exact,readGroundPoint:exact}),read=strict(()=>t.ports.berth(f.worker,f.candidate,f.shore,f.pose));
+ expect(read).toMatchObject({state:'met',value:{water:{x:f.pose.x,y:f.pose.y},heading:f.pose.heading,ground:f.shore.ground}});
+ expect(exact).not.toHaveBeenCalled();expect(t.input.readPointRoute).not.toHaveBeenCalled();
+ t.finish();expect(t.work.receipt.used).toBe(0);expect(JSON.stringify(f.snapshot)).toBe(before);
+ expect(Math.hypot(f.hull.x-f.pose.x,f.hull.y-f.pose.y)).toBeGreaterThan(f.hull.radius);
+});
+
+it('keeps exact target-pose proofs stable under live hull movement but versions pose, radius, shore, shape and terrain',()=>{
+ const f=preferredFixture(),a=f.think(0),first=strict(()=>a.ports.berth(f.worker,f.candidate,f.shore,f.pose));
+ expect(first.state).toBe('pending');a.finish();expect(a.work.receipt.used).toBe(6);
+ const b=f.think(1,0),known=strict(()=>b.ports.berth(f.worker,f.candidate,f.shore,f.pose));expect(known.state).toBe('met');
+ f.hull.x+=1;f.hull.sailing!.heading+=.321;
+ const c=f.think(2,0),moved=strict(()=>c.ports.berth(f.worker,f.candidate,f.shore,f.pose));expect(moved).toEqual(known);
+ const variants=[
+  c.ports.berth(f.worker,f.candidate,f.shore,{...f.pose,x:f.pose.x+.0001}),
+  c.ports.berth(f.worker,f.candidate,f.shore,{...f.pose,heading:f.pose.heading+.0001}),
+  c.ports.berth({...f.worker,radius:f.worker.radius+.0001},f.candidate,f.shore,f.pose),
+  c.ports.berth(f.worker,f.candidate,{...f.shore,ground:{...f.shore.ground,x:f.shore.ground.x+.0001}},f.pose),
+  c.ports.berth(f.worker,{...f.candidate,assessment:{...f.hull,kind:'carrier'}},f.shore,f.pose),
+  f.think(2,0,{geometryRevision:'changed-terrain'}).ports.berth(f.worker,f.candidate,f.shore,f.pose),
+ ];
+ for(const read of variants){expect(read.state).toBe('pending');if(read.state==='pending'&&first.state==='pending')expect(read.requestIds).not.toEqual(first.requestIds);}
+ c.finish();expect(c.work.receipt.used).toBe(0);
+});
+
+it('waits for a known failed preferred pose before falling back to the unchanged native scan',()=>{
+ const f=preferredFixture(),pose={x:-1000,y:-1000,heading:0};
+ const a=f.think(0,0),unstarted=strict(()=>a.ports.berth(f.worker,f.candidate,f.shore,pose));
+ expect(unstarted.state).toBe('pending');a.finish();expect(a.work.receipt.used).toBe(0);
+ const b=f.think(1,6),checking=strict(()=>b.ports.berth(f.worker,f.candidate,f.shore,pose));
+ expect(checking.state).toBe('pending');b.finish();expect(b.work.receipt.used).toBe(2);
+ const c=f.think(2,0),fallback=strict(()=>c.ports.berth(f.worker,f.candidate,f.shore,pose));
+ const original=strict(()=>c.ports.berth(f.worker,f.candidate,f.shore));
+ expect(fallback).toEqual(original);expect(fallback.state).toBe('pending');
+ if(fallback.state==='pending'&&unstarted.state==='pending')expect(fallback.requestIds).not.toEqual(unstarted.requestIds);
+ c.finish();expect(c.work.receipt.used).toBe(0);
+});
+
+it.each(['hull-fit','boarding-gap','land-region','sea-region'] as const)('rejects a known invalid %s without publishing the preferred pose',failure=>{
+ const f=preferredFixture();let shore=f.shore,pose=f.pose;
+ if(failure==='land-region')shore={...shore,landId:'land:999'};
+ else if(failure==='sea-region')shore={...shore,seaId:'sea:999'};
+ else {
+  let found:typeof pose|undefined;
+  for(let step=0;step<=128&&!found;step++)for(let direction=0;direction<8&&!found;direction++){
+   const value={x:f.pose.x+Math.cos(direction*Math.PI/4)*step,y:f.pose.y+Math.sin(direction*Math.PI/4)*step,
+    heading:f.pose.heading+(failure==='hull-fit'?Math.PI/2:0)};
+   const dock={...f.hull,x:value.x,y:value.y,sailing:{...f.hull.sailing!,heading:value.heading}};shareShipProfile(f.hull,dock);
+   if(!isWalkable(f.snapshot.map,value.x,value.y,'sea')||seaIdAt(f.snapshot.map,value)!==f.shore.seaId)continue;
+   const fit=hullFits(f.snapshot.map,dock,value),gap=distanceToHull(dock,f.shore.ground);
+   if(failure==='hull-fit'?!fit:fit&&gap>f.worker.radius+BOARDING_GAP)found=value;
+  }
+  if(!found)throw Error('fixture has no native '+failure+' counterexample');pose=found;
+ }
+ const a=f.think(0),first=strict(()=>a.ports.berth(f.worker,f.candidate,shore,pose));
+ expect(first.state).toBe('pending');a.finish();expect(a.work.receipt.used).toBeGreaterThan(0);expect(a.work.receipt.used).toBeLessThanOrEqual(6);
+ const b=f.think(1,0),fallback=strict(()=>b.ports.berth(f.worker,f.candidate,shore,pose));
+ expect(fallback).toEqual(strict(()=>b.ports.berth(f.worker,f.candidate,shore)));expect(fallback.state).toBe('pending');
+ if(first.state==='pending'&&fallback.state==='pending')expect(first.requestIds).not.toEqual(fallback.requestIds);
+ b.finish();expect(b.work.receipt.used).toBe(0);
+});
+
+it('keeps an invalid pose, missing hull profile and unfinished region index pending without synchronous work',()=>{
+ const f=preferredFixture(),t=f.think(0,0);
+ expect(strict(()=>t.ports.berth(f.worker,f.candidate,f.shore,{...f.pose,heading:NaN})))
+  .toMatchObject({state:'pending',reason:{code:'preferred-boarding-pose-invalid'}});
+ expect(strict(()=>t.ports.berth(f.worker,{...f.candidate,assessment:f.worker},f.shore,f.pose)))
+  .toMatchObject({state:'pending',reason:{code:'preferred-boarding-profile-unpublished'}});
+ const pendingIndex=f.think(0,0,{regions:{...f.regions,scannedRows:0}});
+ expect(strict(()=>pendingIndex.ports.berth(f.worker,f.candidate,f.shore,f.pose)))
+  .toMatchObject({state:'pending',reason:{code:'preferred-boarding-regions-unpublished'}});
+ t.finish();pendingIndex.finish();expect(t.work.receipt.used).toBe(0);expect(pendingIndex.work.receipt.used).toBe(0);
+});
 
 it('slices prepared native shore pairs, survives JSON turns, and leaves omitted alternatives explicit',()=>{
  const f=frame(), before=JSON.stringify(f.snapshot); let t=f.think(0,0);

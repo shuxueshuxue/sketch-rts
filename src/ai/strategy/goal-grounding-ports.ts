@@ -42,7 +42,9 @@ export type GoalSeaLeg = Readonly<{ ticks: number; endpoint: Point; heading: num
 export type GoalTransportFactPorts = Readonly<{
   shores: (from: Target, to: Target) => GoalCandidates<GoalShorePair>;
   hulls: (seaId: SeaId, from: Target, mass: number, request: GoalTransportRequest) => GoalCandidates<GoalHullCandidate>;
-  berth: (passenger: Unit, hull: GoalHullCandidate, shore: Shore) => GoalPublishedValue<GoalBerth>;
+  /** Optional target pose is a dock geometry proposal, never current arrival. */
+  berth: (passenger: Unit, hull: GoalHullCandidate, shore: Shore,
+    preferredPose?: Readonly<Point & { heading: number }>) => GoalPublishedValue<GoalBerth>;
   seaLeg: (hull: GoalHullCandidate, from: Point & { heading: number }, to: Point, future: boolean) => GoalEstimate<GoalSeaLeg>;
 }>;
 
