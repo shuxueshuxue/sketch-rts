@@ -20,9 +20,10 @@ import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import { readGoalGuardFact } from './goal-guard-facts';
-import type { GoalGeometryMemory } from './goal-grounding-ports';
+import type { GoalGeometryMemory, GoalGeometryReader } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
+import { createGoalMovementProjection } from './goal-movement-projection';
 import { createGoalLandCombatGrounding } from './goal-land-combat-grounding';
 import { readGoalLandCapabilityFact } from './goal-land-facts';
 import { createGoalNavalCombatGrounding } from './goal-naval-combat-grounding';
@@ -33,7 +34,9 @@ import { planGoals } from './goal-planner';
 import type { GoalCandidates, GoalCohortMember, GoalFactObservation, GoalGroundingReader, GoalPlannerInput,
   GoalPlannerCache, GoalPlanningContext, GoalRequest, GoalResourceBalance, GoalSearchLimits, GoalPlan, GoalEntityReference } from './goal-planner-types';
 import { groundGoalTransportOptions } from './goal-transport-grounding';
+import { createGoalTransportCohorts } from './goal-transport-cohorts';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
+import { createGoalVoyageRiskReader, type GoalVoyageRiskMemory } from './goal-voyage-risk-source';
 import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
 import { observationJsonBytes } from './observation-json-bytes';
 import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
@@ -47,6 +50,7 @@ export type GoalPlannerRuntimeMemory = {
   version: 1; owner: PlayerId; world: GoalWorldFactMemory; cache?: GoalPlannerCache;
   /** Separate from the observation segment: its trimmer must never evict active plan evidence. */
   geometry?: GoalGeometryMemory;
+  voyageRisk?: GoalVoyageRiskMemory;
   requotes?: Readonly<{ key: string; cache: GoalPlannerCache }>[];
 };
 export type GoalPlannerOwnerInput = Readonly<{
@@ -98,10 +102,15 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       }
       retained.geometry ??= preparation.goalGeometry ?? { version: 1, entries: [] };
       delete preparation.goalGeometry; // migrate older memories before observation trimming
-      const geometry = createGoalGeometryReader({ tick: snapshot.tick, work, memory: retained.geometry,
+      const rawGeometry = createGoalGeometryReader({ tick: snapshot.tick, work, memory: retained.geometry,
         ...(input.geometryMeasurement ? { measurement: true } : {}) });
-      const geometryRevision = goalValueKey([preparation.terrain, preparation.landBodies,
+      const readVoyageRisk = createGoalVoyageRiskReader({ snapshot, owner, work, observation: preparation,
+        memory: retained.voyageRisk ??= { model: { version: 1, owner, tick: -1, routeIds: [], entries: [] }, publications: [] } });
+      const geometryRevision = rawGeometry.reference!('world-geometry', [preparation.terrain, preparation.landBodies,
         snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])]);
+      const geometry: GoalGeometryReader = Object.assign(<State, Value>(request: import('./goal-grounding-ports').GoalGeometryRequest<State, Value>) =>
+        rawGeometry({ ...request, references: [...new Set([geometryRevision, ...(request.references ?? [])])] }),
+      { reference: rawGeometry.reference! });
       const landRoute: import('./allocation-arrival-query').AllocationLandRouteReader = (from, goal) => {
         const published = distances.field(goal);
         if (!published) return { status: 'unknown', reasonCode: 'goal-land-route-pending' };
@@ -109,7 +118,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'goal-land-route-unreachable' }
           : { status: 'known', distance, points };
       };
-      const arrivalPhysics = createArrivalPlanningPhysics({ snapshot, geometry, geometryRevision, landRoute });
+      const arrivalPhysics = createArrivalPlanningPhysics({ snapshot, geometry, geometryRevision, landRoute, regions });
       const arrivals = createArrivalQuery(snapshot, owner, memory, distances, 1, regions, preparation, false, arrivalPhysics);
       const projectGround = (point: { x: number; y: number }, mover: 'land' | 'sea') => {
         const result = arrivalPhysics.ground({ kind: 'project-goal', point, mover });
@@ -138,7 +147,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         unavailableProduction: readonly import('./types').ProductionUse[] = [], reserved = reservedGold): GoalPlanningContext {
         const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
           readFact: fact => read(fact) };
-        const baseRead = createGoalFactReader({ ...context, memory: retained!.world,
+        const worldReader = (worldSnapshot: GameSnapshot) => createGoalFactReader({ ...context, snapshot: worldSnapshot, memory: retained!.world,
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }),
           ports: { geometry, geometryRevision, regionAt, reservedGold: reserved,
@@ -168,9 +177,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             }), (fact, factsContext) => readGoalSiteSafetyFact(fact, factsContext, { regionAt,
               readThreatArrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
             }), (fact, factsContext) => readGoalCampStagingFact(fact, factsContext, {
-              landRoute, readGroundPoint: arrivalPhysics.ground, resolveCohort,
+              landRoute, readGroundPoint: arrivalPhysics.ground,
+              resolveCohort: references => resolveSnapshotCohort(worldSnapshot, references),
             })],
           } });
+        const baseRead = worldReader(snapshot);
         const read: GoalPlanningContext['readFact'] = fact => {
           const guard = readGoalGuardFact(fact, context, memory.strategyAllocation, allowedUnitIds, interruptedUnitIds);
           if (guard?.state === 'met') return guard;
@@ -184,21 +195,24 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return { ...value, availableTick, revision: goalValueKey([value.revision, occupied]),
             reason: { code: 'counterfactual-production-occupied-until', factIds: [fact.id], values: { availableTick } } };
         };
-        const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt });
-        const resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']> = references => {
+        const resolveSnapshotCohort = (worldSnapshot: GameSnapshot, references: Parameters<NonNullable<GoalGroundingReader['resolveCohort']>>[0]): ReturnType<NonNullable<GoalGroundingReader['resolveCohort']>> => {
           const members: GoalCohortMember[] = [];
           for (const reference of references) {
             if (reference.kind !== 'existing') return { state: 'pending', requestIds: [`output-shape:${goalValueKey(reference)}`],
               reason: { code: 'goal-output-assessment-binding-required', factIds: [], values: {} } };
-            const assessment = snapshot.units.find(unit => unit.id === reference.entityId && unit.owner === owner && unit.hp > 0);
+            const assessment = worldSnapshot.units.find(unit => unit.id === reference.entityId && unit.owner === owner && unit.hp > 0
+              && (allowedUnitIds === undefined || allowedUnitIds.includes(unit.id)) && !interruptedUnitIds?.includes(unit.id));
             if (!assessment) return { state: 'unmet', reason: { code: 'goal-cohort-member-unavailable', factIds: [reference.entityId], values: {} } };
             members.push({ reference, assessment });
           }
           return { state: 'met', candidates: members, factIds: members.map(member => member.assessment.id) };
         };
+        const resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']> = references => resolveSnapshotCohort(snapshot, references);
+        const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt,
+          cohortOptions: effect => cohortOptions(effect) });
         const physical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
           regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
-          readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground,
+          readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground, readVoyageRisk,
           readPointRoute: (ship, from, to, future) => {
             const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
             shareShipProfile(ship, pose);
@@ -212,20 +226,25 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
             ports: physical, readFact: read });
         };
+        const cohortOptions = createGoalTransportCohorts(context, { transportOptions,
+          ...(allowedUnitIds === undefined ? {} : { allowedUnitIds }),
+          ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds }) });
         const combatPorts = { landRoute, resolveCohort,
           movementRisk: request => assessGoalCombatMovementRisk({ snapshot, situation, request }),
           arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds })
         } satisfies import('./goal-naval-combat-grounding').GoalNavalCombatGroundingPorts;
-        const naval = createGoalNavalCombatGrounding(context, { ...combatPorts, readGroundPoint: arrivalPhysics.ground });
+        const naval = createGoalNavalCombatGrounding(context, { ...combatPorts, readGroundPoint: arrivalPhysics.ground,
+          cohortOptions, transportFacts: physical });
         const land = createGoalLandCombatGrounding(context, combatPorts);
         const combatOptions: NonNullable<GoalGroundingReader['combatOptions']> = effect => {
           const kind = effect.predicate.kind;
           return (kind === 'enemy-site-destroyed' || kind === 'route-controlled' || kind === 'harassment-ended'
             ? land : naval).combatOptions!(effect);
         };
-        const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, combatOptions, resolveCohort, transportOptions } };
+        const grounded: GoalPlanningContext = { ...context, readProjectedFact: createGoalMovementProjection(context, worldReader),
+          grounding: { ...economy, combatOptions, resolveCohort, transportOptions, cohortOptions } };
         return grounded;
       }
       const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);

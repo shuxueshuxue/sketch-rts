@@ -8,11 +8,12 @@ import { createGoalBoardingGeometry, type GoalNativeGroundReader } from './goal-
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalGeometryReader, GoalHullCandidate, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalFactReader } from './goal-planner-types';
-import { landIdAt } from './regions';
+import { landIdAt, type RegionIndex } from './regions';
 import type { Point } from './types';
 
 export type ArrivalPlanningPhysicsInput = Readonly<{
   snapshot: GameSnapshot; geometry: GoalGeometryReader; geometryRevision: string;
+  regions?: RegionIndex;
   landRoute: AllocationLandRouteReader;
   /** Native partial endpoints/projection and harbor launch ranking can only
    * come from a published, budgeted service. Absent capabilities stay pending. */

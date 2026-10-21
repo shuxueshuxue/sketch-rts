@@ -203,11 +203,14 @@ function satisfies(factInput: GoalFact, path: Path, state: GoalSearchMemory, inp
   }
   const quantity = goalQuantity(fact);
   if (input.context.readProjectedFact && path.steps.length && ['force-at', 'force-available', 'worker-at', 'cargo-aboard',
-    'unit-available', 'interception-capability'].includes(fact.predicate.kind)) {
+    'unit-available', 'interception-capability', 'camp-staging', 'route'].includes(fact.predicate.kind)) {
     const projected = input.context.readProjectedFact(fact, { actions: path.steps, bindings: path.bindings });
-    return bounded({ met: projected.state === 'met', pending: projected.state === 'pending', bindings: binding,
+    if (projected) return bounded({ met: projected.state === 'met', pending: projected.state === 'pending', bindings: binding,
       tick: projected.availableTick ?? now, producers: path.steps.filter(step => step.action.effects
-        .some(effect => effect.operation === 'establish' && matchGoalFacts(effect.fact, fact, binding, true))).map(step => step.action.id) });
+        .some(effect => effect.operation === 'establish' && matchGoalFacts(effect.fact, fact, binding, true))
+        || step.action.demands.some(demand => demand.resource.kind === 'entity-control'
+          && demand.resource.entity.kind === 'existing' && projected.entityIds?.includes(demand.resource.entity.entityId)))
+        .map(step => step.action.id) });
   }
   if (quantity) {
     const projected = projectGoalResources({ epoch: now, initial: balances(state, input), actions: path.steps });

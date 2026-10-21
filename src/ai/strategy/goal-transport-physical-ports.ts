@@ -66,8 +66,8 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       // An aboard request ranks only destination shores. Its hull's moving
       // pose is consumed by seaLeg, not by this finite coast enumeration.
       const originKey = from.landId ? from : { seaId: from.seaId };
-      const key = `shore-pairs:${goalValueKey([originKey, to, limit])}`;
-      const read = input.geometry<State, { pairs: GoalShorePair[]; count: number; considered: number }>({ key, revision: input.shoreGeometryRevision ?? input.geometryRevision,
+      const key = `shore-pair-indices:${goalValueKey([originKey, to, limit])}`;
+      const read = input.geometry<State, { pairs: RankedPair[]; count: number; considered: number }>({ key, revision: input.shoreGeometryRevision ?? input.geometryRevision,
         initialState: { sea: 0, scan: 0, phase: 'departures', departure: 0, landing: 0, count: 0, considered: 0, starts: [], ends: [], best: [] },
         advance(state, allowance) {
           let work = 0;
@@ -102,16 +102,18 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
           // For additive pair ordering, an endpoint outside its top K already
           // has K better partners with the same other endpoint. Only K² pairs
           // per sea need examination; the returned prefix is still exact.
-          const pairs = done ? state.best.map(item => {
-            const seaId = seas[item.sea]!, departure = item.departure < 0 ? undefined : departures!.get(seaId)![item.departure];
-            return { id: item.id, seaId, ...(departure ? { departure } : {}), landing: landings!.get(seaId)![item.landing]! };
-          }) : [];
           return { state: done ? { ...state, starts: [], ends: [], best: [] } : state, work, done,
-            ...(done ? { value: { pairs, count: state.count, considered: state.considered } } : {}) };
+            ...(done ? { value: { pairs: state.best, count: state.count, considered: state.considered } } : {}) };
         } });
       if (read.state !== 'met') return read;
+      // The immutable, versioned region index already owns each Shore once.
+      // Retain only indices in the publication, not repeated endpoint objects.
+      const pairs: GoalShorePair[] = read.value.pairs.map(item => {
+        const seaId = seas[item.sea]!, departure = item.departure < 0 ? undefined : departures!.get(seaId)![item.departure];
+        return { id: item.id, seaId, ...(departure ? { departure } : {}), landing: landings!.get(seaId)![item.landing]! };
+      });
       const omitted = read.value.count - read.value.pairs.length;
-      return candidates(read.value.pairs, omitted > 0 ? [{ id: `${key}:remaining`, requestIds: [`${key}:remaining`],
+      return candidates(pairs, omitted > 0 ? [{ id: `${key}:remaining`, requestIds: [`${key}:remaining`],
         reason: reason('shore-alternative-prefix-limited', read.factIds, { retained: read.value.pairs.length, totalPossible: read.value.count, consideredPairs: read.value.considered, omitted, nextLimit: limit * 2 }) }] : [], read.factIds);
     },
     hulls(seaId, from, mass, request) {

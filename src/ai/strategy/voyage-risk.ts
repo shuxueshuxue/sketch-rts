@@ -170,10 +170,12 @@ function known(progress: Progress | undefined, ship: Unit, threats: readonly Thr
  * publication. Repeated gross/net queries in this tick cannot spend more work;
  * terrain/weapon caches merely accelerate the same answer. */
 export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, requests: readonly VoyageRiskRequest[], memory: VoyageRiskMemory,
-  observation?: StrategyObservationMemory) {
+  observation?: StrategyObservationMemory, options?: Readonly<{ advance?: boolean; sampleAllowance?: number }>) {
   if (memory.version !== 1 || memory.owner !== owner) throw new Error('Voyage risk memory owner/version mismatch');
   const sequence = currentFactWork()?.receipt.thinkSequence;
-  const advance = sequence === undefined ? memory.tick !== snapshot.tick : memory.thinkSequence !== sequence;
+  const advance = options?.advance !== false && (sequence === undefined ? memory.tick !== snapshot.tick : memory.thinkSequence !== sequence);
+  const sampleAllowance = Math.min(VOYAGE_RISK_SAMPLES_PER_THINK, options?.sampleAllowance ?? VOYAGE_RISK_SAMPLES_PER_THINK);
+  if (!Number.isSafeInteger(sampleAllowance) || sampleAllowance < 0) throw Error('Invalid voyage sample allowance');
   if (advance) { memory.tick = snapshot.tick; if (sequence !== undefined) memory.thinkSequence = sequence; else delete memory.thinkSequence; memory.routeIds = []; }
   memory.nativeRoutes ??= [];
   const bodies = standingBodies(snapshot);
@@ -272,7 +274,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     }
     if (advance && progress.cursor < samples) {
       const pose: Unit = { ...ship, sailing: { ...ship.sailing!, route: undefined } }; shareShipProfile(ship, pose);
-      while (progress.cursor < samples && samplesUsed < VOYAGE_RISK_SAMPLES_PER_THINK) {
+      while (progress.cursor < samples && samplesUsed < sampleAllowance) {
         const leg = legs.find(part => part.offset + part.samples > progress!.cursor)!;
         const index = progress.cursor - leg.offset, point = shipPoseAt(leg.from, leg.to, (index + .5) / leg.samples);
         pose.x = point.x; pose.y = point.y; pose.sailing!.heading = point.heading;

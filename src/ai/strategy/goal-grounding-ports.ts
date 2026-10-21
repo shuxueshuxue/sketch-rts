@@ -11,11 +11,15 @@ export type GoalPublishedValue<T> = Readonly<{ state: 'met'; value: T; factIds: 
  * source owns scheduling/publication on the existing FactWorkQueue. */
 export type GoalGeometryRequest<State, Value> = Readonly<{
   key: string; revision: string; initialState: State;
+  references?: readonly string[];
   advance: (state: State, allowance: number) => Readonly<{
     state: State; work: number; done: boolean; value?: Value;
   }>;
 }>;
-export type GoalGeometryReader = <State, Value>(request: GoalGeometryRequest<State, Value>) => GoalPublishedValue<Value>;
+export type GoalGeometryReader = (<State, Value>(request: GoalGeometryRequest<State, Value>) => GoalPublishedValue<Value>) & {
+  /** Lossless interned geometry versions, retained and charged with entries. */
+  reference?: (namespace: string, value: GoalParameter) => string;
+};
 /** Sea-origin cargo needs only a destination shore. Land-origin grounding
  * must require departure before producing a pickup option. */
 export type GoalShorePair = Readonly<{ id: string; seaId: SeaId; departure?: Shore; landing: Shore }>;
@@ -44,9 +48,12 @@ export type GoalTransportFactPorts = Readonly<{
  * step callbacks and assessment snapshots must never be stored here. */
 export type GoalGeometryMemory = {
   version: 1;
+  references?: { id: string; namespace: string; value: GoalParameter }[];
+  nextReference?: number;
   capacity?: { mode: 'bounded' | 'measurement'; maxBytes: number; maxEntries: number; thinkSequence: number;
     pinnedBytes: number; pinnedEntries: number; peakPinnedBytes: number; peakResidentBytes: number; overflowCount: number;
     pressure?: GoalCapacityPressure };
   entries: { key: string; revision: string; state: GoalParameter; work: number;
+    references?: string[];
     requestedTick: number; lastUsedThink?: number; planIds?: string[]; readyTick: number | null; readyThink?: number; value: GoalParameter | null; errorCode?: string }[];
 };

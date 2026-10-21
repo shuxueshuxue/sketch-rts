@@ -32,6 +32,14 @@ export function createGoalGeometryReader(input: Readonly<{
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || !Number.isSafeInteger(maxEntries) || maxEntries < 1)
     throw Error('Invalid goal geometry capacity');
   const prior = memory.capacity;
+  const referenceValues = new Map<string, NonNullable<GoalGeometryMemory['references']>[number]>();
+  const retainReferences = (ids: readonly string[] = []) => {
+    for (const id of ids) {
+      const value = referenceValues.get(id) ?? memory.references?.find(item => item.id === id);
+      if (!value) throw Error('Geometry entry references an unknown version');
+      if (!memory.references?.some(item => item.id === id)) (memory.references ??= []).push(value);
+    }
+  };
   memory.capacity = { mode: input.measurement ? 'measurement' : 'bounded', maxBytes, maxEntries, thinkSequence: sequence,
     pinnedBytes: prior?.pinnedBytes ?? 0, pinnedEntries: prior?.pinnedEntries ?? 0,
     peakPinnedBytes: prior?.peakPinnedBytes ?? 0, peakResidentBytes: prior?.peakResidentBytes ?? 0, overflowCount: prior?.overflowCount ?? 0 };
@@ -43,7 +51,7 @@ export function createGoalGeometryReader(input: Readonly<{
       requestIds: [...new Set([...capacity.pressure.requestIds, requestId])].sort() };
     return true;
   };
-  return request => {
+  const read: GoalGeometryReader = request => {
     const requestId = entryRequestId(request);
     work.consume(requestId);
     const plans = work.consumerPlanIds();
@@ -53,6 +61,7 @@ export function createGoalGeometryReader(input: Readonly<{
     });
     let entry = memory.entries.find(item => item.key === request.key && item.revision === request.revision);
     if (entry) {
+      if (request.references?.length) { retainReferences(request.references); entry.references = [...request.references]; }
       entry.lastUsedThink = sequence;
       if (plans.length) entry.planIds = [...new Set([...(entry.planIds ?? []), ...plans])].sort();
       boundGoalGeometryMemory(memory, entry);
@@ -62,7 +71,10 @@ export function createGoalGeometryReader(input: Readonly<{
     if (!entry) {
       const state = jsonValue(request.initialState);
       if (state === undefined) return pending('goal-geometry-cursor-invalid');
-      entry = { key: request.key, revision: request.revision, state, work: 0, requestedTick: tick, lastUsedThink: sequence, ...(plans.length ? { planIds: [...plans] } : {}), readyTick: null, value: null };
+      retainReferences(request.references);
+      entry = { key: request.key, revision: request.revision, state, work: 0, requestedTick: tick, lastUsedThink: sequence,
+        ...(request.references?.length ? { references: [...request.references] } : {}),
+        ...(plans.length ? { planIds: [...plans] } : {}), readyTick: null, value: null };
       if (!plans.length && observationJsonBytes(entry) > maxBytes / 2) return pending('goal-geometry-cursor-limit');
       memory.entries = memory.entries.filter(item => item.key !== request.key);
       memory.entries.push(entry);
@@ -101,7 +113,13 @@ export function createGoalGeometryReader(input: Readonly<{
       if (state === undefined || value === undefined) record.errorCode = 'goal-geometry-cursor-invalid';
       else {
         record.state = state;
-        if (result.done) { record.value = value; record.readyTick = tick; if (work.receipt.thinkSequence !== undefined) record.readyThink = work.receipt.thinkSequence; else delete record.readyThink; }
+        if (result.done) {
+          record.value = value;
+          // A completed result is immutable. Its construction cursor can no
+          // longer advance and need not duplicate the published payload.
+          record.state = null; record.readyTick = tick;
+          if (work.receipt.thinkSequence !== undefined) record.readyThink = work.receipt.thinkSequence; else delete record.readyThink;
+        }
         if (!record.planIds?.length && observationJsonBytes(record) > maxBytes / 2) {
           record.errorCode = 'goal-geometry-cursor-limit'; record.state = null; record.value = null;
         }
@@ -111,6 +129,21 @@ export function createGoalGeometryReader(input: Readonly<{
     } });
     return pending('goal-geometry-pending', record.requestedTick);
   };
+  read.reference = (namespace, value) => {
+    const valid = jsonValue(value);
+    if (valid === undefined) throw Error('Invalid referenced geometry');
+    // Store canonical bytes, so equality of a version implies byte equality
+    // even when a caller constructed equivalent objects in another key order.
+    const bytes = goalValueKey(valid);
+    const previous = [...(memory.references ?? []), ...referenceValues.values()]
+      .find(item => item.namespace === namespace && goalValueKey(item.value) === bytes);
+    if (previous) return previous.id;
+    const id = `${namespace}:v${memory.nextReference ?? 1}`;
+    memory.nextReference = (memory.nextReference ?? 1) + 1;
+    referenceValues.set(id, { id, namespace, value: JSON.parse(bytes) as GoalParameter });
+    return id;
+  };
+  return read;
 }
 
 /** Limits count the cached payload {version, entries}, including its envelope.
@@ -120,7 +153,13 @@ export function createGoalGeometryReader(input: Readonly<{
 export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Entry) {
   const capacity = memory.capacity;
   const maxBytes = capacity?.maxBytes ?? GOAL_GEOMETRY_BYTES, maxEntries = capacity?.maxEntries ?? GOAL_GEOMETRY_ENTRIES;
-  const size = () => observationJsonBytes({ version: memory.version, entries: memory.entries });
+  const payload = (entries: readonly Entry[]) => {
+    const used = new Set(entries.flatMap(entry => entry.references ?? []));
+    const references = memory.references?.filter(item => used.has(item.id));
+    return { version: memory.version, entries, ...(references?.length ? { references } : {}),
+      ...(memory.nextReference === undefined ? {} : { nextReference: memory.nextReference }) };
+  };
+  const size = () => observationJsonBytes(payload(memory.entries));
   const pinned = () => memory.entries.filter(entry => entry.planIds?.length);
   const compare = (a: Entry, b: Entry) => (a.lastUsedThink ?? a.requestedTick) - (b.lastUsedThink ?? b.requestedTick)
     || (entryRequestId(a) < entryRequestId(b) ? -1 : entryRequestId(a) > entryRequestId(b) ? 1 : 0);
@@ -129,8 +168,13 @@ export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Ent
     if (!oldest) break;
     memory.entries.splice(memory.entries.indexOf(oldest), 1);
   }
+  if (memory.references) {
+    const used = new Set(memory.entries.flatMap(entry => entry.references ?? []));
+    memory.references = memory.references.filter(item => used.has(item.id));
+    if (!memory.references.length) delete memory.references;
+  }
   if (!capacity) return;
-  const pins = pinned(), bytes = observationJsonBytes({ version: memory.version, entries: pins });
+  const pins = pinned(), bytes = observationJsonBytes(payload(pins));
   capacity.pinnedBytes = bytes; capacity.pinnedEntries = pins.length;
   capacity.peakPinnedBytes = Math.max(capacity.peakPinnedBytes, bytes);
   capacity.peakResidentBytes = Math.max(capacity.peakResidentBytes, size());

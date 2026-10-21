@@ -6,7 +6,7 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalBerth, GoalGeometryReader, GoalHullCandidate, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalFactReader } from './goal-planner-types';
-import { landIdAt, seaIdAt, type Shore } from './regions';
+import { landIdAt, seaIdAt, type RegionIndex, type Shore } from './regions';
 import type { Point } from './types';
 
 /** Native ground projection and partial walking destinations are distinct
@@ -24,12 +24,23 @@ type Cursor = {
 };
 export function createGoalBoardingGeometry(input: Readonly<{
   snapshot: GameSnapshot; geometry: GoalGeometryReader; geometryRevision: string; readFact: GoalFactReader;
+  regions?: RegionIndex;
   readGroundPoint?: GoalNativeGroundReader;
 }>): (passenger: Unit, hull: GoalHullCandidate, shore: Shore) => GoalPublishedValue<GoalBerth> {
   return (passenger, hull, shore) => {
+    const preparedCells = input.regions?.scannedRows === input.regions?.totalRows
+      ? input.regions?.boardingCellsByLand?.get(shore.landId)?.get(shore.seaId) ?? (input.regions?.boardingCellsByLand ? [] : undefined)
+      : undefined;
     const profile = shipProfile(hull.assessment);
     if (!profile) return { state: 'unmet', reason: { code: 'native-hull-profile-unavailable', factIds: hull.factIds, values: {} } };
-    const key = `boarding:${goalValueKey([hull.reference, profile.hull, hull.assessment.sailing?.heading ?? 0, passenger.radius, shore])}`;
+    const hullVersion = input.geometry.reference?.(`hull:${hull.assessment.kind}`, {
+      hull: profile.hull, heading: hull.assessment.sailing?.heading ?? 0,
+    });
+    const shoreVersion = input.geometry.reference?.('shore', shore);
+    const references = hullVersion && shoreVersion ? [hullVersion, shoreVersion] : undefined;
+    const key = `${preparedCells ? 'boarding-cells' : 'boarding'}:${goalValueKey(references
+      ? [hull.reference, hullVersion, passenger.radius, shoreVersion]
+      : [hull.reference, profile.hull, hull.assessment.sailing?.heading ?? 0, passenger.radius, shore])}`;
     const pending = (code: string): GoalPublishedValue<Point> => ({ state: 'pending', requestIds: [key],
       reason: { code, factIds: [key], values: {} } });
     const nativePoint: GoalNativeGroundReader = request => {
@@ -50,6 +61,7 @@ export function createGoalBoardingGeometry(input: Readonly<{
         : pending('native-partial-walk-destination-pending');
     };
     const read = input.geometry<Cursor, { berth: GoalBerth | null; factIds: readonly string[] }>({ key, revision: input.geometryRevision,
+      ...(references ? { references } : {}),
       initialState: { attempt: 0, ground: shore.ground, water: shore.water, heading: hull.assessment.sailing?.heading ?? 0,
         phase: 'project', scan: 0, after: null, best: null, land: null, pose: beginNearestShipPose(), fallback: false, proofIds: [] },
       advance(state, allowance) {
@@ -73,10 +85,11 @@ export function createGoalBoardingGeometry(input: Readonly<{
             work++; state.ground = projected; state.phase = 'scan'; continue;
           }
           if (state.phase === 'scan') {
-            const count = input.snapshot.map.terrain?.cells.length ?? 0;
-            if (!count) return done(null);
+            const count = preparedCells?.length ?? input.snapshot.map.terrain?.cells.length ?? 0;
+            if (!count && !preparedCells) return done(null);
             if (state.scan < count) {
-              const index = state.scan++, candidate = boardingBerthCandidateAt(input.snapshot.map, person, ship, index); work++;
+              const offset = state.scan++, index = preparedCells ? preparedCells[offset]! : offset;
+              const candidate = boardingBerthCandidateAt(input.snapshot.map, person, ship, index); work++;
               if (candidate && (!state.after || candidate.score > state.after.score || candidate.score === state.after.score && index > state.after.index)
                 && (!state.best || candidate.score < state.best.score || candidate.score === state.best.score && index < state.best.index))
                 state.best = { ...candidate, index };

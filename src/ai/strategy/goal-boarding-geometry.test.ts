@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, it } from 'vitest';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
+import { boardingBerthCandidateAt } from '../../shared/naval';
+import { shareShipProfile } from '../../shared/ship-geometry';
 import { walkableGoal, walkDestination } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { createGoalBoardingGeometry, type GoalNativeGroundRequest } from './goal-boarding-geometry';
@@ -29,7 +31,7 @@ const strict = <T>(run: () => T) => withNavigationAudit(event => {
   if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation);
 }, () => withNavigationPhase('strategy-planning', run));
 
-it('continues native 4180 boarding geometry with finite work and JSON turns, consuming explicit published ground endpoints', () => {
+it.each([false, true])('continues native 4180 boarding geometry with finite work and JSON turns (prepared cell index: %s)', indexed => {
   const input = frame(), expected = nativeVoyageBerth(input.snapshot, input.passenger, input.hull.assessment, input.shore);
   expect(expected.status).toBe('known');
   let memory: GoalGeometryMemory = { version: 1, entries: [] }, result: GoalPublishedValue<GoalBerth> | undefined;
@@ -44,7 +46,8 @@ it('continues native 4180 boarding geometry with finite work and JSON turns, con
       : walkDestination(input.snapshot.map, request.from, request.goal));
     const work = new FactWorkQueue(input.snapshot.tick + turn * 15, 6144);
     const geometry = createGoalGeometryReader({ tick: input.snapshot.tick + turn * 15, work, memory });
-    const read = createGoalBoardingGeometry({ ...input, geometry, geometryRevision: 'same-native-bodies', readGroundPoint: request => {
+    const read = createGoalBoardingGeometry({ ...input, geometry, geometryRevision: 'same-native-bodies',
+      ...(indexed ? { regions: regionIndex(input.snapshot.map) } : {}), readGroundPoint: request => {
       const key = goalValueKey(request), value = published.get(key); requests.set(key, request);
       return value ? { state: 'met', value, factIds: [`ground:${key}`] } : { state: 'pending', requestIds: [key],
         reason: { code: 'ground-pending', factIds: [], values: {} } };
@@ -59,8 +62,28 @@ it('continues native 4180 boarding geometry with finite work and JSON turns, con
   if (result?.state !== 'met' || expected.status !== 'known') throw Error('not published');
   expect(result.value).toEqual({ water: expected.shore.water, ground: expected.shore.ground, heading: expected.heading });
   expect(result.value.water).toEqual({ x: 1584, y: 2448 }); expect(result.value.ground).toEqual(result.value.water);
-  expect(total).toBeGreaterThan(input.snapshot.map.terrain!.cells.length);
+  if (!indexed) expect(total).toBeGreaterThan(input.snapshot.map.terrain!.cells.length);
+  else expect(total).toBeLessThan(input.snapshot.map.terrain!.cells.length);
   expect(JSON.stringify(input.snapshot)).toBe(before);
+});
+
+it('retains every native boarding candidate and global row-order tie in the prepared region index', () => {
+  const input = frame(), regions = regionIndex(input.snapshot.map), terrain = input.snapshot.map.terrain!;
+  const examples = new Map<string, Shore>();
+  for (const shore of regions.shores) examples.set(`${shore.landId}/${shore.seaId}`, shore);
+  expect(examples.size).toBeGreaterThan(1);
+  for (const shore of [...examples.values()].slice(0, 6)) {
+    const person = { ...input.passenger, x: shore.ground.x, y: shore.ground.y, deck: undefined, cabin: undefined };
+    const ship = { ...input.hull.assessment, x: shore.water.x, y: shore.water.y };
+    shareShipProfile(input.hull.assessment, ship);
+    const all = Array.from({ length: terrain.cells.length }, (_, index) => index);
+    const indexed = regions.boardingCellsByLand!.get(shore.landId)?.get(shore.seaId) ?? [];
+    const evaluate = (indices: readonly number[]) => indices.flatMap(index => {
+      const candidate = boardingBerthCandidateAt(input.snapshot.map, person, ship, index);
+      return candidate ? [{ index, ...candidate }] : [];
+    });
+    expect(evaluate(indexed)).toEqual(evaluate(all));
+  }
 });
 
 it('does not run native destination lookup at zero allowance or turn absent exact roads into physical infeasibility', () => {

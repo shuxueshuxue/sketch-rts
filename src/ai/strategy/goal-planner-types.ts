@@ -96,7 +96,7 @@ export type GoalPlanningContext = Readonly<{
   readProjectedFact?: (fact: GoalFact, projection: Readonly<{
     actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[];
     bindings: Readonly<Record<string, GoalEntityReference>>;
-  }>) => GoalFactObservation;
+  }>) => GoalFactObservation | null;
 }>;
 export type GoalEstimate<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
   | Readonly<{ state: 'pending'; requestIds: readonly string[]; reason: AllocationReason }>

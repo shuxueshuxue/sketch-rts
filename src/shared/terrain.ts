@@ -1611,12 +1611,16 @@ export type GroundRegionIndex = Readonly<{
   seas: ReadonlyMap<`sea:${number}`, Point>;
   shores: readonly GroundShore[];
   shoresByLand: ReadonlyMap<`land:${number}`, ReadonlyMap<`sea:${number}`, readonly GroundShore[]>>;
+  /** Row-ordered native boarding candidate cells, indexed during the existing
+   * geographic warmup. Dynamic placement remains a per-candidate check. */
+  boardingCellsByLand?: ReadonlyMap<`land:${number}`, ReadonlyMap<`sea:${number}`, readonly number[]>>;
   scannedRows: number; totalRows: number; scannedAtTick: number;
 }>;
 type MutableRegionIndex = {
   lands: Map<`land:${number}`, Point>; seas: Map<`sea:${number}`, Point>;
   shores: GroundShore[];
   shoresByLand: Map<`land:${number}`, Map<`sea:${number}`, GroundShore[]>>;
+  boardingCellsByLand: Map<`land:${number}`, Map<`sea:${number}`, number[]>>;
   scannedRows: number; totalRows: number; scannedAtTick: number;
 };
 const groundRegionIndices = new WeakMap<Terrain, MutableRegionIndex>();
@@ -1626,13 +1630,13 @@ const groundRegionIndices = new WeakMap<Terrain, MutableRegionIndex>();
 export function groundRegionIndex(map: Pick<GameMap, 'terrain'>, rowBudget = Infinity, tick = 0): GroundRegionIndex {
   const terrain = map.terrain;
   if (!terrain) return { lands: new Map([['land:1', { x: 0, y: 0 }]]),
-    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], shoresByLand: new Map(),
+    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], shoresByLand: new Map(), boardingCellsByLand: new Map(),
     scannedRows: 0, totalRows: 0, scannedAtTick: tick };
   let result = groundRegionIndices.get(terrain);
   if (!result) groundRegionIndices.set(terrain, result = {
     lands: new Map(groundWholeAnchors(map).map(({ label, point }) => [`land:${label}` as const, point])),
     seas: new Map(groundWholeAnchors(map, 'sea').map(({ label, point }) => [`sea:${label}` as const, point])),
-    shores: [], shoresByLand: new Map(), scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
+    shores: [], shoresByLand: new Map(), boardingCellsByLand: new Map(), scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
   });
   if (result.scannedRows === terrain.rows) return result;
   const end = Math.min(terrain.rows, result.scannedRows + rowBudget);
@@ -1646,6 +1650,16 @@ export function groundRegionIndex(map: Pick<GameMap, 'terrain'>, rowBudget = Inf
     let contacts = seas.get(shore.seaId);
     if (!contacts) seas.set(shore.seaId, contacts = []);
     contacts.push(shore);
+    if (contact.ground.x === contact.water.x && contact.ground.y === contact.water.y) {
+      const index = Math.floor(contact.water.y / terrain.cell) * terrain.cols + Math.floor(contact.water.x / terrain.cell);
+      if (terrain.cells[index] === ',') {
+        let seas = result.boardingCellsByLand.get(shore.landId);
+        if (!seas) result.boardingCellsByLand.set(shore.landId, seas = new Map());
+        let cells = seas.get(shore.seaId);
+        if (!cells) seas.set(shore.seaId, cells = []);
+        cells.push(index);
+      }
+    }
   }
   result.scannedRows = end;
   return result;
