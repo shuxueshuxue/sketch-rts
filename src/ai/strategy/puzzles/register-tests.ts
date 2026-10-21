@@ -55,7 +55,7 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       if (key === 'guarded-shore') {
         expect(isWalkable(world.game.map, 2256, 1200), 'no third cheap beach through the cliff ring').toBe(false);
         expect(isWalkable(world.game.map, 2368, 768)).toBe(true);
-        expect(isWalkable(world.game.map, 3104, 3200)).toBe(true);
+        expect(isWalkable(world.game.map, 2368, 2944)).toBe(true);
       }
     });
     it.skipIf(!publicPuzzlePlanner)('cold-frame dependency graph: required actions, causal order and forbidden choices', () => {
