@@ -23,7 +23,7 @@ const factNames: Record<GoalFactPredicate['kind'], string> = {
 };
 export const goalFactLabel = (predicate: GoalFactPredicate) => factNames[predicate.kind];
 export const goalActionLabel = (action: GoalActionNode) => actionNames[action.declaration.kind] ?? action.declaration.kind;
-const reasonList = (rows: GoalPlan['reasons']) => rows.map(reason => `<p>${h(allocationReason(reason))}</p>`).join('') || '<p class="plan-muted">原因未记录。</p>';
+const reasonList = (rows: GoalPlan['reasons']) => rows.map(reason => `<p>${h(allocationReason({...reason,factIds:[]}))}</p>${reason.factIds.length?`<details><summary>${reason.factIds.length} 项事实依据</summary><pre>${h(reason.factIds.join('\n'))}</pre></details>`:''}`).join('') || '<p class="plan-muted">原因未记录。</p>';
 
 /** Only a recorded binding to this exact generation grants execution authority. */
 export function recordedGoalExecution(trace: AiPlanTrace, action: GoalActionNode) {
@@ -86,7 +86,7 @@ export function goalPlanGraph(plan: GoalPlan, trace: AiPlanTrace, selected = '$g
       const fact = facts.get(node.id)!.observation;
       title = goalFactLabel(fact.fact.predicate); state = fact.state;
       detail = fact.state === 'pending' ? `请求 ${fact.requestId}` : fact.availableTick != null && fact.availableTick > trace.tick
-        ? `${clock(fact.availableTick)} 才可用（当前未到时刻）` : allocationReason(fact.reason);
+        ? `${clock(fact.availableTick)} 才可用（当前未到时刻）` : allocationReason({...fact.reason,factIds:[]});
     } else {
       const action = actions.get(node.id)!;
       const execution = recordedGoalExecution(trace, action);
@@ -101,17 +101,17 @@ export function goalPlanGraph(plan: GoalPlan, trace: AiPlanTrace, selected = '$g
 
 export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$goal'): string {
   const fact = plan.facts.find(row => row.id === selected), action = plan.actions.find(row => row.id === selected);
-  const head = `<small>规划器记录 · ${clock(plan.observedTick)}</small><h3>${h(plan.goal.id)}</h3><p>${h(states[plan.status] ?? plan.status)}</p>`;
+  const head = `<small>规划器记录 · ${clock(plan.observedTick)}</small><h3>${h(plan.goal.effects.map(effect=>goalFactLabel(effect.predicate)).join('、')||plan.goal.id)}</h3><small>${h(plan.goal.id)}</small><p>${h(states[plan.status] ?? plan.status)}</p>`;
   if (fact) {
     const observation = fact.observation;
     const alternatives = plan.alternatives.filter(row => row.factId === fact.id || row.factId === observation.fact.id);
     return `${head}<h4>条件：${h(goalFactLabel(observation.fact.predicate))}</h4><p>${h(states[observation.state])}</p>
       ${observation.state === 'pending' ? `<p class="plan-blocked">等事实 · ${h(observation.requestId)}<br>请求于 ${clock(observation.requestedTick)}，不视作失败。</p>` : ''}
       ${observation.availableTick != null ? `<p>可用时刻 ${clock(observation.availableTick)}${observation.availableTick > trace.tick ? ' · 当前尚不可用' : ''}</p>` : ''}
-      ${reasonList([observation.reason])}<h4>结构化证据</h4><pre>${h(JSON.stringify({ predicate: observation.fact.predicate,
+      ${reasonList([observation.reason])}<h4>满足它的候选方案</h4>${alternatives.map(row => `<div class="plan-child"><b>${row.status === 'chosen' ? '选中' : row.status === 'rejected' ? '落选' : '等待评估'} · ${h(row.actionId)}</b><br>成本 ${number(row.costGold)} 金 · 预计完成 ${row.finishTick == null ? '—' : clock(row.finishTick)}${reasonList([row.reason])}</div>`).join('') || '<p>候选未记录，不补推方案。</p>'}
+      <h4>世界事实与证据</h4><details><summary>查看结构化字段</summary><pre>${h(JSON.stringify({ predicate: observation.fact.predicate,
         quantity: observation.quantity, entityIds: observation.entityIds, route: observation.route,
-        goldForecast: observation.goldForecast, site: observation.site, interception: observation.interception }, null, 2))}</pre>
-      <h4>满足它的候选方案</h4>${alternatives.map(row => `<div class="plan-child"><b>${row.status === 'chosen' ? '选中' : row.status === 'rejected' ? '落选' : '等待评估'} · ${h(row.actionId)}</b><br>成本 ${number(row.costGold)} 金 · 预计完成 ${row.finishTick == null ? '—' : clock(row.finishTick)}${reasonList([row.reason])}</div>`).join('') || '<p>候选未记录，不补推方案。</p>'}`;
+        goldForecast: observation.goldForecast, site: observation.site, interception: observation.interception }, null, 2))}</pre></details>`;
   }
   if (action) {
     const execution = recordedGoalExecution(trace, action), assignments = recordedGoalAssignments(trace, action);
@@ -119,8 +119,11 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
       row.action?.actionId === action.allocation!.actionId && row.action.generation === action.allocation!.generation) ?? [] : [];
     return `${head}<h4>动作：${h(goalActionLabel(action))}</h4><p>${h(states[action.state])}</p>
       <h4>为了让什么成立</h4>${action.declaration.effects.map(effect => `<p>${h(effect.operation)} · ${h(goalFactLabel(effect.fact.predicate))}</p>`).join('')}
-      <h4>依赖的事实与动作</h4><p>${h(action.prerequisiteFactIds.join('、') || '无')}<br>${h(action.dependsOnActionIds.join('、') || '无前置动作')}</p>${reasonList(action.reasons)}
-      <h4>计划执行器</h4><p>${h(action.declaration.executor.executor)}</p><h4>正式执行记录</h4>
+      <h4>依赖的事实与动作</h4>${action.prerequisiteFactIds.map(id=>{const fact=plan.facts.find(row=>row.id===id||row.observation.fact.id===id);return `<button class="plan-list" data-plan-node="${h(fact?.id??id)}">${h(fact?goalFactLabel(fact.observation.fact.predicate):id)} · ${fact?h(states[fact.observation.state]):'未记录条件节点'}</button>`;}).join('')||'<p>无前置事实。</p>'}
+      ${action.dependsOnActionIds.map(id=>{const previous=plan.actions.find(row=>row.id===id);return `<button class="plan-list" data-plan-node="${h(id)}">${h(previous?goalActionLabel(previous):id)} · 前置动作</button>`;}).join('')}${reasonList(action.reasons)}
+      <h4>计划执行器</h4><p>${h(action.declaration.executor.executor)}</p>
+      <details><summary>声明参数与未来产物（非当前实体）</summary><pre>${h(JSON.stringify({parameters:action.declaration.executor.parameters,outputs:action.declaration.outputs},null,2))}</pre></details>
+      <h4>正式执行记录</h4>
       ${execution ? `<p>${h(execution.executor)} · ${h(execution.phase)} · ${h(stageLabel(execution.status))}<br>${h(execution.token.actionId)} #${execution.token.generation}</p>` : '<p class="plan-muted">未记录执行回执。就绪或计划绑定不等于已经执行。</p>'}
       <p>${assignments.length} 名正式分配</p>${assignments.map(row => `<p class="plan-unit-ids">${h(row.unitId)} · ${h(stageLabel(row.stage))}${row.interruption ? ' · 救命中断，当前不可用' : ''}</p>`).join('')}
       <h4>本次命令接纳记录</h4>${receipts.map(row=>`<p>${h(row.source)} · ${h(row.executor)} · ${h(row.commandId)}<br>${row.status==='accepted'?`已接纳于 ${clock(row.admittedTick)} · 排队时刻 ${row.queuedTick==null?'—':clock(row.queuedTick)}`:`拒绝 · ${h(row.reason.reason)}`}</p>`).join('')||'<p class="plan-muted">本次未记录同代次接纳回执。</p>'}<p class="plan-muted">命令接纳与排队不证明已生效，效果仍看世界事实。</p>
@@ -130,7 +133,7 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
   return `${head}<h4>想得到什么</h4>${plan.goal.effects.map(effect => `<p>${h(goalFactLabel(effect.predicate))}<br><small>${h(effect.id)}</small></p>`).join('')}${reasonList(plan.goal.reasons)}
     <h4>条件、方案、执行与结果</h4><p>左侧点击事实可比较落选方案，点击动作可核对实际执行。</p>
     <p>${plan.facts.filter(row => row.observation.state === 'unmet').length} 个未成立 · ${plan.facts.filter(row => row.observation.state === 'pending').length} 个等事实</p>
-    <p>${plan.readyActionIds.length} 个就绪动作 · 不代表已经分配</p>
+    <p>${plan.readyActionIds.length} 个规划就绪动作 · 本次向分配器提供 ${trace.goalPlanner?.readyActions.filter(row=>row.planId===plan.id&&row.goalId===plan.goal.id).length??0} 个<br>不代表已经分配或执行。</p>
     <h4>计划估值</h4><p>成本 ${number(plan.costGold)} · 成功概率 ${plan.successProbability == null ? '—' : `${number(plan.successProbability * 100)}%`} · 价值 ${number(plan.valueGold)}</p>
     <h4>规划数量与时间账本</h4><p class="plan-muted">此表是计划推算；实际支出由原生回执证明。</p>${plan.resourceTimeline.slice(0,96).map(row => `<p>${clock(row.tick)} · ${h(row.resource.kind)}<br>${number(row.before)} ${row.delta >= 0 ? '+' : ''}${number(row.delta)} = ${number(row.after)}<br><small>${h(row.actionId)}</small></p>`).join('') || '<p>未记录数量账本。</p>'}${plan.resourceTimeline.length>96?`<p>另 ${plan.resourceTimeline.length-96} 项保留在录制中。</p>`:''}
     <h4>结果</h4><p>${plan.status === 'complete' && plan.completedTick != null ? `目标效果于 ${clock(plan.completedTick)} 成立。` : '目标效果未证实，实际完成时刻 —'}</p>

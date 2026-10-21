@@ -47,10 +47,12 @@ export default async function(s: Scene) {
   const details=()=>s.page.locator('.plan-panel').innerText();
   s.must((await details()).includes('落选'),'No recorded rejected option');
   s.must(await s.page.locator('.plan-panel img').count()===0,'Unescaped alternative created an image');
+  await s.page.locator('.plan-panel h4').filter({hasText:'满足它的候选方案'}).scrollIntoViewIfNeeded();
   await s.shot('goal-contract-alternatives');
   await s.page.locator('.goal-graph-node.action').first().click();await s.wait(300);
   s.must((await details()).includes('未记录执行回执'),'A different generation was displayed as execution');
   s.must((await details()).includes('0 名正式分配'),'A planned action invented a grant');
+  await s.page.locator('.plan-panel h4').filter({hasText:'正式执行记录'}).scrollIntoViewIfNeeded();
   await s.shot('goal-contract-execution');
   await s.page.locator('.goal-graph-node.fact').filter({hasText:'可达路线'}).click();await s.wait(300);
   s.must((await details()).includes('route-request'),'Missing pending request');
