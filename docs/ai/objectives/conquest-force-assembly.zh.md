@@ -14,15 +14,15 @@
 
 支持尾部未解但已有正的成功概率下界时，合成器可按已证路径给出 `lower-bound` 结算，原上下界和未解质量作为结构化假设保留；这不表示剩余情景的真实概率为零。下界为零继续 unknown 或已知 blocked。已确认能凑齐的正概率路径若缺少货币结算、时间或同窗证据，仍明确拒收，不能把该路径的钱当作零；收益下界也不能直接当作被抢占时的损失上界。
 
-正式集结被抢占时，`valueAssemblyDelayLoss` 只估计保留进度的推迟损失。调用方提供同一窗口的已证明续行价值 cap，以及各情景抢兵前后首次凑齐时间。完整原现金流计划按显式 readyTick 锚点平移，再调用同一个 `valueConquestContinuation` 重新积分收入和付款，不折现已积分 score；各分项只累计正损失，延后付款的节省仍保留明细但不抵扣上界。逐情景概率加权后，损失不超过整次续行价值 cap。来回行走的切换成本由框架另计。
+正式集结被抢占时，`valueAssemblyCohortLoss` 对同一联合情景的抢占前、抢占后真实成员组分别调用 `valueConquestContinuation`。双方各自使用原现金流、各自 readyTick 和同一个比较窗口，重新计算首战概率、伤亡、运输和收入。凑齐时间相同不代表续行价值相同：原 6→5 个 ravager 的固定输入，readyTick 均为 0，续行价值由 282.337917 降到 277.035574，损失为 5.302343 金。每条路径保留前后 score、有符号差值、加权差值和现金分项；按联合概率合成后才取非负损失，再封顶于独立证明的同窗续行价值 cap。不会先平均成员组或凑齐时间，也不再次折现已积分 score。来回行走的切换成本由框架另计。
 
-仅有部分现金流、计划缺失、尾部未解或移除成员后窗内凑不齐，都可用已证明的整 cap 回退，明确标注原因；缺少有限价值 cap 时保持 unknown。`ready`、已知 `not-filled` 和 `unknown` 分型，不能把未解尾部偷换成零价值。该 helper 不修改集结成员、租用、实际进度、供给模型或导航，也不复用迁移旧任务的上界类型。返回逐情景现金流差和纯数值组成，由正式 oracle/抢占事务绑定目标、证据与事件。
+已知 `not-filled` 表示比较窗内没有该续行，按零续行价值处理；真正未知的正概率路径才按该路径概率使用整 cap，记录 `fallbackPaths` 和 `fallbackProbability`。没有有限价值 cap 时保持 unknown。已知部分矿工曲线可按原共享结算比较，不因无关的额外补员选项未求值就整 cap；实际路线、战斗或收入仍未知时不能补零。纯货币 helper 不计算新的物理事实，不改成员、租用或进度，也不调用导航、风险 batch 或机会 oracle。旧 `valueAssemblyDelayLoss` 只供已证明同一续行现金计划的延期分析，不能代替改变成员组后的正式反事实。
 
-`adaptAssemblyDelayLoss` 将该数值证明绑定到正式 `AssemblyDisplacementQuote`。`bound` 只保留目标、同窗损失、续行价值 cap、模式和严格合计为损失的分项；完整路径证明独立放在返回的 `sidecar`，调用方不得将其并入决策 memory。逐情景重积分标为 `scenario-delay`；任一路径使用整 cap、发生截断或详细证明无法核对时，明确标为 `whole-value-cap`。截断后输出单独的 cap 组成，原始未截断金额仍在 sidecar。浮点加总只向保守方向调和，金额不一致则使用已有整 cap；缺少有限 cap 统一返回 `assembly-continuation-value-unknown`，供框架单独计数。
+`adaptAssemblyDelayLoss` 将该数值证明绑定到正式 `AssemblyDisplacementQuote`。`bound` 只保留目标、同窗损失、续行价值 cap、模式和严格合计为损失的分项；完整路径证明独立放在返回的 `sidecar`，调用方不得将其并入决策 memory。前后成员组续行差标为 `scenario-continuation`，原同计划延期分析为 `scenario-delay`；正概率路径使用整 cap、发生截断或详细证明无法核对时标为 `whole-value-cap`。有符号路径合成后，正式分项输出合计损失，原路径及现金差仍留在 sidecar。浮点加总只向保守方向调和；缺少有限 cap 统一返回 `assembly-continuation-value-unknown`，供框架单独计数。
 
 `prepareAssemblyConquestContinuation` 为每条成功供给路径准备独立续行计划。现存兵只在评估副本移到本陆块 post，已付 job 和条件样本仅有评估身份；工程兵及路线点名的船来自本次显式 response 池，并服从排除、救命中断及生产通道边界。副本时钟推进到该路径 readyTick，敌方数值 ETA 只减一次等待时间，己方已付队列扣除已消耗工作；未观测的新生单位、升级、战斗和世界变化不被模拟成事实。未来评估组的额外人口计入收入税率，但不产生真实出生或 lease。各路径现金流再平移回原比较窗口，不能用平均 ready 或折现过的 score 代替。
 
-准备结果包含具体方法和 `materializedInput` 评估旁表，供框架唯一一次当前帧风险 batch 点名真实船/船厂。风险未发布时 `settlement=null`；`settlePreparedAssemblyConquestContinuation` 只消费同批 map 并重读已有事实，不再具体化、请求 Arrival、采样风险或调用机会 oracle。评估方法使用短哈希身份并显式区分真实船，避免不同船或正式执行计划共用风险键。完整评估输入、回调和样本 ID 都不进入 authority memory。续行现金流覆盖标为 `known-effects`，其部分收入曲线不能直接证明被抢占损失；正式有限 cap 的来源由框架另行证明。
+准备结果包含具体方法和 `materializedInput` 评估旁表，供框架唯一一次当前帧风险 batch 点名真实船/船厂。风险未发布时 `settlement=null`；`settlePreparedAssemblyConquestContinuation` 只消费同批 map 并重读已有事实，不再具体化、请求 Arrival、采样风险或调用机会 oracle。评估方法使用短哈希身份并显式区分真实船，避免不同船或正式执行计划共用风险键。完整评估输入、回调和样本 ID 都不进入 authority memory。续行现金流覆盖标为 `known-effects`；改变成员后必须重新准备并结算同一模型，不能只用原现金流的延期代替。正式有限 cap 的来源由框架另行证明。
 
 评估身份覆盖本次实际选定的全部成员和支持资产（包括工程兵）、其位置/属性、逐段路线与时钟，以及原动作图的目标和依赖。长情景 ID 只进入摘要，不拼入原生请求；解释文案不参与身份。即使战兵、船和 readyTick 相同，目标侧已到岗工程兵与仍需渡海的另一名工程兵也必须形成不同计划，风险 batch 的 method 去重不能丢掉送工航次。回归同时核两种报价顺序、同成员路线变化和 JSON 恢复后的身份稳定。
 

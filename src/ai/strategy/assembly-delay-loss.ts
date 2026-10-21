@@ -13,7 +13,7 @@ type CashComponent = Readonly<{ code: string; side: 'benefit' | 'cost' | 'persis
   beforePresentGold: number; afterPresentGold: number; differenceGold: number; lossUpperGold: number }>;
 export type AssemblyDelayPathValue = Readonly<{
   pathId: string; probability: number; before: AssemblyReadyTime; after: AssemblyReadyTime;
-  basis: 'cash-flow-delay' | 'full-cap' | 'no-delay' | 'no-prior-fill';
+  basis: 'cash-flow-delay' | 'continuation-difference' | 'full-cap' | 'no-delay' | 'no-prior-fill';
   rawLossUpperGold: number; lossUpperGold: number; weightedLossUpperGold: number;
   components: readonly CashComponent[]; reason: AllocationReason;
 }>;
