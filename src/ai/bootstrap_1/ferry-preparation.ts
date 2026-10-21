@@ -11,6 +11,9 @@ import { navalServices } from '../policy/naval-services';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { ferryCrewTaskAvailable } from '../policy/naval';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
+import { navalFerryActor } from '../strategy/incumbent-actors';
+import { strategyLeaseAllows } from '../strategy/control';
 
 /** A real boarding order owns the worker while the ferry still sails to the loading coast. */
 export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, primary: readonly GameCommand[]): GameCommand[] {
@@ -24,6 +27,8 @@ export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, opt
   for (const boat of own.filter(unit => isTransportKind(unit.kind) && !services.reserved.has(unit.id))) {
     const mission = ferries[boat.id];
     if (!mission || mission.purpose !== 'settle' || mission.phase !== 'loading') continue;
+    const context = { ...options, strategyActor: navalFerryActor(boat.id, mission.sinceTick) };
+    if (!strategyLeaseAllows(options.memory, boat.id, context.strategyActor)) continue;
     const shore = walkableGoal(snapshot.map, mission.from.x, mission.from.y);
     const cargo = shipPassengers(snapshot.units, boat);
     const cargoIds = new Set(cargo.map(unit => unit.id));
@@ -33,7 +38,7 @@ export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, opt
     const workers = own.filter(unit => unit.kind === 'worker' && !unit.deck && !reserved.has(unit.id)
       && (unit.order.type === 'idle' || unit.order.type === 'mine') && sameGround(snapshot.map, unit, shore)
       && options.memory.unitClaims[unit.id]?.kind !== 'build' && options.memory.unitClaims[unit.id]?.kind !== 'retreat'
-      && ferryCrewTaskAvailable(unit, options));
+      && ferryCrewTaskAvailable(unit, context));
     const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(snapshot.map, mine, shore)
       && snapshot.buildings.some(hall => hall.owner === owner && hall.kind === 'townHall' && hall.complete
         && distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;
@@ -49,7 +54,7 @@ export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, opt
       if (!boardUnit(boat, copy, planning)) return [];
       planning.push(copy); reserved.add(unit.id); room -= bodyMass(unit); return [unit.id];
     });
-    if (crew.length) commands.push({ type: 'board', unitIds: crew, transportId: boat.id });
+    if (crew.length) commands.push(...bindIncumbentCommands([{ type: 'board', unitIds: crew, transportId: boat.id }], navalFerryActor(boat.id, mission.sinceTick)));
   }
   return commands;
 }

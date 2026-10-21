@@ -1,4 +1,5 @@
-import type { Arrival, SituationUnit } from './types';
+import type { Arrival, SituationUnit, Target } from './types';
+import type { DecisionFacts } from './decision';
 
 export type ArrivalColumns = Readonly<{ ids: readonly string[]; index: ReadonlyMap<string, number> }>;
 export type UnitArrivalFacts = Readonly<{
@@ -19,7 +20,7 @@ export function arrivalColumns(ids: readonly string[]): ArrivalColumns {
   return { ids, index };
 }
 
-export function unitArrivalFacts(unit: SituationUnit): UnitArrivalFacts | undefined { return (unit as StoredUnit)[storedArrivals]; }
+export function unitArrivalFacts(unit: object): UnitArrivalFacts | undefined { return (unit as StoredUnit)[storedArrivals]; }
 
 function materialize(this: StoredUnit): readonly Entry[] {
   const facts = this[storedArrivals]!;
@@ -41,13 +42,36 @@ export function withUnitArrivals<T extends object>(unit: T, facts: UnitArrivalFa
   return Object.defineProperty(unit, 'arrivals', arrayProjection) as T & Pick<SituationUnit, 'arrivals'>;
 }
 
+/** Numerical control rows use the identical storage and reader without
+ * manufacturing explanatory fields or rendering the compatibility array. */
+export function withDecisionUnitArrivals<T extends object>(unit: T,
+  facts: Omit<UnitArrivalFacts, 'values'> & { values: readonly (DecisionFacts<Arrival> | undefined)[] }):
+  T & DecisionFacts<Pick<SituationUnit, 'arrivals'>> {
+  Object.defineProperty(unit, storedArrivals, { value: facts });
+  return Object.defineProperty(unit, 'arrivals', arrayProjection) as T & DecisionFacts<Pick<SituationUnit, 'arrivals'>>;
+}
+
 /** The decision path does not allocate the compatibility array or entry pairs.
  * Deserialized/plain scene inputs continue to use their ordinary array. */
-export function unitArrival(unit: SituationUnit, targetId: string): Arrival | undefined {
+export function unitArrival(unit: SituationUnit, targetId: string): Arrival | undefined;
+export function unitArrival(unit: DecisionFacts<SituationUnit>, targetId: string): DecisionFacts<Arrival> | undefined;
+export function unitArrival(unit: SituationUnit | DecisionFacts<SituationUnit>, targetId: string): Arrival | DecisionFacts<Arrival> | undefined {
   const facts = unitArrivalFacts(unit);
   if (!facts) return unit.arrivals.find(entry => entry.targetId === targetId)?.arrival;
   const index = facts.columns.index.get(targetId);
   return index === undefined ? undefined : facts.values[index];
+}
+
+/** An action may share an asset row only at its exact published point. A
+ * post offset from a hall never borrows the ETA to that hall's center. */
+export function actionTargetArrival(unit: DecisionFacts<SituationUnit>, actionId: string, target: Target,
+  assets: readonly Readonly<{ id: string; target: Target }>[]) {
+  const exact = unitArrival(unit, actionId);
+  if (exact) return exact;
+  const asset = target.entityId && assets.find(asset => asset.id === target.entityId
+    && asset.target.landId === target.landId && asset.target.seaId === target.seaId
+    && Math.hypot(asset.target.point.x - target.point.x, asset.target.point.y - target.point.y) < 1e-6);
+  return asset ? unitArrival(unit, asset.id) : undefined;
 }
 
 export function mapUnitArrivals<T>(unit: SituationUnit, project: (targetId: string, arrival: Arrival) => T): T[] {

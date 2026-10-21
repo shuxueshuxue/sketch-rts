@@ -1,4 +1,5 @@
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
+import { strategyLeaseAllows } from '../../strategy/control';
 import { canCast } from "../../../shared/ability-cooldowns";
 import { constructionStartHp, unitMover } from "../../../shared/catalog";
 import { constructionWorkers } from "../../../shared/construction";
@@ -159,7 +160,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
 export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext, intel: V6Intel): Unit[] {
   const memory = v6Memory(options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? []), ...(options.memory.support?.unitIds ?? []), ...Object.values(options.memory.naval?.ferries ?? {}).flatMap((ferry) => ferry.crewIds)]);
-  return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
+  return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit)
+    && strategyLeaseAllows(options.memory, unit.id, options.strategyActor));
 }
 
 type ArmyPlan = {

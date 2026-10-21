@@ -33,7 +33,7 @@ function assembleStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, opti
   families: readonly ObjectiveFamily[], observation: SituationObservation | undefined, fieldBuildBudget: number): StrategyPlanTrace {
   const preparation = observationMemory(snapshot, owner, options.memory);
   const old = preparation.history && preparation.history.tick < snapshot.tick ? preparation.history : undefined;
-  const context: PlanningContext = { snapshot, owner, memory: options.memory };
+  const context: PlanningContext = { snapshot, owner, memory: options.memory, ...(options.teams ? { teams: options.teams } : {}) };
   const situation = evaluateSituation(snapshot, owner, options.memory, old && observationHistory(preparation), options.teams ?? snapshot.teams, fieldBuildBudget, observation, preparation);
   const generated = families.flatMap(family => family.generate(situation, context, old?.objectives ?? [])
     .map(objective => ({ family, objective })));

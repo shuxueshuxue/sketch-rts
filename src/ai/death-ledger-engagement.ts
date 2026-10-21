@@ -6,7 +6,9 @@ type Identity = Pick<ObservedSource, 'owner' | 'kind' | 'entityType'>;
 type DeathFacts = Omit<AiUnitDeathRecord, 'classification'>;
 
 export function assignmentClearsCamp(assignment: DeathFacts['assignment'], sourceId: string): boolean {
-  return [assignment.task, ...assignment.otherTaskCandidates].some(task => task?.clearing
+  const tasks = [assignment.task, ...assignment.otherTaskCandidates];
+  const formal = tasks.filter(task => task?.attribution === 'assignment');
+  return (formal.length ? formal : tasks).some(task => task?.clearing
     && (task.clearingTargetIds === undefined || task.clearingTargetIds.includes(sourceId)));
 }
 

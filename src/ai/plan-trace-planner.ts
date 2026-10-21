@@ -30,14 +30,17 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
       provider?.set?.(owner, value);
     },
   };
-  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider, observeBootstrapPlan(context, entries) {
-    options.observeBootstrapPlan?.(context, entries);
+  let controlled: import('./strategy/bootstrap-control').BootstrapStrategyOutput | undefined;
+  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider, observeBootstrapPlan(context, entries, actual) {
+    options.observeBootstrapPlan?.(context, entries, actual);
+    controlled = actual;
     memory = context.memory;
     const healing = entries.flatMap(entry => ['mobileCare', 'frontRecovery'].includes(entry.scriptId ?? '') && 'unitIds' in entry.command
       ? entry.command.unitIds.map(unitId => ({ unitId, executor: entry.scriptId! })) : []);
     observed = { context, observation: { healing } };
   } });
-  if (observed) strategy = buildStrategyPlanTrace(snapshot, request.playerId, observed.context, previous?.strategy, families, observed.observation);
+  if (controlled?.project) strategy = controlled.project();
+  else if (observed) strategy = buildStrategyPlanTrace(snapshot, request.playerId, observed.context, previous?.strategy, families, observed.observation);
   const observedMemory = memory ?? createAiPolicyMemory();
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
   const baseTrace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,

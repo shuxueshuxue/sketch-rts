@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { transformSync } from "esbuild";
 import { describe, expect, it } from "vitest";
 import type { Terrain } from "./terrain";
+import * as navigationAudit from "./navigation-audit";
 
 type Point = { x: number; y: number };
 type Body = Point & { radius: number };
@@ -27,7 +28,10 @@ const code = transformSync(`${source}\nexport { overlays, tilesOf, fillClearance
   loader: "ts", format: "cjs", target: "es2022", sourcefile: "terrain.ts",
 }).code;
 const commonJs = { exports: {} };
-new Function("module", "exports", code)(commonJs, commonJs.exports);
+new Function("module", "exports", "require", code)(commonJs, commonJs.exports, (specifier: string) => {
+  if (specifier === "./navigation-audit") return navigationAudit;
+  throw new Error(`Unexpected terrain dependency: ${specifier}`);
+});
 const api = commonJs.exports as TerrainApi;
 
 function random(seed: number) {

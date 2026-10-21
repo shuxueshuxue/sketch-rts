@@ -7,11 +7,12 @@ import { walkableGoal } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import type { Unit } from '../../shared/types';
+import type { GameSnapshot, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { isBacklineKind } from '../policy/v6/backline';
-import { creepForce, EXPANSION_GUARD_RANGE, forceFor } from '../policy/v7/creep';
+import { creepForce, forceFor } from '../policy/v7/creep';
+import { strategicTargetCamp } from './target-camp';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
 import { objectiveId } from './commitments';
@@ -20,7 +21,9 @@ import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETE
 import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, PlanningContext, Precondition, Reason,
   ResourceDemand, Situation, SituationUnit, SiteThreat, Subgoal, Target, Utility } from './types';
 import type { PreviousObjective } from './observation-memory';
+import type { DecisionFacts } from './decision';
 import { capturesExplanations, deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
+import { currentSiteThreatIsClear } from './protection-activation';
 
 const STATION_RANGE = 650;
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -38,10 +41,14 @@ const fieldDemand = (target: Target, strength: number, permanent = false): Resou
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
 const campDomain = Symbol('strategy-frame-camps');
 function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number): number {
+  return siteCollapseAfter(context.snapshot, threat, hp);
+}
+/** Common optimistic arrival deadline, before any unobserved defender damage. */
+export function siteCollapseAfter(snapshot: GameSnapshot, threat: DecisionFacts<SiteThreat>, hp: number): number {
   const events = threat.attackers.flatMap(attacker => {
-    const unit = context.snapshot.units.find(unit => unit.id === attacker.unitId);
+    const unit = snapshot.units.find(unit => unit.id === attacker.unitId);
     return unit && 'ticks' in attacker.arrival ? [{ tick: attacker.arrival.ticks,
-      dps: combatCapability(context.snapshot, unit).dps / SIM_TICKS_PER_SECOND }] : [];
+      dps: combatCapability(snapshot, unit).dps / SIM_TICKS_PER_SECOND }] : [];
   }).sort((a, b) => a.tick - b.tick);
   let previous = 0, damagePerTick = 0, remaining = hp;
   for (const event of events) {
@@ -55,7 +62,7 @@ function campFacts(context: PlanningContext) {
   return frameMemo(campDomain, context.snapshot, () => neutralCampExposure(context.snapshot));
 }
 function campAt(context: PlanningContext, target: Target) {
-  return campFacts(context).camps.find(exposure => distance(exposure.camp.center, target.point) <= EXPANSION_GUARD_RANGE)?.camp;
+  return strategicTargetCamp(context.snapshot, target, campFacts(context));
 }
 function stationed(situation: Situation, target: Target) {
   return situation.units.filter(unit => unit.owner === situation.owner && !unit.roles.includes('worker')
@@ -152,8 +159,20 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
   const threats = situation.lands.flatMap(land => land.threats);
   const deficits = new Map<string, { target: Target; strength: number; minimumStrength: number; utility: Utility; parentId: string; reasons: Reason[] }>();
   const held = new Set(situation.units.flatMap(unit => unit.commitments.filter(task => task.source.startsWith('unitClaims.')).map(task => task.objectiveId)));
-  for (const threat of threats.filter(threat => threat.attackers.length > 0 || held.has(objectiveId('DefendSite', context.owner, threat.siteId)))) {
+  for (const objective of Object.values(context.memory.strategyAllocation?.objectives ?? {}))
+    if (!['complete', 'failed', 'abandoned'].includes(objective.status)) held.add(objective.objectiveId);
+  for (const threat of threats.filter(threat => threat.attackers.length > 0 || held.has(objectiveId('DefendSite', context.owner, threat.siteId))
+    || held.has(objectiveId('Evacuate', context.owner, threat.siteId)))) {
     const site = situation.assets.find(asset => asset.id === threat.siteId)!;
+    if (currentSiteThreatIsClear(context.snapshot, situation, site.target)) {
+      const clear = [reason(tick, 'current-site-threat-cleared', 'The current SiteThreat has no actual or potential attackers and no covering hostile tower')];
+      const utility = strategyUtility({ benefit: [], cost: [], successProbability: 1, evidence: [] });
+      if (held.has(objectiveId('DefendSite', context.owner, site.id))) objectives.push(createObjective(situation, previous, 'DefendSite', site.target,
+        [{ kind: 'site-safe', siteId: site.id, throughTick: tick + threat.horizonTicks }], utility, clear, 'complete'));
+      if (held.has(objectiveId('Evacuate', context.owner, site.id))) objectives.push(createObjective(situation, previous, 'Evacuate', site.target,
+        [], utility, clear, 'abandoned'));
+      continue;
+    }
     const enemy = threat.arrivedStrength + threat.incomingStrength, present = stationed(situation, site.target);
     const incoming = candidates(situation, site.id, present).filter(unit => duration(route(unit, site.id))! <= threat.horizonTicks);
     const collapseTicks = collapseAfter(context, threat, site.hp ?? 0);
@@ -287,8 +306,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
         return actor ? neutralCampPointContacts(context.snapshot, actor, ground, { facts: campFacts(context), horizonTicks: situation.horizonTicks }) : [];
       });
       const exposed = new Set(contacts.map(contact => contact.memberId));
-      const opposition = situation.units.filter(unit => unit.owner === 'neutral' ? exposed.has(unit.id) : isOpponentOwner(context.snapshot, context.owner, unit.owner,
-        context.snapshot.teams ? { teams: context.snapshot.teams } : {}))
+      const opposition = situation.units.filter(unit => unit.owner === 'neutral' ? exposed.has(unit.id) : strategyIsOpponent(context.snapshot, context.owner, unit.owner, context.teams))
         .filter(unit => unit.owner === 'neutral' || unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, ground) <= 400);
       const beachReady = sumStrength([...force.present, ...force.selected]) >= sumStrength(opposition) * 1.4;
       const clearBeach = beachReady ? null : add('clear-beachhead', shore,

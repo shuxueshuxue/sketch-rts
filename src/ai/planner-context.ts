@@ -9,6 +9,7 @@ import { setBuildingBodies } from "../shared/terrain";
 import { withLandRoadReuse } from "./bootstrap_1/safe-land-route";
 import { beginExecutorReasons } from './executor-reasons';
 import type { AiPolicyContext } from './policy/types';
+import { planControlledBootstrapCommands, type BootstrapStrategyOutput } from './strategy/bootstrap-control';
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -30,8 +31,11 @@ export type AiOwnerPlannerRequest<Source extends string = string> = {
 
 export type AiOwnerPlannerOptions = PresetAiPolicyOptions & {
   memoryProvider?: AiMemoryProvider;
+  /** Temporary explicit gate while the first behavioral slice is validated. */
+  strategyControl?: boolean;
+  strategyObservation?: 'facts' | 'trace';
   /** Read-only output hook inside the existing owner-think geometry reuse scope. */
-  observeBootstrapPlan?: (context: AiPolicyContext, entries: readonly CommandFrameEntry[]) => void;
+  observeBootstrapPlan?: (context: AiPolicyContext, entries: readonly CommandFrameEntry[], strategy?: BootstrapStrategyOutput) => void;
 };
 
 export function createAiMemoryProvider(memories: Record<PlayerId, AiPolicyMemory> = {}): AiMemoryProvider {
@@ -49,7 +53,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   // The same bodies the sim stands on its map (see @@@structure-body): any other list restamps the shared overlay, and
   // every think redid the pathing it was handed.
   setBuildingBodies(snapshot.map, standingBodies(snapshot));
-  const { memoryProvider, observeBootstrapPlan, ...policyOptions } = options;
+  const { memoryProvider, observeBootstrapPlan, strategyControl, strategyObservation, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
   const policyMode = request.policyMode ?? options.policyMode;
@@ -69,6 +73,17 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   if (isBootstrapVersion(version)) {
     return withLandRoadReuse(() => {
       const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
+      if (strategyControl) {
+        const result = planControlledBootstrapCommands(snapshot, owner, version, [
+          { id: 'veteranSkills', phase: 'tactics', run: () => planVeteranSkillCommands(snapshot, owner) }, ...scripts,
+        ], { ...policyOptions, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}),
+          memory, executorReason: beginExecutorReasons(memory, snapshot.tick) },
+        observeBootstrapPlan ? strategyObservation ?? 'trace' : 'none');
+        const entries = result.entries.map(entry => ({ playerId: owner,
+          ...(request.source !== undefined ? { source: request.source } : {}), ...entry }));
+        observeBootstrapPlan?.(result.context, entries, result.strategy);
+        return entries;
+      }
       const context = bootstrapPolicyContext(snapshot, owner, version, {
         ...policyOptions,
         ...(policyMode ? { policyMode } : {}),

@@ -19,6 +19,18 @@ function bytes(fields: readonly GroundDistanceField[], targets: typeof goals) {
 }
 
 describe('active published goal field residency', () => {
+  it('retains both assessment and action-target fields inside one nested owner transaction', () => {
+    const world = map(), targets = goals.slice(0, 33);
+    let actual: GroundDistanceField[] = [];
+    withGoalDistanceFieldLease(world, 'us', 100, () => {
+      actual = [...think(world, 'us', 100, targets.slice(0, 16)), ...think(world, 'us', 100, targets.slice(16))];
+    });
+    expect(goalDistanceFieldCacheStats(world, 'land')).toMatchObject({ fields: 33, peakFields: 33, peakOverflow: 1 });
+    for (const [index, goal] of targets.entries()) expect(moverDistanceField(world, goal, 'land', true)).toBe(actual[index]);
+    think(world, 'us', 115, targets.slice(1));
+    expect(goalDistanceFieldCacheStats(world, 'land').fields).toBe(32);
+  });
+
   it.each(['land', 'sea'] as const)('keeps all 33 active %s goals, identical to an unlimited set of held fields', mover => {
     const world = map(), reference = map(), targets = goals.slice(0, 33);
     // These external references deliberately have no eviction limit.

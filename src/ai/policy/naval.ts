@@ -44,6 +44,9 @@ import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
 import { recordExecutorReason } from '../executor-reasons';
+import { strategyLeaseAllows } from '../strategy/control';
+import { navalFerryActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
 export const REINFORCEMENT_DISPATCH_SIZE = 6;
 
@@ -52,7 +55,8 @@ export function ferryCrewTaskAvailable(unit: Unit, options: AiPolicyContext) {
     const claim = options.memory.unitClaims[unit.id];
     // Keep the upcoming squad claim protected when reading persisted memory as well.
     const taskKind: string | undefined = claim?.kind;
-    return !isDefenseTaskClaim(claim) && taskKind !== 'harassSquad';
+    return !isDefenseTaskClaim(claim) && taskKind !== 'harassSquad'
+        && strategyLeaseAllows(options.memory, unit.id, options.strategyActor);
 }
 
 type Point = {
@@ -514,6 +518,9 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0)) {
+        const incumbent = options.memory.naval?.ferries?.[transport.id];
+        const ferryOptions = incumbent ? { ...options, strategyActor: navalFerryActor(transport.id, incumbent.sinceTick) } : options;
+        if (!strategyLeaseAllows(options.memory, transport.id, ferryOptions.strategyActor)) continue;
         if (transport.id === outfit?.shipId || services.reserved.has(transport.id)) {
             ferryDecision(options, snapshot.tick, transport.id, transport.id === outfit?.shipId ? 'outfitting' : 'port-service');
             continue;
@@ -521,7 +528,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         const reachable = islandPlans(snapshot, owner, options, eligible).find(candidate =>
             sameGround(snapshot.map, candidate.landing, transport, 'sea')
             && ferryTargetAvailable(navalMemory(options), transport.id, candidate.mine.id));
-        commands.push(...ferryCommands(snapshot, owner, options, transport, reachable, assault, orderCrew, transportReady));
+        commands.push(...ferryCommands(snapshot, owner, ferryOptions, transport, reachable, assault, orderCrew, transportReady));
     }
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
@@ -558,6 +565,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
+    const commands = produce();
+    return mission ? bindIncumbentCommands(commands, navalFerryActor(boat.id, mission.sinceTick)) : commands;
+    function produce(): GameCommand[] {
     const priorDecision = memory.ferryDecisions?.[boat.id]?.reason;
     const own = units(snapshot, owner), map = snapshot.map;
     const decision = (reason: string, blocked = true) => {
@@ -708,8 +718,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         }
         if (!shipPassengers(snapshot.units,boat).length) {
             if (mission.purpose === 'reinforce' || mission.purpose === 'advance' || mission.purpose === 'settle') {
-                const landed = snapshot.units.filter(unit => mission.payloadIds?.includes(unit.id) && unit.owner === owner && unit.hp > 0
-                    && !unit.deck && sameGround(map, unit, walkableGoal(map, mission.to.x, mission.to.y)));
+                const activeMission = mission;
+                const landed = snapshot.units.filter(unit => activeMission.payloadIds?.includes(unit.id) && unit.owner === owner && unit.hp > 0
+                    && !unit.deck && sameGround(map, unit, walkableGoal(map, activeMission.to.x, activeMission.to.y)));
                 if (landed.length) (mission.deliveries ??= []).push({ tick: snapshot.tick, unitIds: landed.map(unit => unit.id) });
                 delete mission.payloadIds;
             }
@@ -721,7 +732,8 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             decision('landing-defense');
             return cancelFerry(snapshot, boat, mission, options);
         }
-        const keepAboard = shipPassengers(snapshot.units, boat).filter(unit => (mission.purpose === 'advance' || mission.purpose === 'reinforce') && unit.owner === owner && unit.kind !== 'worker'
+        const activeMission = mission;
+        const keepAboard = shipPassengers(snapshot.units, boat).filter(unit => (activeMission.purpose === 'advance' || activeMission.purpose === 'reinforce') && unit.owner === owner && unit.kind !== 'worker'
             && unit.order.type !== 'hold' && unit.order.type !== 'cast');
         if (keepAboard.length) commands.push({ type: 'holdPosition', unitIds: keepAboard.map(unit => unit.id) });
         if (boat.order.type !== "unload")
@@ -848,6 +860,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
     }
     return commands;
+    }
 }
 function unitStrengthForFerry(unit: Unit) { return strengthOf([unit]); }
 
@@ -866,10 +879,10 @@ export function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNull
     if (mission.purpose === "settle" && memory.island?.plan?.mineId === mission.targetId
         && !Object.entries(memory.ferries ?? {}).some(([id, other]) => id !== boat.id && other.targetId === mission.targetId && other.phase === "sailing"))
         delete memory.island;
-    return [
+    return bindIncumbentCommands([
         ...(boarding.length ? [{ type: "stop" as const, unitIds: boarding.map(unit => unit.id) }] : []),
         ...(shipPassengers(snapshot.units,boat).length ? [{ type: "unload" as const, unitIds: [boat.id], ...mission.from, avoidCombat:true }] : []),
-    ];
+    ], navalFerryActor(boat.id, mission.sinceTick));
 }
 
 function evacuationRoute(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, halls: Building[]) {
