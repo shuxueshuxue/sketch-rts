@@ -1,6 +1,7 @@
 import type { BootstrapAiVersion, BuildingKind, GameSnapshot, PlayerId, Unit, UnitKind } from '../../shared/types';
 import type { AllocationReason } from './allocation-types';
 import type { FactWorkQueue } from './fact-work';
+import type { DecisionFacts } from './decision';
 import type { Evidence, LandId, SeaId, Situation, Target } from './types';
 
 /** Shared contract for goal regression. These are world predicates, never
@@ -73,7 +74,7 @@ export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
 /** Fact sources must use the same think's shared readers. Unknown geometry,
  * exit, tier or queue work is pending with a stable request, never false. */
 export type GoalPlanningContext = Readonly<{
-  snapshot: GameSnapshot; situation: Situation; owner: PlayerId; tick: number;
+  snapshot: GameSnapshot; situation: DecisionFacts<Situation>; owner: PlayerId; tick: number;
   version: BootstrapAiVersion; readFact: GoalFactReader;
   /** Same shared fact sources; no provider may invent a build/shore point or
    * call native route selection when this port is absent/pending. */
