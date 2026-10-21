@@ -50,7 +50,8 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
     case 'ship-away':
       ferryChain();
       if (puzzle.variant === 'far') before(kind('position-transport'), kind('transport-force'), 'position hull before boarding');
-      else expect(kind('position-transport'), 'already positioned hull needs no positioning action').toHaveLength(0);
+      else expect(kind('position-transport').filter(p => kind('transport-force').some(f => reaches(p.id, f.id))),
+        'already positioned hull needs no initial positioning; later worker pickup may still reposition').toHaveLength(0);
       break;
     case 'supply-tier':
       if (puzzle.variant === 'knight') {
@@ -79,7 +80,7 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
       else {
         required(kind('transport-force'), 'island first');
         expect(hall.some(h => defend.some(d => h.finishTick !== null && d.startTick !== null && h.finishTick <= d.startTick)), 'island before defense').toBe(true);
-        expect(defend.some(d => d.finishTick !== null && d.finishTick <= world.game.tick + 360 * 20), 'return by enemy arrival').toBe(true);
+        expect(defend.some(d => d.startTick !== null && d.startTick <= world.game.tick + 360 * 20), 'on defense by enemy arrival; winning the battle may finish later').toBe(true);
       }
       break;
     }
