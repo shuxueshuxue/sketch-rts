@@ -17,8 +17,8 @@ export type PuzzleWorld = {
   beachGuards: Unit[]; attackers: Unit[]; islandHall: Building | undefined;
   islandWorkers: Unit[]; localMine: ResourceNode | undefined; localGuards: Unit[];
 };
-export function puzzleBuilder(name: string, gold: number) {
-  return sketchScene(`public-${name}`).replaceDefaults()
+export function puzzleBuilder(gold: number) {
+  return sketchScene('public-planner-frame').replaceDefaults()
     .player(PUZZLE_OWNER, { race: 'grove', ai: false })
     .player(PUZZLE_OPPONENT, { race: 'ember', ai: false })
     .playerState(PUZZLE_OWNER, { gold }).playerState(PUZZLE_OPPONENT, { gold: 0 });
