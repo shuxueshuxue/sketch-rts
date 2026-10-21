@@ -108,6 +108,23 @@ describe('persistent conquest assembly quotation and handoff', () => {
     expect(JSON.stringify({ input, supplied })).toBe(before);
   });
 
+  it('quotes a proven positive supply lower bound with dedicated selection metadata and retains its unresolved tail', () => {
+    const input = example(), supplied = facts(input), model = { ...supplied, forecast: { ...supplied.forecast,
+      probabilityBasis: 'proven-lower-bound' as const, completionProbabilityBounds: { lower: .5, upper: 1 },
+      diagnostics: { scenarioCount: 2, scenarioLimitCount: 0, unresolvedProbability: .5 },
+      missing: [{ code: 'assembly-conditional-support-exhausted', status: 'unknown' as const, factIds: ['no-fill'] }] } };
+    const quote = conquestMethodProvider.quote({ ...input, assemblyFacts: () => model });
+    expect(quote.status).toBe('feasible'); expect(quote.utility?.score).toBe(355);
+    expect(quote.valuationBasis).toEqual({ kind: 'proven-lower-bound', probabilityLower: .5, probabilityUpper: 1, unresolvedProbability: .5 });
+    expect(quote.reason.values.probabilityUpper).toBe(1);
+    expect(quote.reason.values.unresolvedProbability).toBe(.5);
+    expect(conquestMethodProvider.quote({ ...input, assemblyFacts: () => supplied }).valuationBasis).toBeUndefined();
+    const mismatched = conquestMethodProvider.quote({ ...input, assemblyFacts: () => ({ ...model,
+      forecast: { ...model.forecast, completionProbabilityBounds: { lower: .6, upper: 1 } } }) });
+    expect(mismatched.status).toBe('blocked');
+    expect(mismatched.missingPreconditions.some(condition => condition.reason.code === 'assembly-probability-bound-unquoted')).toBe(true);
+  });
+
   it('keeps finite zero supply a known needs-production deficit without requiring a nonexistent continuation', () => {
     const input = example(), supplied = facts(input);
     const quoted = conquestMethodProvider.quote({ ...input, assemblyFacts: () => ({ ...supplied, continuation: null,
