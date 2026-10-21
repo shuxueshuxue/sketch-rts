@@ -136,7 +136,10 @@ export type GoalActionProvider = Readonly<{
   id: string;
   actionsFor: (effect: GoalFact, context: GoalPlanningContext) => readonly GoalActionDeclaration[];
 }>;
-export type GoalCandidates<T> = Readonly<{ state: 'met'; candidates: readonly T[]; factIds: readonly string[] }>
+export type GoalDeferredCandidate = Readonly<{ id: string; requestIds: readonly string[]; reason: AllocationReason }>;
+export type GoalCandidates<T> = Readonly<{ state: 'met'; candidates: readonly T[]; factIds: readonly string[];
+  /** Known candidates remain usable while other alternatives await facts. */
+  deferred?: readonly GoalDeferredCandidate[] }>
   | Readonly<{ state: 'pending'; requestIds: readonly string[]; reason: AllocationReason }>
   | Readonly<{ state: 'unmet'; reason: AllocationReason }>;
 export type GoalBuildSite = Readonly<{
