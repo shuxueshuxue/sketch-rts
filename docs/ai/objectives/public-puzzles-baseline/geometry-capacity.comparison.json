@@ -1,0 +1,2072 @@
+{
+  "measurementSource": "b6cb3d854ed4395b5cac93bd2f01aeb59a74bee0",
+  "defaultSource": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+  "method": "JSON.stringify bytes, original property order, SHA-256",
+  "totals": {
+    "caseCount": 11,
+    "thinkPairs": 220,
+    "inputIdentical": 220,
+    "outputIdentical": 220,
+    "workIdentical": 220,
+    "geometryEntriesIdentical": 220
+  },
+  "cases": [
+    {
+      "puzzle": "defense-window/later",
+      "snapshotIdentical": true,
+      "snapshotSha256": "95e7f36fc5193ecf5bab9a7a06b7201e22b91a162d39604327cd9b68b4b63e93",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "8866ba0f6ce0509cd285351f22b62ce0875e5f720034be4b8b41605e52c2f7de",
+          "defaultOutputSha256": "8866ba0f6ce0509cd285351f22b62ce0875e5f720034be4b8b41605e52c2f7de",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "6a7de20badf0310afdc43754ed4549e5e700299cb65fc71cbb33e9dd9420a974",
+          "defaultOutputSha256": "6a7de20badf0310afdc43754ed4549e5e700299cb65fc71cbb33e9dd9420a974",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "defaultOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "defaultOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "defaultOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "defaultOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "defaultOutputSha256": "50478fa94f29bbbeb3b216fbd0c53cf5563295524b622f53de80666b498fcd10",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "defaultOutputSha256": "3c820df97e638b1523a49feef997a2aec739620b2ac60a36bc3a4b3816cb223c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "defense-window/urgent",
+      "snapshotIdentical": true,
+      "snapshotSha256": "ab78cfb37cb20f65d85b6d2878af79a9e6c31ec90a618c55711ca2a0b8b25b3a",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "869ee79b7bf0b4ce0f19d8a0d2c622d1a843b06b3899b381e4fe46c97cd6b2d5",
+          "defaultOutputSha256": "869ee79b7bf0b4ce0f19d8a0d2c622d1a843b06b3899b381e4fe46c97cd6b2d5",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "46d1c4771e97ef705fb7a8016342973fb4dd4b3099bcd3e473074eb6ef06e9c4",
+          "defaultOutputSha256": "46d1c4771e97ef705fb7a8016342973fb4dd4b3099bcd3e473074eb6ef06e9c4",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "e4a76d4c1c554c033ec0d86f5b9dd81f44152bc31badea06022aaaa858c90706",
+          "defaultOutputSha256": "e4a76d4c1c554c033ec0d86f5b9dd81f44152bc31badea06022aaaa858c90706",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "c4b4c1cf4263396bcf1ab171bae88c0739398f7f83e3ca56b968fe3a48894dff",
+          "defaultOutputSha256": "c4b4c1cf4263396bcf1ab171bae88c0739398f7f83e3ca56b968fe3a48894dff",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "c4b4c1cf4263396bcf1ab171bae88c0739398f7f83e3ca56b968fe3a48894dff",
+          "defaultOutputSha256": "c4b4c1cf4263396bcf1ab171bae88c0739398f7f83e3ca56b968fe3a48894dff",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "defaultOutputSha256": "1b287518fb30259a523a72080dddbf04098d5edafc2d9ea5698014ec65ae7975",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "evacuate/default",
+      "snapshotIdentical": true,
+      "snapshotSha256": "c5aa7cc49d9882878a691975e3c4da3c41cead4663736536035b38db4b81197a",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "96f91b041aa1d5a0c9e008e56edcd2ed7d65bc3731a1424863c45d634efc2b54",
+          "defaultOutputSha256": "96f91b041aa1d5a0c9e008e56edcd2ed7d65bc3731a1424863c45d634efc2b54",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "ede7b1cec0d0a0349bd5e629df35bf21b0a56d1b9b160fa615de5037d5b1dc78",
+          "defaultOutputSha256": "ede7b1cec0d0a0349bd5e629df35bf21b0a56d1b9b160fa615de5037d5b1dc78",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "1c97008360a7aab8c1bf3bff77a0b4bb4c5a6558d8601a25235e721a302e0fc5",
+          "defaultOutputSha256": "1c97008360a7aab8c1bf3bff77a0b4bb4c5a6558d8601a25235e721a302e0fc5",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "defaultOutputSha256": "94906ebbe6466ed3dfbd4a2c90612beb75f41c4d8e8fb5ed19e3ca56eea35ef7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "guarded-shore/strong",
+      "snapshotIdentical": true,
+      "snapshotSha256": "0a692db16a83920f5e1dce9cd41d9c96ceba3d6f32ebdb450f29d582aee66aed",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "9062ed6f137b3929ae4f0062e56ec477f5b641ed26e87f029ba063d1bf23764e",
+          "defaultOutputSha256": "9062ed6f137b3929ae4f0062e56ec477f5b641ed26e87f029ba063d1bf23764e",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "077cb41bf33b6703d4b78aff3a153d1f1421df635d7f0c2ae2a3d1e7b0a70b25",
+          "defaultOutputSha256": "077cb41bf33b6703d4b78aff3a153d1f1421df635d7f0c2ae2a3d1e7b0a70b25",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "guarded-shore/weak",
+      "snapshotIdentical": true,
+      "snapshotSha256": "5df5c3e4e368914011c3348c5a0d18dcd2d89b36983868eaf6b8f0e41dbdbf60",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "728f1ca21d023008005684b97bb601d7b0e3a8b73aead60927cd9e2daaa66e95",
+          "defaultOutputSha256": "728f1ca21d023008005684b97bb601d7b0e3a8b73aead60927cd9e2daaa66e95",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "077cb41bf33b6703d4b78aff3a153d1f1421df635d7f0c2ae2a3d1e7b0a70b25",
+          "defaultOutputSha256": "077cb41bf33b6703d4b78aff3a153d1f1421df635d7f0c2ae2a3d1e7b0a70b25",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "defaultOutputSha256": "d2084d973c3f1ed6e5eea6cadb216bbfb1f38176644dfe0ce1a903ddf33f45a1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "navy-zero/default",
+      "snapshotIdentical": true,
+      "snapshotSha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "caec73cd89d6a921b3f7783b5ae550600895cbafade010014fce1e2d63cff318",
+          "defaultOutputSha256": "caec73cd89d6a921b3f7783b5ae550600895cbafade010014fce1e2d63cff318",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "9c6c1b9d1ec70ffffb8ad10db52ad7d67cd357f0a2ed25e9539ad7e5ed6949ec",
+          "defaultOutputSha256": "9c6c1b9d1ec70ffffb8ad10db52ad7d67cd357f0a2ed25e9539ad7e5ed6949ec",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "defaultOutputSha256": "68913ec7e16e2979c46c1faa5f6c56c1b1562127b20740558c040df5d6d56633",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "negative-return/default",
+      "snapshotIdentical": true,
+      "snapshotSha256": "9ba34970d2f18893c8aecb1bfd5f63af75739afe05dfa0d17988abb73b4b8e7f",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "270cbb66efe1b1c36919bdd984a75bbcc5982b83acb910e4743db8ba27aad6ea",
+          "defaultOutputSha256": "270cbb66efe1b1c36919bdd984a75bbcc5982b83acb910e4743db8ba27aad6ea",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "37a25e06b620667d6d056e9382da8628bbb9dbb32d9b39c956c3e8828b6e689c",
+          "defaultOutputSha256": "37a25e06b620667d6d056e9382da8628bbb9dbb32d9b39c956c3e8828b6e689c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "00a25775009ee58bcdcdfaabb020a9ee52bccc2be5c1d378c2f8b503887c9afa",
+          "defaultOutputSha256": "00a25775009ee58bcdcdfaabb020a9ee52bccc2be5c1d378c2f8b503887c9afa",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "7fa716270a2b33b2743b3bdb106063be9987651d5573e73635ee0de9ddcde943",
+          "defaultOutputSha256": "7fa716270a2b33b2743b3bdb106063be9987651d5573e73635ee0de9ddcde943",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3b46970c35cbae29281778de42c493d886ed7ccc5ada23e513eec7725b7786c7",
+          "defaultOutputSha256": "3b46970c35cbae29281778de42c493d886ed7ccc5ada23e513eec7725b7786c7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "d1505fe8cd6f4f2728cf68f1f2e8c01170eac60ed3ca4dcd88e5ecbe2ef4b7d6",
+          "defaultOutputSha256": "d1505fe8cd6f4f2728cf68f1f2e8c01170eac60ed3ca4dcd88e5ecbe2ef4b7d6",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "ee4e6492520baa99de305750ac9fbc1c2baaa6a4a9288dbdd95575852d874afb",
+          "defaultOutputSha256": "ee4e6492520baa99de305750ac9fbc1c2baaa6a4a9288dbdd95575852d874afb",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "e6e26c5e9d04ff8759ef5b6357be1a96002c8463124466b1daa93db2b509177a",
+          "defaultOutputSha256": "e6e26c5e9d04ff8759ef5b6357be1a96002c8463124466b1daa93db2b509177a",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "defaultOutputSha256": "297300188cc84864c7d440882afd614b619878bcbf0233fcd6140146d50fd878",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/far",
+      "snapshotIdentical": true,
+      "snapshotSha256": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "f0c54d8df775a6fbae1554cc9d472b0b04d684a65298474f85e4d518d251e07c",
+          "defaultOutputSha256": "f0c54d8df775a6fbae1554cc9d472b0b04d684a65298474f85e4d518d251e07c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a58b84423ace15fbcaf6b52748b9f2c83536d620a07e63a1e485d451152522a4",
+          "defaultOutputSha256": "a58b84423ace15fbcaf6b52748b9f2c83536d620a07e63a1e485d451152522a4",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "snapshotIdentical": true,
+      "snapshotSha256": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "39684e5264a8da1b289269090165a0a3ed015ad641945545a6b7ca8ec252d551",
+          "defaultOutputSha256": "39684e5264a8da1b289269090165a0a3ed015ad641945545a6b7ca8ec252d551",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a58b84423ace15fbcaf6b52748b9f2c83536d620a07e63a1e485d451152522a4",
+          "defaultOutputSha256": "a58b84423ace15fbcaf6b52748b9f2c83536d620a07e63a1e485d451152522a4",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "defaultOutputSha256": "4fba8aadb5eeb240558575e5215baf6db655911bebf00d0133183100d44ab0d2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "supply-tier/footmen",
+      "snapshotIdentical": true,
+      "snapshotSha256": "5dfa98f69a187b549b19bbc27f0f0c0381783e930a086940c04584a9195432e4",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "16d9cb7a0be7712c0476c5b564a4adcdf3bde99249f776ef78f63ff19f0334c5",
+          "defaultOutputSha256": "16d9cb7a0be7712c0476c5b564a4adcdf3bde99249f776ef78f63ff19f0334c5",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a1935554444555ef70f9ebbe446218fc416e21743a05da947a8e9d5cd189f4c3",
+          "defaultOutputSha256": "a1935554444555ef70f9ebbe446218fc416e21743a05da947a8e9d5cd189f4c3",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a1935554444555ef70f9ebbe446218fc416e21743a05da947a8e9d5cd189f4c3",
+          "defaultOutputSha256": "a1935554444555ef70f9ebbe446218fc416e21743a05da947a8e9d5cd189f4c3",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a89e82770cbc5e3f99e0fbb8c84c0b6f3b85ff815b2dd90dd3c095cca317e519",
+          "defaultOutputSha256": "a89e82770cbc5e3f99e0fbb8c84c0b6f3b85ff815b2dd90dd3c095cca317e519",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "a89e82770cbc5e3f99e0fbb8c84c0b6f3b85ff815b2dd90dd3c095cca317e519",
+          "defaultOutputSha256": "a89e82770cbc5e3f99e0fbb8c84c0b6f3b85ff815b2dd90dd3c095cca317e519",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "7587fe0f599970da8d198f908d3d008c977bbb3f1d95b7150c809002140a4393",
+          "defaultOutputSha256": "7587fe0f599970da8d198f908d3d008c977bbb3f1d95b7150c809002140a4393",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "7587fe0f599970da8d198f908d3d008c977bbb3f1d95b7150c809002140a4393",
+          "defaultOutputSha256": "7587fe0f599970da8d198f908d3d008c977bbb3f1d95b7150c809002140a4393",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "8b1434f4506c0bfc93f1ad8ceca928c3c36e5c17262d307a7c298f1d9e25bd15",
+          "defaultOutputSha256": "8b1434f4506c0bfc93f1ad8ceca928c3c36e5c17262d307a7c298f1d9e25bd15",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "8b1434f4506c0bfc93f1ad8ceca928c3c36e5c17262d307a7c298f1d9e25bd15",
+          "defaultOutputSha256": "8b1434f4506c0bfc93f1ad8ceca928c3c36e5c17262d307a7c298f1d9e25bd15",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "0079243a7150056c42a790d386d3f533376d1396cc242446b0f85cf82352d99c",
+          "defaultOutputSha256": "0079243a7150056c42a790d386d3f533376d1396cc242446b0f85cf82352d99c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "0079243a7150056c42a790d386d3f533376d1396cc242446b0f85cf82352d99c",
+          "defaultOutputSha256": "0079243a7150056c42a790d386d3f533376d1396cc242446b0f85cf82352d99c",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "deb57b1a5c56be6fcc1dbbecf024dc4fc81d50192023983b8af07308f909be33",
+          "defaultOutputSha256": "deb57b1a5c56be6fcc1dbbecf024dc4fc81d50192023983b8af07308f909be33",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "deb57b1a5c56be6fcc1dbbecf024dc4fc81d50192023983b8af07308f909be33",
+          "defaultOutputSha256": "deb57b1a5c56be6fcc1dbbecf024dc4fc81d50192023983b8af07308f909be33",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3bce8f6b64f1ff897b823d26f9fc7783fdadb8760264b721fceee015d60fcac1",
+          "defaultOutputSha256": "3bce8f6b64f1ff897b823d26f9fc7783fdadb8760264b721fceee015d60fcac1",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "827ea8a253d8c7b8dd397478345a0c0fbd6f62c5a191caa491461483033945be",
+          "defaultOutputSha256": "827ea8a253d8c7b8dd397478345a0c0fbd6f62c5a191caa491461483033945be",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "22e0af590d7fa7db5de58a05116b085fb45f96f655070b4e5bbfd5281d15fc12",
+          "defaultOutputSha256": "22e0af590d7fa7db5de58a05116b085fb45f96f655070b4e5bbfd5281d15fc12",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "defaultOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "defaultOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "defaultOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "defaultOutputSha256": "906442c2809369ae4ff116fa5401bb2b8017747d0a21bb100ac8c77dfee04a86",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    },
+    {
+      "puzzle": "supply-tier/knight",
+      "snapshotIdentical": true,
+      "snapshotSha256": "2f4a017b40b3b9eeb98a94e12c02a50d3f9056864a4791e2241f6000e5f32f8b",
+      "thinks": [
+        {
+          "think": 1,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "ba88a84fe9199847934266ddd05d5d0077714b4ade76da883fca2911ccc41120",
+          "defaultOutputSha256": "ba88a84fe9199847934266ddd05d5d0077714b4ade76da883fca2911ccc41120",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 2,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4040782e9e16275bb4342efc271996739f7d53eba91904689d8f001f1bd0d88b",
+          "defaultOutputSha256": "4040782e9e16275bb4342efc271996739f7d53eba91904689d8f001f1bd0d88b",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 3,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "4040782e9e16275bb4342efc271996739f7d53eba91904689d8f001f1bd0d88b",
+          "defaultOutputSha256": "4040782e9e16275bb4342efc271996739f7d53eba91904689d8f001f1bd0d88b",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 4,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "b59123273c91429568f6f9f7c99deeace9c16e98c6668684db58a6bb4b9c4ac7",
+          "defaultOutputSha256": "b59123273c91429568f6f9f7c99deeace9c16e98c6668684db58a6bb4b9c4ac7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 5,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "b59123273c91429568f6f9f7c99deeace9c16e98c6668684db58a6bb4b9c4ac7",
+          "defaultOutputSha256": "b59123273c91429568f6f9f7c99deeace9c16e98c6668684db58a6bb4b9c4ac7",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 6,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "459f09d08af7fc83de5e4609dd6266370bfa95f474e5cb06d1491d85d8aa9272",
+          "defaultOutputSha256": "459f09d08af7fc83de5e4609dd6266370bfa95f474e5cb06d1491d85d8aa9272",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 7,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "459f09d08af7fc83de5e4609dd6266370bfa95f474e5cb06d1491d85d8aa9272",
+          "defaultOutputSha256": "459f09d08af7fc83de5e4609dd6266370bfa95f474e5cb06d1491d85d8aa9272",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 8,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "9aed261402a7f3ef0f61238e7bb706ac3a2b6f47197d7b1352034cc62f1fda45",
+          "defaultOutputSha256": "9aed261402a7f3ef0f61238e7bb706ac3a2b6f47197d7b1352034cc62f1fda45",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 9,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "9aed261402a7f3ef0f61238e7bb706ac3a2b6f47197d7b1352034cc62f1fda45",
+          "defaultOutputSha256": "9aed261402a7f3ef0f61238e7bb706ac3a2b6f47197d7b1352034cc62f1fda45",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 10,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "49282d99e1bdc66bfb95347b417b09fdcd5256dd1a754b9bf16c3c1400e2e7f2",
+          "defaultOutputSha256": "49282d99e1bdc66bfb95347b417b09fdcd5256dd1a754b9bf16c3c1400e2e7f2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 11,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "49282d99e1bdc66bfb95347b417b09fdcd5256dd1a754b9bf16c3c1400e2e7f2",
+          "defaultOutputSha256": "49282d99e1bdc66bfb95347b417b09fdcd5256dd1a754b9bf16c3c1400e2e7f2",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 12,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "b15e88c1267f25b49ad559f0d30720e55d097bbd63bc7474d9b197dbe11d0e84",
+          "defaultOutputSha256": "b15e88c1267f25b49ad559f0d30720e55d097bbd63bc7474d9b197dbe11d0e84",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 13,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "b15e88c1267f25b49ad559f0d30720e55d097bbd63bc7474d9b197dbe11d0e84",
+          "defaultOutputSha256": "b15e88c1267f25b49ad559f0d30720e55d097bbd63bc7474d9b197dbe11d0e84",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 14,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "8d3852e1e0feea269b646b51b5445308a52e4e72ef55342e39cf99862617a771",
+          "defaultOutputSha256": "8d3852e1e0feea269b646b51b5445308a52e4e72ef55342e39cf99862617a771",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 15,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "29c43d5defb866bfde874db06f9e622c590540149bbddcf30b7b2ce2d3fbd72d",
+          "defaultOutputSha256": "29c43d5defb866bfde874db06f9e622c590540149bbddcf30b7b2ce2d3fbd72d",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 16,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "14e8597d341e10fb53e7623832249e30737b44b76259617ae66eefd6eb523a1d",
+          "defaultOutputSha256": "14e8597d341e10fb53e7623832249e30737b44b76259617ae66eefd6eb523a1d",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 17,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "defaultOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 18,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "defaultOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 19,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "defaultOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        },
+        {
+          "think": 20,
+          "inputIdentical": true,
+          "outputIdentical": true,
+          "measurementOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "defaultOutputSha256": "3363ed66e7ca35947e22bffc2e0bcb64c3bc2bcace0aaec3201741acdf658ac0",
+          "workIdentical": true,
+          "geometryEntriesIdentical": true
+        }
+      ]
+    }
+  ]
+}
