@@ -6,7 +6,7 @@ import { incumbentDisposition, observeIncumbentOrders } from './incumbent-eviden
 import { expansionGarrisonActor, islandConquestActor, landExpansionActor, miningDefenseActor, navalFerryActor } from './incumbent-actors';
 import type { IncumbentCommandActor } from './incumbent-command-source';
 import type { DecisionFacts } from './decision';
-import type { Situation, Target } from './types';
+import type { Objective, Situation, Target } from './types';
 import { unitArrivalFacts, withDecisionUnitArrivals } from './unit-arrivals';
 
 type Task = { actor: IncumbentCommandActor; targetId: string; unitIds: readonly string[]; kind: ExecutableMethod['kind'] };
@@ -40,6 +40,38 @@ export function incumbentTasks(memory: AiPolicyMemory, authority = memory.strate
   for (const task of Object.values(memory.naval?.conquests ?? {})) tasks.push({ actor: islandConquestActor(task),
     targetId: task.mineId, kind: 'direct-conquest', unitIds: task.combat?.creep?.group ?? [] });
   return tasks.sort((a, b) => key(a.actor) < key(b.actor) ? -1 : key(a.actor) > key(b.actor) ? 1 : 0);
+}
+
+/** Receipt-backed progress can belong to the new planner's same terminal
+ * effect. Target equality alone is insufficient: attacking a mine's defender,
+ * guarding its hall and evacuating its workers are different uses. */
+export function continuesImportedProgress(snapshot: GameSnapshot, policy: AiPolicyMemory, authority: StrategyAllocationMemory,
+  fromObjectiveId: string, objective: Pick<Objective, 'owner' | 'effects'>): boolean {
+  if (objective.owner !== authority.owner) return false;
+  const leases = Object.values(authority.leases).filter(lease => lease.objectiveId === fromObjectiveId);
+  const actor = leases[0]?.incumbentTask;
+  if (!actor || leases.some(lease => lease.origin !== 'imported-task' || !lease.incumbentTask
+    || key(lease.incumbentTask) !== key(actor))) return false;
+  const task = incumbentTasks(policy, authority).find(task => key(task.actor) === key(actor));
+  if (!task || leases.some(lease => !lease.resourceKey.startsWith('unit:') || !snapshot.units.some(unit =>
+    unit.id === lease.resourceKey.slice(5) && unit.owner === objective.owner && unit.hp > 0
+    && incumbentDisposition(snapshot, unit, authority, actor) === 'incumbent'))) return false;
+  const mining = (mineId: string) => objective.effects.some(effect => effect.kind === 'mining-established' && effect.mineId === mineId);
+  const defense = (siteId: string) => objective.effects.some(effect => effect.kind === 'site-safe' && effect.siteId === siteId);
+  if (actor.source === 'landExpansion' || actor.source === 'naval.conquests') return mining(task.targetId);
+  if (actor.source === 'miningDefense') return defense(task.targetId);
+  if (actor.source === 'expansionGarrison') {
+    const post = policy.expansionGarrisons?.[actor.taskId];
+    return defense(task.targetId) || !!post && mining(post.mineId);
+  }
+  if (actor.source !== 'naval.ferries') return false;
+  const ferry = Object.entries(policy.naval?.ferries ?? {}).find(([shipId, task]) => key(navalFerryActor(shipId, task.sinceTick)) === key(actor))?.[1];
+  if (!ferry) return false;
+  if (ferry.purpose === 'assault') return objective.effects.some(effect => effect.kind === 'entity-destroyed' && effect.entityId === task.targetId);
+  if (ferry.purpose === 'reinforce' && defense(task.targetId)) return true;
+  // The named mining effect, not a shared sea or land, identifies settlement.
+  return ['settle', 'rebase', 'advance', 'reinforce', 'creep'].includes(ferry.purpose)
+    && snapshot.resources.some(resource => resource.id === task.targetId) && mining(task.targetId);
 }
 
 /** Adoption supplies authority and provenance, not a fabricated price. An old

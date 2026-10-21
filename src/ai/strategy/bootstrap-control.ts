@@ -16,7 +16,7 @@ import { projectStrategyAllocation } from './allocation-trace';
 import { withAllocationLandRoutes } from './allocation-arrival-query';
 import { observeWorkerSafetyInterruption } from './executors/worker-safety';
 import { createStrategyAllocationMemory } from './control';
-import { importExecutedIncumbents, incumbentTasks, withFormalCommitments } from './incumbent-import';
+import { importExecutedIncumbents, incumbentTasks, withFormalCommitments, continuesImportedProgress } from './incumbent-import';
 import { handoffIncumbent } from './incumbent-handoff';
 import { incumbentDisposition, recordCandidateReassignment, recordIncumbentCommands } from './incumbent-evidence';
 import { importedMiningLossUpperBound } from './imported-loss-bound';
@@ -59,7 +59,8 @@ function scriptProposals(scriptId: string, commands: readonly GameCommand[],
 
 /** Replacing these native unit orders has no cash fee and neither cancels a
  * paid production job nor destroys a foundation. Remaining travel/work value
- * is still charged by the same-window displaced-plan oracle, not waived here. */
+ * is charged for a different use by the same-window displaced-plan oracle.
+ * Continuing an explicitly matched goal adopts that progress instead. */
 function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]): number | null {
   const replaceable = new Set(['idle', 'hold', 'move', 'attackMove', 'attack', 'follow', 'board', 'mine', 'repair']);
   return resources.every(key => key.startsWith('unit:') && snapshot.units.some(unit => unit.id === key.slice(5)
@@ -90,9 +91,14 @@ function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: 
   const bundle = createGoalPlanMethods({ snapshot, objectives: evaluation.objectives, output: goalPlanner,
     resolve: frame.resolveReference, requote: frame.requote });
   const candidateRequests = observation === 'none' ? undefined : new Map<string, AllocationCandidateRequest>();
+  const continuesImported = (fromId: string, toId: string) => {
+    const objective = evaluation.objectives.find(objective => objective.id === toId);
+    return !!objective && continuesImportedProgress(snapshot, policy, imported, fromId, objective);
+  };
   let handoffPolicy: typeof policy | undefined;
   const allocation = allocateStrategy({ snapshot, situation, objectives: evaluation.objectives,
     methods: bundle.methods, providers: [bundle.provider], previous: imported,
+    continuesImported,
     importedUpperBound: (objectiveId, window) => {
       const targetId = imported.objectives[objectiveId]?.target.entityId;
       return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;
@@ -105,7 +111,7 @@ function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: 
           reason: request.quote.reason, missingPreconditions: request.quote.missingPreconditions }, stageRisks: [] };
       candidateRequests.set(JSON.stringify(row), row);
     } } : {}),
-    switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
+    switchingCost: request => continuesImported(request.fromObjectiveId, request.toObjectiveId) ? 0 : nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
       const draft = structuredClone(policy), acknowledgements = [];
       for (const request of requests) {

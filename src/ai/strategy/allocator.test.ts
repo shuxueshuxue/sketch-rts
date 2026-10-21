@@ -328,6 +328,23 @@ describe('deterministic whole-bundle allocation', () => {
     expect(formal.memory.leases['unit:one']!.objectiveId).toBe('pair');
   });
 
+  it('transfers matched imported progress without displacement or challenger delay, while still requiring producer acknowledgement', () => {
+    const { input } = fixture();
+    const initial = allocateStrategy({ ...input, objectives: input.objectives.slice(0, 1), methods: input.methods.slice(0, 1) });
+    const previous = { ...initial.memory, leases: Object.fromEntries(Object.entries(initial.memory.leases).map(([key, lease]) => [key,
+      { ...lease, origin: 'imported-task' as const, incumbentTask: { source: 'naval.ferries', taskId: 'observed-old-ferry' } }])) };
+    const later: StrategyAllocationInput = { ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1), previous,
+      snapshot: { ...input.snapshot, tick: 15 }, situation: { ...input.situation, tick: 15 },
+      continuesImported: (from, to) => from === 'pair' && to === 'single', switchingCost: () => 0,
+      importedUpperBound: () => { throw Error('same goal progress charged a displacement envelope'); } };
+    expect(allocateStrategy(later).memory.leases['unit:one']!.objectiveId).toBe('pair');
+    const result = allocateStrategy({ ...later, handoffImported: requests => requests.map(request => ({ eventId: request.eventId, disposition: 'shrink' })) });
+    expect(result.memory.leases['unit:one']!.objectiveId).toBe('single');
+    expect(result.events.find(event => event.kind === 'preempted')).toMatchObject({ kind: 'preempted',
+      quotation: { displacedLossGold: 0, switchingCostGold: 0, reason: { code: 'same-goal-imported-progress' } } });
+    expect(allocateStrategy({ ...later, previous: initial.memory }).memory.leases['unit:one']!.objectiveId).toBe('pair');
+  });
+
   it('keeps unknown/blocked prerequisites outside feasible allocation and rejects hidden recruitment', () => {
     const { input, provider } = fixture();
     const blocked: AllocationMethodProvider = { ...provider, quote(request) { return { status: 'blocked', methodId: request.method.id,

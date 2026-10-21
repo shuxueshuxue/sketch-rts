@@ -9,7 +9,7 @@ import { planAiOwnerCommandEntries } from '../planner-context';
 import { createStrategyAllocationMemory } from './control';
 import { recordIncumbentCommands } from './incumbent-evidence';
 import { incumbentCommandActor } from './incumbent-command-source';
-import { importExecutedIncumbents } from './incumbent-import';
+import { importExecutedIncumbents, continuesImportedProgress } from './incumbent-import';
 import { evaluateSituation } from './situation';
 
 type Frame = { snapshot: GameSnapshot; owner: string; version: BootstrapAiVersion;
@@ -37,6 +37,22 @@ it('imports only the actual ferry producer after its accepted order advances in 
   expect(Object.values(adopted.leases).every(lease => lease.origin === 'imported-task')).toBe(true);
   expect(Object.values(adopted.incumbentOrders).every(receipt => receipt.observedTick === snapshot.tick)).toBe(true);
   expect(Object.values(adopted.objectives).every(objective => objective.committedUtilityGold === null)).toBe(true);
+  const importedId = Object.values(adopted.leases)[0]!.objectiveId;
+  const ferry = Object.values(frame.memory.naval!.ferries!)[0]!;
+  const sameGoal = { owner: frame.owner, effects: [{ kind: 'mining-established' as const, mineId: ferry.targetId,
+    completeHall: true as const, garrisonHandoff: true as const }] };
+  const immutable = JSON.stringify([snapshot, frame.memory, adopted]);
+  expect(continuesImportedProgress(snapshot, frame.memory, adopted, importedId, sameGoal)).toBe(true);
+  expect(continuesImportedProgress(snapshot, frame.memory, adopted, importedId,
+    { ...sameGoal, owner: 'other-owner' })).toBe(false);
+  expect(continuesImportedProgress(snapshot, frame.memory, adopted, importedId,
+    { owner: frame.owner, effects: [{ ...sameGoal.effects[0]!, mineId: 'another-mine' }] })).toBe(false);
+  expect(continuesImportedProgress(snapshot, frame.memory, adopted, importedId,
+    { owner: frame.owner, effects: [{ kind: 'entity-destroyed', entityId: ferry.targetId }] })).toBe(false);
+  const formal = { ...adopted, leases: Object.fromEntries(Object.entries(adopted.leases).map(([key, lease]) =>
+    [key, { ...lease, origin: 'allocator' as const }])) };
+  expect(continuesImportedProgress(snapshot, frame.memory, formal, importedId, sameGoal)).toBe(false);
+  expect(JSON.stringify([snapshot, frame.memory, adopted])).toBe(immutable);
   const restored: typeof adopted = JSON.parse(JSON.stringify(adopted));
   expect(importExecutedIncumbents(snapshot, frame.memory, evaluateSituation(snapshot, frame.owner, frame.memory), restored)).toEqual(adopted);
 

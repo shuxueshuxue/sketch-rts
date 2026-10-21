@@ -459,7 +459,13 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
           : { status: result.quote.missingPreconditions.some(condition => condition.status === 'unknown') ? 'unknown' : 'not-runnable', reasonCode: result.quote.reason.code };
       } });
   }
+  const continuesImported = (fromId: string, toId: string) => {
+    const held = Object.values(memory.leases).filter(lease => lease.objectiveId === fromId);
+    return !!held.length && held.every(lease => lease.origin === 'imported-task' && lease.incumbentTask)
+      && input.continuesImported?.(fromId, toId) === true;
+  };
   const oracle = createOpportunityOracle(sources, {
+    continuesCommitment: continuesImported,
     effectKeysFor: id => input.objectives.find(objective => objective.id === id)?.effects.map(allocationEffectKey) ?? memory.objectives[id]?.effectKeys ?? [],
     unpricedCommitmentsFor: ids => [...new Set(ids.flatMap(id => {
       const lease = memory.leases[`unit:${id}`];
@@ -532,14 +538,15 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       const alternate = quote.valuation?.opportunity;
       const priced = alternate?.status === 'known' ? (alternate.displacements ?? alternate.alternatives)
         .find(alternative => alternative.objectiveId === fromId) : undefined;
-      const loss = priced?.marginalGold;
+      const continuation = continuesImported(fromId, offer.objective.id);
+      const loss = continuation ? 0 : priced?.marginalGold;
       if (cost === undefined || cost === null || loss === undefined || !Number.isFinite(cost) || cost < 0
         || quote.utility.score <= cost) { failed = true; break; }
       switchingGold += cost;
       const old = memory.objectives[fromId];
       const emergency = offer.objective.kind === 'DefendSite' && input.situation.lands.flatMap(land => land.threats)
         .some(threat => threat.siteId === offer.objective.target.entityId && threat.attackers.some(attacker => attacker.intent?.kind === 'actual-intrusion'));
-      if (old && !emergency) {
+      if (old && !emergency && !continuation) {
         if (challenged.has(fromId) && old.challengerId !== offer.objective.id) { failed = true; break; }
         const challengerThinks = old.challengerId === offer.objective.id ? old.challengerThinks + (challenged.has(fromId) ? 0 : 1) : 1;
         challenged.add(fromId);
@@ -571,7 +578,8 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       memory = appendAllocationEvent(memory, { objectiveId: fromId, methodId: taken[0]!.methodId, action: token, kind: 'preempted', handoff,
         quotation: { fromObjectiveId: fromId, toObjectiveId: offer.objective.id, resourceKeys,
           marginalBenefitGold: quote.utility.score + loss, displacedLossGold: loss, displacedLoss, switchingCostGold: cost,
-          reason: { code: displacedLoss.kind === 'assembly-delay-upper-bound' ? 'same-window-assembly-delay-loss-upper-bound'
+          reason: { code: continuesImported(fromId, offer.objective.id) ? 'same-goal-imported-progress'
+            : displacedLoss.kind === 'assembly-delay-upper-bound' ? 'same-window-assembly-delay-loss-upper-bound'
             : displacedLoss.kind === 'upper-bound' ? 'same-window-imported-loss-upper-bound' : 'same-window-marginal-reallocation',
             factIds: resourceKeys, values: {} } },
         reason: { code: 'higher-marginal-utility-after-switching', factIds: resourceKeys, values: {} } }, tick);

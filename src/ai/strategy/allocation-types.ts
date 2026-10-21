@@ -501,6 +501,9 @@ export type StrategyAllocationInput = Readonly<{
   fixedVoyageLoading?: (unit: Unit, voyage: FixedVoyage) => FixedVoyageLoading;
   /** Verified optimistic target envelope only for imported-task leases. */
   importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
+  /** Receipt-backed imported progress towards the requester's same terminal
+   * effect. This removes displaced-plan value, never the physical handoff. */
+  continuesImported?: (fromObjectiveId: string, toObjectiveId: string) => boolean;
   /** Optional observation of the exact materialized request, never a second
    * provider evaluation. The receiver cannot participate in admission. */
   observeCandidate?: (request: Readonly<{ objectiveId: string; method: ExecutableMethod;
