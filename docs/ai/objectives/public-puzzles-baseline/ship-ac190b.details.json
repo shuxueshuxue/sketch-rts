@@ -1,0 +1,1490 @@
+{
+  "source": "9fa9bbb475f226c8e048757f3688e3d6ae7e1ba4",
+  "sharedBase": "ac190b30ca2234029aed66e453ad92932a780c97",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "first": {
+        "think": 1,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+        },
+        "phase": "plan-verdict",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 5782,
+          "services": [
+            {
+              "key": "goal-search:ConquerIsland:planner:resource-1",
+              "tier": "critical-route",
+              "work": 5
+            },
+            {
+              "key": "goal-geometry:03bbfdb1",
+              "tier": "background-field",
+              "work": 135
+            },
+            {
+              "key": "goal-geometry:9dd3f5c2",
+              "tier": "background-field",
+              "work": 2488
+            },
+            {
+              "key": "field:land:2976:896",
+              "tier": "background-field",
+              "work": 3154
+            }
+          ]
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "owner": "planner",
+            "effects": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "hall-complete",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              }
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null,
+            "reasons": [
+              {
+                "code": "goal-from-observed-objective",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1"
+                ],
+                "values": {
+                  "observedTick": 1,
+                  "blocked": true,
+                  "benefitTerms": 2,
+                  "rewardGold": 1200,
+                  "sourceBenefitsKeepExistingDiscount": true
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "island-income"
+                ],
+                "values": {
+                  "gold": 800.0000000000001
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "new-site-asset"
+                ],
+                "values": {
+                  "gold": 400
+                }
+              }
+            ]
+          }
+        ],
+        "ports": {
+          "combatOptions": true,
+          "futureProjection": true
+        },
+        "plans": [
+          {
+            "id": "goal-plan:ConquerIsland:planner:resource-1",
+            "goal": {
+              "id": "ConquerIsland:planner:resource-1",
+              "owner": "planner",
+              "effects": [
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "hall-complete",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                },
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "garrison-ready",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                }
+              ],
+              "rewardGold": 1200,
+              "deadlineTick": null,
+              "reasons": [
+                {
+                  "code": "goal-from-observed-objective",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1"
+                  ],
+                  "values": {
+                    "observedTick": 1,
+                    "blocked": true,
+                    "benefitTerms": 2,
+                    "rewardGold": 1200,
+                    "sourceBenefitsKeepExistingDiscount": true
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "island-income"
+                  ],
+                  "values": {
+                    "gold": 800.0000000000001
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "new-site-asset"
+                  ],
+                  "values": {
+                    "gold": 400
+                  }
+                }
+              ]
+            },
+            "observedTick": 1,
+            "status": "waiting-facts",
+            "facts": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "garrison-ready",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[null,[],0,0]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "observed-garrison-handoff",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "quantity": 0,
+                  "entityIds": [],
+                  "availableTick": 1
+                },
+                "producerActionIds": []
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "hall-complete",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"resource-1\",[[\"scene-public-planner-frame-planner-townHall-1\",\"townHall\",656,784,true,560,560,[],[],{\"x\":730,\"y\":828},{\"buildingDurability\":0,\"leadership\":0,\"rangeTraining\":0,\"reinforcedPlating\":0,\"shipbuilding\":0,\"speedTraining\":0,\"weaponTraining\":0}]]]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "native-mine-hall-missing",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "entityIds": []
+                },
+                "producerActionIds": []
+              }
+            ],
+            "deferredCandidates": [
+              {
+                "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"goal-geometry:[\\\"shore-pair-indices:[{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1184,\\\\\\\"y\\\\\\\":704}},{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},16]\\\",\\\"128:96:32:0e82f645\\\"]\"]]",
+                "requestIds": [
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "goal-geometry:[\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},16]\",\"128:96:32:0e82f645\"]"
+                ],
+                "reason": {
+                  "code": "combat-candidate-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+              },
+              {
+                "id": "grounding:[\"goal:economy\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"goal-geometry:[\\\"geometry:build:[\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}}]\\\",\\\"world-geometry:v1\\\"]\"]]",
+                "requestIds": [
+                  "goal-geometry:[\"geometry:build:[\\\"planner\\\",\\\"townHall\\\",{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}}]\",\"world-geometry:v1\"]"
+                ],
+                "reason": {
+                  "code": "goal-geometry-pending",
+                  "factIds": [
+                    "goal-geometry:[\"geometry:build:[\\\"planner\\\",\\\"townHall\\\",{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}}]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {
+                    "requestedTick": 1,
+                    "tick": 1
+                  }
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+              }
+            ],
+            "actions": [],
+            "edges": [],
+            "subgoals": [
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              },
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              }
+            ],
+            "alternatives": [],
+            "readyActionIds": [],
+            "resourceTimeline": [],
+            "costGold": null,
+            "successProbability": null,
+            "valueGold": null,
+            "completedTick": null,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "reasons": [
+              {
+                "code": "goal-required-facts-pending",
+                "factIds": [],
+                "values": {}
+              }
+            ]
+          }
+        ],
+        "geometryCapacity": {
+          "mode": "bounded",
+          "maxBytes": 33776,
+          "maxEntries": 38,
+          "thinkSequence": 1,
+          "pinnedBytes": 4217,
+          "pinnedEntries": 2,
+          "peakPinnedBytes": 6576,
+          "peakResidentBytes": 6576,
+          "overflowCount": 0
+        }
+      },
+      "final": {
+        "think": 20,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+        },
+        "phase": "plan-verdict",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 20,
+          "limit": 6144,
+          "used": 6144,
+          "services": [
+            {
+              "key": "goal-search:ConquerIsland:planner:resource-1",
+              "tier": "critical-route",
+              "work": 5
+            },
+            {
+              "key": "goal-geometry:9909529d",
+              "tier": "background-field",
+              "work": 1027
+            },
+            {
+              "key": "goal-geometry:59fc8b70",
+              "tier": "background-field",
+              "work": 1205
+            },
+            {
+              "key": "field:land:1552:720",
+              "tier": "background-field",
+              "work": 3907
+            }
+          ]
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "owner": "planner",
+            "effects": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "hall-complete",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              }
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null,
+            "reasons": [
+              {
+                "code": "goal-from-observed-objective",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1"
+                ],
+                "values": {
+                  "observedTick": 1,
+                  "blocked": true,
+                  "benefitTerms": 2,
+                  "rewardGold": 1200,
+                  "sourceBenefitsKeepExistingDiscount": true
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "island-income"
+                ],
+                "values": {
+                  "gold": 800.0000000000001
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "new-site-asset"
+                ],
+                "values": {
+                  "gold": 400
+                }
+              }
+            ]
+          }
+        ],
+        "ports": {
+          "combatOptions": true,
+          "futureProjection": true
+        },
+        "plans": [
+          {
+            "id": "goal-plan:ConquerIsland:planner:resource-1",
+            "goal": {
+              "id": "ConquerIsland:planner:resource-1",
+              "owner": "planner",
+              "effects": [
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "hall-complete",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                },
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "garrison-ready",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                }
+              ],
+              "rewardGold": 1200,
+              "deadlineTick": null,
+              "reasons": [
+                {
+                  "code": "goal-from-observed-objective",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1"
+                  ],
+                  "values": {
+                    "observedTick": 1,
+                    "blocked": true,
+                    "benefitTerms": 2,
+                    "rewardGold": 1200,
+                    "sourceBenefitsKeepExistingDiscount": true
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "island-income"
+                  ],
+                  "values": {
+                    "gold": 800.0000000000001
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "new-site-asset"
+                  ],
+                  "values": {
+                    "gold": 400
+                  }
+                }
+              ]
+            },
+            "observedTick": 1,
+            "status": "waiting-facts",
+            "facts": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "garrison-ready",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[null,[],0,0]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "observed-garrison-handoff",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "quantity": 0,
+                  "entityIds": [],
+                  "availableTick": 1
+                },
+                "producerActionIds": []
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "hall-complete",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"resource-1\",[[\"scene-public-planner-frame-planner-townHall-1\",\"townHall\",656,784,true,560,560,[],[],{\"x\":730,\"y\":828},{\"buildingDurability\":0,\"leadership\":0,\"rangeTraining\":0,\"reinforcedPlating\":0,\"shipbuilding\":0,\"speedTraining\":0,\"weaponTraining\":0}]]]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "native-mine-hall-missing",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "entityIds": []
+                },
+                "producerActionIds": []
+              }
+            ],
+            "deferredCandidates": [
+              {
+                "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":464},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":464},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":496},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":528},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":528},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":560},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":560},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":592},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":592},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":624},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":624},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":656},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":656},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":688},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":688},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"goal-geometry:[\\\"boarding-cells:[{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-transport-1000\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},\\\\\\\"hull:transport:v2\\\\\\\",18,\\\\\\\"shore:v8\\\\\\\"]\\\",\\\"world-geometry:v1\\\"]\",\"goal-geometry:[\\\"boarding-cells:[{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-transport-1000\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},\\\\\\\"hull:transport:v2\\\\\\\",18,\\\\\\\"shore:v9\\\\\\\"]\\\",\\\"world-geometry:v1\\\"]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":1552,\\\"y\\\":656},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":1552,\\\"y\\\":752},false]\",\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},16]:remaining\"]]",
+                "requestIds": [
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":464},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":464},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":496},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":528},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":528},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":560},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":560},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":592},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":592},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":624},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":624},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":656},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":656},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":688},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":688},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "goal-geometry:[\"boarding-cells:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v8\\\"]\",\"world-geometry:v1\"]",
+                  "goal-geometry:[\"boarding-cells:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v9\\\"]\",\"world-geometry:v1\"]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":1552,\"y\":656},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":1552,\"y\":752},false]",
+                  "shore-pair-indices:[{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},16]:remaining"
+                ],
+                "reason": {
+                  "code": "combat-candidate-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+              },
+              {
+                "id": "grounding:[\"goal:economy\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1008},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1008},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1040},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1040},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1072},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1072},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1104},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1104},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1136},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1136},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1168},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1168},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1200},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1200},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":496},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":112,\\\"y\\\":784},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":112,\\\"y\\\":816},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":112,\\\"y\\\":848},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":2432},{\\\"x\\\":112,\\\"y\\\":880},false]\",\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3152,\\\"y\\\":752}},16]:remaining\"]]",
+                "requestIds": [
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1008},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1008},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1040},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1040},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1072},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1072},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1104},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1104},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1136},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1136},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1168},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1168},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1200},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1200},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":496},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":112,\"y\":784},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":112,\"y\":816},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":112,\"y\":848},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":2432},{\"x\":112,\"y\":880},false]",
+                  "shore-pair-indices:[{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},{\"landId\":\"land:2\",\"point\":{\"x\":3152,\"y\":752}},16]:remaining"
+                ],
+                "reason": {
+                  "code": "cohort-landing-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":2401,\"count\":1,\"kind\":\"worker-at\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+              }
+            ],
+            "actions": [],
+            "edges": [],
+            "subgoals": [
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              },
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              }
+            ],
+            "alternatives": [],
+            "readyActionIds": [],
+            "resourceTimeline": [],
+            "costGold": null,
+            "successProbability": null,
+            "valueGold": null,
+            "completedTick": null,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "reasons": [
+              {
+                "code": "goal-required-facts-pending",
+                "factIds": [],
+                "values": {}
+              }
+            ]
+          }
+        ],
+        "geometryCapacity": {
+          "mode": "bounded",
+          "maxBytes": 33776,
+          "maxEntries": 38,
+          "thinkSequence": 20,
+          "pinnedBytes": 32354,
+          "pinnedEntries": 34,
+          "peakPinnedBytes": 32403,
+          "peakResidentBytes": 33772,
+          "overflowCount": 0
+        }
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "first": {
+        "think": 1,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+        },
+        "phase": "plan-verdict",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 5782,
+          "services": [
+            {
+              "key": "goal-search:ConquerIsland:planner:resource-1",
+              "tier": "critical-route",
+              "work": 5
+            },
+            {
+              "key": "goal-geometry:03bbfdb1",
+              "tier": "background-field",
+              "work": 135
+            },
+            {
+              "key": "goal-geometry:9dd3f5c2",
+              "tier": "background-field",
+              "work": 2488
+            },
+            {
+              "key": "field:land:2976:896",
+              "tier": "background-field",
+              "work": 3154
+            }
+          ]
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "owner": "planner",
+            "effects": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "hall-complete",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              }
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null,
+            "reasons": [
+              {
+                "code": "goal-from-observed-objective",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1"
+                ],
+                "values": {
+                  "observedTick": 1,
+                  "blocked": true,
+                  "benefitTerms": 2,
+                  "rewardGold": 1200,
+                  "sourceBenefitsKeepExistingDiscount": true
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "island-income"
+                ],
+                "values": {
+                  "gold": 800.0000000000001
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "new-site-asset"
+                ],
+                "values": {
+                  "gold": 400
+                }
+              }
+            ]
+          }
+        ],
+        "ports": {
+          "combatOptions": true,
+          "futureProjection": true
+        },
+        "plans": [
+          {
+            "id": "goal-plan:ConquerIsland:planner:resource-1",
+            "goal": {
+              "id": "ConquerIsland:planner:resource-1",
+              "owner": "planner",
+              "effects": [
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "hall-complete",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                },
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "garrison-ready",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                }
+              ],
+              "rewardGold": 1200,
+              "deadlineTick": null,
+              "reasons": [
+                {
+                  "code": "goal-from-observed-objective",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1"
+                  ],
+                  "values": {
+                    "observedTick": 1,
+                    "blocked": true,
+                    "benefitTerms": 2,
+                    "rewardGold": 1200,
+                    "sourceBenefitsKeepExistingDiscount": true
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "island-income"
+                  ],
+                  "values": {
+                    "gold": 800.0000000000001
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "new-site-asset"
+                  ],
+                  "values": {
+                    "gold": 400
+                  }
+                }
+              ]
+            },
+            "observedTick": 1,
+            "status": "waiting-facts",
+            "facts": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "garrison-ready",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[null,[],0,0]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "observed-garrison-handoff",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "quantity": 0,
+                  "entityIds": [],
+                  "availableTick": 1
+                },
+                "producerActionIds": []
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "hall-complete",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"resource-1\",[[\"scene-public-planner-frame-planner-townHall-1\",\"townHall\",656,784,true,560,560,[],[],{\"x\":730,\"y\":828},{\"buildingDurability\":0,\"leadership\":0,\"rangeTraining\":0,\"reinforcedPlating\":0,\"shipbuilding\":0,\"speedTraining\":0,\"weaponTraining\":0}]]]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "native-mine-hall-missing",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "entityIds": []
+                },
+                "producerActionIds": []
+              }
+            ],
+            "deferredCandidates": [
+              {
+                "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"goal-geometry:[\\\"shore-pair-indices:[{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1184,\\\\\\\"y\\\\\\\":704}},{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},16]\\\",\\\"128:96:32:0e82f645\\\"]\"]]",
+                "requestIds": [
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "goal-geometry:[\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},16]\",\"128:96:32:0e82f645\"]"
+                ],
+                "reason": {
+                  "code": "combat-candidate-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+              },
+              {
+                "id": "grounding:[\"goal:economy\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"goal-geometry:[\\\"geometry:build:[\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}}]\\\",\\\"world-geometry:v1\\\"]\"]]",
+                "requestIds": [
+                  "goal-geometry:[\"geometry:build:[\\\"planner\\\",\\\"townHall\\\",{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}}]\",\"world-geometry:v1\"]"
+                ],
+                "reason": {
+                  "code": "goal-geometry-pending",
+                  "factIds": [
+                    "goal-geometry:[\"geometry:build:[\\\"planner\\\",\\\"townHall\\\",{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}}]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {
+                    "requestedTick": 1,
+                    "tick": 1
+                  }
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+              }
+            ],
+            "actions": [],
+            "edges": [],
+            "subgoals": [
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              },
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              }
+            ],
+            "alternatives": [],
+            "readyActionIds": [],
+            "resourceTimeline": [],
+            "costGold": null,
+            "successProbability": null,
+            "valueGold": null,
+            "completedTick": null,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "reasons": [
+              {
+                "code": "goal-required-facts-pending",
+                "factIds": [],
+                "values": {}
+              }
+            ]
+          }
+        ],
+        "geometryCapacity": {
+          "mode": "bounded",
+          "maxBytes": 33776,
+          "maxEntries": 38,
+          "thinkSequence": 1,
+          "pinnedBytes": 4217,
+          "pinnedEntries": 2,
+          "peakPinnedBytes": 6576,
+          "peakResidentBytes": 6576,
+          "overflowCount": 0
+        }
+      },
+      "final": {
+        "think": 20,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+        },
+        "phase": "plan-verdict",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 20,
+          "limit": 6144,
+          "used": 6144,
+          "services": [
+            {
+              "key": "goal-search:ConquerIsland:planner:resource-1",
+              "tier": "critical-route",
+              "work": 5
+            },
+            {
+              "key": "goal-geometry:9909529d",
+              "tier": "background-field",
+              "work": 1027
+            },
+            {
+              "key": "goal-geometry:59fc8b70",
+              "tier": "background-field",
+              "work": 1205
+            },
+            {
+              "key": "field:land:1552:720",
+              "tier": "background-field",
+              "work": 3907
+            }
+          ]
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "owner": "planner",
+            "effects": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "hall-complete",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              }
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null,
+            "reasons": [
+              {
+                "code": "goal-from-observed-objective",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1"
+                ],
+                "values": {
+                  "observedTick": 1,
+                  "blocked": true,
+                  "benefitTerms": 2,
+                  "rewardGold": 1200,
+                  "sourceBenefitsKeepExistingDiscount": true
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "island-income"
+                ],
+                "values": {
+                  "gold": 800.0000000000001
+                }
+              },
+              {
+                "code": "goal-objective-benefit",
+                "factIds": [
+                  "ConquerIsland:planner:resource-1",
+                  "new-site-asset"
+                ],
+                "values": {
+                  "gold": 400
+                }
+              }
+            ]
+          }
+        ],
+        "ports": {
+          "combatOptions": true,
+          "futureProjection": true
+        },
+        "plans": [
+          {
+            "id": "goal-plan:ConquerIsland:planner:resource-1",
+            "goal": {
+              "id": "ConquerIsland:planner:resource-1",
+              "owner": "planner",
+              "effects": [
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "hall-complete",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                },
+                {
+                  "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "garrison-ready",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  }
+                }
+              ],
+              "rewardGold": 1200,
+              "deadlineTick": null,
+              "reasons": [
+                {
+                  "code": "goal-from-observed-objective",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1"
+                  ],
+                  "values": {
+                    "observedTick": 1,
+                    "blocked": true,
+                    "benefitTerms": 2,
+                    "rewardGold": 1200,
+                    "sourceBenefitsKeepExistingDiscount": true
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "island-income"
+                  ],
+                  "values": {
+                    "gold": 800.0000000000001
+                  }
+                },
+                {
+                  "code": "goal-objective-benefit",
+                  "factIds": [
+                    "ConquerIsland:planner:resource-1",
+                    "new-site-asset"
+                  ],
+                  "values": {
+                    "gold": 400
+                  }
+                }
+              ]
+            },
+            "observedTick": 1,
+            "status": "waiting-facts",
+            "facts": [
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "garrison-ready",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[null,[],0,0]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "observed-garrison-handoff",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "quantity": 0,
+                  "entityIds": [],
+                  "availableTick": 1
+                },
+                "producerActionIds": []
+              },
+              {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "observation": {
+                  "fact": {
+                    "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                    "predicate": {
+                      "kind": "hall-complete",
+                      "mineId": "resource-1",
+                      "at": {
+                        "entityId": "resource-1",
+                        "point": {
+                          "x": 2976,
+                          "y": 896
+                        },
+                        "landId": "land:2"
+                      }
+                    }
+                  },
+                  "state": "unmet",
+                  "observedTick": 1,
+                  "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"resource-1\",[[\"scene-public-planner-frame-planner-townHall-1\",\"townHall\",656,784,true,560,560,[],[],{\"x\":730,\"y\":828},{\"buildingDurability\":0,\"leadership\":0,\"rangeTraining\":0,\"reinforcedPlating\":0,\"shipbuilding\":0,\"speedTraining\":0,\"weaponTraining\":0}]]]]",
+                  "evidence": [],
+                  "reason": {
+                    "code": "native-mine-hall-missing",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  },
+                  "entityIds": []
+                },
+                "producerActionIds": []
+              }
+            ],
+            "deferredCandidates": [
+              {
+                "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":464},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":464},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":496},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":528},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":528},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":560},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":560},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":592},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":592},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":624},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":624},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":656},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":656},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":688},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1456,\\\\\\\"y\\\\\\\":688},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"goal-geometry:[\\\"boarding-cells:[{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-transport-1000\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},\\\\\\\"hull:transport:v2\\\\\\\",18,\\\\\\\"shore:v8\\\\\\\"]\\\",\\\"world-geometry:v1\\\"]\",\"goal-geometry:[\\\"boarding-cells:[{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-transport-1000\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},\\\\\\\"hull:transport:v2\\\\\\\",18,\\\\\\\"shore:v9\\\\\\\"]\\\",\\\"world-geometry:v1\\\"]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":1552,\\\"y\\\":656},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":1552,\\\"y\\\":752},false]\",\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},16]:remaining\"]]",
+                "requestIds": [
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                  "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":464},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":464},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":496},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":528},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":528},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":560},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":560},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":592},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":592},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":624},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":624},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":656},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":656},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1456,\"y\":688},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1456,\\\"y\\\":688},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "goal-geometry:[\"boarding-cells:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v8\\\"]\",\"world-geometry:v1\"]",
+                  "goal-geometry:[\"boarding-cells:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v9\\\"]\",\"world-geometry:v1\"]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":1552,\"y\":656},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":1552,\"y\":752},false]",
+                  "shore-pair-indices:[{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},16]:remaining"
+                ],
+                "reason": {
+                  "code": "combat-candidate-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+              },
+              {
+                "id": "grounding:[\"goal:economy\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",[\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1008},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1008},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1040},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1040},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1072},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1072},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1104},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1104},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1136},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1136},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1168},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1168},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1200},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":1200},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"future-producer:fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"},\\\"building\\\":{\\\"kind\\\":\\\"binding\\\",\\\"name\\\":\\\"producer:shipyard:{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":208,\\\\\\\"y\\\\\\\":496},\\\\\\\"seaId\\\\\\\":\\\\\\\"sea:1\\\\\\\"}\\\"},\\\"buildingKind\\\":\\\"shipyard\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":112,\\\"y\\\":784},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":112,\\\"y\\\":816},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":112,\\\"y\\\":848},false]\",\"point:[\\\"transport\\\",{\\\"heading\\\":0,\\\"x\\\":1664,\\\"y\\\":768},{\\\"x\\\":112,\\\"y\\\":880},false]\",\"shore-pair-indices:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3152,\\\"y\\\":752}},16]:remaining\"]]",
+                "requestIds": [
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1008},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1008},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1040},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1040},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1072},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1072},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1104},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1104},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1136},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1136},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1168},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1168},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":1200},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":1200},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "future-producer:fact:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":208,\"y\":496},\"seaId\":\"sea:1\"},\"building\":{\"kind\":\"binding\",\"name\":\"producer:shipyard:{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":208,\\\"y\\\":496},\\\"seaId\\\":\\\"sea:1\\\"}\"},\"buildingKind\":\"shipyard\",\"kind\":\"building-complete\"}",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":112,\"y\":784},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":112,\"y\":816},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":112,\"y\":848},false]",
+                  "point:[\"transport\",{\"heading\":0,\"x\":1664,\"y\":768},{\"x\":112,\"y\":880},false]",
+                  "shore-pair-indices:[{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},{\"landId\":\"land:2\",\"point\":{\"x\":3152,\"y\":752}},16]:remaining"
+                ],
+                "reason": {
+                  "code": "cohort-landing-facts-pending",
+                  "factIds": [
+                    "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":2401,\"count\":1,\"kind\":\"worker-at\"}"
+                  ],
+                  "values": {}
+                },
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+              }
+            ],
+            "actions": [],
+            "edges": [],
+            "subgoals": [
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              },
+              {
+                "id": "subgoal:fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                "parentGoalId": "ConquerIsland:planner:resource-1",
+                "requestedByActionIds": [],
+                "state": "unmet",
+                "chosenActionId": null,
+                "chosenActionIds": [],
+                "alternativeIds": []
+              }
+            ],
+            "alternatives": [],
+            "readyActionIds": [],
+            "resourceTimeline": [],
+            "costGold": null,
+            "successProbability": null,
+            "valueGold": null,
+            "completedTick": null,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "reasons": [
+              {
+                "code": "goal-required-facts-pending",
+                "factIds": [],
+                "values": {}
+              }
+            ]
+          }
+        ],
+        "geometryCapacity": {
+          "mode": "bounded",
+          "maxBytes": 33776,
+          "maxEntries": 38,
+          "thinkSequence": 20,
+          "pinnedBytes": 32354,
+          "pinnedEntries": 34,
+          "peakPinnedBytes": 32403,
+          "peakResidentBytes": 33772,
+          "overflowCount": 0
+        }
+      }
+    }
+  ]
+}
