@@ -11,6 +11,8 @@ export type PuzzleThinkEvidence = {
   think: number; calls: number; snapshotUntouched: boolean; passed: boolean;
   readyActionCount: number; executable: boolean;
   error: ReturnType<typeof puzzleFailure>; planHash: string | null;
+  structureHash?: string; numericPlanStable?: boolean;
+  stability?: ReturnType<typeof import('./plan-stability').comparePuzzlePlanWindow>;
   work: FactWorkReceipt | null; memoryThinkSequence: number | null; scoped?: string; memoryAfter?: string;
 };
 export function puzzleFailure(error: unknown) {

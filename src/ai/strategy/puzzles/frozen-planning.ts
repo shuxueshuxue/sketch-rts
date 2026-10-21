@@ -10,6 +10,7 @@ import { publicPuzzlePlanner } from './planner-binding';
 import { puzzleFailure, serializeScopedPlan, writePuzzlePlanEvidence, type PuzzleThinkEvidence } from './plan-evidence';
 import type { PublicPuzzleCase } from './scenes';
 import type { PuzzleWorld } from './world';
+import { comparePuzzlePlanWindow, puzzlePlanStructureKey } from './plan-stability';
 
 export const PUBLIC_PUZZLE_MAX_THINKS = 20;
 
@@ -37,6 +38,8 @@ function planHash(output: GoalPlannerOutput) {
 export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
   const snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot), memory = createAiPolicyMemory();
   const previousWork = currentFactWork(), thinks: PuzzleThinkEvidence[] = [];
+  const structureWindow: string[] = [];
+  const numericalWindow: GoalPlannerOutput[] = [];
   let stable = false, finalFailure: unknown, fatal: unknown;
   try {
     for (let think = 1; think <= PUBLIC_PUZZLE_MAX_THINKS; think++) {
@@ -57,6 +60,12 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
             expect(memory.goalPlanning, 'native owner memory must retain the search continuation').toBeDefined();
             memory.goalPlanning!.cache = output.cache;
             hash = planHash(output);
+            record.structureHash = createHash('sha256').update(puzzlePlanStructureKey(output)).digest('hex');
+            structureWindow.push(record.structureHash);
+            if (structureWindow.length > 3) structureWindow.shift();
+            numericalWindow.push(output);
+            if (numericalWindow.length > 3) numericalWindow.shift();
+            if (numericalWindow.length === 3) record.stability = comparePuzzlePlanWindow(numericalWindow);
             record.readyActionCount = output.readyActions.length;
             try {
               checkPuzzlePlan(puzzle, world, { input, output,
@@ -92,7 +101,8 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       record.executable = record.passed && record.readyActionCount > 0;
       finalFailure = failure;
       const prior = thinks.at(-2);
-      stable = hash !== null && prior?.planHash === hash;
+      record.numericPlanStable = hash !== null && prior?.planHash === hash;
+      stable = structureWindow.length === 3 && structureWindow.every(value => value === record.structureHash);
       // Retain all K observations: an independent ready atom (for example,
       // waiting for income) does not finish the requested chain's refinement.
     }
