@@ -173,7 +173,7 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
           reason: reason('native-point-route-end-unpublished', [answer.id]) };
       const request: VoyageRiskRequest | null = hull.reference.kind === 'existing' ? {
         id: `goal-sea-leg:${hull.reference.entityId}:${fnv1a(goalValueKey([hull.seaId, from, to, fact.route]))}`,
-        seaId: hull.seaId, shipId: hull.reference.entityId, start: { ...from }, destination: to,
+        seaId: hull.seaId, shipId: hull.reference.entityId, start: { ...from }, destination: { x: end.x, y: end.y },
         route: { points: fact.route.points, partial: false },
       } : null;
       const risk = request && input.readVoyageRisk ? input.readVoyageRisk(request) : {

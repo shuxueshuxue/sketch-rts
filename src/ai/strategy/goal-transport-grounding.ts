@@ -11,6 +11,7 @@ import type { GoalNavalMember } from './goal-naval-actions';
 import type { GoalCandidates, GoalFact, GoalFactReader, GoalTransportOption, GoalTransportRequest } from './goal-planner-types';
 import type { Shore } from './regions';
 import type { Point, Target } from './types';
+import { valueGoalSeaLeg } from './goal-sea-leg-value';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
 export type GoalTransportGroundingInput = Readonly<{
@@ -176,9 +177,11 @@ export function groundGoalTransportOptions(input: GoalTransportGroundingInput): 
         to: { seaId: pair.seaId, point: landing.water }, actor: hull.reference, fromHeading: from.heading });
       const shoreSafe = goalFact({ kind: 'shore-safe', landId: pair.landing.landId,
         landing: { landId: pair.landing.landId, seaId: pair.seaId, point: landing.ground }, throughTick: input.byTick });
+      const valuation = valueGoalSeaLeg({ snapshot: input.snapshot, owner: input.owner, hull,
+        leg: { state: 'met', value: sailing, factIds: sorted(pathProofs) }, passengers: members.map(member => member.reference) });
       const common = { id: `goal-transport:${goalValueKey({ pair: pair.id, hull: hull.reference, cohort: requested, from, landing, origin })}`,
         seaId: pair.seaId, from: input.from, to: input.to, transport: hull.reference, capacity: hull.capacity,
-        loadedUnitIds: sorted(hull.cargoUnitIds), landing, crossing, shoreSafe, preconditions: [...hull.preconditions, ...pickupFacts],
+        loadedUnitIds: sorted(hull.cargoUnitIds), landing, crossing, shoreSafe, preconditions: [...hull.preconditions, ...pickupFacts], ...valuation,
         duration: { state: 'met' as const, value: walk + (waiting.length ? GANGWAY_SETUP_TICKS : 0) + sailing.ticks + GANGWAY_SETUP_TICKS,
           factIds: sorted([...pathProofs, crossing.id, ...(approach ? [approach.id] : [])]) }, factIds: sorted(pathProofs) };
       if (origin === 'land' && departure && approach) options.push({ ...common, origin: 'land', departure, approach });
