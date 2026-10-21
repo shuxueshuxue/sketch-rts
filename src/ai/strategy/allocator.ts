@@ -84,6 +84,10 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
   return { method, quote, unitIds };
 }
 function candidateBundles(input: StrategyAllocationInput, memory: StrategyAllocationMemory, method: ExecutableMethod): readonly string[][] {
+  if (method.kind === 'goal-plan') {
+    if (!method.goalBundle) throw Error('Goal plan has no explicit allocation bundle');
+    return [[...new Set(method.goalBundle.unitIds)].sort(compare)];
+  }
   const owned = input.situation.units.filter(unit => unit.owner === input.situation.owner && unit.hp > 0);
   const free = new Set(allocationResponseCandidates(input.snapshot, input.situation, memory));
   const existing = Object.values(memory.assignments).filter(assignment => assignment.methodId === method.id).map(assignment => assignment.unitId);
@@ -356,7 +360,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
   memory = observeAllocationOrders(memory, input.snapshot);
   for (const objective of input.objectives) {
     const prior = memory.objectives[objective.id];
-    if (!prior || terminal(prior.status) || !['DefendSite', 'Evacuate'].includes(objective.kind)
+    if (!prior || memory.methods[prior.methodId]?.stage === 'goal-plan' || terminal(prior.status) || !['DefendSite', 'Evacuate'].includes(objective.kind)
       || !terminal(objective.status) || !currentSiteThreatIsClear(input.snapshot, input.situation, objective.target)) continue;
     const executions = { ...memory.executions };
     const status = objective.kind === 'DefendSite' ? 'complete' as const : 'abandoned' as const;

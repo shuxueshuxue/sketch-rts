@@ -409,7 +409,10 @@ export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
   providerId: string;
   /** A completed gathering coordinator is a retained prerequisite, not the
    * conquest's final effect. Existing methods omit this and execute normally. */
-  stage?: 'assembly' | 'execution';
+  stage?: 'assembly' | 'execution' | 'goal-plan';
+  /** Exact current ready/active bundle declared by goal regression. The
+   * allocator must not recruit prefix members or implicit auxiliary units. */
+  goalBundle?: Readonly<{ planId: string; unitIds: readonly string[] }>;
   /** Stable preference within this objective, not a global defense/island priority. */
   preference: number;
   spends: readonly PlannedAllocationSpend[];

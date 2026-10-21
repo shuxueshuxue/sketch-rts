@@ -310,7 +310,7 @@ export type Method = Readonly<{
   objectiveId: ObjectiveId;
   kind: 'local-squad' | 'main-army-recall' | 'wait-in-cover' | 'cross-sea-reinforcement'
     | 'direct-conquest' | 'staged-beachhead' | 'land-expansion' | 'land-attack'
-    | 'route-pressure' | 'counter-harassment' | 'recovery' | 'evacuation';
+    | 'route-pressure' | 'counter-harassment' | 'recovery' | 'evacuation' | 'goal-plan';
   preconditions: readonly Precondition[];
   subgoals: readonly Subgoal[];
   demands: readonly ResourceDemand[];

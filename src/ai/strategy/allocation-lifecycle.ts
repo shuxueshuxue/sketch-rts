@@ -117,7 +117,8 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     if (assemblyReady) for (const action of actions) if (action.phase !== 'ready-for-departure') next = { ...next,
       executions: { ...next.executions, [action.token.actionId]: { ...action, phase: 'ready-for-departure' } } };
     if (!['complete', 'failed', 'abandoned'].includes(objective.status) && actions.length
-      && actions.every(action => terminal(action.status)) && !pendingGarrison && !assemblyReady) {
+      && actions.every(action => terminal(action.status)) && !pendingGarrison && !assemblyReady
+      && next.methods[objective.methodId]?.stage !== 'goal-plan') {
       const status = actions.every(action => action.status === 'complete') ? 'complete'
         : actions.some(action => action.status === 'failed') ? 'failed' : 'abandoned';
       objectives[id] = { ...objective, status, committedUtilityGold: null, assignmentIds: [] };
