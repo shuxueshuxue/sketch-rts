@@ -7,6 +7,7 @@ import { createGoalFactReader } from '../goal-world-facts';
 import { withGoalPlannerInput } from '../goal-planner-input';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import type { PuzzlePlanObservation } from './planner-checks';
+import { withInput } from './goal-planner-native';
 
 export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
@@ -36,11 +37,10 @@ export async function optionalFunction<T extends (...args: never[]) => unknown>(
   return { value: module[name] as T };
 }
 
-/** The shared scope exists. Its normal goal collector/value adapter and the
- * execution bridge remain separate capabilities; no authored goal prices or
- * incumbent/witness fallback may fill either gap. */
-const [input, allocation, execution] = await Promise.all([
-  optionalFunction<NativePuzzleModule['withInput']>('./goal-planner-native.ts', 'withInput'),
+/** Cold planning uses the real shared Objective collector. Actual grants and
+ * command execution remain separate capabilities; neither gets a fake grant
+ * or incumbent/witness fallback. */
+const [allocation, execution] = await Promise.all([
   optionalFunction<NativePuzzleModule['allocation']>('./goal-planner-native.ts', 'allocation'),
   optionalFunction<NativePuzzleModule['createExecution']>('./goal-planner-native.ts', 'createExecution'),
 ]);
@@ -48,10 +48,9 @@ export const publicPuzzlePlanner = {
   planGoals,
   createGoalFactReader,
   withGoalPlannerInput,
-  withInput: input.value,
+  withInput,
   allocation: allocation.value,
   createExecution: execution.value,
-  unavailable: [input.value ? undefined : 'shared GoalRequest collector/valuation not wired',
-    input.unavailable, allocation.unavailable, execution.unavailable]
+  unavailable: [allocation.unavailable, execution.unavailable]
     .filter((reason): reason is string => reason !== undefined),
 };
