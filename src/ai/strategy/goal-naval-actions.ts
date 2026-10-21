@@ -317,8 +317,12 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     cost: factReferences(input.estimates.cost.state === 'met' ? { ...input.estimates.cost,
       value: input.estimates.cost.value.map(term => ({ ...term, factIds: factIds(term.factIds) })) } : input.estimates.cost),
     successProbability: factReferences(input.estimates.successProbability) };
+  // Training contributes to the regional capacity pool. A symbolic future
+  // hull cannot demand a named world ship's inventory before it exists.
+  // Exact refinement/allocation must subsequently bind the actual hull.
+  const capacityIdentity = option.transport.kind === 'existing' ? { transport: option.transport } : {};
   const preconditions: GoalFact[] = [goalFact({ kind: 'transport-in', seaId: option.seaId,
-    capacity: waitingMass, transport: option.transport, byTick: input.byTick }),
+    capacity: waitingMass, ...capacityIdentity, byTick: input.byTick }),
     ...(option.preconditions ?? []).map(fact => replacements.get(fact.id) ?? fact), option.crossing, shoreSafe];
   if (loaded.length) preconditions.push(goalFact({ kind: 'cargo-aboard', transport: option.transport, units: loadedRefs }));
   // An unprotected delivery must be safe at its actual shore and at the
@@ -349,7 +353,7 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
   const resources: GoalActionDeclaration['demands'] = [...demands(input, [...new Map([...units, ...dependents].map(unit => [unit.id, unit])).values()]
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
     { resource: { kind: 'entity-control', entity: option.transport }, quantity: 1, from: 'start', until: 'finish' },
-    ...(waitingMass > 0 ? [{ resource: { kind: 'transport-capacity' as const, transport: option.transport, seaId: option.seaId },
+    ...(waitingMass > 0 ? [{ resource: { kind: 'transport-capacity' as const, ...capacityIdentity, seaId: option.seaId },
       quantity: waitingMass, from: 'start' as const, until: 'finish' as const }] : [])];
   const declaredPreconditions = preconditions.map(fact => replacements.get(fact.id) ?? fact);
   const sourceFacts = factIds([...optionFactIds, ...declaredPreconditions.map(fact => fact.id)]);
