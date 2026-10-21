@@ -31,7 +31,7 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
       });
       return entries;
     },
-  }, { onStep() { if (world.game.tick % 20 === 0) tracker.sample(); } });
+  }, { onStep() { tracker.sample(); } });
   return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
     elapsedMs: result.elapsedMs, cpuMs: result.cpuMs, execution: tracker.finish() };
 }
