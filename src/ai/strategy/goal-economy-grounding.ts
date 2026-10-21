@@ -22,7 +22,7 @@ export type GoalEconomicGroundingPorts = Readonly<{
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const why = (code: string, factIds: readonly string[] = []) => ({ code, factIds, values: {} });
 
-function footprintRegions(context: GoalPlanningContext, kind: BuildingKind, point: Point, ports: Pick<GoalEconomicGroundingPorts, 'regionAt'>) {
+export function goalBuildingRegions(context: GoalPlanningContext, kind: BuildingKind, point: Point, ports: Pick<GoalEconomicGroundingPorts, 'regionAt'>) {
   const cell = context.snapshot.map.terrain?.cell, footprint = cell ? footprintCells(cell, point.x, point.y, BUILDING_DEFS[kind].radius) : null;
   const cells: Point[] = [];
   if (footprint && cell) for (let y = footprint.top; y <= footprint.bottom; y++) for (let x = footprint.left; x <= footprint.right; x++)
@@ -76,7 +76,7 @@ export function goalBuildPointRequest(context: GoalPlanningContext, buildingKind
           || point.x + rules.radius > snapshot.map.width || point.y + rules.radius > snapshot.map.height
           || mine && Math.hypot(point.x - mine.x, point.y - mine.y) > GOLD_MINE_RULES.baseRange
           || !foundation && !isBuildPlacementClear(snapshot, buildingKind, point)) continue;
-        const regions = footprintRegions(context, buildingKind, point, ports);
+        const regions = goalBuildingRegions(context, buildingKind, point, ports);
         const lands = regions.lands.filter(value => !near.landId || value.id === near.landId), seas = regions.seas;
         if (!lands.length || rules.shore && (!seas.length || near.seaId && !seas.includes(near.seaId))) continue;
         lands.sort((a, b) => Math.hypot(a.at.x - point.x, a.at.y - point.y) - Math.hypot(b.at.x - point.x, b.at.y - point.y)
@@ -139,7 +139,7 @@ export function createGoalEconomicGrounding(context: GoalPlanningContext, ports:
     const candidates: GoalProductionOption[] = [];
     for (const building of snapshot.buildings.filter(building => building.owner === owner && building.hp > 0 && building.kind === kind)
       .sort((a, b) => order(a.id, b.id))) {
-      const regions = footprintRegions(context, kind, building, ports);
+      const regions = goalBuildingRegions(context, kind, building, ports);
       const landId = regions.lands[0]?.id;
       const observedSeas = regions.seas;
       if (unitMover(unitKind) === 'land' && near.landId && landId !== near.landId
