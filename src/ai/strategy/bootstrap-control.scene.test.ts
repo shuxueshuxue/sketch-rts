@@ -20,7 +20,6 @@ import type { BootstrapStrategyOutput } from './bootstrap-control';
 type Frame = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory; nextId: number; activePlayers: string[] };
 const frames: Record<string, Frame> = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString()).frames;
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const policy = (memory: AiPolicyMemory) => { const { strategy, strategyAllocation, goalPlanning, ...old } = memory; return old; };
 const plan = (frame: Frame, options: AiOwnerPlannerOptions = {}) => planAiOwnerCommandEntries(frame.snapshot,
   { playerId: frame.owner, version: frame.owner === 'p0' ? 'v9_knight' : 'v9_summoner', memory: frame.memory }, { strategyControl: true, ...options });
 afterEach(() => vi.restoreAllMocks());
@@ -121,13 +120,16 @@ describe('the real bootstrap control entry before behavioral acceptance', () => 
   }, 60000);
 
   it('retains the ordinary room path as an explicit comparison while control is opt-in', () => {
-    const ordinary = structuredClone(frames['gullIsland-p0-9930']!), controlled = structuredClone(ordinary);
-    const original = plan(ordinary, { strategyControl: false }), candidate = plan(controlled);
-    // This first cold frame has no feasible formal grant. The old producers
-    // keep their behavior instead of converting a missing quote into zero.
+    const ordinary = structuredClone(frames['gullIsland-p0-9930']!), defaultOff = structuredClone(ordinary), controlled = structuredClone(ordinary);
+    const original = plan(ordinary, { strategyControl: false });
+    const baseline = planAiOwnerCommandEntries(defaultOff.snapshot,
+      { playerId: defaultOff.owner, version: 'v9_knight', memory: defaultOff.memory });
+    plan(controlled);
+    // Default/off retains the ordinary policy. A cold controlled planner no
+    // longer starts another old strategic mission while its facts are pending.
     expect(Object.keys(controlled.memory.strategyAllocation!.leases)).toEqual([]);
-    expect(candidate).toEqual(original);
-    expect(policy(controlled.memory)).toEqual(policy(ordinary.memory));
+    expect(baseline).toEqual(original);
+    expect(defaultOff.memory).toEqual(ordinary.memory);
     expect(ordinary.memory.strategyAllocation).toBeUndefined();
   }, 60000);
 });

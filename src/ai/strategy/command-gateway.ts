@@ -48,7 +48,10 @@ function operands(snapshot: GameSnapshot, command: GameCommand): Operands {
  * retain the original producer's native authority. Local rescue services can
  * interrupt either without changing the parent. Native legality is not copied. */
 type StrategyGatewayInput = Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
-  memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; queuedTick: number | null }>;
+  memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; queuedTick: number | null;
+  /** Controlled strategic producers may continue their actual task, but may
+   * not recruit an unleased unit or start another ungranted mission. */
+  incumbentOnlyScripts?: ReadonlySet<string> }>;
 export function createStrategyCommandGateway(input: StrategyGatewayInput) {
   const { snapshot, owner, memory, grants, queuedTick } = input;
   const units = new Map(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])]).map(unit => [unit.id, unit]));
@@ -64,7 +67,11 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
     const actor = incumbentCommandActor(proposal.command);
     const importedOwner = lease?.origin === 'imported-task' && (memory.executions[lease.action.actionId]?.executor === proposal.executor
       || actor && lease.incumbentTask?.source === actor.source && lease.incumbentTask.taskId === actor.taskId);
-    if (proposal.source === 'script') return !lease || !!importedOwner || !formalTakeover && lease.origin === 'imported-task';
+    const continuingOwner = lease?.origin === 'imported-task' && (actor
+      ? lease.incumbentTask?.source === actor.source && lease.incumbentTask.taskId === actor.taskId
+      : memory.executions[lease.action.actionId]?.executor === proposal.executor);
+    if (proposal.source === 'script') return input.incumbentOnlyScripts?.has(proposal.executor) ? !!continuingOwner
+      : !lease || !!importedOwner || !formalTakeover && lease.origin === 'imported-task';
     const grant = grantFor(proposal), action = proposal.action && memory.executions[proposal.action.actionId];
     const order = key.startsWith('unit:') ? memory.issuedOrders[key.slice(5)] : undefined;
     const service = proposal.purpose === 'life-saving' && order?.observedTick === snapshot.tick

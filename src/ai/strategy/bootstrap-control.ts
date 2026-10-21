@@ -1,7 +1,9 @@
 import type { BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
 import { planAiCommandEntriesFromScripts } from '../policy/core';
-import { bootstrapDoctrineContext, prepareBootstrapLandMission, prepareBootstrapSites } from '../bootstrap_1/policy';
+import { bootstrapDoctrineContext } from '../bootstrap_1/policy';
+import { migrateExpansionClaims } from '../bootstrap_1/expansion-mission';
+import { maintainExpansionGarrisons } from '../bootstrap_1/expansion-garrison';
 import type { StrategyDecision } from './decision';
 import type { AllocationPrecondition, AllocationReason, CommandAdmission, ExecutorFeedback, ExecutorInput,
   PlannedVoyage } from './allocation-types';
@@ -31,6 +33,7 @@ import { goalEconomyExecutors } from './executors/goal-economy';
 import { goalLandExecutors } from './executors/goal-land';
 import { goalNavalExecutors } from './goal-naval-executors';
 import { goalTrainingReader, observeGoalTraining } from './goal-training-ledger';
+import { continuedIncumbentScripts, isIncumbentStrategyScript } from './incumbent-scripts';
 const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
@@ -154,17 +157,21 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
     }
   }
   const context = withNavigationPhase('incumbent', () => {
-    prepareBootstrapSites(snapshot, owner, options);
-    const context = bootstrapDoctrineContext(snapshot, owner, version, options);
-    prepareBootstrapLandMission(snapshot, owner, context); return context;
+    // Keep established post bookkeeping. New land/island missions belong to
+    // the goal planner; receipt-backed old producers prepare their own task.
+    migrateExpansionClaims(snapshot, policy);
+    maintainExpansionGarrisons(snapshot, owner, options);
+    return bootstrapDoctrineContext(snapshot, owner, version, options);
   });
   const authority = policy.strategyAllocation!, grants = allocationGrants(authority);
+  const incumbentScripts = continuedIncumbentScripts(scripts, authority);
+  const incumbentOnlyScripts = new Set(incumbentScripts.filter(isIncumbentStrategyScript).map(script => script.id));
   const goalFacts = frame.executionFacts(authority);
   let sequence = 0;
   const nextId = () => `${owner}:strategy-command:${snapshot.tick}:${authority.revision}:${sequence++}`;
-  const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null });
+  const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null, incumbentOnlyScripts });
   const rejected: CommandAdmission[] = [];
-  const oldEntries = withNavigationPhase('incumbent', () => planAiCommandEntriesFromScripts(snapshot, owner, scripts, context, {
+  const oldEntries = withNavigationPhase('incumbent', () => planAiCommandEntriesFromScripts(snapshot, owner, incumbentScripts, context, {
     admitCommands(script, commands) {
       const result = preflight.admit(scriptProposals(script.id, commands, nextId));
       rejected.push(...result.admissions.filter(item => item.status === 'rejected'));
@@ -199,7 +206,7 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
   // orders or spends money; only the final admitted subset becomes provenance.
   let memory = authority;
   for (const feedback of feedbacks) memory = applyExecutorFeedback(memory, snapshot, feedback);
-  const gateway = createStrategyCommandGateway({ snapshot, owner, memory, grants: allocationGrants(memory), queuedTick: null });
+  const gateway = createStrategyCommandGateway({ snapshot, owner, memory, grants: allocationGrants(memory), queuedTick: null, incumbentOnlyScripts });
   const result = gateway.admit([...formal.filter(item => item.purpose === 'life-saving'), ...scriptFinal,
     ...formal.filter(item => item.purpose !== 'life-saving')]);
   memory = recordAllocationCommands(memory, snapshot, result.admissions);
