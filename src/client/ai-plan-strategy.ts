@@ -61,7 +61,8 @@ export function planViewNodes(trace: AiPlanTrace): PlanViewNode[] {
     const matched = result.find(node => node.strategy?.objectiveId === plan.goal.id);
     const resources = { unitIds: [...new Set(plan.actions.flatMap(action => recordedGoalAssignments(trace, action).map(row => row.unitId)))],
       gold: { reserved: null, required: null } };
-    if (matched) { matched.id=plannerGoalId(plan.id);matched.goalPlan = plan; matched.status = plan.status; matched.resources = resources;delete matched.sinceTick; }
+    if (matched) { matched.id=plannerGoalId(plan.id);matched.source='goalPlanner';matched.goalPlan = plan; matched.status = plan.status; matched.resources = resources;
+      matched.utility={score:plan.valueGold,source:'planner',terms:[]};delete matched.sinceTick; }
     else {
       const effect = plan.goal.effects[0]?.predicate;
       const target = effect && 'at' in effect ? effect.at : effect && 'site' in effect ? effect.site : undefined;

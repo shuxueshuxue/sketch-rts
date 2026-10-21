@@ -17,6 +17,7 @@ it('shows every recorded dependency layer, pending requests, rejected alternativ
   expect(recordedGoalExecution(trace, action)).toBeUndefined(); expect(recordedGoalAssignments(trace, action)).toEqual([]);
   const node = planViewNodes(trace).find(row => row.goalPlan)!;
   expect(node.resources.unitIds).toEqual([]); expect(node.status).toBe('waiting-facts');
+  expect(node.utility.score).toBeNull();
   expect(JSON.stringify(trace)).toBe(before);
 });
 
@@ -29,6 +30,7 @@ it('joins only the recorded objective, method, action and generation, and labels
   const text = goalPlanDetail({ ...plan, actions: [current] }, trace, current.id);
   expect(text).toContain('正式执行记录'); expect(text).toContain('fixture-defense');
   expect(text).toContain('命令接纳与排队不证明已生效');
+  expect(text).toContain('额度 200 金 · 已支付 50 金');
   const goal = goalPlanDetail(plan, trace);
   expect(goal).toContain('规划数量与时间账本'); expect(goal).toContain('实际支出由原生回执证明');
   expect(goal).not.toContain('目标效果于');

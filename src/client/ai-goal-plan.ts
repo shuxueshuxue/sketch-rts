@@ -115,6 +115,9 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
   }
   if (action) {
     const execution = recordedGoalExecution(trace, action), assignments = recordedGoalAssignments(trace, action);
+    const budgets=action.allocation?trace.strategy?.allocation?.budget.filter(row=>row.objectiveId===action.allocation!.objectiveId
+      &&row.methodId===action.allocation!.methodId&&row.action.actionId===action.allocation!.actionId
+      &&row.action.generation===action.allocation!.generation)??[]:[];
     const receipts = action.allocation ? trace.strategy?.allocation?.commandAdmissions?.filter(row =>
       row.action?.actionId === action.allocation!.actionId && row.action.generation === action.allocation!.generation) ?? [] : [];
     return `${head}<h4>动作：${h(goalActionLabel(action))}</h4><p>${h(states[action.state])}</p>
@@ -123,9 +126,11 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
       ${action.dependsOnActionIds.map(id=>{const previous=plan.actions.find(row=>row.id===id);return `<button class="plan-list" data-plan-node="${h(id)}">${h(previous?goalActionLabel(previous):id)} · 前置动作</button>`;}).join('')}${reasonList(action.reasons)}
       <h4>计划执行器</h4><p>${h(action.declaration.executor.executor)}</p>
       <details><summary>声明参数与未来产物（非当前实体）</summary><pre>${h(JSON.stringify({parameters:action.declaration.executor.parameters,outputs:action.declaration.outputs},null,2))}</pre></details>
+      <details><summary>动作的计划资源需求与收支</summary><pre>${h(JSON.stringify({demands:action.declaration.demands,flows:action.declaration.flows,cost:action.declaration.cost},null,2))}</pre></details>
       <h4>正式执行记录</h4>
       ${execution ? `<p>${h(execution.executor)} · ${h(execution.phase)} · ${h(stageLabel(execution.status))}<br>${h(execution.token.actionId)} #${execution.token.generation}</p>` : '<p class="plan-muted">未记录执行回执。就绪或计划绑定不等于已经执行。</p>'}
       <p>${assignments.length} 名正式分配</p>${assignments.map(row => `<p class="plan-unit-ids">${h(row.unitId)} · ${h(stageLabel(row.stage))}${row.interruption ? ' · 救命中断，当前不可用' : ''}</p>`).join('')}
+      <h4>同代次正式预算</h4>${budgets.map(row=>`<p>${h(row.spendId)} · ${h(row.state)}<br>额度 ${number(row.amountGold)} 金 · 已支付 ${number(row.paidGold)} 金</p>`).join('')||'<p class="plan-muted">未记录正式预算。</p>'}
       <h4>本次命令接纳记录</h4>${receipts.map(row=>`<p>${h(row.source)} · ${h(row.executor)} · ${h(row.commandId)}<br>${row.status==='accepted'?`已接纳于 ${clock(row.admittedTick)} · 排队时刻 ${row.queuedTick==null?'—':clock(row.queuedTick)}`:`拒绝 · ${h(row.reason.reason)}`}</p>`).join('')||'<p class="plan-muted">本次未记录同代次接纳回执。</p>'}<p class="plan-muted">命令接纳与排队不证明已生效，效果仍看世界事实。</p>
       <h4>预计与结果</h4><p>预计 ${action.startTick == null ? '—' : clock(action.startTick)} → ${action.finishTick == null ? '—' : clock(action.finishTick)}</p>
       <p>${action.state === 'world-effects-met' ? '世界效果已观测；证据见相应事实节点。' : '效果尚未证实，不从命令接受推断完成。'}</p>`;
