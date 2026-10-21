@@ -4,6 +4,7 @@ import { shareShipProfile } from '../../shared/ship-geometry';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { reservedAllocationGold } from './allocation-ledger';
+import { createArrivalPlanningPhysics } from './arrival-planning-physics';
 import { createArrivalQuery } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { decisionProjection } from './explanations';
@@ -63,13 +64,29 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
     const work = input.work ?? currentFactWork() ?? new FactWorkQueue(snapshot.tick, 6144, preparation.factWork, beginObservationThink(preparation));
     return withFactWork(work, () => {
       const regions = regionIndex(snapshot.map), distances = createPlanningDistanceQuery(snapshot, 1, 'land', preparation);
-      const arrivals = createArrivalQuery(snapshot, owner, memory, distances, 1, regions, preparation, false);
+      const geometry = createGoalGeometryReader({ tick: snapshot.tick, work,
+        memory: preparation.goalGeometry ??= { version: 1, entries: [] } });
+      const geometryRevision = goalValueKey([preparation.terrain, preparation.landBodies,
+        snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])]);
+      const landRoute: import('./allocation-arrival-query').AllocationLandRouteReader = (from, goal) => {
+        const published = distances.field(goal);
+        if (!published) return { status: 'unknown', reasonCode: 'goal-land-route-pending' };
+        const distance = published.field.cost(from), points = published.field.road(from, goal);
+        return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'goal-land-route-unreachable' }
+          : { status: 'known', distance, points };
+      };
+      const arrivalPhysics = createArrivalPlanningPhysics({ snapshot, geometry, geometryRevision, landRoute });
+      const arrivals = createArrivalQuery(snapshot, owner, memory, distances, 1, regions, preparation, false, arrivalPhysics);
+      const projectGround = (point: { x: number; y: number }, mover: 'land' | 'sea') => {
+        const result = arrivalPhysics.ground({ kind: 'project-goal', point, mover });
+        return result.state === 'met' ? result.value : undefined;
+      };
       // This is the sole Situation evaluation. In an actual owner think the
       // caller supplies the ordinary planner's accepted healing observations;
       // an isolated cold frame has none, and never previews old selectors.
       const observed = decisionProjection(() => {
         const situation = evaluateSituation(snapshot, owner, memory, observationHistory(preparation),
-          snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances, arrivals });
+          snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances, arrivals, projectGround });
         const objectives = input.objectives ?? (input.goals === undefined
           ? generateStrategyObjectives(situation, { snapshot, owner, memory, ...(snapshot.teams ? { teams: snapshot.teams } : {}) }, preparation.history?.objectives)
             .map(entry => entry.objective) : []);
@@ -81,10 +98,6 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         retained = { version: 1, owner, world: createGoalWorldFactMemory(owner) };
         memory.goalPlanning = retained;
       }
-      const geometry = createGoalGeometryReader({ tick: snapshot.tick, work,
-        memory: preparation.goalGeometry ??= { version: 1, entries: [] } });
-      const geometryRevision = goalValueKey([preparation.terrain, preparation.landBodies,
-        snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])]);
       const regionAt = (point: { x: number; y: number }, mover: 'land' | 'sea') => mover === 'land'
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
@@ -94,13 +107,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         ...(input.allowedUnitIds === undefined ? {} : { allowedUnitIds: input.allowedUnitIds }),
         ...(input.interruptedUnitIds === undefined ? {} : { interruptedUnitIds: input.interruptedUnitIds }),
         ports: { geometry, geometryRevision, regionAt, reservedGold,
-          landRoute: (from, goal) => {
-            const published = distances.field(goal);
-            if (!published) return { status: 'unknown', reasonCode: 'goal-land-route-pending' };
-            const distance = published.field.cost(from), points = published.field.road(from, goal);
-            return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'goal-land-route-unreachable' }
-              : { status: 'known', distance, points };
-          },
+          landRoute,
           seaRoute: (predicate, actor) => {
             const fact = goalFact(predicate), ship = { ...actor, sailing: { ...actor.sailing!,
               heading: predicate.fromHeading ?? actor.sailing?.heading ?? 0 } };
@@ -139,7 +146,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       };
       const physical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
         regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
-        readFact: read, resolveCohort, productionOptions: economy.productionOptions,
+        readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground,
         readPointRoute: (ship, from, to, future) => {
           const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
           shareShipProfile(ship, pose);

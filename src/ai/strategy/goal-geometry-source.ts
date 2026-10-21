@@ -1,3 +1,4 @@
+import { fnv1a } from '../../shared/sim/checksum';
 import { factPublicationPending, type FactWorkQueue } from './fact-work';
 import { goalValueKey } from './goal-facts';
 import type { GoalGeometryMemory, GoalGeometryReader, GoalPublishedValue } from './goal-grounding-ports';
@@ -19,6 +20,7 @@ export function createGoalGeometryReader(input: Readonly<{
   boundGoalGeometryMemory(memory);
   return request => {
     const requestId = `goal-geometry:${goalValueKey([request.key, request.revision])}`;
+    work.consume(requestId);
     const pending = (code: string, requestedTick = tick): GoalPublishedValue<never> => ({
       state: 'pending', requestIds: [requestId],
       reason: { code, factIds: [requestId], values: { requestedTick, tick } },
@@ -41,7 +43,9 @@ export function createGoalGeometryReader(input: Readonly<{
       // alter a published fact or another counterfactual's cursor through it.
       return { state: 'met', value: structuredClone(record.value) as never, factIds: [requestId] };
     }
-    work.register({ key: requestId, tier: 'background-field', minimum: 1, run: allowance => {
+    // The full semantic ID remains the task key. The receipt label is only a
+    // diagnostic summary, as for native point-route work.
+    work.register({ key: requestId, reportKey: `goal-geometry:${fnv1a(requestId)}`, tier: 'background-field', minimum: 1, run: allowance => {
       if (!memory.entries.includes(record)) return { work: 0, done: true };
       const slice = Math.min(SLICE, allowance);
       let result: ReturnType<typeof request.advance>;

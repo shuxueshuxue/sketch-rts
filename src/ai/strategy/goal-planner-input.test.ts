@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
@@ -78,4 +80,17 @@ it('advances owner publication through JSON thinks while the complete native sna
   expect(ready).toBe(true);
   expect(JSON.stringify(snapshot)).toBe(before);
   expect(memory.strategyAllocation).toBeUndefined();
+});
+
+it('keeps continued native cross-sea observations inside the shared physical facts on later frozen thinks', () => {
+  const frame: { snapshot: import('../../shared/types').GameSnapshot; owner: string; memory: AiPolicyMemory } = JSON.parse(gunzipSync(readFileSync(
+    new URL('./fixtures/sapphire-control-p4-4180.json.gz', import.meta.url))).toString());
+  const before = JSON.stringify(frame.snapshot);
+  let memory = frame.memory ?? createAiPolicyMemory();
+  for (let think = 0; think < 6; think++) {
+    strict(() => planOwnerGoals({ snapshot: frame.snapshot, owner: frame.owner, version: 'v9_summoner', memory }));
+    expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    expect(JSON.stringify(frame.snapshot)).toBe(before);
+    memory = JSON.parse(JSON.stringify(memory));
+  }
 });

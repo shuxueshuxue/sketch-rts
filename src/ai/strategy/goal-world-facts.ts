@@ -1,3 +1,5 @@
+import { currentFactWork } from './fact-work';
+import { planningFieldKey } from './distance-fields';
 import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
 import { GOLD_MINE_RULES } from '../../shared/mining';
@@ -83,7 +85,8 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
   function measure(fact: GoalFact): GoalFactObservation | null {
     const p = fact.predicate;
     if (p.kind === 'route') {
-      const actor = p.actor?.kind === 'existing' ? own.find(unit => p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
+      // Physical routes may describe an opponent; commanding remains restricted to owned leases.
+      const actor = p.actor?.kind === 'existing' ? snapshot.units.find(unit => unit.hp > 0 && p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
       if (p.actor && !actor) return answer(fact, false, 'route-actor-not-available', p.actor);
       if (actor && unitMover(actor.kind) !== p.mover) return answer(fact, false, 'route-actor-mover-mismatch', unitRevision(actor));
       if (p.mover === 'sea') return actor && ports.seaRoute ? ports.seaRoute(p, actor)
@@ -177,6 +180,8 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
     return null;
   }
   function read(fact: GoalFact): GoalFactObservation {
+    if (fact.predicate.kind === 'route' && fact.predicate.mover === 'land')
+      currentFactWork()?.consume(planningFieldKey('land', fact.predicate.to.point));
     const previous = memo.get(fact.id);
     if (previous) return previous;
     const value = readGoalEconomicFact(fact, context, ports) ?? measure(fact)

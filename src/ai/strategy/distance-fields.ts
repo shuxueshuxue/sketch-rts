@@ -5,11 +5,14 @@ import { OBSERVATION_FIELD_LIMIT, type StrategyObservationMemory } from './obser
 import { currentFactWork, factPublicationPending } from './fact-work';
 import { withFactNavigation } from '../../shared/navigation-audit';
 
+export const planningFieldKey = (mover: Mover, goal: Point) => `field:${mover}:${goal.x}:${goal.y}`;
+
 export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget = Infinity, mover: Mover = 'land', observation?: StrategyObservationMemory) {
   let built = 0, deferred = 0, work = 0;
   const queries = new Map<number, Map<number, { field: GroundDistanceField; builtTick: number } | null>>();
   return {
     field(goal: Point) {
+      currentFactWork()?.consume(planningFieldKey(mover, goal));
       let row = queries.get(goal.y); if (!row) queries.set(goal.y, row = new Map());
       if (row.has(goal.x)) return row.get(goal.x)!;
       const entries = observation?.fields[mover];
@@ -32,7 +35,7 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
         const queue = currentFactWork();
         if (queue) {
           const progress = entry;
-          queue.register({ key: `field:${mover}:${goal.x}:${goal.y}`, minimum: 1,
+          queue.register({ key: planningFieldKey(mover, goal), goal, minimum: 1,
             tier: progress.work > 0 ? 'existing-field' : 'background-field',
             run(allowance) {
               const before = progress.work;

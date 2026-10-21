@@ -76,6 +76,8 @@ export type SituationPhysicalQueries = Readonly<{
   regions: RegionIndex;
   distances: ReturnType<typeof createPlanningDistanceQuery>;
   arrivals: ReturnType<typeof createArrivalQuery>;
+  /** Published projection only; undefined is pending, never a native fallback. */
+  projectGround?: (point: { x: number; y: number }, mover: 'land' | 'sea') => { x: number; y: number } | undefined;
 }>;
 
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
@@ -88,6 +90,13 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const regions = physical?.regions ?? regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
   const distances = physical?.distances ?? createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
   const query = physical?.arrivals ?? createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
+  const projected = new Map<string, { x: number; y: number } | undefined>();
+  const ground = (point: { x: number; y: number }, mover: 'land' | 'sea' = 'land') => {
+    const key = `${mover}:${point.x}:${point.y}`;
+    if (!projected.has(key)) projected.set(key, physical?.projectGround ? physical.projectGround(point, mover) : walkableGoal(snapshot.map, point.x, point.y, mover));
+    return projected.get(key);
+  };
+  const projectedLand = (point: { x: number; y: number }) => { const value = ground(point); return value && landIdAt(snapshot.map, value); };
   const { liveUnits: live, live: byId } = snapshotUnitIndex(snapshot);
   const locations = new Map<string, SituationUnit['location']>();
   for (const unit of live) locations.set(unit.id, unitLocation(snapshot.map, unit, byId, tick));
@@ -116,7 +125,8 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const target = (entity: { id: string; x: number; y: number; kind?: string }): Target => {
     const known = targetCache.get(entity.id); if (known) return known;
     const landId = landIdAt(snapshot.map, entity);
-    const seaId = seaIdAt(snapshot.map, entity.kind === 'shipyard' ? walkableGoal(snapshot.map, entity.x, entity.y, 'sea') : entity);
+    const seaPoint = entity.kind === 'shipyard' ? ground(entity, 'sea') : entity;
+    const seaId = seaPoint && seaIdAt(snapshot.map, seaPoint);
     const result = { entityId: entity.id, point: point(entity), ...(landId ? { landId } : {}), ...(seaId ? { seaId } : {}) };
     targetCache.set(entity.id, result); return result;
   };
@@ -215,7 +225,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     && distance(unit, site.target.point) <= unit.speed * threatWindow(unit, site.id) / SIM_TICKS_PER_SECOND + 240) || live.some(unit => foe(unit.owner) && (unitMover(unit.kind) === 'sea' && weapon(unit).armed
       && distance(unit, site.target.point) <= weapon(unit).range || (unit.deck || unit.cabin)
       && (() => { const ship = byId.get(unit.deck?.shipId ?? unit.cabin!.shipId);
-        return ship?.order.type === 'unload' && landIdAt(snapshot.map, walkableGoal(snapshot.map, ship.order.x, ship.order.y)) === site.target.landId; })()))).map(site => site.id));
+        return ship?.order.type === 'unload' && projectedLand(ship.order) === site.target.landId; })()))).map(site => site.id));
   const targets = new Map<string, Target>(sites.filter(site => !bounded || urgentSites.has(site.id)
     || site.kind === 'hall' && urgentSites.size > 0).map(site => [site.id, site.target]));
   for (const entity of [...snapshot.resources, ...snapshot.buildings]) if (retainedIds.has(entity.id)) targets.set(entity.id, target(entity));
@@ -342,7 +352,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
       arrival: { status: 'unknown', reason: deferredRecord({ code: 'threat-geometry-refresh-pending', detail: 'Coarse same-land threat candidate; arrival field is pending, not confirmed inside the response window', evidence: [] }) } });
     for (const passenger of live.filter(unit => foe(unit.owner) && unit.kind !== 'worker' && unit.attackDamage > 0 && (unit.deck || unit.cabin))) {
       const boat = byId.get(passenger.deck?.shipId ?? passenger.cabin!.shipId);
-      if (!boat || boat.order.type !== 'unload' || landIdAt(snapshot.map, walkableGoal(snapshot.map, boat.order.x, boat.order.y)) !== land) continue;
+      if (!boat || boat.order.type !== 'unload' || projectedLand(boat.order) !== land) continue;
       const arrival = query.arrival(passenger, site.target);
       if ('ticks' in arrival && arrival.ticks <= STRATEGY_PARAMETERS.knownThreatHorizonTicks || arrival.status === 'unknown')
         attackers.push({ unitId: passenger.id, strength: strength(passenger), arrival });

@@ -85,7 +85,8 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
         for (const step of path.steps) { step.startTick += delta; step.finishTick += delta; }
     }
     const beforeWork = state.expansions;
-    work.register({ key: `goal-search:${goal.id}`, tier: 'critical-route', minimum: 1, run: allowance => {
+    work.withConsumer(goal.id, previous?.plan.valueGold ?? null, () => work.register({ key: `goal-search:${goal.id}`,
+      kind: 'search', tier: 'critical-route', minimum: 1, run: allowance => {
       let used = 0;
       while (used < Math.min(allowance, 64) && state.phase !== 'done') {
         if (state.expansions >= input.limits.maxExpansions) { state.limitReason = 'expansion-limit'; state.phase = 'done'; break; }
@@ -94,7 +95,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
         state.expansions++; used++;
       }
       return { work: used, done: state.phase === 'done' };
-    } });
+    } }));
     runs.push({ goal, goalKey, state, beforeWork });
   }
   // Register every goal before flushing, so an earlier goal cannot spend the
@@ -309,7 +310,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
       ? alternative.costGold !== null && alternative.costGold > path.cost ? 'goal-alternative-cost-above-plan' : 'goal-alternative-not-in-selected-plan'
       : 'goal-alternative-search-unresolved', [alternative.factId], { selectedCostGold: path?.cost ?? null }) }));
   return { id: `goal-plan:${goal.id}`, goal, observedTick: input.context.tick,
-    status: currentMet ? 'complete' : path ? profitable ? 'ready' : 'blocked' : state.phase !== 'done' || state.limitReason ? 'search-pending' : unresolved ? 'waiting-facts' : 'blocked',
+    status: currentMet ? 'complete' : path ? profitable ? 'ready' : 'blocked' : unresolved ? 'waiting-facts' : state.phase !== 'done' || state.limitReason ? 'search-pending' : 'blocked',
     facts: state.observed.map(observation => ({ id: observation.fact.id, observation,
       producerActionIds: path ? satisfies(observation.fact, path, state, input).producers : [] })),
     ...(state.deferred?.length ? { deferredCandidates: state.deferred } : {}),

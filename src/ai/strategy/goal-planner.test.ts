@@ -191,7 +191,7 @@ it('preserves deferred grounding as waiting evidence and retries its published a
     return ctx.grounding!.buildSites('townHall', fact.predicate.at).state === 'met' ? [action] : [];
   } };
   const configured = { ...input(), context: { ...context, grounding }, providers: [provider] };
-  const first = planGoals(configured);
+  const first = planGoals({ ...configured, work: new FactWorkQueue(0, 1) });
   expect(first.plans[0]!.status).toBe('waiting-facts'); expect(first.readyActions).toEqual([]);
   expect(first.plans[0]!.facts[0]!.observation.state).toBe('unmet'); // world truth was not changed
   expect(first.plans[0]!.deferredCandidates).toMatchObject([{ requestIds: ['shared-geometry:site'] }]);
