@@ -1,0 +1,381 @@
+{
+  "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+  "sharedBase": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+  "operation": "Original new native SDK members versus old original156; new157 is a real recorded call, not a reconstruction of the old failure.",
+  "cases": [
+    {
+      "variant": "far",
+      "provenance": {
+        "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+        "production": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+        "operation": "Original complete compressed members copied byte-for-byte from the ongoing native SDK run. No source replay, new facts, sim calls or reconstructed failed old attempt.",
+        "trace": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-f563cd5f/runtime/ship-away-far.jsonl.gz",
+        "capturedPrefixBytes": 36218891,
+        "capturedPrefixSha256": "80beda29f862a9afd22bb280e2926b1494af15f193079d3cec7185a7249f1fde",
+        "completedMembersAtCapture": 222,
+        "partialTailBytes": 0,
+        "originalRunOngoing": true,
+        "members": [
+          {
+            "think": 156,
+            "tick": 2340,
+            "file": "far-think156.jsonl.gz",
+            "offset": 24664859,
+            "bytes": 216206,
+            "sha256": "8fccc46b63cae9f740b9720d252eeb4ee29b42a89bf8ed922ca28358c19ef618",
+            "plainSha256": "173ad4760b86d68e152514e21cf2c1a08f4dbc4add1423b383c3972a14537174"
+          },
+          {
+            "think": 157,
+            "tick": 2355,
+            "file": "far-think157.jsonl.gz",
+            "offset": 24881065,
+            "bytes": 216101,
+            "sha256": "7a35e352956c275cd96c3b63e8d6bf79a50a6e224d093a098a8b2e78ffe1b6aa",
+            "plainSha256": "617e28e70af64811074e3684da28abe80031f2159fcf9aaabd9707a12f858711"
+          },
+          {
+            "think": 196,
+            "tick": 2940,
+            "file": "far-think196.jsonl.gz",
+            "offset": 32188634,
+            "bytes": 124921,
+            "sha256": "5e93cf86c408d5175d79fbe610571626a214c837b3341baa43b9f3c3d721aeb0",
+            "plainSha256": "5e3f3e67c57fffe98a610c374831bc4d3fd5b94c22f5ac7c256721f8dec512af"
+          }
+        ],
+        "actualThink156VersusOldActualThink156": {
+          "snapshot": true,
+          "work": true,
+          "output": true,
+          "commands": true
+        }
+      },
+      "nativeByteSummary": [
+        {
+          "think": 156,
+          "tick": 2340,
+          "work": 5517,
+          "authorityBytes": 91712,
+          "executions": 5,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.assemble:complete": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 1,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 156,
+            "pinnedBytes": 6324,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8216,
+            "peakResidentBytes": 19244,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "ready",
+              "search": {
+                "expansions": 708,
+                "depth": 6,
+                "work": 1416,
+                "limitReason": null
+              },
+              "actions": 11,
+              "factStates": {
+                "met": 204,
+                "unmet": 70
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        },
+        {
+          "think": 157,
+          "tick": 2355,
+          "work": 5517,
+          "authorityBytes": 92904,
+          "executions": 5,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.assemble:complete": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 1,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 157,
+            "pinnedBytes": 6324,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8216,
+            "peakResidentBytes": 19244,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "ready",
+              "search": {
+                "expansions": 708,
+                "depth": 6,
+                "work": 1416,
+                "limitReason": null
+              },
+              "actions": 11,
+              "factStates": {
+                "met": 204,
+                "unmet": 70
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        },
+        {
+          "think": 196,
+          "tick": 2940,
+          "work": 6144,
+          "authorityBytes": 108015,
+          "executions": 5,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.assemble:complete": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 1,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 196,
+            "pinnedBytes": 6852,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8452,
+            "peakResidentBytes": 25108,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 457,
+                "depth": 3,
+                "work": 2743,
+                "limitReason": null
+              },
+              "actions": 0,
+              "factStates": {
+                "met": 130,
+                "unmet": 62
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variant": "near",
+      "provenance": {
+        "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+        "production": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+        "operation": "Original complete compressed members copied byte-for-byte from the ongoing native SDK run. No source replay, new facts, sim calls or reconstructed failed old attempt.",
+        "trace": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-f563cd5f/runtime/ship-away-near.jsonl.gz",
+        "capturedPrefixBytes": 77695078,
+        "capturedPrefixSha256": "ccc4e7d0ceceade76d2ebb78044a933ac9b882d6782dfb6a13598d1aa561787e",
+        "completedMembersAtCapture": 400,
+        "partialTailBytes": 0,
+        "originalRunOngoing": true,
+        "members": [
+          {
+            "think": 156,
+            "tick": 2340,
+            "file": "near-think156.jsonl.gz",
+            "offset": 24260831,
+            "bytes": 199938,
+            "sha256": "bafeaec7921016a3aacf483d25346e6fdb45ff08f2c81f71ac682c7ccd11a372",
+            "plainSha256": "c813f49b2ac90b04d0098621312f0d78ca2d31eedaac49ca8c77646c34fc09d5"
+          },
+          {
+            "think": 157,
+            "tick": 2355,
+            "file": "near-think157.jsonl.gz",
+            "offset": 24460769,
+            "bytes": 199279,
+            "sha256": "f085b2d1e2f4ae325f459b49fa1a0fb34a5b0a4ff7a4d49d18e059491c64f01c",
+            "plainSha256": "52b557b71b955c54acbd560b1a20dcc892fe9e7a90bb904a97134ca71e64db12"
+          },
+          {
+            "think": 196,
+            "tick": 2940,
+            "file": "near-think196.jsonl.gz",
+            "offset": 32204375,
+            "bytes": 216188,
+            "sha256": "64a66b9b581f087ade6efbc37cab9230aecabe74743bb09eae28923aa6b303a6",
+            "plainSha256": "c334ac11f6a262a1bb71b94faedeeb5984e2ccd0806a437c38c05fae953b0324"
+          }
+        ],
+        "actualThink156VersusOldActualThink156": {
+          "snapshot": true,
+          "work": true,
+          "output": true,
+          "commands": true
+        }
+      },
+      "nativeByteSummary": [
+        {
+          "variant": "near",
+          "think": 156,
+          "tick": 2340,
+          "work": 5517,
+          "authorityBytes": 91018,
+          "executions": 5,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.assemble:complete": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 1,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 156,
+            "pinnedBytes": 6324,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8216,
+            "peakResidentBytes": 19244,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "ready",
+              "search": {
+                "expansions": 708,
+                "depth": 6,
+                "work": 1416,
+                "limitReason": null
+              },
+              "actions": 11,
+              "factStates": {
+                "met": 204,
+                "unmet": 70
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        },
+        {
+          "variant": "near",
+          "think": 157,
+          "tick": 2355,
+          "work": 5517,
+          "authorityBytes": 92211,
+          "executions": 5,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.assemble:complete": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 1,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 157,
+            "pinnedBytes": 6324,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8216,
+            "peakResidentBytes": 19244,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "ready",
+              "search": {
+                "expansions": 708,
+                "depth": 6,
+                "work": 1416,
+                "limitReason": null
+              },
+              "actions": 11,
+              "factStates": {
+                "met": 204,
+                "unmet": 70
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        },
+        {
+          "variant": "near",
+          "think": 196,
+          "tick": 2940,
+          "work": 5626,
+          "authorityBytes": 120099,
+          "executions": 6,
+          "executionStatuses": {
+            "goal.assemble:blocked": 1,
+            "goal.position-transport:active": 1,
+            "goal.position-transport:blocked": 3,
+            "goal.wait-income:active": 1
+          },
+          "geometryCapacity": {
+            "mode": "bounded",
+            "maxBytes": 33776,
+            "maxEntries": 38,
+            "thinkSequence": 196,
+            "pinnedBytes": 6852,
+            "pinnedEntries": 7,
+            "peakPinnedBytes": 8452,
+            "peakResidentBytes": 26397,
+            "overflowCount": 0
+          },
+          "plans": [
+            {
+              "status": "ready",
+              "search": {
+                "expansions": 762,
+                "depth": 6,
+                "work": 1524,
+                "limitReason": null
+              },
+              "actions": 11,
+              "factStates": {
+                "met": 215,
+                "unmet": 83
+              },
+              "deferred": {
+                "combat-candidate-facts-pending": 1
+              },
+              "pendingEstimates": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

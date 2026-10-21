@@ -1,0 +1,1316 @@
+{
+  "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+  "sharedBase": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+  "semantics": "Pure extraction of original native frames. First accepted command proves actual gateway admission and matching returned SDK entry/token; it is not completion of the stage. wait-income is separate and has no native command. Physical milestones are the unchanged original verdict result. No planner/source/sim calls.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "thinkCount": 560,
+      "firstAcceptedByKind": {
+        "assemble": {
+          "think": 9,
+          "tick": 135,
+          "executor": "goal.assemble",
+          "admission": {
+            "commandId": "planner:strategy-command:135:9:0",
+            "source": "executor",
+            "executor": "goal.assemble",
+            "action": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "generation": 2
+            },
+            "allocationRevision": 9,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "x": 1488,
+              "y": 688,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 135,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "generation": 2
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.assemble",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "actionKind": "assemble",
+              "parameters": {
+                "cohort": [
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-1"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-2"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-3"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-4"
+                  }
+                ],
+                "from": {
+                  "landId": "land:1",
+                  "point": {
+                    "x": 1184,
+                    "y": 704
+                  }
+                },
+                "at": {
+                  "landId": "land:1",
+                  "point": {
+                    "x": 1488,
+                    "y": 688
+                  }
+                },
+                "byTick": 12135,
+                "fromScope": "pool"
+              },
+              "outputs": []
+            },
+            "target": {
+              "landId": "land:1",
+              "point": {
+                "x": 1488,
+                "y": 688
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "assembling",
+            "sinceTick": 135,
+            "lastProgressTick": 135,
+            "state": {}
+          }
+        },
+        "position-transport": {
+          "think": 11,
+          "tick": 165,
+          "executor": "goal.position-transport",
+          "admission": {
+            "commandId": "planner:strategy-command:165:11:2",
+            "source": "executor",
+            "executor": "goal.position-transport",
+            "action": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "generation": 3
+            },
+            "allocationRevision": 11,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "unit-planner-transport-1000"
+              ],
+              "x": 112,
+              "y": 944,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 165,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "generation": 3
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.position-transport",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "actionKind": "position-transport",
+              "parameters": {
+                "transport": {
+                  "kind": "existing",
+                  "entityId": "unit-planner-transport-1000"
+                },
+                "at": {
+                  "seaId": "sea:1",
+                  "point": {
+                    "x": 112,
+                    "y": 944
+                  }
+                },
+                "tolerance": 36,
+                "byTick": 12165,
+                "dependentUnitIds": []
+              },
+              "outputs": []
+            },
+            "target": {
+              "seaId": "sea:1",
+              "point": {
+                "x": 112,
+                "y": 944
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "positioning",
+            "sinceTick": 165,
+            "lastProgressTick": 165,
+            "state": {}
+          }
+        }
+      },
+      "acceptedCommandCountsByKind": {
+        "assemble": 25,
+        "position-transport": 4
+      },
+      "firstWaitIncomeExecution": {
+        "think": 6,
+        "tick": 90,
+        "executions": [
+          {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:action:wait-income:fact:{\"byTick\":12090,\"kind\":\"gold\",\"minimum\":400}",
+              "generation": 1
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.wait-income",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "action:wait-income:fact:{\"byTick\":12090,\"kind\":\"gold\",\"minimum\":400}",
+              "actionKind": "wait-income",
+              "parameters": {
+                "minimumGold": 400,
+                "byTick": 12090
+              },
+              "outputs": []
+            },
+            "target": {
+              "entityId": "resource-1",
+              "point": {
+                "x": 2976,
+                "y": 896
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "waiting-for-free-gold",
+            "sinceTick": 90,
+            "lastProgressTick": 90,
+            "state": {}
+          }
+        ]
+      },
+      "physicalMilestones": {
+        "farm-complete": 1465,
+        "shipyard-complete": 2799
+      },
+      "physicalChecks": {
+        "islandHallComplete": false,
+        "campCleared": false,
+        "armyTransported": false,
+        "safeWorkerSequence": false
+      },
+      "finalPlans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "reasons": [
+            {
+              "code": "goal-plan-net-nonpositive",
+              "factIds": [],
+              "values": {
+                "valueGold": -72.70344238829671
+              }
+            }
+          ],
+          "selected": [
+            {
+              "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":912},\"seaId\":\"sea:1\"},\"byTick\":20400,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "kind": "position-transport",
+              "state": "ready",
+              "refinementState": "known",
+              "unmetPreconditions": []
+            },
+            {
+              "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1584,\"y\":656}},\"byTick\":18705,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1599.9999999999998,\"y\":680.0067682139004}},\"fromScope\":\"pool\"}",
+              "kind": "assemble",
+              "state": "ready",
+              "refinementState": "known",
+              "unmetPreconditions": []
+            },
+            {
+              "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1584,\"y\":656},\"seaId\":\"sea:1\"},\"byTick\":20400,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "kind": "position-transport",
+              "state": "waiting-time",
+              "refinementState": "known",
+              "unmetPreconditions": []
+            },
+            {
+              "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1584,\"y\":656},\"heading\":0.7853981633974483,\"water\":{\"x\":1584,\"y\":656}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1599.9999999999998,\"y\":680.0067682139004}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":4.71238898038469,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1584,\"y\":656}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1599.9999999999998,\\\"y\\\":680.0067682139004}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1021\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1027\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1035\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1038\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1044\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1056\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":1140,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "kind": "transport-force",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":656},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "predicate": {
+                    "kind": "transport-at",
+                    "transport": {
+                      "kind": "existing",
+                      "entityId": "unit-planner-transport-1000"
+                    },
+                    "at": {
+                      "seaId": "sea:1",
+                      "point": {
+                        "x": 1584,
+                        "y": 656
+                      }
+                    },
+                    "tolerance": 36,
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-transport-pose",
+                    "factIds": [
+                      "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":656},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+                    ],
+                    "values": {}
+                  }
+                }
+              ]
+            },
+            {
+              "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+              "kind": "assemble",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}",
+                  "predicate": {
+                    "kind": "force-available",
+                    "at": {
+                      "landId": "land:2",
+                      "point": {
+                        "x": 2960,
+                        "y": 304
+                      }
+                    },
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ],
+                    "metric": "combat-rating",
+                    "byTick": 20400,
+                    "minimum": 11.403532048618011
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":4,\"kind\":\"unit-available\",\"unitKind\":\"footman\"}",
+                  "predicate": {
+                    "kind": "unit-available",
+                    "unitKind": "footman",
+                    "count": 4,
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-callable-region-pool",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":4,\"kind\":\"unit-available\",\"unitKind\":\"footman\"}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":6,\"kind\":\"unit-available\",\"unitKind\":\"lancer\"}",
+                  "predicate": {
+                    "kind": "unit-available",
+                    "unitKind": "lancer",
+                    "count": 6,
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-callable-region-pool",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":6,\"kind\":\"unit-available\",\"unitKind\":\"lancer\"}"
+                    ],
+                    "values": {}
+                  }
+                }
+              ]
+            },
+            {
+              "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+              "kind": "clear-camp",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"camp-force\",\"minimum\":2.554819263267845}",
+                  "predicate": {
+                    "kind": "force-at",
+                    "at": {
+                      "landId": "land:2",
+                      "point": {
+                        "x": 2786.7441144910053,
+                        "y": 896.3971192686356
+                      }
+                    },
+                    "minimum": 2.554819263267845,
+                    "metric": "camp-force",
+                    "campId": "camp:[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]",
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ],
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"camp-force\",\"minimum\":2.554819263267845}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":0}",
+                  "predicate": {
+                    "kind": "force-available",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "metric": "combat-rating",
+                    "minimum": 0,
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ],
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":0}"
+                    ],
+                    "values": {}
+                  }
+                }
+              ]
+            },
+            {
+              "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-worker-1010\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-worker-1019\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-worker-1024\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1552,\"y\":912},\"heading\":1.5707963267948966,\"water\":{\"x\":1552,\"y\":912}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":656,\"y\":943}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":4.71238898038469,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":656,\\\"y\\\":943}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-worker-1010\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-worker-1019\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-worker-1024\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":450,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "kind": "transport-worker",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"point\":{\"x\":1552,\"y\":912},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "predicate": {
+                    "kind": "transport-at",
+                    "transport": {
+                      "kind": "existing",
+                      "entityId": "unit-planner-transport-1000"
+                    },
+                    "at": {
+                      "seaId": "sea:1",
+                      "point": {
+                        "x": 1552,
+                        "y": 912
+                      }
+                    },
+                    "tolerance": 36,
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-transport-pose",
+                    "factIds": [
+                      "fact:{\"at\":{\"point\":{\"x\":1552,\"y\":912},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}",
+                  "predicate": {
+                    "kind": "site-safe",
+                    "site": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "throughTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "coarse-safety-observed-window-bound",
+                    "factIds": [
+                      "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":10800}",
+                      "fact:{\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"kind\":\"camp-cleared\"}"
+                    ],
+                    "values": {
+                      "precision": "coarse",
+                      "requestedThroughTick": 20400,
+                      "observedThroughTick": 10800
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":20400,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":20400,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":20400}\"]]",
+              "kind": "build",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":1,\"kind\":\"worker-at\"}",
+                  "predicate": {
+                    "kind": "worker-at",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "count": 1,
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-callable-region-pool",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":1,\"kind\":\"worker-at\"}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}",
+                  "predicate": {
+                    "kind": "site-safe",
+                    "site": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "throughTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "coarse-safety-observed-window-bound",
+                    "factIds": [
+                      "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":10800}",
+                      "fact:{\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"kind\":\"camp-cleared\"}"
+                    ],
+                    "values": {
+                      "precision": "coarse",
+                      "requestedThroughTick": 20400,
+                      "observedThroughTick": 10800
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"fromScope\":\"post\"}",
+              "kind": "assemble",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}",
+                  "predicate": {
+                    "kind": "force-at",
+                    "at": {
+                      "landId": "land:2",
+                      "point": {
+                        "x": 2786.7441144910053,
+                        "y": 896.3971192686356
+                      }
+                    },
+                    "minimum": 11.403532048618011,
+                    "metric": "combat-rating",
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ],
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2786.7441144910053,\"y\":896.3971192686356}},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":4,\"kind\":\"unit-available\",\"unitKind\":\"footman\"}",
+                  "predicate": {
+                    "kind": "unit-available",
+                    "unitKind": "footman",
+                    "count": 4,
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-callable-region-pool",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":4,\"kind\":\"unit-available\",\"unitKind\":\"footman\"}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":6,\"kind\":\"unit-available\",\"unitKind\":\"lancer\"}",
+                  "predicate": {
+                    "kind": "unit-available",
+                    "unitKind": "lancer",
+                    "count": 6,
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-callable-region-pool",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"count\":6,\"kind\":\"unit-available\",\"unitKind\":\"lancer\"}"
+                    ],
+                    "values": {}
+                  }
+                }
+              ]
+            },
+            {
+              "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":20400}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":20400,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1021\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1027\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1035\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1038\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1044\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1056\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":11.403532048618011}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":20400,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1021\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1027\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1035\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1038\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1044\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1056\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":20400}\\\"]]\"]",
+              "kind": "hold-position",
+              "state": "waiting-actions",
+              "refinementState": null,
+              "unmetPreconditions": [
+                {
+                  "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}",
+                  "predicate": {
+                    "kind": "force-at",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "minimum": 11.403532048618011,
+                    "byTick": 20400,
+                    "metric": "combat-rating",
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ]
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-at\",\"metric\":\"combat-rating\",\"minimum\":11.403532048618011}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+                  "predicate": {
+                    "kind": "hall-complete",
+                    "mineId": "resource-1",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    }
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "native-mine-hall-missing",
+                    "factIds": [
+                      "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":0}",
+                  "predicate": {
+                    "kind": "force-available",
+                    "at": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "metric": "combat-rating",
+                    "minimum": 0,
+                    "cohort": [
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-1"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-2"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-3"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "scene-public-planner-frame-planner-footman-4"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1021"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1027"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1035"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1038"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1044"
+                      },
+                      {
+                        "kind": "existing",
+                        "entityId": "unit-planner-lancer-1056"
+                      }
+                    ],
+                    "byTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "selected-cohort-not-at-location",
+                    "factIds": [
+                      "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":20400,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}],\"kind\":\"force-available\",\"metric\":\"combat-rating\",\"minimum\":0}"
+                    ],
+                    "values": {}
+                  }
+                },
+                {
+                  "factId": "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}",
+                  "predicate": {
+                    "kind": "site-safe",
+                    "site": {
+                      "entityId": "resource-1",
+                      "point": {
+                        "x": 2976,
+                        "y": 896
+                      },
+                      "landId": "land:2"
+                    },
+                    "throughTick": 20400
+                  },
+                  "state": "unmet",
+                  "reason": {
+                    "code": "coarse-safety-observed-window-bound",
+                    "factIds": [
+                      "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":10800}",
+                      "fact:{\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"kind\":\"camp-cleared\"}"
+                    ],
+                    "values": {
+                      "precision": "coarse",
+                      "requestedThroughTick": 20400,
+                      "observedThroughTick": 10800
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "pendingFacts": [],
+          "deferredCandidates": [
+            {
+              "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":20400}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1021\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1027\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1035\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1038\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1044\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1056\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1021\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1027\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1035\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1038\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1044\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1056\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\"]]",
+              "requestIds": [
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1044\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1056\",\"kind\":\"existing\"}]:crossing"
+              ],
+              "reason": {
+                "code": "combat-candidate-facts-pending",
+                "factIds": [
+                  "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}"
+                ],
+                "values": {}
+              },
+              "factId": "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}"
+            }
+          ]
+        }
+      ],
+      "inputSha256": "1bdc5b93a17a611809d30c1a11c0bee76e0db6b50dae76a75d2b1d278bf0a2fc"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "thinkCount": 560,
+      "firstAcceptedByKind": {
+        "assemble": {
+          "think": 9,
+          "tick": 135,
+          "executor": "goal.assemble",
+          "admission": {
+            "commandId": "planner:strategy-command:135:9:0",
+            "source": "executor",
+            "executor": "goal.assemble",
+            "action": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "generation": 2
+            },
+            "allocationRevision": 9,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ],
+              "x": 1488,
+              "y": 688,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 135,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "generation": 2
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.assemble",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12135,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+              "actionKind": "assemble",
+              "parameters": {
+                "cohort": [
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-1"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-2"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-3"
+                  },
+                  {
+                    "kind": "existing",
+                    "entityId": "scene-public-planner-frame-planner-footman-4"
+                  }
+                ],
+                "from": {
+                  "landId": "land:1",
+                  "point": {
+                    "x": 1184,
+                    "y": 704
+                  }
+                },
+                "at": {
+                  "landId": "land:1",
+                  "point": {
+                    "x": 1488,
+                    "y": 688
+                  }
+                },
+                "byTick": 12135,
+                "fromScope": "pool"
+              },
+              "outputs": []
+            },
+            "target": {
+              "landId": "land:1",
+              "point": {
+                "x": 1488,
+                "y": 688
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "assembling",
+            "sinceTick": 135,
+            "lastProgressTick": 135,
+            "state": {}
+          }
+        },
+        "position-transport": {
+          "think": 11,
+          "tick": 165,
+          "executor": "goal.position-transport",
+          "admission": {
+            "commandId": "planner:strategy-command:165:11:2",
+            "source": "executor",
+            "executor": "goal.position-transport",
+            "action": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "generation": 3
+            },
+            "allocationRevision": 11,
+            "purpose": "task",
+            "command": {
+              "type": "move",
+              "unitIds": [
+                "unit-planner-transport-1000"
+              ],
+              "x": 112,
+              "y": 944,
+              "avoidCombat": true
+            },
+            "status": "accepted",
+            "admittedTick": 165,
+            "queuedTick": null
+          },
+          "execution": {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "generation": 3
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.position-transport",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":944},\"seaId\":\"sea:1\"},\"byTick\":12165,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "actionKind": "position-transport",
+              "parameters": {
+                "transport": {
+                  "kind": "existing",
+                  "entityId": "unit-planner-transport-1000"
+                },
+                "at": {
+                  "seaId": "sea:1",
+                  "point": {
+                    "x": 112,
+                    "y": 944
+                  }
+                },
+                "tolerance": 36,
+                "byTick": 12165,
+                "dependentUnitIds": []
+              },
+              "outputs": []
+            },
+            "target": {
+              "seaId": "sea:1",
+              "point": {
+                "x": 112,
+                "y": 944
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "positioning",
+            "sinceTick": 165,
+            "lastProgressTick": 165,
+            "state": {}
+          }
+        }
+      },
+      "acceptedCommandCountsByKind": {
+        "assemble": 31,
+        "position-transport": 9
+      },
+      "firstWaitIncomeExecution": {
+        "think": 6,
+        "tick": 90,
+        "executions": [
+          {
+            "token": {
+              "actionId": "goal:ConquerIsland:planner:resource-1:action:wait-income:fact:{\"byTick\":12090,\"kind\":\"gold\",\"minimum\":400}",
+              "generation": 1
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.wait-income",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "action:wait-income:fact:{\"byTick\":12090,\"kind\":\"gold\",\"minimum\":400}",
+              "actionKind": "wait-income",
+              "parameters": {
+                "minimumGold": 400,
+                "byTick": 12090
+              },
+              "outputs": []
+            },
+            "target": {
+              "entityId": "resource-1",
+              "point": {
+                "x": 2976,
+                "y": 896
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "waiting-for-free-gold",
+            "sinceTick": 90,
+            "lastProgressTick": 90,
+            "state": {}
+          }
+        ]
+      },
+      "physicalMilestones": {
+        "transport-at-embark": 1,
+        "farm-complete": 1465,
+        "shipyard-complete": 2799,
+        "army-boarded": 6426
+      },
+      "physicalChecks": {
+        "islandHallComplete": false,
+        "campCleared": false,
+        "armyTransported": false,
+        "safeWorkerSequence": false
+      },
+      "finalPlans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "reasons": [
+            {
+              "code": "goal-required-facts-pending",
+              "factIds": [],
+              "values": {}
+            }
+          ],
+          "selected": [],
+          "pendingFacts": [],
+          "deferredCandidates": [
+            {
+              "id": "grounding:[\"goal:naval-and-defense\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":20400}\",[\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1021\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1027\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1035\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1038\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"unit-planner-lancer-1059\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1021\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1027\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1035\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1038\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1047\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\",\"combat-location:[{\\\"entityId\\\":\\\"unit-planner-lancer-1059\\\",\\\"kind\\\":\\\"existing\\\"}]:crossing\"]]",
+              "requestIds": [
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"},{\"entityId\":\"unit-planner-lancer-1059\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1021\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1027\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1035\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1038\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1047\",\"kind\":\"existing\"}]:crossing",
+                "combat-location:[{\"entityId\":\"unit-planner-lancer-1059\",\"kind\":\"existing\"}]:crossing"
+              ],
+              "reason": {
+                "code": "combat-candidate-facts-pending",
+                "factIds": [
+                  "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}"
+                ],
+                "values": {}
+              },
+              "factId": "fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"throughTick\":20400}"
+            }
+          ]
+        }
+      ],
+      "inputSha256": "224db337cf250915989dfd66d74a450223dc3e774653b8adbaea38b618772235"
+    }
+  ]
+}
