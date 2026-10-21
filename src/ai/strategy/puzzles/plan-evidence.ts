@@ -9,11 +9,26 @@ import type { PublicPuzzleCase } from './scenes';
  * terrain lease leaves it; the outside writer receives ordinary bytes only. */
 export function serializeScopedPlan(input: GoalPlannerInput, output: GoalPlannerOutput | undefined) {
   if (!process.env.SKETCH_PUZZLE_PLAN_EVIDENCE) return undefined;
+  const workAtPlan = structuredClone(input.work.receipt);
+  // Reporting probes run after search/verdict, in the same physical scope.
+  // They read the actual grounding port, never replace the search result,
+  // grant extra allowance or run a second planning pass.
+  const hallGrounding: { factId: string; result?: unknown; error?: string }[] = [];
+  for (const fact of input.goals.flatMap(goal => goal.effects)) {
+    const p = fact.predicate;
+    if (p.kind !== 'hall-complete') continue;
+    try { hallGrounding.push({ factId: fact.id,
+      result: input.context.grounding?.buildSites('townHall', { ...p.at, entityId: p.mineId }) ?? null }); }
+    catch (error) { hallGrounding.push({ factId: fact.id, error: String(error) }); }
+  }
   return JSON.stringify({ context: { tick: input.context.tick, owner: input.context.owner,
     version: input.context.version, situation: input.context.situation },
   goals: input.goals, initialBalances: input.initialBalances, limits: input.limits,
   declarationRevision: input.declarationRevision, providerIds: input.providers.map(provider => provider.id),
-  work: input.work.receipt, output: output ?? null });
+  work: workAtPlan, output: output ?? null,
+  ports: { combatOptions: typeof input.context.grounding?.combatOptions === 'function',
+    futureProjection: typeof input.context.readProjectedFact === 'function' },
+  afterPlanHallGrounding: hallGrounding });
 }
 
 export function writePuzzlePlanEvidence(puzzle: PublicPuzzleCase, snapshot: GameSnapshot, scoped: string | undefined,
