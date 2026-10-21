@@ -115,7 +115,8 @@ export const goalBuildExecutor: StrategyExecutor = {
       entityId: foundation.id, observedTick: input.snapshot.tick, proof: { kind: 'foundation', acceptedCommandId: command.id } }] : [];
     if (foundation?.complete) return { ...base, status: 'complete', phase: 'building-complete', payments, goalOutputs };
     const route = currentAllocationLandRouteReader()?.(worker, approach.point);
-    if (!route || route.status !== 'known') return blockedExecutor(input, route?.status === 'unreachable' ? 'goal-building-route-unreachable' : 'goal-building-route-pending');
+    if (!route || route.status !== 'known') return { ...blockedExecutor(input,
+      route?.status === 'unreachable' ? 'goal-building-route-unreachable' : 'goal-building-route-pending'), payments, goalOutputs };
     if (foundation) return { ...base, status: 'active', phase: 'constructing', payments, goalOutputs,
       commands: worker.order.type === 'repair' && worker.order.buildingId === foundation.id || worker.order.type === 'build'
         && worker.order.buildingKind === kind && worker.order.x === at.point.x && worker.order.y === at.point.y ? []

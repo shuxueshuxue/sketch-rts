@@ -164,3 +164,40 @@ it('binds only a paid exact native foundation and keeps completion gated by real
   expect(f.memory.budgets.capital!.paidGold).toBe(BUILDING_DEFS.farm.cost);
   expect(f.memory.budgets.capital!.nativePayments).toHaveLength(1);
 });
+
+it.each(['unknown', 'unreachable'] as const)('preserves paid foundation receipts while the construction route is %s', status => {
+  const at = { point: { x: 900, y: 900 } }, cost = BUILDING_DEFS.farm.cost;
+  const f = fixture(goalBuildExecutor, 'build', { buildingKind: 'farm', worker: { kind: 'existing', entityId: 'worker' },
+    at, approach: at, foundationId: null }, ['building'], cost);
+  const first = f.think();
+  expect(first.commands).toHaveLength(1);
+  expect(Object.values(f.memory.issuedCommands)).toHaveLength(1);
+  let foundation = f.game.buildings.find(building => building.kind === 'farm');
+  for (let tick = 0; tick < 1200 && !foundation; tick++) {
+    stepGame(f.game);
+    foundation = f.game.buildings.find(building => building.kind === 'farm');
+  }
+  expect(foundation).toMatchObject({ owner: 'us', kind: 'farm', complete: false, x: at.point.x, y: at.point.y });
+  expect(f.game.players.us!.gold).toBe(3000 - cost);
+  expect(f.memory.budgets.capital!.paidGold).toBe(0);
+  f.restore();
+  const input = f.input(), before = JSON.stringify(input);
+  const feedback = withAllocationLandRoutes(() => ({ status, reasonCode: 'construction-route-not-published' }),
+    () => goalBuildExecutor.execute(input));
+  expect(JSON.stringify(input)).toBe(before);
+  expect(feedback).toMatchObject({ status: 'blocked', commands: [],
+    reasons: [{ reason: status === 'unreachable' ? 'goal-building-route-unreachable' : 'goal-building-route-pending' }] });
+  const acceptedCommandId = Object.values(f.memory.issuedCommands)[0]!.id;
+  expect(feedback.payments).toEqual([{ budgetId: 'capital', amountGold: cost,
+    proof: { kind: 'foundation', buildingId: foundation!.id, acceptedCommandId } }]);
+  expect(feedback.goalOutputs).toEqual([{ output: 'building', entityId: foundation!.id, observedTick: f.game.tick,
+    proof: { kind: 'foundation', acceptedCommandId } }]);
+  f.apply(feedback);
+  expect(f.memory.executions.atom).toMatchObject({ status: 'blocked', state: { goalOutputBindings: { building: foundation!.id } } });
+  expect(f.memory.budgets.capital).toMatchObject({ paidGold: cost, state: 'spent' });
+  expect(f.memory.budgets.capital!.nativePayments).toHaveLength(1);
+  const replay = applyAllocationPayments(f.memory, snapshotGame(f.game), f.memory.executions.atom!.token, feedback.payments!);
+  expect(replay.budgets).toEqual(f.memory.budgets);
+  expect(f.game.players.us!.gold).toBe(3000 - cost);
+  expect(Object.values(f.memory.issuedCommands)).toHaveLength(1);
+});
