@@ -1,0 +1,35 @@
+{
+  "source": "9005a1ab638d22dd94d3013ae245223d7094c20e",
+  "sharedBase": "76b21070eeb2291fbfa15728695cc93c60afba4c",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "readyNodeOccurrencesByKind": {
+        "wait-income": 37
+      },
+      "firstReadyByKind": {
+        "wait-income": {
+          "think": 334,
+          "tick": 5010
+        }
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "readyNodeOccurrencesByKind": {
+        "position-transport": 108,
+        "wait-income": 68
+      },
+      "firstReadyByKind": {
+        "position-transport": {
+          "think": 91,
+          "tick": 1365
+        },
+        "wait-income": {
+          "think": 91,
+          "tick": 1365
+        }
+      }
+    }
+  ]
+}
