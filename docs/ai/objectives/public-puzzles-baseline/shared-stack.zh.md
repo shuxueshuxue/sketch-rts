@@ -1,6 +1,6 @@
 # 共同规划器栈上的题库接线
 
-#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `026799d7`，绑定真实搜索与 current-world reader 导出。
+#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `2988f233`，绑定真实搜索、current-world reader 和 `withGoalPlannerInput` 原生物理 scope。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
 ## 判法使用的正式合同
@@ -18,17 +18,19 @@
 `goal-planner.ts/planGoals(input)` 已由 32 在 `acb13825` 导出。[planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts) 静态导入这个真实函数，绑定测试检查函数引用相同，不再把搜索本身当作可缺省能力。
 `goal-world-facts.ts/createGoalFactReader(input: GoalWorldFactInput): GoalFactReader` 已在 `026799d7` 导出，题库同样静态绑定，并检查函数引用相同。输入需要同次 owner-think 的 Situation、ports、memory 等，不能用人工事实替代；未来投影、完整安全和海上出生能力尚未闭合。
 
-原生接线文件 `puzzles/goal-planner-native.ts` 也尚未建立，需要真实 source/owner-think 接口确定后实现以下三个口：
+`withGoalPlannerInput` 已在 `cb6a19b7` 提供，题库直接使用正式导出。正常 GoalRequest collector/效果估值与执行 bridge 仍缺；`puzzles/goal-planner-native.ts` 仅预留下列适配口，尚未建立，不返回已离开物理 scope 的输入：
 
 | 导出 | 输入/输出与责任 |
 | --- | --- |
-| `createInput(snapshot, owner): GoalPlannerInput` | 使用普通目标收集器、动作 provider、真实事实源及同一 think 的 FactWorkQueue；不接收题号、人工解、预期登陆点或合成事实 |
+| `withInput(snapshot, owner, run)` | 通过共享普通目标收集/估值和 `withGoalPlannerInput`，在同 Situation/query/FactWorkQueue/物理 scope 内调用 run；不接收题号、人工解、预期登陆点或合成事实 |
 | `allocation(input, output): StrategyAllocationTrace \| null` | 返回这次规划对应的实际分配器收据，不能手填“预留了 400” |
 | `createExecution()` | 返回真实 SDK commandPlanner 和其实际输入/规划输出/分配收据；不回退到现役 AI 或人工解 |
 
-11 个冷帧测试体已直接调用 `planGoals(input)`，再调用正式类型判法，并检查输入冷帧未被修改。
+11 个冷帧测试体将在 run(input) 回调内直接调用 `planGoals(input)`、正式类型判法和预算断言，并检查输入冷帧未被修改。回调未发生或执行多次都不能通过。
 11 个执行测试体通过原生运行口推进模拟，必须出现真实规划器输出，再用原来的执行判法计分。
 在缺少上述能力时共 22 项明确 skip；人工解通过和构造器测试通过都不算规划器通过。
+
+每题另有一个明确命名的原生 scope 诊断：用空 goals 只检查实际 cold frame 的唯一 Situation、同一 6144 队列、严格导航授权、scope 恢复和快照不变性。它不声明目标收益、不检查题目计划、不算公开题库通过。
 
 首版接线后运行以下严格入口，缺能力会失败，不能靠 skip 变绿：
 
@@ -96,6 +98,20 @@ A100 / Node 24.22.0，最终代码 `370e24be82b50d3a45bb4f4e2b5e993acc2ae5d1`：
 同 Situation、同 query、同 FactWorkQueue 的 owner-think 装配，以及未来投影、完整安全/海上出生能力仍等共享栈完成。
 原始日志与绑定哈希见 [world-reader.evidence.json](world-reader.evidence.json)。此前 main rebase 源码保留在 `archive/public-puzzles-main-rebase-20261021`。
 
+## 原生 owner-think scope 诊断（2988f233）
+
+接线代码 `da495241e0d766b07464040abfee775880064a55`，A100 / Node 24.22.0：根与 tools/ai tsc 均 exit 0。
+题库、正式输入/reader 合同和 SDK 边界共 11 文件、58 通过、22 等待真实能力而跳过，exit 0。
+58 项包括 11 个空 goals 的 scope 诊断和 11 个人工合法解，均不算规划器解题成绩。
+
+每个 scope 诊断都核验唯一 Situation、与 currentFactWork 相同的队列、6144 上限、严格导航授权、scope 恢复、无分配发令及冷帧不变。
+正常计划检查已改成 `withInput(..., run)`：搜索、资源投影和实际预算断言都在 run(input) 回调中执行，不能返回悬空输入再搜索。
+
+32 确认正常 `GoalRequest` collector/效果收益口尚未交，不能用题库手设 rewardGold 代替。
+因此 scope 诊断只传空请求以验证原生装配，不宣称推导了题目的计划；全部 22 项计划/执行验收继续跳过。
+严格冷帧 smoke 按预期 exit 1，只报告目标收集/估值适配及 bridge 缺失。combatOptions、未来评估投影、完整安全与海上出生能力也仍待闭合，blocked 不当作已证不可行。
+本轮未跑全量 src。日志、退出码和逐文件哈希见 [owner-input.evidence.json](owner-input.evidence.json)。
+
 重跑可行性与合同检查：
 
 ```sh
@@ -103,4 +119,4 @@ SKETCH_PUZZLE_WITNESS=1 npx vitest run src/ai/strategy/puzzles src/ai/strategy/g
 ```
 
 重模拟继续放 A100/mac1。共同栈上的 witness 脚本输出 `mainBaseline: null`；历史三个房间流派要在已归档分支 `archive/public-puzzles-main-baseline-20261021` 或原始证据的源码提交上重跑。
-本 PR 继续保持 draft，等原生 owner-think 装配与完整事实能力齐备后再作为第一道验收。搜索和 reader 函数已导出，不代表真实题库已经通过。
+本 PR 继续保持 draft，等正常目标收集/效果估值与完整事实、执行能力齐备后再作为第一道验收。搜索、reader 与 scope 已导出，不代表真实题库已经通过。
