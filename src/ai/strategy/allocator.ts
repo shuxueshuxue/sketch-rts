@@ -15,6 +15,7 @@ import type { Effect, Objective, SituationUnit, ValuationContext } from './types
 import { assertUnitValueSides } from './unit-value-ledger';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { currentSiteThreatIsClear } from './protection-activation';
+import { assessForceAssemblyPosts } from './assembly-posts';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -57,7 +58,7 @@ function quoteInput(input: StrategyAllocationInput, memory: StrategyAllocationMe
     ...(input.fixedVoyageArrival ? { fixedVoyageArrival: input.fixedVoyageArrival } : {}) };
 }
 function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemory, provider: AllocationMethodProvider,
-  offer: Pick<Offer, 'objective' | 'method' | 'unitIds'>, valuation: ValuationContext): { method: ExecutableMethod; quote: MethodAllocationQuote } {
+  offer: Pick<Offer, 'objective' | 'method' | 'unitIds'>, valuation: ValuationContext): { method: ExecutableMethod; quote: MethodAllocationQuote; unitIds: readonly string[] } {
   const request = quoteInput(input, memory, offer, valuation);
   const method = provider.materialize?.(request) ?? request.method;
   if (method.id !== offer.method.id || method.objectiveId !== offer.objective.id || method.providerId !== provider.id)
@@ -69,14 +70,16 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
     if (voyage.unitIds.some(id => !permitted.has(id)) || voyage.ship.kind === 'existing' && !permitted.has(voyage.ship.unitId))
       throw new Error('Materialized voyage recruited outside the quoted bundle');
   }
-  const quote = provider.quote({ ...request, method });
+  const actual = method.stage === 'assembly' ? new Set(method.actions.flatMap(action => action.unitIds ?? [])) : permitted;
+  const unitIds = offer.unitIds.filter(id => actual.has(id));
+  const quote = provider.quote({ ...quoteInput(input, memory, { ...offer, method, unitIds }, valuation), method });
   if (quote.utility) assertUnitValueSides(quote.utility);
   if (quote.potentialUtility) assertUnitValueSides(quote.potentialUtility);
   if (quote.methodId !== method.id || quote.status === 'feasible' && !Number.isFinite(quote.utility.score))
     throw new Error('Invalid allocation method quote');
-  input.observeCandidate?.({ objectiveId: offer.objective.id, method, unitIds: offer.unitIds, phase: valuation.phase, quote,
+  input.observeCandidate?.({ objectiveId: offer.objective.id, method, unitIds, phase: valuation.phase, quote,
     ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}) });
-  return { method, quote };
+  return { method, quote, unitIds };
 }
 function candidateBundles(input: StrategyAllocationInput, memory: StrategyAllocationMemory, method: ExecutableMethod): readonly string[][] {
   const owned = input.situation.units.filter(unit => unit.owner === input.situation.owner && unit.hp > 0);
@@ -177,6 +180,16 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       completionEffects: [...action.completionEffects], ...(action.production ? { production: action.production } : {}),
       status: old?.status ?? 'waiting', phase: old?.phase ?? 'allocated', sinceTick: old?.sinceTick ?? tick,
       lastProgressTick: old?.lastProgressTick ?? tick, state: old?.state ?? {} };
+    if (method.stage === 'assembly' && action.intent.kind === 'assemble-force' && old?.status === 'complete') {
+      const assessment = assessForceAssemblyPosts({ snapshot, owner: situation.owner, intent: action.intent,
+        unitIds: action.unitIds ?? offer.unitIds,
+        interruptedUnitIds: Object.values(memory.assignments).filter(assignment => assignment.interruption).map(assignment => assignment.unitId) });
+      const changed = old.intent.kind !== 'assemble-force' || old.intent.requiredForce !== action.intent.requiredForce
+        || JSON.stringify([...old.intent.posts].sort((a, b) => compare(a.id, b.id)).map(post => ({ ...post, unitIds: [...post.unitIds].sort() })))
+          !== JSON.stringify([...action.intent.posts].sort((a, b) => compare(a.id, b.id)).map(post => ({ ...post, unitIds: [...post.unitIds].sort() })));
+      if (changed || assessment.status !== 'known' || !assessment.sufficient)
+        executions[action.id] = { ...executions[action.id]!, status: 'ready', phase: 'assembling-force' };
+    }
   }
   let next = advanceAllocationGraph({ ...memory, methods: { ...memory.methods, [method.id]: method }, executions, nextActionGeneration: generation });
   const leases = { ...next.leases }, assignments = { ...next.assignments }, voyages = { ...next.voyages };
@@ -305,7 +318,7 @@ function handoffCompletedGarrisons(input: StrategyAllocationInput, memory: Strat
     const priorLeases = assignments.map(assignment => memory.leases[`unit:${assignment.unitId}`]!);
     for (const assignment of assignments) { delete leases[`unit:${assignment.unitId}`]; delete nextAssignments[assignment.id]; }
     memory = { ...memory, leases, assignments: nextAssignments };
-    memory = assignMethod(input, memory, { objective, provider, method: result.method, unitIds, gross: result.quote });
+    memory = assignMethod(input, memory, { objective, provider, method: result.method, unitIds: result.unitIds, gross: result.quote });
     const nextAssignment = memory.assignments[assignments[0]!.id];
     if (!nextAssignment || nextAssignment.objectiveId !== objective.id) throw new Error('Garrison continuation lost its existing cohort');
     memory = { ...memory, executions: { ...memory.executions, [action.token.actionId]: {
@@ -367,14 +380,16 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     if (!provider) throw new Error(`Missing allocation provider ${method.providerId}`);
     for (const unitIds of candidateBundles(input, memory, method)) {
       const result = reprice(input, memory, provider, { objective, method, unitIds }, { phase: 'gross' });
-      offers.push({ objective, method: result.method, provider, unitIds, gross: result.quote });
+      if (result.method.stage === 'assembly' && offers.some(offer => offer.method.id === result.method.id
+        && offer.method.stage === 'assembly' && offer.unitIds.join('\0') === result.unitIds.join('\0'))) continue;
+      offers.push({ objective, method: result.method, provider, unitIds: result.unitIds, gross: result.quote });
     }
   }
   if (input.prepareVoyageRisks) {
     input = { ...input, voyageRisks: input.prepareVoyageRisks(offers.map(offer => offer.method), offers.map(offer => offer.gross)) };
     for (const offer of offers) {
       const result = reprice(input, memory, offer.provider, offer, { phase: 'gross' });
-      offer.method = result.method; offer.gross = result.quote;
+      offer.method = result.method; offer.gross = result.quote; offer.unitIds = result.unitIds;
     }
   }
   const sources: BundleValuationSource[] = offers.filter(offer => offer.gross.status === 'feasible').map((offer, index) => ({
@@ -416,7 +431,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
   for (const offer of offers) {
     if (offer.gross.status !== 'feasible') continue;
     const result = reprice(input, memory, offer.provider, offer, { phase: 'net', opportunity: oracle });
-    offer.method = result.method; offer.net = result.quote;
+    offer.method = result.method; offer.net = result.quote; offer.unitIds = result.unitIds;
   }
   const byUtility = (a: Offer, b: Offer) =>
     (b.net?.utility?.score ?? 0) - (a.net?.utility?.score ?? 0) || a.method.preference - b.method.preference
@@ -431,7 +446,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       if (ids.length === offer.unitIds.length) return offer;
       const result = reprice(input, memory, offer.provider, { ...offer, unitIds: ids }, { phase: 'net', opportunity: oracle,
         allowedUnitIds: offer.unitIds, unavailableUnitIds: offer.unitIds.filter(id => !ids.includes(id)) });
-      return { ...offer, method: result.method, unitIds: ids, net: result.quote };
+      return { ...offer, method: result.method, unitIds: result.unitIds, net: result.quote };
     }).filter(offer => offer.net?.status === 'feasible').sort(byUtility);
     const offer = pending.shift(); if (!offer) break;
     const quote = offer.net!;

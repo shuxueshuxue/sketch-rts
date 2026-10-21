@@ -89,6 +89,31 @@ describe('deterministic whole-bundle allocation', () => {
     expect(JSON.stringify(input.snapshot)).toBe(before);
   });
 
+  it('does not price or preempt an unused engineer when a full skeleton specializes to assembly', () => {
+    const { input, provider } = fixture();
+    input.snapshot.units.push(createUnit('engineer', 'player', 'worker', 1000, 1000));
+    const worker: DecisionFacts<Situation>['units'][number] = { ...input.situation.units[0]!, id: 'engineer', kind: 'worker', roles: ['worker'] };
+    const memory = createStrategyAllocationMemory('player', input.snapshot.tick);
+    const oldLease = { id: 'old-builder', resourceKey: 'unit:engineer' as const, objectiveId: 'unpriced-build', methodId: 'unpriced-build',
+      action: { actionId: 'old-builder', generation: 1 }, sinceTick: 0, minimumStayUntilTick: 0, origin: 'imported-task' as const,
+      incumbentTask: { source: 'landExpansion', taskId: 'old-build' } };
+    const observed: string[][] = [], conflicts: string[][] = [];
+    const methods = input.methods.map(method => ({ ...method, demands: [...method.demands,
+      { kind: 'workers' as const, count: 1, at: method.actions[0]!.target }] }));
+    const result = allocateStrategy({ ...input, situation: { ...input.situation, units: [...input.situation.units, worker] }, methods,
+      previous: { ...memory, leases: { 'unit:engineer': oldLease } },
+      switchingCost: request => { conflicts.push([...request.resourceKeys]); return 0; },
+      observeCandidate: request => observed.push([...request.unitIds]), providers: [{ ...provider, materialize: request => ({
+        ...request.method, stage: 'assembly', actions: request.method.actions.map(action => ({ ...action,
+          executor: 'strategy.assemble-force', intent: { kind: 'assemble-force', campTarget: request.objective.target,
+            requiredForce: 1, posts: [{ id: 'home', target: action.target, unitIds: request.unitIds.filter(id => id !== 'engineer') }] },
+          unitIds: request.unitIds.filter(id => id !== 'engineer') })) }) }] });
+    expect(result.memory.objectives.single).toBeDefined();
+    expect(result.memory.leases['unit:engineer']).toEqual(oldLease);
+    expect(observed.every(ids => !ids.includes('engineer'))).toBe(true);
+    expect(conflicts.every(keys => !keys.includes('unit:engineer'))).toBe(true);
+  });
+
   it('publishes loading-stage epochs without requiring later legs and preserves them after actual boarding', () => {
     const { input, method } = fixture(), tick = 100;
     const departure = { point: { x: 1000, y: 1000 }, landId: 'land:1' as const };

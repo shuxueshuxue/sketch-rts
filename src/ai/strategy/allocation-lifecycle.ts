@@ -4,6 +4,7 @@ import type { ActionGrant, ActionToken, AllocationEvent, AllocationReason, Execu
 import { advancesAllocationCommand, applyAllocationPayments } from './allocation-ledger';
 import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS } from './control';
 import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
+import { assessForceAssemblyPosts } from './assembly-posts';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
  * before safety services or assignment-stage accounting consume it. */
@@ -21,6 +22,8 @@ export function observeAllocationOrders(memory: StrategyAllocationMemory, snapsh
 }
 
 const terminal = (status: ExecutionAction['status']) => ['complete', 'failed', 'abandoned'].includes(status);
+const pendingAssembly = (memory: StrategyAllocationMemory, action: ExecutionAction) => action.status === 'complete'
+  && action.intent.kind === 'assemble-force' && memory.methods[action.methodId]?.stage === 'assembly';
 /** Required unloads are an observed milestone. Optional voyages retain their
  * action and leases while successors may use the cohort already on shore. */
 export function actionDependencySatisfied(action: ExecutionAction): boolean {
@@ -73,7 +76,20 @@ export function advanceAllocationGraph(memory: StrategyAllocationMemory): Strate
  * graphs for diagnosis; live graphs and pending handoffs are never truncated.
  * A disappeared unit leaves a real vacancy, without inventing a battle death. */
 export function settleAllocationState(memory: StrategyAllocationMemory, snapshot: GameSnapshot): StrategyAllocationMemory {
-  let next = advanceAllocationGraph(memory);
+  const refreshed = { ...memory.executions };
+  for (const action of Object.values(refreshed)) if (pendingAssembly(memory, action) && action.intent.kind === 'assemble-force') {
+    const members = Object.values(memory.assignments).filter(assignment => {
+      const lease = memory.leases[`unit:${assignment.unitId}`];
+      return lease && sameAction(assignment.action, action.token) && sameAction(lease.action, action.token);
+    });
+    const assessment = assessForceAssemblyPosts({ snapshot, owner: memory.owner, intent: action.intent,
+      unitIds: members.map(assignment => assignment.unitId),
+      interruptedUnitIds: members.filter(assignment => assignment.interruption).map(assignment => assignment.unitId) });
+    if (assessment.status === 'known' && !assessment.sufficient) refreshed[action.token.actionId] = { ...action,
+      status: 'ready', phase: 'assembling-force', state: { ...action.state, arrivedUnitIds: assessment.onStationUnitIds,
+        assembledForce: assessment.assembledForce, requiredForce: assessment.requiredForce } };
+  }
+  let next = advanceAllocationGraph({ ...memory, executions: refreshed });
   const present = new Set(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])])
     .filter(unit => unit.owner === memory.owner && unit.hp > 0).map(unit => unit.id));
   const leases = { ...next.leases }, assignments = { ...next.assignments }, vacancies = { ...next.vacancies };
@@ -95,8 +111,11 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     const pendingGarrison = actions.some(action => action.executor === 'strategy.establish-garrison'
       && action.status === 'complete' && typeof action.state.hallId === 'string' && !action.state.leasesTransferredTo
       && Object.values(assignments).some(assignment => sameAction(assignment.action, action.token)));
+    const assemblyReady = actions.length > 0 && actions.every(action => pendingAssembly(next, action));
+    if (assemblyReady) for (const action of actions) if (action.phase !== 'ready-for-departure') next = { ...next,
+      executions: { ...next.executions, [action.token.actionId]: { ...action, phase: 'ready-for-departure' } } };
     if (!['complete', 'failed', 'abandoned'].includes(objective.status) && actions.length
-      && actions.every(action => terminal(action.status)) && !pendingGarrison) {
+      && actions.every(action => terminal(action.status)) && !pendingGarrison && !assemblyReady) {
       const status = actions.every(action => action.status === 'complete') ? 'complete'
         : actions.some(action => action.status === 'failed') ? 'failed' : 'abandoned';
       objectives[id] = { ...objective, status, committedUtilityGold: null, assignmentIds: [] };
@@ -121,7 +140,7 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     .filter(([, entry]) => !discard.has(entry.objectiveId)));
   const liveParent = (token: ActionToken) => {
     const execution = next.executions[token.actionId];
-    return !!execution && sameAction(execution.token, token) && !terminal(execution.status);
+    return !!execution && sameAction(execution.token, token) && (!terminal(execution.status) || pendingAssembly(next, execution));
   };
   const voyages = Object.fromEntries(Object.entries(next.voyages).filter(([, voyage]) => liveParent(voyage.action)));
   const remainingVacancies = Object.fromEntries(Object.entries(vacancies).filter(([, vacancy]) => liveParent(vacancy.action)));
@@ -163,7 +182,7 @@ export function advanceAllocationLeases(memory: StrategyAllocationMemory, snapsh
         action: execution.token, kind: 'lease-transferred', fromObjectiveId: assignment.objectiveId, toObjectiveId: assignment.objectiveId,
         leaseIds: [lease.id], assignmentIds: [assignment.id], reason: { code: 'observed-dependency-lease-handoff', factIds: [unit.id], values: {} } }, snapshot.tick);
     } else if (terminal(current.status) && !future.length && current.executor !== 'strategy.establish-garrison'
-      && current.executor !== 'strategy.start-mining') {
+      && current.executor !== 'strategy.start-mining' && !pendingAssembly(next, current)) {
       delete assignments[assignment.id]; delete leases[`unit:${unit.id}`];
     }
   }
@@ -258,7 +277,7 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
 export function pruneAllocationProvenance(memory: StrategyAllocationMemory): StrategyAllocationMemory {
   const live = (token: ActionToken) => {
     const execution = memory.executions[token.actionId];
-    return !!execution && sameAction(execution.token, token) && !terminal(execution.status);
+    return !!execution && sameAction(execution.token, token) && (!terminal(execution.status) || pendingAssembly(memory, execution));
   };
   const blocked = Object.fromEntries(Object.entries(memory.blocked).filter(([, quote]) => live(quote.parent)));
   const protectedCommands = new Set(Object.values(blocked).map(quote => quote.interruptedCommandId));
