@@ -18,6 +18,7 @@ export function discoverGoalActions(provider: GoalActionProvider, fact: GoalFact
     productionOptions: (...args) => track(source.productionOptions(...args)),
     transportOptions: (...args) => track(source.transportOptions(...args)),
     ...(source.combatOptions ? { combatOptions: (...args: Parameters<NonNullable<GoalGroundingReader['combatOptions']>>) => track(source.combatOptions!(...args)) } : {}),
+    ...(source.cohortOptions ? { cohortOptions: (...args: Parameters<NonNullable<GoalGroundingReader['cohortOptions']>>) => track(source.cohortOptions!(...args)) } : {}),
     ...(source.resolveCohort ? { resolveCohort: (...args: Parameters<NonNullable<GoalGroundingReader['resolveCohort']>>) => track(source.resolveCohort!(...args)) } : {}),
   };
   const actions = provider.actionsFor(fact, grounding ? { ...context, grounding } : context);
