@@ -60,6 +60,14 @@
 
 `hold-position` 的前置是精确 cohort 已在 post 的 `force-at`。前置成立后，在 start 建立 `route-controlled`，成员继续占用到 finish；它不等守点结束才交出控制事实，也不把同陆块可调用池当作到岗。移动到 post 由对应到岗前置和其 producer 的效果时刻证明，不能在 hold 本身再叠一次行军时间。
 
+## 陆地能力事实端口
+
+`readGoalLandCapabilityFact(fact, context, ports)` 只处理 `interception-capability`、`harassment-ended`、`route-controlled`、`enemy-site-destroyed`；其余返回 null，由 32 的唯一 reader 组合。端口不建队列或 Situation，不选兵，也不调用原生导航。`ports.regionAt` 是已准备的区域查询；所有行军证据经过同一个 `context.readFact(route)`。
+
+拦截能力仅核请求里的真实精确 cohort。空组是已知零，未出生的 output/binding 不产生实体 ID；在另一任务池里的快兵不会补进来。单骚扰者使用旧陆地评估同一个 `canLandIntercept` 和原生 `resolveUnitDamage`，保留射程/速度优势与两轮齐射门槛，另核真实行军 ETA、当前武器冷却和寿命是否允许在声明窗内完成两次开火。冷却在行军途中也流逝，不重复相加。未公布路线、缺 ETA、未来才可用的路线保留 pending；已公布不可达是已知不足。已知成员足够时，另一个未解成员不阻止该能力成立。多名同时骚扰者尚无共同整组评估端口时明确 `land-joint-interception-assessment-required` pending，不能重复花同一份齐射伤害。
+
+持续控制/骚扰结束须由正式执行观察或投影给出同一 fact、同一 epoch 的 `readWindowProof`；当前无敌不保证未来整个 throughTick 窗口。指定敌实体的真实 hp=0 可以证明销毁；实体已从 snapshot 移除时须有 `destroyedEntity` 的原实体 owner、销毁 tick 和 revision。未知 ID、友方、尚未发生的销毁均不当成已摧毁。未来成员和上述证明仍由共享投影/生命周期源处理，本模块不私造预测世界。
+
 ## 验证范围
 
 构造器和 grounding 测试包括真实原生训练付款/出生、真实农场完成后解锁骑士、同一共享 6144/Arrival 的水中船厂中心建址及公开 move→build 完工，以及 route/income 结构端口、JSON 续行、零预算和无账外原生导航调用。两份 actionsFor 的测试验证单原子候选、生产者 output 连接、数量部分贡献和精确战斗组绑定。它们不替代公开题的完整规划和执行检查；规划器分配接线及执行绑定仍需在同一共享事实源上继续验收。
