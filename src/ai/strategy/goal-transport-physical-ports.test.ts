@@ -142,3 +142,17 @@ it('uses known sea connectivity for estimated travel while retaining the native 
  expect(readPointRoute).toHaveBeenCalledTimes(1);expect(readVoyageRisk.mock.calls[0]![0]).not.toHaveProperty('route');
  t.finish();expect(t.work.receipt.used).toBe(0);
 });
+
+it('keeps a future shore-pose scan stable while the actual ship turns, without changing default native hints',()=>{
+ const f=frame(), shore=f.regions.shoresByLand.get(f.from.landId)!.get('sea:1')![0]!;
+ const hull:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:[]};
+ const a=f.think(0,0,{berthOrientation:'shore'}),first=strict(()=>a.ports.berth(f.worker,hull,shore));a.finish();
+ expect(first.state).toBe('pending');
+ f.hull.sailing!.heading+=.321;
+ const before=JSON.stringify(f.snapshot),b=f.think(1,0,{berthOrientation:'shore'}),turning=strict(()=>b.ports.berth(f.worker,hull,shore));b.finish();
+ expect(turning.state).toBe('pending');
+ if(first.state==='pending'&&turning.state==='pending')expect(turning.requestIds).toEqual(first.requestIds);
+ expect(JSON.stringify(f.snapshot)).toBe(before);expect(b.work.receipt.used).toBe(0);
+ const c=f.think(2,0),native=strict(()=>c.ports.berth(f.worker,hull,shore));
+ if(first.state==='pending'&&native.state==='pending')expect(native.requestIds).not.toEqual(first.requestIds);
+});

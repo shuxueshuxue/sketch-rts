@@ -7,21 +7,26 @@ import type { GoalBerth, GoalHullCandidate, GoalPublishedValue, GoalTransportFac
 import type { GoalCohortMember, GoalEntityReference, GoalGroundingReader, GoalPlan } from './goal-planner-types';
 import type { RegionIndex, Shore } from './regions';
 import type { Point, Target } from './types';
+import type { GoalExactPreparation } from './goal-plan-refinement';
 
-type Answer = Extract<GoalPublishedValue<GoalBerth>, { state: 'met' | 'unmet' }>;
+type Answer = GoalPublishedValue<GoalBerth>;
 export type GoalSelectedBerthMemory = {
   revision: number; nextId: number;
   /** Native hull/terrain inputs are interned once, never embedded in fact IDs. */
   sources: { id: number; value: string }[];
   entries: { id: string; source: number; transport: string; members: string; shore: Shore; answer: Answer; planIds: string[] }[];
 };
-export type GoalPublishedBerthReader = (ship: Unit, members: readonly GoalCohortMember[], shore: Shore) => Answer | undefined;
+export type GoalPublishedBerthReader = ((ship: Unit, members: readonly GoalCohortMember[], shore: Shore) => Answer | undefined)
+  & { preferred?: (ship: Unit, members: readonly GoalCohortMember[], shores: readonly Shore[]) => Shore | undefined };
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 const same = (a: unknown, b: unknown) => goalValueKey(a) === goalValueKey(b);
 const point = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
+const sameShore = (a: Shore, b: Shore) => a.landId === b.landId && a.seaId === b.seaId
+  && point(a.water, b.water) && point(a.ground, b.ground);
 export function chooseGoalCoarseShore(shores: readonly Shore[], near: Point, ship: Unit,
   members: readonly GoalCohortMember[], published?: GoalPublishedBerthReader) {
-  for (const shore of [...shores].sort((a, b) => gap(a.ground, near) - gap(b.ground, near)
+  const preferred = published?.preferred?.(ship, members, shores);
+  for (const shore of [...shores].sort((a, b) => Number(b === preferred) - Number(a === preferred) || gap(a.ground, near) - gap(b.ground, near)
     || goalValueKey(a).localeCompare(goalValueKey(b)))) {
     const answer = published?.(ship, members, shore);
     if (answer?.state === 'unmet') continue;
@@ -30,16 +35,27 @@ export function chooseGoalCoarseShore(shores: readonly Shore[], near: Point, shi
 }
 
 /** Only the chosen graph requests a native common berth. Coarse discovery
- * reads these already-published contacts without registering any geometry.
+ * reads these contacts without registering any geometry. A pending choice
+ * remains a proposal until native proof publishes; actor motion changes its
+ * approach price rather than silently replacing the unfinished target scan.
  * A changed water/ground pair re-enters search together: hull positioning,
  * loading force, worker route, safety and later voyage prices all use it. */
 export function createGoalSelectedBerths(input: {
   memory: GoalSelectedBerthMemory; geometryRevision: string;
   regions: RegionIndex; units: readonly Unit[];
+  berthOrientation?: 'shore';
+  currentPlanIds?: () => readonly string[];
 }) {
   const { memory } = input;
-  const source = (ship: Unit) => goalValueKey([input.geometryRevision, ship.kind, ship.radius,
-    shipProfile(ship)?.hull, ship.sailing?.heading ?? 0]);
+  // Snapshot units are immutable within this owner frame. These keys belong
+  // to future dock proposals, never a proof about the current boat pose.
+  const sourceKeys = new WeakMap<Unit, string>();
+  const source = (ship: Unit) => {
+    let key = sourceKeys.get(ship);
+    if (!key) { key = goalValueKey([input.geometryRevision, ship.kind, ship.radius,
+      shipProfile(ship)?.hull, input.berthOrientation === 'shore' ? 'future-shore-heading-v1' : ship.sailing?.heading ?? 0]); sourceKeys.set(ship, key); }
+    return key;
+  };
   // The native berth scan depends on passenger shape, not their identity or
   // current HP. Every distinct shape was rechecked before publication. This
   // lets another selected worker reuse the same published physical contact.
@@ -48,9 +64,17 @@ export function createGoalSelectedBerths(input: {
   const find = (ship: Unit, members: readonly GoalCohortMember[], shore: Shore) => {
     const version = memory.sources.find(entry => entry.value === source(ship));
     return version && memory.entries.find(entry => entry.source === version.id && entry.transport === ship.id
-      && entry.members === membersKey(members) && same(entry.shore, shore));
+      && entry.members === membersKey(members) && sameShore(entry.shore, shore));
   };
-  const published: GoalPublishedBerthReader = (ship, members, shore) => find(ship, members, shore)?.answer;
+  const published: GoalPublishedBerthReader = Object.assign((ship: Unit, members: readonly GoalCohortMember[], shore: Shore) => find(ship, members, shore)?.answer,
+    { preferred(ship: Unit, members: readonly GoalCohortMember[], shores: readonly Shore[]) {
+      const plans = input.currentPlanIds?.();
+      const version = memory.sources.find(entry => entry.value === source(ship));
+      const chosen = memory.entries.find(entry => entry.source === version?.id && entry.transport === ship.id
+        && entry.members === membersKey(members) && entry.answer.state !== 'unmet'
+        && (!plans || entry.planIds.some(id => plans.includes(id))) && shores.some(shore => sameShore(shore, entry.shore)))?.shore;
+      return chosen && shores.find(shore => sameShore(shore, chosen));
+    } });
   const retain = (planIds: readonly string[]) => {
     memory.entries = memory.entries.filter(entry => {
       const ship = input.units.find(unit => unit.id === entry.transport && unit.hp > 0);
@@ -60,8 +84,8 @@ export function createGoalSelectedBerths(input: {
     memory.sources = memory.sources.filter(source => memory.entries.some(entry => entry.source === source.id));
   };
   function prepare(plan: GoalPlan, selected: GoalPlan['actions'], ports: GoalTransportFactPorts,
-    resolve: NonNullable<GoalGroundingReader['resolveCohort']>): GoalPlan | undefined {
-    const pending = new Set<string>(), changes: AllocationReason[] = [];
+    resolve: NonNullable<GoalGroundingReader['resolveCohort']>): GoalExactPreparation | undefined {
+    const pending = new Set<string>(), deferredActions = new Set<string>(), changes: AllocationReason[] = [];
     for (const node of selected) {
       const action = node.declaration, at = action.executor.parameters.at as Target | undefined;
       if (action.kind !== 'position-transport' || action.precision !== 'coarse' || !at?.seaId) continue;
@@ -80,14 +104,14 @@ export function createGoalSelectedBerths(input: {
       if (!from.landId) continue;
       const members = resolve(cohort);
       if (members.state !== 'met') {
-        if (members.state === 'pending') members.requestIds.forEach(id => pending.add(id));
+        if (members.state === 'pending') { members.requestIds.forEach(id => pending.add(id)); deferredActions.add(node.id); }
         continue;
       }
       const contact = chooseGoalCoarseShore(input.regions.shoresByLand.get(from.landId)?.get(at.seaId) ?? [],
         from.point, ship, members.candidates, published);
       if (!contact) continue;
       const old = find(ship, members.candidates, contact.shore);
-      if (old) { if (!old.planIds.includes(plan.id)) old.planIds.push(plan.id); continue; }
+      if (old) { if (!old.planIds.includes(plan.id)) old.planIds.push(plan.id); if (old.answer.state !== 'pending') continue; }
       const profile = shipProfile(ship); if (!profile || !members.candidates.length) continue;
       const hull: GoalHullCandidate = { id: ship.id, reference: transport, seaId: at.seaId, assessment: ship,
         availableTick: plan.observedTick, capacity: profile.loadCapacity, cargoUnitIds: [], preconditions: [], factIds: [ship.id] };
@@ -113,12 +137,13 @@ export function createGoalSelectedBerths(input: {
             : { state: 'unmet', reason: { code: 'selected-cohort-cannot-share-boarding-pose', factIds: [...facts].sort(), values: {} } };
         }
       }
-      if (answer.state === 'pending') { answer.requestIds.forEach(id => pending.add(id)); continue; }
       let version = memory.sources.find(entry => entry.value === source(ship));
       if (!version) memory.sources.push(version = { id: memory.nextId++, value: source(ship) });
-      const id = `selected-berth:${memory.nextId++}`;
-      memory.entries.push({ id, source: version.id, transport: ship.id, members: membersKey(members.candidates),
+      const id = old?.id ?? `selected-berth:${memory.nextId++}`;
+      if (old) old.answer = answer;
+      else memory.entries.push({ id, source: version.id, transport: ship.id, members: membersKey(members.candidates),
         shore: contact.shore, answer, planIds: [plan.id] });
+      if (answer.state === 'pending') { answer.requestIds.forEach(id => pending.add(id)); deferredActions.add(node.id); continue; }
       memory.revision++;
       changes.push({ code: answer.state === 'met' ? 'selected-native-berth-reenters-search' : 'selected-native-berth-unavailable',
         factIds: [id], values: { proposedX: at.point.x, proposedY: at.point.y,
@@ -127,7 +152,12 @@ export function createGoalSelectedBerths(input: {
     }
     if (!pending.size && !changes.length) return;
     const why = { code: 'selected-native-berths-pending', factIds: [...pending].sort(), values: {} };
-    return { ...plan, status: 'waiting-facts', readyActionIds: [], reasons: [...plan.reasons, ...changes, ...(pending.size ? [why] : [])] };
+    return { plan: { ...plan, ...(changes.length ? { status: 'waiting-facts' as const } : {}),
+      readyActionIds: changes.length ? [] : plan.readyActionIds.filter(id => !deferredActions.has(id)),
+      reasons: [...plan.reasons, ...changes, ...(pending.size ? [why] : [])] },
+      deferActionIds: [...deferredActions], changed: changes.length > 0 };
   }
-  return { published, prepare, retain };
+  const requests = (planId: string) => memory.entries.filter(entry => entry.planIds.includes(planId)).flatMap(entry =>
+    entry.answer.state === 'pending' ? entry.answer.requestIds : entry.answer.state === 'met' ? entry.answer.factIds : []);
+  return { published, prepare, retain, requests };
 }

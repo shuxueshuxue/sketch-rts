@@ -62,6 +62,13 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
     expect(immediate.readyActions.map(row => row.action.declaration.id)).toEqual(['exact-0']);
     expect(immediate.plans[0]!.search.work).toBe(liveWork.receipt.services.filter(service => service.key.startsWith('goal-search')).reduce((sum, service) => sum + service.work, 0));
     expect(liveWork.receipt.used).toBeLessThanOrEqual(6144);
+    const partial: GoalRefinementMemory = { revision: 0, entries: [] };
+    const independent = planGoals({ ...base, work: new FactWorkQueue(snapshot.tick),
+      providers: [applyGoalRefinements(provider, partial)], declarationRevision: 'partial-0', refinementRevision: () => `partial-${partial.revision}`,
+      refineSelected: createGoalPlanRefiner({ memory: partial, providers: [provider], exactContext: () => ({ ...context, precision: 'exact' }),
+        prepareExact: plan => ({ plan, changed: false, deferActionIds: plan.actions.filter(node => node.declaration.executor.parameters.campId === '1').map(node => node.id) }) }) });
+    expect(independent.readyActions.map(row => row.action.declaration.id)).toEqual(['exact-0']);
+    expect(partial.entries).toHaveLength(1); // the other layer's unpublished proof does not block this ready atom
     const retained = JSON.parse(JSON.stringify(refinement.entries[0]!)) as typeof refinement.entries[number];
     const obsolete = { ...retained, coarse: { ...retained.coarse, executor: { ...retained.coarse.executor,
       parameters: { campId: 'obsolete-choice' } } }, exact: [] };

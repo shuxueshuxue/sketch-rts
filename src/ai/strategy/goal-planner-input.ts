@@ -123,8 +123,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])];
       const geometryRevision = rawGeometry.reference!('world-geometry', worldGeometry);
       const berthBindings = createGoalSelectedBerths({ memory: retained.selectedBerths ??= { revision: 0, nextId: 1, sources: [], entries: [] },
-        geometryRevision: goalValueKey(worldGeometry), regions, units: snapshot.units });
-      const contactPreparation = new WeakMap<GoalPlanningContext, (plan: GoalPlan, selected: GoalPlan['actions']) => GoalPlan | undefined>();
+        geometryRevision: goalValueKey(worldGeometry), regions, units: snapshot.units,
+        currentPlanIds: () => work.consumerPlanIds().map(id => `goal-plan:${id}`),
+        ...(precision === 'coarse' ? { berthOrientation: 'shore' as const } : {}) });
+      const contactPreparation = new WeakMap<GoalPlanningContext,
+        (plan: GoalPlan, selected: GoalPlan['actions']) => ReturnType<typeof berthBindings.prepare>>();
       const geometry: GoalGeometryReader = Object.assign(<State, Value>(request: import('./goal-grounding-ports').GoalGeometryRequest<State, Value>) =>
         rawGeometry({ ...request, references: [...new Set([geometryRevision, ...(request.references ?? [])])] }),
       { reference: rawGeometry.reference! });
@@ -279,6 +282,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
           ...(selected.length ? { hullReferences } : {}),
           ...(precision === 'coarse' && mode === 'exact' ? { travelTimePolicy: 'connectivity-estimate' as const } : {}),
+          ...(precision === 'coarse' ? { berthOrientation: 'shore' as const } : {}),
           readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground, readVoyageRisk,
           readPointRoute: (ship, from, to, future) => {
             const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
@@ -381,7 +385,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             return found;
           };
           retainGoalGeometryRequests(retained.geometry!, plans.map(plan => ({ planId: plan.goal.id,
-            requestIds: [...ids([plan.actions, plan.deferredCandidates ?? []])] })), work.receipt.thinkSequence ?? snapshot.tick);
+            requestIds: [...ids([plan.actions, plan.deferredCandidates ?? [], berthBindings.requests(plan.id)])] })), work.receipt.thinkSequence ?? snapshot.tick);
         },
         capacityPressure: () => retained.geometry?.capacity?.pressure ? [retained.geometry.capacity.pressure] : [],
         providers: precision === 'coarse' ? baseProviders.map(provider => applyGoalRefinements(provider, refinements, sourceRevision)) : baseProviders, initialBalances,

@@ -31,6 +31,8 @@ export type GoalTransportPhysicalInput = Readonly<{
   hullReferences?: readonly import('./goal-planner-types').GoalEntityReference[];
   /** Normal planner commands need connectivity; native timing refines in the background. */
   travelTimePolicy?: 'connectivity-estimate';
+  /** A future dock is a target pose, independent of a hull currently turning. */
+  berthOrientation?: 'shore';
 }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const unique = (ids: readonly string[]) => [...new Set(ids)].sort();
@@ -46,7 +48,16 @@ function candidates<T>(known: readonly T[], deferred: readonly Deferred[], factI
 /** Native transport rules behind the one owner-think source. This factory
  * owns no Situation/query/work allowance and invokes no private pathfinder. */
 export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput): GoalTransportFactPorts {
-  const berth = createGoalBoardingGeometry(input);
+  const nativeBerth = createGoalBoardingGeometry(input);
+  const berth: GoalTransportFactPorts['berth'] = (passenger, hull, shore) => {
+    if (input.berthOrientation !== 'shore') return nativeBerth(passenger, hull, shore);
+    // Only the proposal's preferred heading changes. The finite native scan
+    // still proves hull fit, shared boarding gap and the exact land/sea pair.
+    const assessment = { ...hull.assessment, sailing: { ...hull.assessment.sailing!,
+      heading: Math.atan2(shore.water.y - shore.ground.y, shore.water.x - shore.ground.x) } };
+    shareShipProfile(hull.assessment, assessment);
+    return nativeBerth(passenger, { ...hull, assessment }, shore);
+  };
   return {
     berth,
     shores(from, to) {

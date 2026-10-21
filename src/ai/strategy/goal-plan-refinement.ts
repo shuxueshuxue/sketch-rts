@@ -5,6 +5,7 @@ import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningC
 type Entry = { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
   exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number] };
 export type GoalRefinementMemory = { revision: number; entries: Entry[] };
+export type GoalExactPreparation = Readonly<{ plan: GoalPlan; deferActionIds: readonly string[]; changed: boolean }>;
 /** Clock deadlines do not create a new physical proposal. Actual geometry,
  * actors and quoted bounds still participate, so a moved/changed choice cannot
  * borrow another proposal's exact validation. */
@@ -68,12 +69,12 @@ const sameChoice = (a: GoalActionDeclaration, b: GoalActionDeclaration) => {
 };
 
 /** Refinement is demand-driven by the chosen graph, never its rejected
- * alternatives. Newly found exact declarations re-enter ordinary regression
- * next think, so changed preconditions/times/resources are scheduled again. */
+ * alternatives. Newly found exact declarations re-enter ordinary regression,
+ * sharing the current allowance when the owner enables same-think passes. */
 export function createGoalPlanRefiner(input: Readonly<{
   memory: GoalRefinementMemory; providers: readonly GoalActionProvider[];
   exactContext: (selected: readonly GoalActionDeclaration[], plan: GoalPlan) => GoalPlanningContext;
-  prepareExact?: (plan: GoalPlan, selected: GoalPlan['actions'], context: GoalPlanningContext) => GoalPlan | undefined;
+  prepareExact?: (plan: GoalPlan, selected: GoalPlan['actions'], context: GoalPlanningContext) => GoalExactPreparation | undefined;
   sourceRevision?: (action: GoalActionDeclaration) => string;
 }>) {
   const { memory } = input;
@@ -95,12 +96,16 @@ export function createGoalPlanRefiner(input: Readonly<{
       return retain;
     });
     const first = new Set(plan.actions.filter(node => !node.dependsOnActionIds.length).map(node => node.id));
-    const selected = plan.actions.filter(node => first.has(node.id)
+    let selected = plan.actions.filter(node => first.has(node.id)
       || node.dependsOnActionIds.length && node.dependsOnActionIds.every(id => first.has(id)));
     if (!selected.length) return plan;
     const context = input.exactContext(selected.map(node => node.declaration), plan);
     const prepared = input.prepareExact?.(plan, selected, context);
-    if (prepared) return prepared;
+    if (prepared) {
+      if (prepared.changed) return prepared.plan;
+      plan = prepared.plan;
+      selected = selected.filter(node => !prepared.deferActionIds.includes(node.id));
+    }
     const deferred = [...(plan.deferredCandidates ?? [])];
     const annotations = new Map<string, NonNullable<GoalPlan['actions'][number]['refinement']>>();
     let changed = invalidated.size > 0;
