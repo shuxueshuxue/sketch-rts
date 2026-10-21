@@ -14,16 +14,18 @@ type Plan = Readonly<{ id: string; status: string; actions: readonly Action[];
 export type PuzzlePlanObservation = Readonly<{
   output: { plans: readonly Plan[] };
   /** IDs returned by the shared goalCampId/resolveGoalCamp, never guessed by proximity. */
-  campIds: { target: string; beach?: string; local?: string };
+  campIdFor: (originalMemberIds: readonly string[]) => string;
   /** Actual allocator ledger (StrategyPlanTrace.budget), not a forecast balance. */
   hallGoldReservation: number | null;
 }>;
 export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, observed: PuzzlePlanObservation) {
+  const campId = (members: typeof world.guards) => members.length ? observed.campIdFor(members.map(u => u.id)) : undefined;
+  const campIds = { target: campId(world.guards), beach: campId(world.beachGuards), local: campId(world.localGuards) };
   const plans = observed.output.plans.filter(p => p.status !== 'blocked');
   const actions = plans.flatMap(p => p.actions), effects = (a: Action) => a.declaration.effects.filter(e => e.operation === 'establish').map(e => e.fact.predicate);
   const kind = (name: string) => actions.filter(a => a.declaration.kind === name);
   const producing = (predicate: (p: Predicate) => boolean) => actions.filter(a => effects(a).some(predicate));
-  const camp = (id: string) => producing(p => p.kind === 'camp-cleared' && p.campId === id);
+  const camp = (id: string | undefined) => id ? producing(p => p.kind === 'camp-cleared' && p.campId === id) : [];
   const building = (name: string) => producing(p => p.kind === 'building-complete' && p.buildingKind === name);
   const trained = (name: string) => producing(p => p.kind === 'unit-available' && p.unitKind === name);
   const hall = producing(p => p.kind === 'hall-complete' && p.mineId === world.mine.id);
@@ -42,8 +44,8 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
     expect(left.some(a => right.some(b => reaches(a.id, b.id))), label).toBe(true);
   };
   const ferryChain = () => {
-    before(kind('transport-force'), camp(observed.campIds.target), 'army transport before camp');
-    before(camp(observed.campIds.target), kind('transport-worker'), 'clear before worker transport');
+    before(kind('transport-force'), camp(campIds.target), 'army transport before camp');
+    before(camp(campIds.target), kind('transport-worker'), 'clear before worker transport');
     before(kind('transport-worker'), hall, 'worker transport before hall');
   };
   switch (puzzle.key) {
@@ -56,9 +58,9 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
     case 'supply-tier':
       if (puzzle.variant === 'knight') {
         before(building('farm'), trained('knight'), 'farm unlocks knight tier');
-        before(trained('knight'), camp(observed.campIds.target), 'knight clears camp');
+        before(trained('knight'), camp(campIds.target), 'knight clears camp');
       } else {
-        before(trained('footman'), camp(observed.campIds.target), 'faster basic force clears camp');
+        before(trained('footman'), camp(campIds.target), 'faster basic force clears camp');
         expect(trained('knight')).toHaveLength(0);
         expect(building('farm')).toHaveLength(0);
       }
@@ -85,20 +87,20 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
       break;
     }
     case 'guarded-shore': {
-      required(kind('transport-force'), 'army crosses water'); required(camp(observed.campIds.target), 'target camp');
+      required(kind('transport-force'), 'army crosses water'); required(camp(campIds.target), 'target camp');
       const shores = actions.flatMap(effects).filter(p => p.kind === 'shore-safe');
       const safeLanding = shores.some(p => {
         const landing = p.landing as { point?: { x: number; y: number } } | undefined;
         return landing?.point && Math.hypot(landing.point.x - world.landing.x, landing.point.y - world.landing.y) < 400;
       });
       expect(safeLanding, 'chosen native landing changes with force size').toBe(true);
-      if (puzzle.variant === 'strong') before(camp(observed.campIds.beach!), camp(observed.campIds.target), 'clear near beach before target camp');
-      else expect(camp(observed.campIds.beach!)).toHaveLength(0);
+      if (puzzle.variant === 'strong') before(camp(campIds.beach), camp(campIds.target), 'clear near beach before target camp');
+      else expect(camp(campIds.beach)).toHaveLength(0);
       break;
     }
     case 'negative-return':
-      expect(camp(observed.campIds.target), 'do not commit to the loss-making camp').toHaveLength(0);
-      required(camp(observed.campIds.local!), 'use army on mainland opportunity');
+      expect(camp(campIds.target), 'do not commit to the loss-making camp').toHaveLength(0);
+      required(camp(campIds.local), 'use army on mainland opportunity');
       required(producing(p => p.kind === 'hall-complete' && p.mineId === world.localMine!.id), 'mainland expansion');
       break;
     case 'evacuate':
