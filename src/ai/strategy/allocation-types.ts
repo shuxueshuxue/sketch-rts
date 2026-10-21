@@ -28,7 +28,9 @@ export type ProductionBinding = Readonly<{
 }>;
 export type ActionIntent =
   | Readonly<{ kind: 'clear-camp'; memberIds: readonly string[] }>
-  | Readonly<{ kind: Exclude<Subgoal['kind'], 'clear-camp'> | 'defend-site' | 'recall' | 'wait-in-cover' | 'load' | 'sail' | 'unload'
+  | Readonly<{ kind: 'assemble-force'; campTarget: Target; requiredForce: number;
+      posts: readonly Readonly<{ id: string; target: Target; unitIds: readonly string[] }>[] }>
+  | Readonly<{ kind: Exclude<Subgoal['kind'], 'clear-camp' | 'assemble-force'> | 'defend-site' | 'recall' | 'wait-in-cover' | 'load' | 'sail' | 'unload'
       | 'attack-site' | 'contest-route' | 'counter-harass' | 'recover-site' }>;
 export type AllocationReason = Readonly<{ code: string; factIds: readonly string[];
   values: Readonly<Record<string, string | number | boolean | null>> }>;
