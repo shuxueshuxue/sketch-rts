@@ -3,33 +3,59 @@ import { BUILDING_DEFS } from '../../../shared/catalog';
 import type { PublicPuzzleCase } from './scenes';
 import type { PuzzleWorld } from './world';
 
-/** Read-only projection of the approved GoalPlannerOutput, not a second fact source.
- * Replace this projection with the shared type when its prerequisite stack reaches main. */
-type Predicate = Readonly<{ kind: string; [key: string]: unknown }>;
-type Action = Readonly<{ id: string; dependsOnActionIds: readonly string[]; startTick: number | null; finishTick: number | null;
-  declaration: { kind: string; effects: readonly { fact: { predicate: Predicate }; operation: string }[] } }>;
-type Plan = Readonly<{ id: string; status: string; actions: readonly Action[];
-  edges: readonly { from: string; to: string }[];
-  resourceTimeline: readonly { tick: number; before: number; after: number; resource: { kind: string } }[] }>;
+import { goalCampId, goalFact, goalValueKey } from '../goal-facts';
+import { projectGoalResources, type GoalScheduledAction } from '../goal-resource-ledger';
+import type { GoalActionKind, GoalActionNode, GoalFactPredicate, GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
+import type { StrategyAllocationTrace } from '../allocation-types';
+
 export type PuzzlePlanObservation = Readonly<{
-  output: { plans: readonly Plan[] };
-  /** IDs returned by the shared goalCampId/resolveGoalCamp, never guessed by proximity. */
-  campIdFor: (originalMemberIds: readonly string[]) => string;
-  /** Actual allocator ledger (StrategyPlanTrace.budget), not a forecast balance. */
-  hallGoldReservation: number | null;
+  input: GoalPlannerInput;
+  output: GoalPlannerOutput;
+  /** Actual same-think allocator trace, never a resource forecast. */
+  allocation: StrategyAllocationTrace | null;
 }>;
+
+/** Recompute every resource prefix from the real input and selected schedules.
+ * A proposed trace balance, unknown timestamp or repeated action cannot mint
+ * resources or stand in for the shared source's initial inventory. */
+export function projectPuzzleResources(observed: Pick<PuzzlePlanObservation, 'input' | 'output'>) {
+  const selected = observed.output.plans.filter(p => p.status !== 'blocked');
+  const scheduled = new Map<string, GoalScheduledAction>();
+  for (const node of selected.flatMap(p => p.actions).filter(node => node.state !== 'world-effects-met')) {
+    if (node.startTick === null || node.finishTick === null) return {
+      state: 'pending' as const, reason: { code: 'puzzle-action-not-scheduled', factIds: [node.id], values: {} },
+    };
+    const old = scheduled.get(node.declaration.id);
+    if (old && (old.startTick !== node.startTick || old.finishTick !== node.finishTick
+      || goalValueKey(old.action) !== goalValueKey(node.declaration))) return {
+      state: 'pending' as const, reason: { code: 'puzzle-shared-action-conflict', factIds: [node.id], values: {} },
+    };
+    scheduled.set(node.declaration.id, { action: node.declaration, startTick: node.startTick, finishTick: node.finishTick });
+  }
+  return projectGoalResources({ epoch: observed.input.context.tick, initial: observed.input.initialBalances,
+    actions: [...scheduled.values()] });
+}
 export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, observed: PuzzlePlanObservation) {
-  const campId = (members: typeof world.guards) => members.length ? observed.campIdFor(members.map(u => u.id)) : undefined;
+  expect(observed.input.context.owner).toBe(world.owner);
+  expect(observed.input.context.tick).toBe(world.game.tick);
+  for (const request of observed.input.goals) for (const fact of request.effects)
+    expect(fact.id, 'goals use the shared canonical predicate identity').toBe(goalFact(fact.predicate).id);
+  const campId = (members: typeof world.guards) => members.length ? goalCampId(members.map(u => u.id)) : undefined;
   const campIds = { target: campId(world.guards), beach: campId(world.beachGuards), local: campId(world.localGuards) };
   const plans = observed.output.plans.filter(p => p.status !== 'blocked');
-  const actions = plans.flatMap(p => p.actions), effects = (a: Action) => a.declaration.effects.filter(e => e.operation === 'establish').map(e => e.fact.predicate);
-  const kind = (name: string) => actions.filter(a => a.declaration.kind === name);
-  const producing = (predicate: (p: Predicate) => boolean) => actions.filter(a => effects(a).some(predicate));
-  const camp = (id: string | undefined) => id ? producing(p => p.kind === 'camp-cleared' && p.campId === id) : [];
+  const actions = plans.flatMap(p => p.actions).filter(node => node.state !== 'world-effects-met'), effects = (a: GoalActionNode) => a.declaration.effects.filter(e => e.operation === 'establish').map(e => e.fact.predicate);
+  const kind = (name: GoalActionKind) => actions.filter(a => a.declaration.kind === name);
+  const producing = (predicate: (p: GoalFactPredicate) => boolean) => actions.filter(a => effects(a).some(predicate));
+  const camp = (id: string | undefined) => id ? actions.filter(a => a.declaration.effects.some(e => e.operation === 'establish'
+    && e.fact.id === goalFact({ kind: 'camp-cleared', campId: id }).id)) : [];
   const building = (name: string) => producing(p => p.kind === 'building-complete' && p.buildingKind === name);
   const trained = (name: string) => producing(p => p.kind === 'unit-available' && p.unitKind === name);
   const hall = producing(p => p.kind === 'hall-complete' && p.mineId === world.mine.id);
-  const required = (values: readonly Action[], label: string) => { expect(values.length, label).toBeGreaterThan(0); return values; };
+  const required = (values: readonly GoalActionNode[], label: string) => { expect(values.length, label).toBeGreaterThan(0); return values; };
+  const projection = projectPuzzleResources(observed);
+  expect(projection.state, 'shared resource ledger must prove every prefix; pending is not solvent').toBe('met');
+  if (projection.state === 'pending') throw new Error(projection.reason.code);
+  expect(projection.deficits, 'real initial inventory and source-deduplicated flows must fund every selected plan').toEqual([]);
   const predecessors = new Map<string, Set<string>>();
   const link = (from: string, to: string) => { const set = predecessors.get(to) ?? new Set(); set.add(from); predecessors.set(to, set); };
   for (const action of actions) for (const parent of action.dependsOnActionIds) link(parent, action.id);
@@ -39,7 +65,7 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
     seen.add(to);
     return [...(predecessors.get(to) ?? [])].some(id => id === from || reaches(from, id, seen));
   };
-  const before = (left: readonly Action[], right: readonly Action[], label: string) => {
+  const before = (left: readonly GoalActionNode[], right: readonly GoalActionNode[], label: string) => {
     required(left, `${label}: predecessor`); required(right, `${label}: successor`);
     expect(left.some(a => right.some(b => reaches(a.id, b.id))), label).toBe(true);
   };
@@ -69,10 +95,17 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
       ferryChain();
       before(building('shipyard'), trained('transport'), 'yard before new hull');
       before(trained('transport'), kind('transport-force'), 'new hull before army transport');
-      const gold = plans.flatMap(p => p.resourceTimeline).filter(e => e.resource.kind === 'gold');
-      expect(gold.length, 'explicit gold timeline').toBeGreaterThan(0);
-      expect(gold.every(e => e.before >= 0 && e.after >= 0), 'no insolvent prefix').toBe(true);
-      expect(observed.hallGoldReservation, 'real hall reservation, separate from forecast').toBeGreaterThanOrEqual(BUILDING_DEFS.townHall.cost);
+      const gold = projection.timeline.filter(e => e.resource.kind === 'gold');
+      expect(gold.length, 'recomputed gold timeline').toBeGreaterThan(0);
+      expect(gold.every(e => e.before >= 0 && e.after >= 0), 'no insolvent prefix or double-counted income/bounty').toBe(true);
+      const hallBindings = hall.flatMap(node => node.allocation ? [node.allocation] : []);
+      const reserved = observed.allocation?.budget.filter(entry => entry.state === 'reserved' && hallBindings.some(binding =>
+        binding.objectiveId === entry.objectiveId && binding.methodId === entry.methodId
+        && binding.actionId === entry.action.actionId && binding.generation === entry.action.generation)) ?? [];
+      expect(observed.allocation, 'actual allocation trace, not a hand-authored amount').not.toBeNull();
+      expect(new Set(reserved.map(entry => entry.id)).size).toBe(reserved.length);
+      expect(reserved.reduce((sum, entry) => sum + Math.max(0, entry.amountGold - entry.paidGold), 0),
+        'hall capital joined to its real allocator action/generation').toBeGreaterThanOrEqual(BUILDING_DEFS.townHall.cost);
       break;
     }
     case 'defense-window': {
@@ -88,14 +121,16 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
     }
     case 'guarded-shore': {
       required(kind('transport-force'), 'army crosses water'); required(camp(campIds.target), 'target camp');
-      const shores = actions.flatMap(effects).filter(p => p.kind === 'shore-safe');
-      const safeLanding = shores.some(p => {
-        const landing = p.landing as { point?: { x: number; y: number } } | undefined;
-        return landing?.point && Math.hypot(landing.point.x - world.landing.x, landing.point.y - world.landing.y) < 400;
-      });
-      expect(safeLanding, 'chosen native landing changes with force size').toBe(true);
-      if (puzzle.variant === 'strong') before(camp(campIds.beach), camp(campIds.target), 'clear near beach before target camp');
-      else expect(camp(campIds.beach)).toHaveLength(0);
+      const shoreFacts = kind('transport-force').flatMap(a => a.declaration.preconditions)
+        .filter(f => f.predicate.kind === 'shore-safe');
+      expect(shoreFacts.some(f => f.predicate.kind === 'shore-safe'
+        && Math.hypot(f.predicate.landing.point.x - world.landing.x, f.predicate.landing.point.y - world.landing.y) < 400),
+      'selected transport uses the appropriate shore; already safe needs no clear action').toBe(true);
+      const near = world.beachGuards.reduce((p, u) => ({ x: p.x + u.x / world.beachGuards.length, y: p.y + u.y / world.beachGuards.length }), { x: 0, y: 0 });
+      const clearNear = [...camp(campIds.beach), ...kind('clear-shore').filter(a => effects(a).some(p =>
+        p.kind === 'shore-safe' && Math.hypot(p.landing.point.x - near.x, p.landing.point.y - near.y) < 400))];
+      if (puzzle.variant === 'strong') before(clearNear, camp(campIds.target), 'clear near beach before target camp');
+      else expect(clearNear, 'safe alternative must not clear the dangerous near beach').toHaveLength(0);
       break;
     }
     case 'negative-return':
