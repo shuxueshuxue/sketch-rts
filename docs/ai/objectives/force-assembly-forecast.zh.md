@@ -11,3 +11,7 @@
 运行时情景上限为常量 `ASSEMBLY_SCENARIO_LIMIT=64`。超限仅该 forecast 输出 `unknown`、原因 `scenario-limit`，`diagnostics.scenarioLimitCount=1`，不会抛异常终止玩家 think。测试、同次报价诊断与后续 11 图审计须累计此计数；真实对局触发仍是待解决问题。其他目标可继续报价。
 
 两层在支持的比较窗内仍不够时是已知 `needs-production` 及缺口；未发布实际路线、缺 job 身份、未报价恢复、超出经验曲线支持仍保留对应 unknown。没有校准默认 P=1，也不制造未来成员。当前纯模块尚未接校准/控制 wrapper，不代表自然 grant 或 18000 tick 行为验收通过。
+
+实际供给 reader 只读取本次候选组和原生已付 job，不从未获配现存兵池补造免费成员。招募路线起点由原生 landSpawnPoint 选择，堵塞出口保持显式缺项。条件情景首次凑齐时同时输出选中的原库存阶梯 sampleTick 和 queue shift；后续货币评估必须用这一点的真实 HP/武器成员，不能用平均时刻或分数个兵。实际单位仍保持原身份，未来样本和 job 仅生成评估命名空间的副本，不能进入 lease。
+
+生产 lane 的占用止于原生 queue 工作结束，已出生单位走向 post 的时间只延迟该兵的到岗，不继续冻结工厂。共用 Arrival reader 由同一次控制事务提供，评估几何使用独立缓存身份，防止旧位置 ETA 被误用；reader 不另建查询或预算。
