@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "evidence": "artificial-contract-only",
+  "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+  "packets": 3,
+  "drags": [
+    {
+      "requested": 68,
+      "actual": 68
+    },
+    {
+      "requested": 95,
+      "actual": 95
+    }
+  ],
+  "checked": [
+    "recorded-edges",
+    "rejected-alternatives",
+    "pending-request",
+    "generation-binding",
+    "pointer-seek",
+    "incremental-replay",
+    "unrecorded-gap"
+  ],
+  "source": "dca0b4c4776b36f22623de0398118627c19ac229",
+  "contractSource": "8afe8a35b3474855ac4352752cd1ffe0b6c999c9",
+  "rawDirectory": "/root/.cache/sketch-cli/runs/mvhlramk-4bb3c5/dca0b4c",
+  "browserOk": true,
+  "browserErrors": [],
+  "shots": [
+    {
+      "path": "goal-contract-alternatives.png",
+      "sha256": "eafe470b040b23a8c85b18f11846863a88f906aa2f1f3c4c87e5a64e25c55b65",
+      "bytes": 196105,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-contract-execution.png",
+      "sha256": "ccb7149a90344dab624c9734bb103ce7626ddc96f7e489fa50ef52eb8a500db7",
+      "bytes": 196511,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-contract-unrecorded.png",
+      "sha256": "fbd8ee8753759d6fcada812e012b9c470c32b604f3916eb38e5deb2c8a32d8bf",
+      "bytes": 233357,
+      "width": 1600,
+      "height": 900
+    }
+  ],
+  "validation": {
+    "rootTscExit": 0,
+    "cliTscExit": 0,
+    "testFiles": 9,
+    "testsPassed": 48,
+    "codeSource": "dca0b4c4776b36f22623de0398118627c19ac229"
+  },
+  "notEvidenceOf": [
+    "real planner decisions",
+    "AI execution",
+    "planner search performance",
+    "full match render performance"
+  ]
+}

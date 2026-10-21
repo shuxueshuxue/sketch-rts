@@ -18,7 +18,7 @@
 
 32 已提供 `fa9fff25` 的 `GoalPlan`、事实、动作、边、候选、数量时间账本和分配关联类型。版式脚本中的演示对象只属于本地样稿，不导出为 shared 契约。
 
-正式消费将按该类型接入：事实 `pending` 保留稳定 requestId；动作就绪与实际执行分开；执行只关联同一 action/generation 的真实分配与回执；结果只读世界效果观测，未来产物保留 output 引用。正式入口已在 `e30fa911` 定为 `AiPlanTrace.goalPlanner?: GoalPlannerOutput`。公共事实队列等依赖位于 de1/fa9/e30 栈，下一步将消费端换到该共同基线，不单抄或伪造队列实现；生产尚未运行规划器时，缺少字段就表示未记录输出。
+正式类型的[游戏内消费端](goal-consumer.zh.md)已在共同基础设施栈上接线：事实 `pending` 保留稳定 requestId；动作就绪与实际执行分开；执行只关联同一 objective/method/action/generation 的真实分配与回执；结果只读世界效果观测，未来产物保留 output 引用。正式入口是 `AiPlanTrace.goalPlanner?: GoalPlannerOutput`，没有复制或伪造公共事实队列。生产尚未运行规划器时，缺少字段就表示未记录输出；人工契约样例不作为真实对局证据。
 
 `#576` 继续保持 draft。已有分配接线和验证记录见 [allocation-wiring.zh.md](allocation-wiring.zh.md)；它们是上一轮的基础设施，新的展示主线由这张依赖图取代。
 
