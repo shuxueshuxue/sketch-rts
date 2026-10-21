@@ -4,8 +4,8 @@ export type PlanOutputDelta =
   | { kind: 'fields'; set: Record<string, PlanOutputDelta>; remove: string[] }
   | { kind: 'rows'; key: RowKey; upsert: { id: string; delta: PlanOutputDelta }[]; remove: string[]; order?: string[] };
 
-type RowKey = 'id' | 'objectiveId' | 'actionId';
-const rowKeys: readonly RowKey[] = ['id', 'objectiveId', 'actionId'];
+type RowKey = 'id' | 'objectiveId' | 'actionId' | 'goalKey';
+const rowKeys: readonly RowKey[] = ['id', 'objectiveId', 'actionId', 'goalKey'];
 const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 

@@ -1,0 +1,97 @@
+import { expect, it } from 'vitest';
+import { goalPlanDetail, goalPlanGraph, recordedGoalAssignments, recordedGoalExecution } from './ai-goal-plan';
+import { goalDependencyFixture } from './ai-goal-plan.test-fixture';
+import { planViewNodes } from './ai-plan-strategy';
+import { AiPlanHistory } from './ai-plan-history';
+import { applyAiPlanDelta, diffAiPlan, filterAiPlanPacket } from '../ai/plan-stream';
+import type { GoalPlan } from '../ai/strategy/goal-planner-types';
+
+it('shows every recorded dependency layer, pending requests, rejected alternatives and unknown estimates without inventing execution', () => {
+  const { plan, trace, action, safe } = goalDependencyFixture(), before = JSON.stringify(trace);
+  const graph = goalPlanGraph(plan, trace), fact = goalPlanDetail(plan, trace, safe.id), detail = goalPlanDetail(plan, trace, action.id);
+  for (const word of ['目标', '世界条件', '推导动作', 'route-request', 'requires', 'establishes', '计划 planned-defense', '执行未记录']) expect(graph).toContain(word);
+  for (const word of ['选中', '落选', 'recall-distant', '成本 —', '&lt;img']) expect(fact).toContain(word);
+  expect(fact).not.toContain('<img');
+  expect(detail).toContain('未记录执行回执'); expect(detail).toContain('0 名正式分配');
+  expect(detail).toContain('效果尚未证实'); expect(detail).toContain('计划执行器');
+  expect(recordedGoalExecution(trace, action)).toBeUndefined(); expect(recordedGoalAssignments(trace, action)).toEqual([]);
+  const node = planViewNodes(trace).find(row => row.goalPlan)!;
+  expect(node.resources.unitIds).toEqual([]); expect(node.status).toBe('waiting-facts');
+  expect(JSON.stringify(trace)).toBe(before);
+});
+
+it('joins only the recorded objective, method, action and generation, and labels predicted balances separately', () => {
+  const { plan, trace, action, first } = goalDependencyFixture();
+  const current = { ...action, allocation: { ...action.allocation!, generation: 1 } };
+  expect(recordedGoalExecution(trace, current)?.phase).toBe('gather');
+  expect(recordedGoalAssignments(trace, current).map(row => row.unitId)).toEqual([first.id]);
+  expect(recordedGoalAssignments(trace, { ...current, allocation: { ...current.allocation, methodId: 'another' } })).toEqual([]);
+  const text = goalPlanDetail({ ...plan, actions: [current] }, trace, current.id);
+  expect(text).toContain('正式执行记录'); expect(text).toContain('fixture-defense');
+  expect(text).toContain('命令接纳与排队不证明已生效');
+  const goal = goalPlanDetail(plan, trace);
+  expect(goal).toContain('规划数量与时间账本'); expect(goal).toContain('实际支出由原生回执证明');
+  expect(goal).not.toContain('目标效果于');
+});
+
+it('keeps future availability explicit and does not make a future met condition ready at the current tick', () => {
+  const { plan, trace, route } = goalDependencyFixture();
+  const next = { ...plan, facts: plan.facts.map(row => row.id !== route.id ? row : { ...row,
+    observation: { ...row.observation, state: 'met' as const, availableTick: 400,
+      route: { distance: 90, ticks: 350, points: [{ x: 0, y: 0 }] } } }) };
+  expect(goalPlanGraph(next, trace)).toContain('当前未到时刻');
+  const detail = goalPlanDetail(next, trace, route.id);
+  expect(detail).toContain('当前尚不可用'); expect(detail).toContain('&quot;distance&quot;: 90');
+  expect(next.readyActionIds).toEqual([]);
+});
+
+it('carries graph deltas through private transport, JSON recording and history without mutating past frames or crossing a gap', () => {
+  const { trace, output, plan } = goalDependencyFixture(), previous = JSON.stringify(trace);
+  const next = { ...trace, tick: 65, goalPlanner: { ...output, plans: [{ ...plan, observedTick: 65, status: 'ready' as const }] } };
+  const baseline = diffAiPlan(undefined, trace, 1), packet = diffAiPlan(trace, next, 1);
+  expect(packet.goalPlannerDelta).toBeDefined(); expect(packet.header.goalPlanner).toBeUndefined();
+  expect(applyAiPlanDelta(applyAiPlanDelta(undefined, baseline), packet)).toEqual(next);
+  expect(applyAiPlanDelta(undefined, packet)).toBeUndefined();
+  expect(filterAiPlanPacket(packet, { kind: 'owner', owner: 'enemy' })).toBeUndefined();
+  expect(filterAiPlanPacket(packet, { kind: 'none' })).toBeUndefined();
+  const history = new AiPlanHistory();
+  for (const message of JSON.parse(JSON.stringify([{ type: 'coverage', session: 1, from: 50, to: 70 }, baseline, packet]))) history.receive(message);
+  expect(history.nodes(50).find(row => row.node.goalPlan)?.node.goalPlan?.status).toBe('waiting-facts');
+  expect(history.nodes(65).find(row => row.node.goalPlan)?.node.goalPlan?.status).toBe('ready');
+  expect(history.nodes(90)).toEqual([]); expect(JSON.stringify(trace)).toBe(previous);
+  const { goalPlanner: _removed, ...without } = next;
+  expect(applyAiPlanDelta(next, diffAiPlan(next, { ...without, tick: 70 }, 1))?.goalPlanner).toBeUndefined();
+});
+
+it('patches one fact and its cache entry rather than resending the graph, and reads complete-header recordings', () => {
+  const { trace, output, plan } = goalDependencyFixture();
+  const rich: GoalPlan = { ...plan, facts: Array.from({length:80},(_,index)=>({ ...plan.facts[0]!,id:`fact-${index}`,
+    observation:{...plan.facts[0]!.observation, fact:{...plan.facts[0]!.observation.fact,id:`fact-${index}`},quantity:index,
+      reason:{code:'fixture-repeated-evidence',values:{note:'unchanged source evidence '.repeat(8)},factIds:[`fact-${index}`]}} })) };
+  const changed: GoalPlan = {...rich,observedTick:65,facts:rich.facts.map((row,index)=>index!==31?row:{...row,
+    observation:{...row.observation,quantity:99,revision:'changed'}})};
+  const withPlan=(value:GoalPlan)=>({...output,plans:[value],cache:{...output.cache,entries:[{...output.cache.entries[0]!,plan:value}]}});
+  const old={...trace,goalPlanner:withPlan(rich)},next={...trace,tick:65,goalPlanner:withPlan(changed)};
+  const bytes=JSON.stringify(old),packet=diffAiPlan(old,next,1);
+  expect(packet.goalPlannerDelta).toBeDefined();
+  expect(JSON.stringify(packet)).toContain('goalKey');
+  expect(JSON.stringify(packet).length).toBeLessThan(JSON.stringify(next.goalPlanner).length*.25);
+  expect(applyAiPlanDelta(old,packet)).toEqual(next);expect(JSON.stringify(old)).toBe(bytes);
+  const {goalPlannerDelta:_patch,...complete}=packet;
+  expect(applyAiPlanDelta(old,{...complete,header:{...complete.header,goalPlanner:next.goalPlanner}})).toEqual(next);
+  expect(applyAiPlanDelta(old,{...packet,goalPlannerDelta:{kind:'replace',value:{...next.goalPlanner,
+    cache:{...next.goalPlanner.cache,owner:'enemy'}}}})).toBeUndefined();
+});
+
+it('starts a fresh observed lifetime when the same goal becomes unmet after completion',()=>{
+  const {trace,output,plan}=goalDependencyFixture(),history=new AiPlanHistory();
+  history.receive({type:'coverage',session:1,from:50,to:100});
+  let previous;
+  for(const tick of [50,65,80,95]){
+    const next={...trace,tick,goalPlanner:{...output,plans:[{...plan,observedTick:tick,
+      status:tick===65?'complete' as const:'waiting-facts' as const,completedTick:tick===65?65:null}]}};
+    history.receive(diffAiPlan(previous,next,1));previous=next;
+  }
+  expect(history.bands.filter(row=>row.id==='goalPlanner/defense-plan').map(row=>[row.from,row.to,row.status]))
+    .toEqual([[50,65,'complete'],[80,95,'waiting-facts']]);
+});

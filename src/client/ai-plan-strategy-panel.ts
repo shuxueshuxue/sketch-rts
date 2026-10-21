@@ -31,6 +31,11 @@ export function strategyPlanPanel(trace: AiPlanTrace, node: PlanViewNode, record
   const eventHtml = (event: AllocationEvent) => {
     let detail = '';
     if (event.kind === 'preempted') detail = `<br>新增收益 ${n(event.quotation.marginalBenefitGold)} · 原目标损失 ${n(event.quotation.displacedLossGold)} · 切换成本 ${n(event.quotation.switchingCostGold)}`;
+    if (event.kind === 'preempted' && event.quotation.displacedLoss) {
+      const loss=event.quotation.displacedLoss;
+      detail+=`<br><small>损失口径：${loss.kind==='remaining-utility'?'剩余效用':loss.kind==='upper-bound'?'迁移旧任务的潜在值上界':'集结延迟损失上界'}</small>`;
+      if('bound' in loss)detail+=`<details><summary>查看上界依据</summary><pre>${planHtml(JSON.stringify(loss.bound,null,2))}</pre></details>`;
+    }
     return `<p>${planClock(event.tick)} · ${planHtml(allocationEventLabel(event))}${detail}<br><small>${reason(event.reason)}</small></p>`;
   };
   return `<article class="plan-strategy" data-objective="${planHtml(objectiveId)}">

@@ -1,13 +1,22 @@
 import type { AiPlanNode, AiPlanTrace } from '../ai/plan-trace';
 import type { AllocationEvent, AllocationReason, ObjectiveAllocation } from '../ai/strategy/allocation-types';
 import type { Objective, ResourceDemand } from '../ai/strategy/types';
+import type { GoalPlan } from '../ai/strategy/goal-planner-types';
+import { goalFactLabel, recordedGoalAssignments, recordedGoalExecution } from './ai-goal-plan';
 
 export type PlanViewNode = Omit<AiPlanNode, 'status'> & {
   status: string;
   strategy?: { objectiveId: string; quote?: Objective; allocation?: ObjectiveAllocation };
+  goalPlan?: GoalPlan;
 };
 export type PlanAllocationEvent = { owner: string; event: AllocationEvent; observedTick: number; session: number };
 export const strategyGoalId = (id: string) => `strategy/${id}`;
+export const plannerGoalId = (id: string) => `goalPlanner/${id}`;
+export function traceObjectiveNodeId(trace: AiPlanTrace | undefined, objectiveId: string) {
+  const plan=trace?.goalPlanner?.plans.find(row=>row.goal.id===objectiveId
+    ||row.actions.some(action=>action.allocation?.objectiveId===objectiveId));
+  return plan?plannerGoalId(plan.id):strategyGoalId(objectiveId);
+}
 export const allocationEventId = (entry: PlanAllocationEvent) => `allocation/${entry.owner}/${entry.event.id}`;
 const cache = new WeakMap<AiPlanTrace, PlanViewNode[]>();
 const families: Record<Objective['kind'], { label: string; kind: AiPlanNode['kind'] }> = {
@@ -48,6 +57,24 @@ export function planViewNodes(trace: AiPlanTrace): PlanViewNode[] {
       strategy: { objectiveId, ...(quote ? { quote } : {}), ...(allocation ? { allocation } : {}) },
     };
   });
+  for (const plan of trace.goalPlanner?.plans ?? []) {
+    const matched = result.find(node => node.strategy?.objectiveId === plan.goal.id);
+    const resources = { unitIds: [...new Set(plan.actions.flatMap(action => recordedGoalAssignments(trace, action).map(row => row.unitId)))],
+      gold: { reserved: null, required: null } };
+    if (matched) { matched.id=plannerGoalId(plan.id);matched.goalPlan = plan; matched.status = plan.status; matched.resources = resources;delete matched.sinceTick; }
+    else {
+      const effect = plan.goal.effects[0]?.predicate;
+      const target = effect && 'at' in effect ? effect.at : effect && 'site' in effect ? effect.site : undefined;
+      result.push({ id: plannerGoalId(plan.id), kind: effect?.kind === 'hall-complete' ? 'expansion' : effect?.kind === 'site-safe' ? 'defense' : 'task',
+        label: plan.goal.effects.map(fact => goalFactLabel(fact.predicate)).join('、') || plan.goal.id, source: 'goalPlanner', status: plan.status,
+        selected: true, target: target ? { position: target.point, ...(target.entityId ? { entityId: target.entityId } : {}) } : {},
+        utility: { score: plan.valueGold, source: 'planner', terms: [] },
+        reasons: plan.reasons.map(reason => ({ code: reason.code, detail: allocationReason(reason), source: 'goalPlanner' })),
+        requirements: plan.facts.filter(row => row.observation.state !== 'met').map(row => ({ code: row.id,
+          detail: `${goalFactLabel(row.observation.fact.predicate)} · ${row.observation.state === 'pending' ? '等事实' : '未成立'}`,
+          met: row.observation.state === 'pending' ? null : false })), resources, children: [], goalPlan: plan });
+    }
+  }
   result.push(...trace.roots.flatMap(id => { const node = trace.nodes.find(node => node.id === id); return node ? [node] : []; }));
   cache.set(trace, result);
   return result;
@@ -57,6 +84,8 @@ export const planStatus: Record<string, string> = {
   candidate: '候选', proposed: '报价', selected: '已选方法', assigned: '已分配', 'en-route': '在途', 'on-station': '已到岗',
   active: '执行中', ready: '就绪', waiting: '等待', paused: '暂停', blocked: '受阻', complete: '完成', done: '完成',
   failed: '失败', abandoned: '放弃', released: '不再保留（结果未记录）',
+  'waiting-facts': '等事实', 'waiting-actions': '等前置动作', 'waiting-time': '等可用时刻',
+  'search-pending': '搜索待续', 'world-effects-met': '世界效果已观测',
 };
 export const stageLabel = (stage: string) => planStatus[stage] ?? stage;
 export function allocationReason(reason: AllocationReason): string {
@@ -78,6 +107,8 @@ export function allocationEventLabel(event: AllocationEvent): string {
     case 'preempted': return `抢占 ${event.quotation.fromObjectiveId} → ${event.quotation.toObjectiveId} · ${event.quotation.resourceKeys.join('、')} · ${event.handoff}`;
     case 'lease-transferred': return `交接 ${event.fromObjectiveId} → ${event.toObjectiveId}`;
     case 'incumbent-adopted': return '接管原有任务';
+    case 'valuation-bound-selected': return `采用估值边界 · ${event.basis.kind} · ${event.scoreGold}`;
+    case 'candidate-reassigned': return `从旧任务重新分配 · ${event.fromTask.source} / ${event.fromTask.taskId}`;
     case 'interrupted': return `救命中断 · ${event.assignmentId}`;
     case 'resumed': return `恢复原任务 · ${event.assignmentId}`;
     case 'vacancy-filled': return `补齐空缺 · ${event.vacancyId}`;
@@ -96,6 +127,11 @@ export function eventMatchesObjective(event: AllocationEvent, objectiveId: strin
 }
 
 export function planPhase(trace: AiPlanTrace, node: PlanViewNode): { phase: string; reason: string } {
+  if (node.goalPlan) {
+    const executions = node.goalPlan.actions.flatMap(action => { const actual = recordedGoalExecution(trace, action); return actual ? [actual] : []; });
+    return { phase: executions.map(action => `${action.phase} (${stageLabel(action.status)})`).join(' / ') || stageLabel(node.goalPlan.status),
+      reason: node.goalPlan.reasons.map(allocationReason).join('；') };
+  }
   if (!node.strategy) return { phase: trace.nodes.find(child => node.children.includes(child.id))?.label ?? node.reasons[0]?.code ?? node.status,
     reason: node.reasons.map(reason => reason.detail).join('；') };
   const allocation = trace.strategy?.allocation, id = node.strategy.objectiveId;

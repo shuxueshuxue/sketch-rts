@@ -46,8 +46,9 @@ export class AiPlanHistory {
     for(const node of nodes){
       const id = node.id;
       const since = Math.max(interval?.from ?? packet.tick, node.strategy ? node.sinceTick ?? 0 : 0);
-      let band=this.bands.find(b=>b.owner===trace.owner&&b.id===id&&b.status!=='released'&&b.from>=since);
-      if(!band){band={owner:trace.owner,id,label:node.label,kind:node.strategy?'strategy':node.kind,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
+      let band=this.bands.filter(b=>b.owner===trace.owner&&b.id===id&&b.status!=='released'&&b.from>=since).at(-1);
+      if(band&&terminal(band.status)&&node.goalPlan&&node.status!=='complete'&&packet.tick>band.to)band=undefined;
+      if(!band){band={owner:trace.owner,id,label:node.label,kind:node.goalPlan?'goal':node.strategy?'strategy':node.kind,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
       if(terminal(band.status))continue;
       band.to=packet.tick;band.status=node.status;
       const {phase,reason}=planPhase(trace,node);
@@ -96,6 +97,8 @@ export function planTimelineRows<T>(items:readonly T[],start:(item:T)=>number,en
 /** Link only an explicitly recorded task identity, never nearby units or positions. */
 export function planDeathMatches(owner:string,node:PlanViewNode,death:AiUnitDeathRecord,fromTick:number){
   if(death.owner!==owner||!death.actualDeath||death.tick<fromTick)return false;
+  if(node.goalPlan)return death.attributionContext.objectiveId===node.goalPlan.goal.id
+    ||node.goalPlan.actions.some(action=>action.allocation?.objectiveId===death.attributionContext.objectiveId);
   if(node.strategy)return death.attributionContext.objectiveId===node.strategy.objectiveId;
   const id=death.assignment.task?.id;
   if(!id)return false;
