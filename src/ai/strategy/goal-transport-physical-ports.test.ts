@@ -111,3 +111,16 @@ it('preserves shared point-route pending/transient/static answers and exact sour
   if(result.state==='pending')expect(result.requestIds).toEqual(['native-route-request']);
  }
 });
+
+it('requests existing voyage risk only for a published exact native sea leg and preserves the model result',()=>{
+ const f=frame(),actual:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:[]};
+ const risk={status:'known' as const,survivalProbability:.73,expectedDamage:12,expectedHpLoss:12,damageErrorBound:1,samples:17,totalSamples:17,computedTick:f.snapshot.tick,basis:'native-route-exposure' as const,threatIds:['actual-coastal-enemy']};
+ const readVoyageRisk=vi.fn<NonNullable<GoalTransportPhysicalInput['readVoyageRisk']>>(()=>risk),from={x:f.hull.x,y:f.hull.y,heading:2.5},to={x:2000,y:2400};
+ const t=f.think(0,6144,{readVoyageRisk}),result=strict(()=>t.ports.seaLeg(actual,from,to,false));
+ expect(result).toMatchObject({state:'met',value:{risk}});expect(readVoyageRisk).toHaveBeenCalledTimes(1);
+ const request=readVoyageRisk.mock.calls[0]![0];
+ expect(request).toMatchObject({shipId:f.hull.id,seaId:'sea:1',start:from,destination:to,route:{partial:false,points:[{...to,heading:from.heading}]}});
+ expect(request.id.length).toBeLessThanOrEqual(256);
+ const delayed=f.think(0,6144,{readVoyageRisk,readPointRoute:()=>({id:'pending-point',fact:{status:'pending',reasonCode:'shared-pending',work:0}})});
+ expect(strict(()=>delayed.ports.seaLeg(actual,from,to,false)).state).toBe('pending');expect(readVoyageRisk).toHaveBeenCalledTimes(1);
+});

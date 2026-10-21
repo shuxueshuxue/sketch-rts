@@ -1,6 +1,7 @@
 import type { Unit } from '../../shared/types';
 import type { Point, SeaId, Target } from './types';
 import type { Shore } from './regions';
+import type { VoyageRisk } from './voyage-risk';
 import type { GoalCandidates, GoalCapacityPressure, GoalEntityReference, GoalEstimate, GoalFact, GoalParameter, GoalTransportRequest } from './goal-planner-types';
 
 export type GoalPublishedValue<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
@@ -26,7 +27,10 @@ export type GoalHullCandidate = Readonly<{
   capacity: number; cargoUnitIds: readonly string[]; factIds: readonly string[];
 }>;
 export type GoalBerth = Readonly<{ water: Point; ground: Point; heading: number }>;
-export type GoalSeaLeg = Readonly<{ ticks: number; endpoint: Point; heading: number }>;
+export type GoalSeaLeg = Readonly<{ ticks: number; endpoint: Point; heading: number;
+  /** Published existing voyage model for this exact hull/start/native route. */
+  risk?: VoyageRisk;
+}>;
 /** All implementations are injected by the one owner-think source. Candidate
  * domains consume them; they cannot construct another query/work allowance. */
 export type GoalTransportFactPorts = Readonly<{

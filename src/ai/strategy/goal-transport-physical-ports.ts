@@ -1,6 +1,7 @@
 import { bodyMass } from '../../shared/physical-body';
 import { shareShipProfile, shipProfile } from '../../shared/ship-geometry';
 import { isTransportKind } from '../../shared/transport-role';
+import { fnv1a } from '../../shared/sim/checksum';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { createGoalBoardingGeometry, type GoalNativeGroundReader } from './goal-boarding-geometry';
 import { goalFact, goalValueKey } from './goal-facts';
@@ -9,6 +10,7 @@ import type { GoalCandidates, GoalFactReader, GoalGroundingReader, GoalProductio
 import type { PointRouteFact } from './point-routes';
 import { seaIdAt, type RegionIndex } from './regions';
 import type { Point, Target } from './types';
+import type { VoyageRisk, VoyageRiskRequest } from './voyage-risk';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
 export type GoalTransportPhysicalInput = Readonly<{
@@ -21,6 +23,8 @@ export type GoalTransportPhysicalInput = Readonly<{
   resolveProducedHull?: (option: GoalProductionOption, unitKind: 'transport' | 'carrier') => GoalPublishedValue<GoalHullCandidate>;
   readGroundPoint?: GoalNativeGroundReader;
   readPointRoute: (ship: Unit, from: Point & { heading: number }, to: Point, future: boolean) => Readonly<{ id: string; fact: PointRouteFact }>;
+  /** Registers/reads the central same-think batch; the domain never samples. */
+  readVoyageRisk?: (request: VoyageRiskRequest) => VoyageRisk;
   /** A bounded alternative prefix, never proof of exhaustive infeasibility. */
   shorePairLimit?: number;
 }>;
@@ -167,7 +171,17 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       if (fact.route.partial || !Number.isFinite(fact.ticks) || fact.ticks < 0 || !Number.isFinite(end.heading)
         || Math.hypot(end.x - to.x, end.y - to.y) > ship.radius) return { state: 'pending', requestIds: [answer.id],
           reason: reason('native-point-route-end-unpublished', [answer.id]) };
-      return { state: 'met', value: { ticks: fact.ticks, endpoint: { x: end.x, y: end.y }, heading: end.heading }, factIds: [answer.id] };
+      const request: VoyageRiskRequest | null = hull.reference.kind === 'existing' ? {
+        id: `goal-sea-leg:${hull.reference.entityId}:${fnv1a(goalValueKey([hull.seaId, from, to, fact.route]))}`,
+        seaId: hull.seaId, shipId: hull.reference.entityId, start: { ...from }, destination: to,
+        route: { points: fact.route.points, partial: false },
+      } : null;
+      const risk = request && input.readVoyageRisk ? input.readVoyageRisk(request) : {
+        status: 'unknown' as const, reasonCode: request ? 'goal-voyage-risk-port-unpublished' : 'goal-voyage-hull-not-yet-actual',
+        samples: 0, totalSamples: 0, threatIds: [],
+      };
+      return { state: 'met', value: { ticks: fact.ticks, endpoint: { x: end.x, y: end.y }, heading: end.heading, risk },
+        factIds: [answer.id, ...(request ? [request.id] : [])] };
     },
   };
 }
