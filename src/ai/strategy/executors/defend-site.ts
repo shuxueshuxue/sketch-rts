@@ -9,6 +9,7 @@ import { MINING_PURSUIT_RADIUS } from '../../bootstrap_1/mining-leash';
 import type { ExecutorInput, ExecutorFeedback, ExecutionState, JsonValue, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, sameAction, validExecutorGrant } from '../executor-grants';
 import type { Point } from '../types';
+import { currentAllocationLandRouteReader } from '../allocation-arrival-query';
 
 function isRecord(value: JsonValue | undefined): value is { readonly [key: string]: JsonValue } {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -29,16 +30,29 @@ export function defenseGatherPost(from: Point, to: Point): Point {
 
 /** A covered waiting post is behind a live tower, not merely near a tower icon. */
 export function defenseCoverPost(input: Pick<ExecutorInput, 'snapshot' | 'owner'>, anchor: Point, field: Point) {
-  return input.snapshot.buildings.filter(tower => tower.owner === input.owner && tower.hp > 0 && tower.complete
+  return defenseCoverPostFacts(input, anchor, field).post;
+}
+
+/** Unknown published roads remain pending rather than proving the tower has
+ * no usable cover. Default execution outside the allocation scope is native. */
+export function defenseCoverPostFacts(input: Pick<ExecutorInput, 'snapshot' | 'owner'>, anchor: Point, field: Point) {
+  const read = currentAllocationLandRouteReader();
+  const pending: { towerId: string; point: Point; reasonCode: string }[] = [];
+  const post = input.snapshot.buildings.filter(tower => tower.owner === input.owner && tower.hp > 0 && tower.complete
     && tower.attackDamage > 0 && distance(tower, anchor) <= tower.attackRange + MINING_PURSUIT_RADIUS)
     .flatMap(tower => {
       const gap = Math.max(1, distance(tower, field)), depth = tower.attackRange / 3;
       if (depth <= tower.radius + 80) return [];
       const point = { x: tower.x - (field.x - tower.x) * depth / gap, y: tower.y - (field.y - tower.y) * depth / gap };
-      if (!isOpenGround(input.snapshot.map, point.x, point.y)
-        || walkingDistance(input.snapshot.map, anchor, point) === undefined) return [];
+      if (!isOpenGround(input.snapshot.map, point.x, point.y)) return [];
+      if (read) {
+        const route = read(anchor, point);
+        if (route.status === 'unknown') { pending.push({ towerId: tower.id, point, reasonCode: route.reasonCode }); return []; }
+        if (route.status === 'unreachable') return [];
+      } else if (walkingDistance(input.snapshot.map, anchor, point) === undefined) return [];
       return [{ point, towerId: tower.id, gap: distance(anchor, point) }];
     }).sort((a, b) => a.gap - b.gap || (a.towerId < b.towerId ? -1 : 1))[0];
+  return { post, pending };
 }
 
 function aimedAt(foe: Unit, id: string) {
@@ -69,8 +83,14 @@ export const defendSiteExecutor: StrategyExecutor = {
     if (waiting && !snapshot.buildings.some(tower => tower.owner === owner && tower.complete && tower.hp > 0
       && tower.attackDamage > 0 && distance(tower, point) + 80 <= tower.attackRange))
       return blockedExecutor(input, 'no-reachable-tower-cover', active.map(unit => unit.id));
-    const units = active.filter(unit => walkingDistance(snapshot.map, unit, point) !== undefined);
-    if (!units.length) return { ...blockedExecutor(input, active.length ? 'defense-route-unreachable'
+    const read = currentAllocationLandRouteReader(), pending: string[] = [];
+    const units = active.filter(unit => {
+      if (!read) return walkingDistance(snapshot.map, unit, point) !== undefined;
+      const route = read(unit, point);
+      if (route.status === 'unknown') pending.push(unit.id);
+      return route.status === 'known';
+    });
+    if (!units.length) return { ...blockedExecutor(input, pending.length ? 'defense-route-pending' : active.length ? 'defense-route-unreachable'
       : cohort.length ? 'defenders-in-life-saving-interruption' : granted.length ? 'defenders-in-transit' : 'no-granted-defenders'),
       handoffs: handoffs(input, active) };
     const protectedEntities = [site, ...snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker'
@@ -103,6 +123,8 @@ export const defendSiteExecutor: StrategyExecutor = {
     const firstArrival = execution.state.arrivalRecorded !== true && arrived.length > 0;
     return { ...base, status: 'active', phase, state: { ...execution.state, post: { ...point }, protectedHp: hp,
       arrivalRecorded: execution.state.arrivalRecorded === true || firstArrival },
+    reasons: pending.length ? [{ executor: this.id, outcome: 'paused', reason: 'defense-route-pending',
+      taskId: execution.token.actionId, unitIds: pending }] : base.reasons,
     commands: commands.map(command => ({ command, purpose: 'task' })),
     progress: firstArrival ? [{ kind: 'garrison-arrived', unitIds: arrived.map(unit => unit.id), entityIds: [site.id], basis: 'observed-world' }] : [],
     handoffs: handoffs(input, active) };

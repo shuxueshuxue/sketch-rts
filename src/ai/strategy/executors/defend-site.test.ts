@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import * as terrain from '../../../shared/terrain';
+import { withAllocationLandRoutes } from '../allocation-arrival-query';
+import type { AllocationLandRouteReader } from '../allocation-arrival-query';
 import { createGame, restoreSnapshotIntoGame, snapshotGame, stepGame } from '../../../shared/sim';
 import { standingBodies } from '../../../shared/structure-bodies';
 import { setBuildingBodies } from '../../../shared/terrain';
@@ -79,6 +82,38 @@ describe('granted defense at the real E01 home raid', () => {
     expect(result.commands).toEqual([]);
     expect(result.progress).toEqual([]);
     expect(result.reasons[0]?.reason).toBe('defenders-in-transit');
+  });
+
+  it('keeps route-pending defenders paused without native routing or an unreachable conclusion', () => {
+    const request = input(), before = JSON.stringify(request), native = vi.spyOn(terrain, 'walkingDistance');
+    const read = vi.fn<AllocationLandRouteReader>(() => ({ status: 'unknown', reasonCode: 'land-route-not-published' }));
+    try {
+      const result = withAllocationLandRoutes(read, () => defendSiteExecutor.execute(request));
+      expect(read).toHaveBeenCalledTimes(recalled.length); expect(native).not.toHaveBeenCalled();
+      expect(result.status).toBe('blocked'); expect(result.commands).toEqual([]); expect(result.progress).toEqual([]);
+      expect(result.reasons[0]?.reason).toBe('defense-route-pending'); expect(JSON.stringify(request)).toBe(before);
+    } finally { vi.restoreAllMocks(); }
+  });
+
+  it('distinguishes a published unreachable road from pending and advances only the known subgroup', () => {
+    const request = input(), first = request.snapshot.units.find(unit => unit.id === recalled[0])!;
+    const known = request.snapshot.units.filter(unit => recalled.includes(unit.id) && unit.x === first.x && unit.y === first.y).map(unit => unit.id);
+    const read: AllocationLandRouteReader = (from, goal) => from.x === first.x && from.y === first.y
+      ? { status: 'known', points: [goal], distance: 100 } : { status: 'unknown', reasonCode: 'land-route-not-published' };
+    const native = vi.spyOn(terrain, 'walkingDistance');
+    try {
+      const result = withAllocationLandRoutes(read, () => defendSiteExecutor.execute(request));
+      expect(result.status).toBe('active'); expect(native).not.toHaveBeenCalled();
+      const commanded = result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : []);
+      expect(commanded.length).toBeGreaterThan(0); expect(commanded.every(id => known.includes(id))).toBe(true);
+      expect(result.reasons[0]?.reason).toBe('defense-route-pending'); expect(result.reasons[0]?.outcome).toBe('paused');
+      const cold: ExecutorInput = JSON.parse(JSON.stringify(request)); setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
+      expect(withAllocationLandRoutes(read, () => defendSiteExecutor.execute(cold))).toEqual(result);
+      const unreachable = withAllocationLandRoutes(() => ({ status: 'unreachable', reasonCode: 'land-route-unreachable' }),
+        () => defendSiteExecutor.execute(request));
+      expect(unreachable.status).toBe('blocked'); expect(unreachable.commands).toEqual([]);
+      expect(unreachable.reasons[0]?.reason).toBe('defense-route-unreachable'); expect(native).not.toHaveBeenCalled();
+    } finally { vi.restoreAllMocks(); }
   });
 
   it('preserves its physical post and decisions through a JSON fork while the native world advances', () => {

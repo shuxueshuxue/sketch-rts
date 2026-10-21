@@ -9,7 +9,7 @@ import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote, AllocationPrecondition } from './allocation-types';
 import type { DecisionFacts } from './decision';
-import { defenseCoverPost, defenseGatherPost } from './executors/defend-site';
+import { defenseCoverPostFacts, defenseGatherPost } from './executors/defend-site';
 import type { Method, Objective, ResourceDemand, Situation, Target } from './types';
 import { discountedFlow, discountedValue, resolveValuation, valuationWindow } from './utility';
 import { siteCollapseAfter } from './naval-objectives';
@@ -50,8 +50,15 @@ function method(input: Parameters<AllocationMethodProvider['buildMethods']>[0], 
   const field = attackers.length ? averagePoint(attackers) : objective.target.point;
   const known = input.executions.find(action => action.methodId === id && action.executor === 'strategy.defend-site'
     && !['complete', 'failed', 'abandoned'].includes(action.status));
-  const post = kind === 'wait-in-cover' ? defenseCoverPost({ snapshot, owner: situation.owner }, objective.target.point, field)?.point
+  const cover = kind === 'wait-in-cover' ? defenseCoverPostFacts({ snapshot, owner: situation.owner }, objective.target.point, field) : undefined;
+  const post = kind === 'wait-in-cover' ? cover?.post?.point
     : defenseGatherPost(objective.target.point, field);
+  const coverPending: AllocationPrecondition | undefined = !known && cover && !cover.post && cover.pending.length ? {
+    id: `${id}/cover-route`, kind: 'route', status: 'unknown',
+    reason: reason('defense-cover-route-pending', cover.pending.map(item => item.towerId),
+      Object.fromEntries(cover.pending.flatMap(item => [[`${item.towerId}/reason`, item.reasonCode],
+        [`${item.towerId}/x`, item.point.x], [`${item.towerId}/y`, item.point.y]]))),
+    demand: null, subgoalIds: [] } : undefined;
   const at = kind === 'evacuation' ? destination ?? objective.target : known?.target ?? { ...objective.target, point: post ?? objective.target.point };
   const subjects = evacuationSubjectIds(objective);
   const workers = subjects ? subjects.length : situation.units.filter(unit => unit.owner === situation.owner
@@ -63,7 +70,8 @@ function method(input: Parameters<AllocationMethodProvider['buildMethods']>[0], 
     && destination.landId !== objective.target.landId ? `${id}/deliver` : undefined;
   const finish = `${id}/${kind === 'evacuation' ? 'evacuate' : 'defend'}`;
   return { id, objectiveId: objective.id, kind, providerId: 'strategy.defense-methods', preference, spends: [],
-    demands, preconditions: refuge?.condition ? [refuge.condition] : [], subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [], actions: [
+    demands, preconditions: [...(refuge?.condition ? [refuge.condition] : []), ...(coverPending ? [coverPending] : [])],
+    subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [], actions: [
       ...(travel ? [{ id: travel, executor: 'strategy.transport', intent: { kind: kind === 'evacuation' ? 'deliver-workers' as const : 'deliver-force' as const }, target: at,
         dependsOn: [], demands, spendIds: [], completionEffects: [] }] : []),
       { id: finish, executor: kind === 'evacuation' ? 'strategy.evacuate' : 'strategy.defend-site',
@@ -220,7 +228,8 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       && tower.complete && tower.hp > 0 && tower.attackDamage > 0
       && strikeGap(tower, method.actions.at(-1)!.target.point) + 80 <= tower.attackRange);
     const coverForce = response.staticForce;
-    if (method.kind === 'wait-in-cover' && !covering.length) missing = 'no-reachable-tower-cover';
+    if (method.kind === 'wait-in-cover' && !covering.length
+      && !conditions.some(condition => condition.id === `${method.id}/cover-route` && condition.status === 'unknown')) missing = 'no-reachable-tower-cover';
     const total = assessAllocatedForce(situation.owner, cohort, { metric: 'field-strength', requiredForce: Math.max(0, demand - coverForce) });
     const weighted = arrivalWeightedForce(cohort.filter(unit => stationed.includes(unit.id)),
       cohort.filter(unit => enRoute.includes(unit.id)).map(unit => ({ unit, etaTicks: etas.get(unit.id)! })),
