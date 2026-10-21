@@ -8,3 +8,4 @@
 .graph-node[aria-pressed=true]{background:var(--paper);color:var(--ink)}
 .graph-node.fact.met[aria-pressed=true],.graph-node.result.met[aria-pressed=true]{background:var(--green-wash)}
 .graph-node.fact.pending[aria-pressed=true]{background:var(--blue-wash)}
+.graph-sheet{min-height:0}

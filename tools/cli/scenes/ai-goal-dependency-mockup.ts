@@ -13,6 +13,10 @@ export default async function (s: Scene) {
   const file = pathToFileURL(`${process.cwd()}/docs/ai/plan-viz/goal-dependency.html`).href;
   await s.page.goto(file, { waitUntil: 'load' });
   await s.page.waitForSelector('[data-node="camp-action"]');
+  const graphBox = await s.page.locator('.graph-sheet').boundingBox();
+  const timelineBox = await s.page.locator('.chronology').boundingBox();
+  s.must(graphBox && timelineBox && graphBox.y + graphBox.height <= timelineBox.y,
+    'The dependency diagram overlaps the time axis');
   await s.page.click('[data-node="camp-action"]');
   const detail = await s.page.locator('#node-detail').innerText();
   for (const text of ['force-at', '运兵', '集结', '等事实', '落选', '200 金']) s.must(detail.includes(text), `Missing dependency detail: ${text}`);
