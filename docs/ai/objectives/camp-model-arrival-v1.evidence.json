@@ -1,0 +1,2064 @@
+{
+  "status": "experimental-validation-failed-default-switch-gate",
+  "defaultModelRemains": "casualty-alpha-0.19",
+  "defaultRegistrationChanged": false,
+  "reason": "Controlled held-out improvement does not establish natural equivalence: only 1 of 18 natural rows is supported, with 8.898 extra predicted gold versus alpha and actual zero. Original puzzle far/near is outside new feature support. Do not extrapolate or silently substitute 0/P1.",
+  "nativeSource": "8d483125feb63ad6ab2e41c99d21b16a6ccad45f",
+  "nativeArchive": {
+    "path": "/codegeex/jeffry/sketch-camp-model-20261021/data/source-8d483125.tar.gz",
+    "sha256": "7b58c17e58ea3d6f6dae72881d78bcef0675ef7692574a99676c3916d4ad2320"
+  },
+  "baseline": {
+    "population": 198,
+    "strictNaturalEvaluationRows": 18,
+    "newFitNaturalTrainingRows": 0,
+    "rawArchiveSha256": "e5e98df238ba393a955802f58e20181f74190fa6c92c1eeac6d9c2b66c4214cb",
+    "canonicalFeaturesSha256": "85aa6bee792389dbd9940b2bb1db0d3d38f51a5cae7d79d60607f2717704802c",
+    "consumableSidecarSha256": "d938faa0dcbcafbbeeaf424a90ed2e3a75e984abdae71f74ffdbcc5d3da8ab61",
+    "contactSidecarSha256": "ce69f279b5f59883c8fa113be9c5819e60847d57675f3e19b345d9689b9bd6d3",
+    "selection": "Original exact 18 ids, no new success/outcome filtering. Natural rows are evaluation only. Contact timing/15/30 tick weight shares are post-hoc diagnostics only."
+  },
+  "controlled": {
+    "rows": 21450,
+    "settledLossLabels": 21031,
+    "censoredLossLabels": 419,
+    "blocks": {
+      "observedStrata": 8580,
+      "nativeCatalog37Templates": 7380,
+      "arrivalDispersion": 5490
+    },
+    "simulationErrors": 0,
+    "maximumWorkers": 16,
+    "quota": 57,
+    "tacticalPolicy": "Installed native continueV7Creep in its original general slot plus native local tactics, claim/onCommands and public SDK; version v9_archer. Economy and strategic target selection excluded, not full owner-think acceptance. Formation/cooldown seeds vary; simulator deterministic.",
+    "outcome": "Win = camp cleared in the attempt. Native retreat that terminates the task is non-win, not a promised eventual mission failure. Clearing can be known while post-clear loss label remains censored. Raw positive damage/deaths/healing/residual windows retained."
+  },
+  "model": {
+    "id": "camp-native-arrival-empirical-v3",
+    "format": "camp-gold-v2",
+    "parameters": {
+      "maxDepth": 8,
+      "minimumLeafRows": 12,
+      "minimumLeafWeight": 0.3,
+      "thresholds": 24,
+      "criterion": "sum weighted squared errors for zero-loss, win, and casualty/capital",
+      "controlAnchorWeight": 1,
+      "naturalWeight": 1
+    },
+    "features": [
+      "logCampForceRatio",
+      "logCombatRatingRatio",
+      "logDpsRatio",
+      "logHpRatio",
+      "ownHpFraction",
+      "campHpFraction",
+      "minimumOwnHpFraction",
+      "minimumCampHpFraction",
+      "ownRangedShare",
+      "campRangedShare",
+      "ownHealerShare",
+      "campCasterShare",
+      "ownCount",
+      "campCount",
+      "workerCount",
+      "meanOwnLevel",
+      "meanCampLevel",
+      "meanOwnProtection",
+      "meanCampProtection",
+      "logSpeedRatio",
+      "logRangeRatio",
+      "campWalkableFraction",
+      "stagingWalkableFraction",
+      "useHealingScroll",
+      "useGuardianScroll",
+      "capitalGold",
+      "logGeometricArrivalSpreadTicks",
+      "firstWaveRatingShare15Ticks",
+      "firstWaveRatingShare30Ticks",
+      "approachBlockedFraction",
+      "minimumApproachCrossSection",
+      "rearCampBlockedFraction"
+    ],
+    "inputCoverage": {
+      "logCampForceRatio": [
+        -1.137724490127725,
+        1.5305521756094906
+      ],
+      "logCombatRatingRatio": [
+        -0.8543780633871721,
+        3.1323728597876843
+      ],
+      "logDpsRatio": [
+        -0.8968725776912674,
+        2.2240227056308064
+      ],
+      "logHpRatio": [
+        -0.9631011477427696,
+        3.4829479239827124
+      ],
+      "ownHpFraction": [
+        0.5,
+        1
+      ],
+      "campHpFraction": [
+        0.028089887640449437,
+        1
+      ],
+      "minimumOwnHpFraction": [
+        0.3728813559322034,
+        1
+      ],
+      "minimumCampHpFraction": [
+        0.028089887640449437,
+        1
+      ],
+      "ownRangedShare": [
+        0,
+        1
+      ],
+      "campRangedShare": [
+        0,
+        1
+      ],
+      "ownHealerShare": [
+        0,
+        0.5
+      ],
+      "campCasterShare": [
+        0,
+        0.6666666666666666
+      ],
+      "ownCount": [
+        1,
+        21
+      ],
+      "campCount": [
+        1,
+        6
+      ],
+      "workerCount": [
+        0,
+        3
+      ],
+      "meanOwnLevel": [
+        0,
+        1
+      ],
+      "meanCampLevel": [
+        0,
+        0
+      ],
+      "meanOwnProtection": [
+        0,
+        0
+      ],
+      "meanCampProtection": [
+        0,
+        0
+      ],
+      "logSpeedRatio": [
+        -0.38299224695307554,
+        0.4054651030576595
+      ],
+      "logRangeRatio": [
+        -1.1700712382824388,
+        2.267775664737191
+      ],
+      "campWalkableFraction": [
+        0.46938775510204084,
+        1
+      ],
+      "stagingWalkableFraction": [
+        0.45918367346938777,
+        1
+      ],
+      "useHealingScroll": [
+        0,
+        1
+      ],
+      "useGuardianScroll": [
+        0,
+        1
+      ],
+      "capitalGold": [
+        115,
+        3150
+      ],
+      "logGeometricArrivalSpreadTicks": [
+        0,
+        5.366394958379396
+      ],
+      "firstWaveRatingShare15Ticks": [
+        0.07403905752424919,
+        1
+      ],
+      "firstWaveRatingShare30Ticks": [
+        0.08473488107917834,
+        1
+      ],
+      "approachBlockedFraction": [
+        0,
+        0.5686274509803921
+      ],
+      "minimumApproachCrossSection": [
+        0,
+        1
+      ],
+      "rearCampBlockedFraction": [
+        0,
+        0.95
+      ]
+    },
+    "support": "Exact own-kind set, full guard-kind roster, worker count, consumable decision; each covariate within observed finite training range. Unsupported compositions/levels/terrain/dispersion remain pending. No map feature or map correction. Min/max support is a conservative rectangular screening, not a proof of all joint combinations.",
+    "outputs": [
+      "P(zero unit deaths)",
+      "conditional positive native replacement-gold histogram",
+      "separate P(camp cleared)",
+      "battle duration"
+    ],
+    "expectedGold": "(1-Pzero)*sum(conditional_probability*min(cohort_native_capital,conditional_gold)); no added margin, wounds and consumable price excluded from death labels."
+  },
+  "validation": {
+    "holdout": "Leave one source map out, excluding every controlled derivative from its source map. Fit controlled rows only. Control anchor total weight 1; natural diagnostic rows not trained. No per-map parameter tuning.",
+    "knownPredictionRows": 8600,
+    "allEvaluationRows": 21468,
+    "comparison": {
+      "controlled": {
+        "pairedRows": 8599,
+        "alphaUnknownRows": 0,
+        "new": {
+          "zeroLoss": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 0.6458326874407272,
+            "predicted": 0.6509310835996658,
+            "bias": 0.0050983961589385765,
+            "mae": 0.21952843508691267,
+            "squaredError": 0.1217099919858194
+          },
+          "win": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 0.9154838004075206,
+            "predicted": 0.9161385285927927,
+            "bias": 0.0006547281852718522,
+            "mae": 0.055509413842192705,
+            "squaredError": 0.03376736881854083
+          },
+          "lossGold": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 81.7451948872168,
+            "predicted": 80.8347539587882,
+            "bias": -0.9104409284285959,
+            "mae": 54.58463863075111,
+            "squaredError": 9334.894827731125
+          },
+          "actualZeroPredictedPositiveExpectedLoss": 5139,
+          "actualZeroPredictedLossMoreLikelyThanZero": 527,
+          "actualZeroCount": 5348,
+          "actualZeroMeanPredictedLoss": 25.854608435230947
+        },
+        "alpha019": {
+          "zeroLoss": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 0.6458326874407272,
+            "predicted": 0.8565128141221897,
+            "bias": 0.21068012668146252,
+            "mae": 0.25297867155737386,
+            "squaredError": 0.25297867155737386
+          },
+          "win": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 0.9154838004075206,
+            "predicted": 0.7633617937776318,
+            "bias": -0.15212200662988895,
+            "mae": 0.24186282577829654,
+            "squaredError": 0.08008003846042076
+          },
+          "lossGold": {
+            "n": 8443,
+            "weight": 148.84435125060125,
+            "actual": 81.7451948872168,
+            "predicted": 32.67108839274687,
+            "bias": -49.07410649446993,
+            "mae": 67.43869732710031,
+            "squaredError": 19655.828088012127
+          },
+          "actualZeroPredictedPositiveExpectedLoss": 211,
+          "actualZeroPredictedLossMoreLikelyThanZero": 211,
+          "actualZeroCount": 5348,
+          "actualZeroMeanPredictedLoss": 6.601533283470456
+        }
+      },
+      "natural": {
+        "pairedRows": 1,
+        "alphaUnknownRows": 0,
+        "new": {
+          "zeroLoss": {
+            "n": 1,
+            "weight": 1,
+            "actual": 1.0,
+            "predicted": 0.9152603731140044,
+            "bias": -0.08473962688599557,
+            "mae": 0.08473962688599557,
+            "squaredError": 0.007180804364777743
+          },
+          "win": {
+            "n": 1,
+            "weight": 1,
+            "actual": 1.0,
+            "predicted": 1.0,
+            "bias": 0.0,
+            "mae": 0.0,
+            "squaredError": 0.0
+          },
+          "lossGold": {
+            "n": 1,
+            "weight": 1,
+            "actual": 0.0,
+            "predicted": 8.89817192293868,
+            "bias": 8.89817192293868,
+            "mae": 8.89817192293868,
+            "squaredError": 79.17746357017424
+          },
+          "actualZeroPredictedPositiveExpectedLoss": 1,
+          "actualZeroPredictedLossMoreLikelyThanZero": 0,
+          "actualZeroCount": 1,
+          "actualZeroMeanPredictedLoss": 8.89817192293868
+        },
+        "alpha019": {
+          "zeroLoss": {
+            "n": 1,
+            "weight": 1,
+            "actual": 1.0,
+            "predicted": 1.0,
+            "bias": 0.0,
+            "mae": 0.0,
+            "squaredError": 0.0
+          },
+          "win": {
+            "n": 1,
+            "weight": 1,
+            "actual": 1.0,
+            "predicted": 0.7906021899520754,
+            "bias": -0.20939781004792457,
+            "mae": 0.20939781004792457,
+            "squaredError": 0.0438474428528667
+          },
+          "lossGold": {
+            "n": 1,
+            "weight": 1,
+            "actual": 0.0,
+            "predicted": 0.0,
+            "bias": 0.0,
+            "mae": 0.0,
+            "squaredError": 0.0
+          },
+          "actualZeroPredictedPositiveExpectedLoss": 0,
+          "actualZeroPredictedLossMoreLikelyThanZero": 0,
+          "actualZeroCount": 1,
+          "actualZeroMeanPredictedLoss": 0.0
+        }
+      }
+    },
+    "naturalUnknownReasons": {
+      "outside-feature-support:logCampForceRatio,logCombatRatingRatio,logDpsRatio,logHpRatio,ownCount,meanOwnLevel,campWalkableFraction,capitalGold": 1,
+      "outside-feature-support:logGeometricArrivalSpreadTicks,firstWaveRatingShare15Ticks,firstWaveRatingShare30Ticks": 1,
+      "composition-not-covered": 9,
+      "outside-feature-support:logGeometricArrivalSpreadTicks": 3,
+      "outside-feature-support:logGeometricArrivalSpreadTicks,firstWaveRatingShare30Ticks,rearCampBlockedFraction": 1,
+      "outside-feature-support:firstWaveRatingShare30Ticks,rearCampBlockedFraction": 1,
+      "outside-feature-support:ownRangedShare,logSpeedRatio,logRangeRatio,stagingWalkableFraction,firstWaveRatingShare15Ticks,firstWaveRatingShare30Ticks": 1
+    },
+    "mapComparisons": {
+      "brokenSea": {
+        "testRows": 1266,
+        "supported": 1159,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 1159,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 0.6916509032851467,
+                "predicted": 0.7097446401294343,
+                "bias": 0.018093736844287712,
+                "mae": 0.20946585265906714,
+                "squaredError": 0.11161360118265236
+              },
+              "win": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 0.9393764582748627,
+                "predicted": 0.9354918855149986,
+                "bias": -0.0038845727598640777,
+                "mae": 0.053314365428721484,
+                "squaredError": 0.03381134292070438
+              },
+              "lossGold": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 61.86523939494946,
+                "predicted": 63.70417450059001,
+                "bias": 1.8389351056405485,
+                "mae": 42.18820012945314,
+                "squaredError": 5405.657668579741
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 758,
+              "actualZeroPredictedLossMoreLikelyThanZero": 46,
+              "actualZeroCount": 778,
+              "actualZeroMeanPredictedLoss": 21.40228080376798
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 0.6916509032851467,
+                "predicted": 0.8967737379769932,
+                "bias": 0.2051228346918466,
+                "mae": 0.23950446032385297,
+                "squaredError": 0.23950446032385297
+              },
+              "win": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 0.9393764582748627,
+                "predicted": 0.7775172856996164,
+                "bias": -0.16185917257524637,
+                "mae": 0.22314914070799832,
+                "squaredError": 0.06721829396922495
+              },
+              "lossGold": {
+                "n": 1139,
+                "weight": 20.094600769600767,
+                "actual": 61.86523939494946,
+                "predicted": 24.002415821747423,
+                "bias": -37.862823573202036,
+                "mae": 47.97919832059397,
+                "squaredError": 10308.208453042278
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 21,
+              "actualZeroPredictedLossMoreLikelyThanZero": 21,
+              "actualZeroCount": 778,
+              "actualZeroMeanPredictedLoss": 3.0398457583547556
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "greystonePass": {
+        "testRows": 1879,
+        "supported": 1032,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 1032,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 0.5840067120094079,
+                "predicted": 0.5770695749216178,
+                "bias": -0.006937137087790106,
+                "mae": 0.2211480989631882,
+                "squaredError": 0.12490238312522339
+              },
+              "win": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 0.8903384200645069,
+                "predicted": 0.8754868030755392,
+                "bias": -0.014851616988967626,
+                "mae": 0.047375460168364705,
+                "squaredError": 0.02537015575720335
+              },
+              "lossGold": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 94.51417017969756,
+                "predicted": 105.28404628936445,
+                "bias": 10.769876109666905,
+                "mae": 59.50876262255291,
+                "squaredError": 9776.119230675782
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 536,
+              "actualZeroPredictedLossMoreLikelyThanZero": 80,
+              "actualZeroCount": 582,
+              "actualZeroMeanPredictedLoss": 31.812676118582793
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 0.5840067120094079,
+                "predicted": 0.8128339671689212,
+                "bias": 0.22882725515951338,
+                "mae": 0.27436713866213697,
+                "squaredError": 0.27436713866213697
+              },
+              "win": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 0.8903384200645069,
+                "predicted": 0.7447891521996723,
+                "bias": -0.14554926786483446,
+                "mae": 0.2579562171612679,
+                "squaredError": 0.0874385797672841
+              },
+              "lossGold": {
+                "n": 1018,
+                "weight": 19.234259259259257,
+                "actual": 94.51417017969756,
+                "predicted": 39.32315987098638,
+                "bias": -55.19101030871117,
+                "mae": 79.55821774143634,
+                "squaredError": 22334.122934303457
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 25,
+              "actualZeroPredictedLossMoreLikelyThanZero": 25,
+              "actualZeroCount": 582,
+              "actualZeroMeanPredictedLoss": 8.565292096219931
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "gullIsland": {
+        "testRows": 1815,
+        "supported": 698,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 697,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 0.6378844928341204,
+                "predicted": 0.6339714401402736,
+                "bias": -0.003913052693846917,
+                "mae": 0.16912155090607958,
+                "squaredError": 0.08037081421891529
+              },
+              "win": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 0.916724204419104,
+                "predicted": 0.8996969361496535,
+                "bias": -0.017027268269450536,
+                "mae": 0.09103950817429632,
+                "squaredError": 0.05698865120525744
+              },
+              "lossGold": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 92.76268669082742,
+                "predicted": 116.44830774532215,
+                "bias": 23.685621054494746,
+                "mae": 64.63401430184886,
+                "squaredError": 13038.529654016113
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 427,
+              "actualZeroPredictedLossMoreLikelyThanZero": 30,
+              "actualZeroCount": 439,
+              "actualZeroMeanPredictedLoss": 20.294739105519426
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 0.6378844928341204,
+                "predicted": 0.7821237107707604,
+                "bias": 0.14423921793663994,
+                "mae": 0.1734285033330981,
+                "squaredError": 0.1734285033330981
+              },
+              "win": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 0.916724204419104,
+                "predicted": 0.7506331715414419,
+                "bias": -0.1660910328776621,
+                "mae": 0.25361311011896065,
+                "squaredError": 0.0870168717311026
+              },
+              "lossGold": {
+                "n": 683,
+                "weight": 11.75588023088023,
+                "actual": 92.76268669082742,
+                "predicted": 59.67835629217518,
+                "bias": -33.08433039865224,
+                "mae": 67.19617765203009,
+                "squaredError": 17845.45508014881
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 13,
+              "actualZeroPredictedLossMoreLikelyThanZero": 13,
+              "actualZeroCount": 439,
+              "actualZeroMeanPredictedLoss": 3.3826879271070616
+            }
+          },
+          "natural": {
+            "pairedRows": 1,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 1,
+                "weight": 1,
+                "actual": 1.0,
+                "predicted": 0.9152603731140044,
+                "bias": -0.08473962688599557,
+                "mae": 0.08473962688599557,
+                "squaredError": 0.007180804364777743
+              },
+              "win": {
+                "n": 1,
+                "weight": 1,
+                "actual": 1.0,
+                "predicted": 1.0,
+                "bias": 0.0,
+                "mae": 0.0,
+                "squaredError": 0.0
+              },
+              "lossGold": {
+                "n": 1,
+                "weight": 1,
+                "actual": 0.0,
+                "predicted": 8.89817192293868,
+                "bias": 8.89817192293868,
+                "mae": 8.89817192293868,
+                "squaredError": 79.17746357017424
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 1,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 1,
+              "actualZeroMeanPredictedLoss": 8.89817192293868
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 1,
+                "weight": 1,
+                "actual": 1.0,
+                "predicted": 1.0,
+                "bias": 0.0,
+                "mae": 0.0,
+                "squaredError": 0.0
+              },
+              "win": {
+                "n": 1,
+                "weight": 1,
+                "actual": 1.0,
+                "predicted": 0.7906021899520754,
+                "bias": -0.20939781004792457,
+                "mae": 0.20939781004792457,
+                "squaredError": 0.0438474428528667
+              },
+              "lossGold": {
+                "n": 1,
+                "weight": 1,
+                "actual": 0.0,
+                "predicted": 0.0,
+                "bias": 0.0,
+                "mae": 0.0,
+                "squaredError": 0.0
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 1,
+              "actualZeroMeanPredictedLoss": 0.0
+            }
+          }
+        }
+      },
+      "pineshade": {
+        "testRows": 2269,
+        "supported": 315,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 315,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 0.8452107279693487,
+                "predicted": 0.7333676299458312,
+                "bias": -0.11184309802351751,
+                "mae": 0.23613687477539574,
+                "squaredError": 0.14128900928307347
+              },
+              "win": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 0.9754789272030652,
+                "predicted": 0.9662364393291285,
+                "bias": -0.009242487873936564,
+                "mae": 0.03633109978331937,
+                "squaredError": 0.01790342024487651
+              },
+              "lossGold": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 26.85823754789272,
+                "predicted": 52.66614431001732,
+                "bias": 25.8079067621246,
+                "mae": 40.7970872236519,
+                "squaredError": 4638.532043449461
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 255,
+              "actualZeroPredictedLossMoreLikelyThanZero": 38,
+              "actualZeroCount": 257,
+              "actualZeroMeanPredictedLoss": 33.257801746129935
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 0.8452107279693487,
+                "predicted": 0.9003831417624522,
+                "bias": 0.055172413793103454,
+                "mae": 0.10523627075351213,
+                "squaredError": 0.10523627075351213
+              },
+              "win": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 0.9754789272030652,
+                "predicted": 0.7845490977806076,
+                "bias": -0.19092982942245768,
+                "mae": 0.21256204394984993,
+                "squaredError": 0.066181309062563
+              },
+              "lossGold": {
+                "n": 314,
+                "weight": 5.178571428571428,
+                "actual": 26.85823754789272,
+                "predicted": 31.900383141762454,
+                "bias": 5.042145593869733,
+                "mae": 23.274584929757346,
+                "squaredError": 5008.735632183909
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 11,
+              "actualZeroPredictedLossMoreLikelyThanZero": 11,
+              "actualZeroCount": 257,
+              "actualZeroMeanPredictedLoss": 10.29182879377432
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "reedwater": {
+        "testRows": 1730,
+        "supported": 922,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 922,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 0.6607222730797869,
+                "predicted": 0.6495024431650217,
+                "bias": -0.01121982991476522,
+                "mae": 0.20810159310905238,
+                "squaredError": 0.12250780054217805
+              },
+              "win": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 0.9022642415567662,
+                "predicted": 0.9080700226198809,
+                "bias": 0.005805781063114847,
+                "mae": 0.03989504248065949,
+                "squaredError": 0.021161042504931737
+              },
+              "lossGold": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 76.58876266796167,
+                "predicted": 80.67097642875855,
+                "bias": 4.082213760796872,
+                "mae": 54.294784796102526,
+                "squaredError": 8579.115039561835
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 546,
+              "actualZeroPredictedLossMoreLikelyThanZero": 66,
+              "actualZeroCount": 572,
+              "actualZeroMeanPredictedLoss": 29.021932795640883
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 0.6607222730797869,
+                "predicted": 0.845345097909967,
+                "bias": 0.1846228248301802,
+                "mae": 0.23745041947962064,
+                "squaredError": 0.23745041947962064
+              },
+              "win": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 0.9022642415567662,
+                "predicted": 0.7672304769419062,
+                "bias": -0.13503376461486005,
+                "mae": 0.23343030537659798,
+                "squaredError": 0.07363839655563782
+              },
+              "lossGold": {
+                "n": 906,
+                "weight": 17.877861952861952,
+                "actual": 76.58876266796167,
+                "predicted": 34.5024695252579,
+                "bias": -42.08629314270379,
+                "mae": 64.72762579175811,
+                "squaredError": 19922.46877864942
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 24,
+              "actualZeroPredictedLossMoreLikelyThanZero": 24,
+              "actualZeroCount": 572,
+              "actualZeroMeanPredictedLoss": 10.192307692307692
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "ringwater": {
+        "testRows": 2095,
+        "supported": 1098,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 1098,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 0.5525525734402292,
+                "predicted": 0.5748749485826673,
+                "bias": 0.02232237514243809,
+                "mae": 0.23160166098742924,
+                "squaredError": 0.1285835535332653
+              },
+              "win": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 0.8992535775675062,
+                "predicted": 0.9156318842066935,
+                "bias": 0.016378306639187327,
+                "mae": 0.06422754117666513,
+                "squaredError": 0.038808513729353795
+              },
+              "lossGold": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 127.01193754222263,
+                "predicted": 102.32775532891283,
+                "bias": -24.68418221330981,
+                "mae": 71.48612734729642,
+                "squaredError": 16000.352493753071
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 576,
+              "actualZeroPredictedLossMoreLikelyThanZero": 54,
+              "actualZeroCount": 580,
+              "actualZeroMeanPredictedLoss": 27.17189107069482
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 0.5525525734402292,
+                "predicted": 0.8071981727648407,
+                "bias": 0.2546455993246116,
+                "mae": 0.3047321530265973,
+                "squaredError": 0.3047321530265973
+              },
+              "win": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 0.8992535775675062,
+                "predicted": 0.7398774049602899,
+                "bias": -0.15937617260721634,
+                "mae": 0.26876291713877015,
+                "squaredError": 0.0961396939425636
+              },
+              "lossGold": {
+                "n": 1082,
+                "weight": 17.28825456950457,
+                "actual": 127.01193754222263,
+                "predicted": 51.17643652627085,
+                "bias": -75.83550101595179,
+                "mae": 98.84637000468632,
+                "squaredError": 35755.633254880006
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 30,
+              "actualZeroPredictedLossMoreLikelyThanZero": 30,
+              "actualZeroCount": 580,
+              "actualZeroMeanPredictedLoss": 8.258620689655173
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "sapphireArchipelago": {
+        "testRows": 1824,
+        "supported": 761,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 761,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 0.6912742661382415,
+                "predicted": 0.7115498077941524,
+                "bias": 0.020275541655910962,
+                "mae": 0.2247041036942882,
+                "squaredError": 0.12085502517869634
+              },
+              "win": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 0.9235574662457178,
+                "predicted": 0.9554718920822929,
+                "bias": 0.0319144258365751,
+                "mae": 0.057885332375332915,
+                "squaredError": 0.03691941332603874
+              },
+              "lossGold": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 70.6633304225163,
+                "predicted": 52.99034379245057,
+                "bias": -17.672986630065722,
+                "mae": 49.533901108970035,
+                "squaredError": 9308.034352733112
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 513,
+              "actualZeroPredictedLossMoreLikelyThanZero": 50,
+              "actualZeroCount": 513,
+              "actualZeroMeanPredictedLoss": 19.490404783186374
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 0.6912742661382415,
+                "predicted": 0.9268489285954189,
+                "bias": 0.23557466245717743,
+                "mae": 0.24041109693020757,
+                "squaredError": 0.24041109693020757
+              },
+              "win": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 0.9235574662457178,
+                "predicted": 0.7796742097265466,
+                "bias": -0.14388325651917133,
+                "mae": 0.22766923185371607,
+                "squaredError": 0.07495186594043364
+              },
+              "lossGold": {
+                "n": 737,
+                "weight": 13.784259259259258,
+                "actual": 70.6633304225163,
+                "predicted": 17.344663128904415,
+                "bias": -53.318667293611874,
+                "mae": 59.22516289379996,
+                "squaredError": 16796.659837442065
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 2,
+              "actualZeroPredictedLossMoreLikelyThanZero": 2,
+              "actualZeroCount": 513,
+              "actualZeroMeanPredictedLoss": 0.3898635477582846
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "templeSpring": {
+        "testRows": 2443,
+        "supported": 969,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 969,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 0.7361602398940273,
+                "predicted": 0.7374741790160849,
+                "bias": 0.0013139391220575805,
+                "mae": 0.22004256011181472,
+                "squaredError": 0.11929355742430786
+              },
+              "win": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 0.9603039434036421,
+                "predicted": 0.9456986949646418,
+                "bias": -0.014605248439000284,
+                "mae": 0.03291435195569682,
+                "squaredError": 0.019585343778395447
+              },
+              "lossGold": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 42.2454765128026,
+                "predicted": 46.63865596247085,
+                "bias": 4.39317944966825,
+                "mae": 37.96789359393734,
+                "squaredError": 4131.52175318792
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 626,
+              "actualZeroPredictedLossMoreLikelyThanZero": 73,
+              "actualZeroCount": 702,
+              "actualZeroMeanPredictedLoss": 24.36878394902286
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 0.7361602398940273,
+                "predicted": 0.9257172802305776,
+                "bias": 0.18955704033655033,
+                "mae": 0.2429509294437894,
+                "squaredError": 0.2429509294437894
+              },
+              "win": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 0.9603039434036421,
+                "predicted": 0.7925475562517893,
+                "bias": -0.1677563871518527,
+                "mae": 0.20631587620203518,
+                "squaredError": 0.05814381120313576
+              },
+              "lossGold": {
+                "n": 966,
+                "weight": 18.173809523809524,
+                "actual": 42.2454765128026,
+                "predicted": 15.325778418271536,
+                "bias": -26.919698094531054,
+                "mae": 40.632960682416986,
+                "squaredError": 7303.032701573577
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 26,
+              "actualZeroPredictedLossMoreLikelyThanZero": 26,
+              "actualZeroCount": 702,
+              "actualZeroMeanPredictedLoss": 4.786324786324786
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "turtleLake": {
+        "testRows": 2212,
+        "supported": 305,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 305,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 0.6948568908983381,
+                "predicted": 0.7499558975613156,
+                "bias": 0.05509900666297755,
+                "mae": 0.25011340250036906,
+                "squaredError": 0.1601513485355518
+              },
+              "win": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 0.9102816689471271,
+                "predicted": 0.9013437700464023,
+                "bias": -0.008937898900724786,
+                "mae": 0.05170020841315146,
+                "squaredError": 0.027530158487197275
+              },
+              "lossGold": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 43.62880169092354,
+                "predicted": 45.722580665384655,
+                "bias": 2.0937789744611197,
+                "mae": 38.69558535219292,
+                "squaredError": 3940.520623280962
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 196,
+              "actualZeroPredictedLossMoreLikelyThanZero": 14,
+              "actualZeroCount": 197,
+              "actualZeroMeanPredictedLoss": 21.838245882827938
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 0.6948568908983381,
+                "predicted": 0.8788183132057908,
+                "bias": 0.18396142230745274,
+                "mae": 0.21453242394868438,
+                "squaredError": 0.21453242394868438
+              },
+              "win": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 0.9102816689471271,
+                "predicted": 0.7535532157738878,
+                "bias": -0.1567284531732393,
+                "mae": 0.24334960133112055,
+                "squaredError": 0.07841437223757229
+              },
+              "lossGold": {
+                "n": 297,
+                "weight": 3.436279461279461,
+                "actual": 43.62880169092354,
+                "predicted": 32.03304509712662,
+                "bias": -11.595756593796915,
+                "mae": 35.818376195492036,
+                "squaredError": 5612.648944397592
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 6,
+              "actualZeroPredictedLossMoreLikelyThanZero": 6,
+              "actualZeroCount": 197,
+              "actualZeroMeanPredictedLoss": 6.446700507614213
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "twoShores": {
+        "testRows": 2068,
+        "supported": 1104,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 1104,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 0.5397512362124764,
+                "predicted": 0.5568096767705663,
+                "bias": 0.017058440558089895,
+                "mae": 0.24117275531952934,
+                "squaredError": 0.1375474253061624
+              },
+              "win": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 0.8719224713067381,
+                "predicted": 0.8769684056865751,
+                "bias": 0.005045934379837045,
+                "mae": 0.07741311232743188,
+                "squaredError": 0.0508822200969283
+              },
+              "lossGold": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 118.47307442759754,
+                "predicted": 106.01020915588096,
+                "bias": -12.462865271716588,
+                "mae": 68.71661112993915,
+                "squaredError": 12998.431184427409
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 542,
+              "actualZeroPredictedLossMoreLikelyThanZero": 72,
+              "actualZeroCount": 562,
+              "actualZeroMeanPredictedLoss": 30.718503570204316
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 0.5397512362124764,
+                "predicted": 0.8283182699396554,
+                "bias": 0.288567033727179,
+                "mae": 0.3220432645111126,
+                "squaredError": 0.3220432645111126
+              },
+              "win": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 0.8719224713067381,
+                "predicted": 0.7438079756109612,
+                "bias": -0.12811449569577682,
+                "mae": 0.2797840828149772,
+                "squaredError": 0.10507470845823937
+              },
+              "lossGold": {
+                "n": 1068,
+                "weight": 18.496464646464645,
+                "actual": 118.47307442759754,
+                "predicted": 27.12090080004369,
+                "bias": -91.35217362755385,
+                "mae": 101.49764232209007,
+                "squaredError": 34809.08867280905
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 19,
+              "actualZeroPredictedLossMoreLikelyThanZero": 19,
+              "actualZeroCount": 562,
+              "actualZeroMeanPredictedLoss": 5.080071174377224
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      },
+      "veiledHill": {
+        "testRows": 1867,
+        "supported": 237,
+        "comparison": {
+          "controlled": {
+            "pairedRows": 237,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 0.7030317506355246,
+                "predicted": 0.7485335153612667,
+                "bias": 0.04550176472574207,
+                "mae": 0.24423086295492252,
+                "squaredError": 0.12841832081181476
+              },
+              "win": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 0.9418627266988553,
+                "predicted": 0.9660262620942603,
+                "bias": 0.024163535395405108,
+                "mae": 0.054503453661172575,
+                "squaredError": 0.041479798458955996
+              },
+              "lossGold": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 64.84873662839303,
+                "predicted": 50.41867513166403,
+                "bias": -14.430061496728992,
+                "mae": 50.45673923770661,
+                "squaredError": 7983.591270563332
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 164,
+              "actualZeroPredictedLossMoreLikelyThanZero": 4,
+              "actualZeroCount": 166,
+              "actualZeroMeanPredictedLoss": 27.808485648914775
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 0.7030317506355246,
+                "predicted": 0.8418303106819306,
+                "bias": 0.1387985600464061,
+                "mae": 0.2962994557521369,
+                "squaredError": 0.2962994557521369
+              },
+              "win": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 0.9418627266988553,
+                "predicted": 0.7888005580697013,
+                "bias": -0.1530621686291539,
+                "mae": 0.21375761330973553,
+                "squaredError": 0.0680558467132552
+              },
+              "lossGold": {
+                "n": 233,
+                "weight": 3.524110149110149,
+                "actual": 64.84873662839303,
+                "predicted": 35.91206728882671,
+                "bias": -28.936669339566304,
+                "mae": 60.06925084878781,
+                "squaredError": 14614.589681469983
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 34,
+              "actualZeroPredictedLossMoreLikelyThanZero": 34,
+              "actualZeroCount": 166,
+              "actualZeroMeanPredictedLoss": 33.25301204819277
+            }
+          },
+          "natural": {
+            "pairedRows": 0,
+            "alphaUnknownRows": 0,
+            "new": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            },
+            "alpha019": {
+              "zeroLoss": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "win": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "lossGold": {
+                "n": 0,
+                "weight": 0,
+                "actual": null,
+                "predicted": null,
+                "bias": null,
+                "mae": null,
+                "squaredError": null
+              },
+              "actualZeroPredictedPositiveExpectedLoss": 0,
+              "actualZeroPredictedLossMoreLikelyThanZero": 0,
+              "actualZeroCount": 0,
+              "actualZeroMeanPredictedLoss": null
+            }
+          }
+        }
+      }
+    },
+    "alphaBoundary": "Same native assessAllocatedCampBattle alpha=0.19. For natural camp-only comparison retain exact onset cohort/guards/HP and exclude external world from BOTH models, not as a planner fact. Full-world alpha remained unknown due enemy arrival facts and is not converted to 0. Alpha has no calibrated Pzero: table zero label is its deterministic predicted death-gold==0 indicator.",
+    "zeroLossFalsePositiveDefinitions": "Counts with positive expected cost and with P(loss)>.5 are both reported; a positive expectation is not a binary assertion that this particular fight must lose a unit."
+  },
+  "arrivalIntervention": [
+    {
+      "lagTicks": 30,
+      "leadShare": 0.5,
+      "pairedRows": 1768,
+      "parentZeroRate": 0.7222850678733032,
+      "delayedZeroRate": 0.6843891402714932,
+      "parentGold": 70.65045248868778,
+      "delayedGold": 79.31278280542986,
+      "parentContactSpread": 49.52828054298642,
+      "delayedContactSpread": 64.65328054298642
+    },
+    {
+      "lagTicks": 90,
+      "leadShare": 0.5,
+      "pairedRows": 1753,
+      "parentZeroRate": 0.7244723331431832,
+      "delayedZeroRate": 0.587564175698802,
+      "parentGold": 69.42384483742157,
+      "delayedGold": 107.87221905305191,
+      "parentContactSpread": 48.66286366229321,
+      "delayedContactSpread": 109.64004563605248
+    },
+    {
+      "lagTicks": 90,
+      "leadShare": 0.25,
+      "pairedRows": 1755,
+      "parentZeroRate": 0.7264957264957265,
+      "delayedZeroRate": 0.43988603988603986,
+      "parentGold": 69.44159544159544,
+      "delayedGold": 131.37037037037038,
+      "parentContactSpread": 47.245584045584046,
+      "delayedContactSpread": 117.2051282051282
+    }
+  ],
+  "turtleDiagnosis": {
+    "initialMixedReportZeroBias": 0.5106282764475201,
+    "initialControlledOnlyZeroBias": 0.0898801648029742,
+    "newSupportedZeroBias": 0.05509900666297755,
+    "newNaturalSupported": 0,
+    "interpretation": "Removing natural fitting and adding initial-pose dispersion/terrain descriptors changes support. The lower supported bias is NOT proof the natural turtle problem is fixed; all four turtle natural rows are now unsupported. Observed contact dispersal occurs on twoShores too, so no turtle-specific correction."
+  },
+  "integration": {
+    "pureExports": [
+      "campEncounterFeatureVector",
+      "predictEmpiricalCamp",
+      "quoteEmpiricalCampChoices",
+      "createEmpiricalGoalCampBattleModel"
+    ],
+    "actualNoneUseGrantContract": false,
+    "consumable": "Pure none/use alternatives preserve native actual carrier, cooldown and shop price. Runtime use action still needs one-shot shared item balance/carrier lease; not executable here. Only healingScroll/guardianScroll controlled; neutral automatic items/reusable-active mixed policies pending.",
+    "workers": "Worker-k controls exist, with actual native DPS and combatRating=0. Worker foregone income remains missing/null until same-think economic oracle, and is not folded into death label or charged twice with allocator opportunity cost. No live worker-k provider registered.",
+    "puzzle1": "Far/near original snapshot/cohort immutable, conditional pure quotation only; new model outside feature support. Existing alpha remains. No public puzzle/owner-think acceptance claim."
+  },
+  "artifact": {
+    "archive": "/tmp/sketch-camp-model-20261021/camp-model-arrival-v1-evidence.tar.gz",
+    "bytes": 4298282,
+    "sha256": "2868d6c26b1d5dfe6fa20286bde86d6cf129a8a315a7ef4ac98c47b44e706a02",
+    "reportSha256": "bbb5bfb008c2aec8164d8106541b8459595a0c88b9663344e1f8ec414b6d8f4e",
+    "manifestSha256": "498ecfce9fc953cb44421e587a350eccca667a41465f9b64e47a9800a250f02d",
+    "a100Path": "/codegeex/jeffry/sketch-camp-model-20261021/camp-model-arrival-v1-evidence.tar.gz"
+  },
+  "checks": {
+    "pureContractTests": 5,
+    "rootTscExit": 0,
+    "runtime": {
+      "format": "camp-gold-v2",
+      "modelId": "camp-native-arrival-empirical-v3",
+      "modelSha": "90cad3f33fea713102faaa4d84172ed3bcd23b190c1b2efb0298709d47844eec",
+      "rows": 21468,
+      "known": 21090,
+      "pending": 378,
+      "maxGoldError": 0,
+      "tableUnchanged": true,
+      "originals": "See runtime-parity.json for full conditional original-frame records."
+    }
+  }
+}
