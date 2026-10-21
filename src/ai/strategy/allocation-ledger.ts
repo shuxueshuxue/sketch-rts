@@ -25,11 +25,31 @@ export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashG
   for (const budget of Object.values(budgets)) if (budget.plannedGold !== undefined && budget.state === 'reserved'
     && ['complete', 'failed', 'abandoned'].includes(memory.objectives[budget.objectiveId]?.status ?? 'abandoned'))
     budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
-  let free = Math.max(0, cashGold - reservedAllocationGold({ ...memory, budgets }));
-  for (const budget of Object.values(budgets).sort((a, b) => (a.expectedPaymentTick ?? Infinity) - (b.expectedPaymentTick ?? Infinity)
-    || a.id.localeCompare(b.id))) {
-    if (budget.plannedGold === undefined || budget.state !== 'reserved') continue;
-    const added = Math.min(free, Math.max(0, budget.plannedGold - budget.amountGold));
+  const adjustable = Object.values(budgets).filter(budget => {
+    if (budget.plannedGold === undefined || budget.state !== 'reserved') return false;
+    const purchase = memory.methods[budget.methodId]?.actions.find(action => action.id === budget.action.actionId);
+    // A future hall can be attached to an earlier training action for saving;
+    // that action's unrelated purchase does not issue the hall's own spend.
+    const issued = (!purchase || purchase.spendIds.includes(budget.spendId))
+      && Object.values(memory.issuedCommands).some(command => sameAction(command.action, budget.action)
+        && ['build', 'train'].includes(command.command.type));
+    return !issued;
+  })
+    .sort((a, b) => (a.expectedPaymentTick ?? Infinity) - (b.expectedPaymentTick ?? Infinity) || a.id.localeCompare(b.id));
+  const adjustableIds = new Set(adjustable.map(budget => budget.id));
+  // An issued native purchase may already have spent the cash before its ACK
+  // arrives. Keep that budget intact so its real payment can still be proved.
+  const protectedGold = Object.values(budgets).reduce((sum, budget) => sum + (adjustableIds.has(budget.id) ? 0 : outstanding(budget)), 0);
+  let free = Math.max(0, cashGold - protectedGold);
+  // Preserve existing claims first; cash loss trims the later payment claims
+  // before earlier ones. This does not reshuffle saved cash on unchanged input.
+  for (const budget of adjustable) {
+    const held = Math.min(free, Math.max(0, budget.amountGold - budget.paidGold), Math.max(0, budget.plannedGold! - budget.paidGold));
+    budgets[budget.id] = { ...budget, amountGold: budget.paidGold + held }; free -= held;
+  }
+  for (const original of adjustable) {
+    const budget = budgets[original.id]!;
+    const added = Math.min(free, Math.max(0, budget.plannedGold! - budget.amountGold));
     budgets[budget.id] = { ...budget, amountGold: budget.amountGold + added }; free -= added;
   }
   return { ...memory, budgets };
