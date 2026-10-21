@@ -1,0 +1,4657 @@
+{
+  "source": "0615cf078469a59ee8b43e7cf42a461afadf7d0e",
+  "sharedBase": "a0dbb1056d876d17dd934a56f15824d9447b4208",
+  "geometryLimitBytes": 16384,
+  "observationLimitBytes": 65536,
+  "cases": [
+    {
+      "puzzle": "defense-window/later",
+      "rootRequestHashes": [
+        "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 6144,
+          "geometryBytes": 2418,
+          "geometryCount": 1,
+          "observationBytes": 3203,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15708,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15215,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15215,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15215,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15215,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 3294,
+          "geometryBytes": 15937,
+          "geometryCount": 17,
+          "observationBytes": 16867,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 77,
+          "geometryBytes": 14184,
+          "geometryCount": 17,
+          "observationBytes": 15591,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 6144,
+          "geometryBytes": 16061,
+          "geometryCount": 16,
+          "observationBytes": 16930,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16742,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16862,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16862,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16862,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16862,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 6144,
+          "geometryBytes": 16060,
+          "geometryCount": 16,
+          "observationBytes": 16862,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 16901,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 16901,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 16901,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 16901,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 16901,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0
+          ],
+          "roots": [
+            {
+              "id": "b63971a79e00ab234dbaed94e26de9660edb536cc891c60bc31905e651a02b53",
+              "present": true,
+              "readyThink": 9,
+              "work": 140
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "defense-window/urgent",
+      "rootRequestHashes": [
+        "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 6144,
+          "geometryBytes": 2418,
+          "geometryCount": 1,
+          "observationBytes": 3571,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15761,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15665,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 14569,
+          "geometryCount": 14,
+          "observationBytes": 15599,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 791,
+          "geometryBytes": 15937,
+          "geometryCount": 17,
+          "observationBytes": 17249,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 1,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 89,
+          "geometryBytes": 14184,
+          "geometryCount": 17,
+          "observationBytes": 15975,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 16061,
+          "geometryCount": 16,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 16059,
+          "geometryCount": 16,
+          "observationBytes": 16808,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 6144,
+          "geometryBytes": 16098,
+          "geometryCount": 16,
+          "observationBytes": 17282,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 16099,
+          "geometryCount": 16,
+          "observationBytes": 17410,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 16082,
+          "geometryCount": 15,
+          "observationBytes": 17406,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 16224,
+          "geometryCount": 15,
+          "observationBytes": 17619,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 6144,
+          "geometryBytes": 16263,
+          "geometryCount": 15,
+          "observationBytes": 17588,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 6144,
+          "geometryBytes": 16263,
+          "geometryCount": 15,
+          "observationBytes": 17588,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 2457,
+          "geometryBytes": 16113,
+          "geometryCount": 15,
+          "observationBytes": 17577,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 7,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 269,
+          "geometryBytes": 15524,
+          "geometryCount": 17,
+          "observationBytes": 17530,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 165,
+          "geometryBytes": 16199,
+          "geometryCount": 15,
+          "observationBytes": 17660,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 17,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 73,
+          "geometryBytes": 15524,
+          "geometryCount": 17,
+          "observationBytes": 17024,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 165,
+          "geometryBytes": 16199,
+          "geometryCount": 15,
+          "observationBytes": 17660,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": true,
+              "readyThink": 19,
+              "work": 140
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 73,
+          "geometryBytes": 15524,
+          "geometryCount": 17,
+          "observationBytes": 17024,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "3a9f97e50ae741bb1a5269fa108fc8bc425afa087532584ba6120d58d569eedd",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "evacuate/default",
+      "rootRequestHashes": [],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 6144,
+          "geometryBytes": 607,
+          "geometryCount": 1,
+          "observationBytes": 1434,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 2,
+          "work": 1789,
+          "geometryBytes": 8817,
+          "geometryCount": 9,
+          "observationBytes": 9808,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 3,
+          "work": 6144,
+          "geometryBytes": 9433,
+          "geometryCount": 9,
+          "observationBytes": 10090,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 9435,
+          "geometryCount": 9,
+          "observationBytes": 9887,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 10055,
+          "geometryCount": 9,
+          "observationBytes": 10710,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 10248,
+          "geometryCount": 9,
+          "observationBytes": 10768,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 10249,
+          "geometryCount": 9,
+          "observationBytes": 10769,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 10249,
+          "geometryCount": 9,
+          "observationBytes": 10974,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 9,
+          "work": 6144,
+          "geometryBytes": 10967,
+          "geometryCount": 10,
+          "observationBytes": 11691,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 11581,
+          "geometryCount": 10,
+          "observationBytes": 12171,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 11582,
+          "geometryCount": 10,
+          "observationBytes": 12172,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 13607,
+          "geometryCount": 10,
+          "observationBytes": 14388,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 13,
+          "work": 6144,
+          "geometryBytes": 14225,
+          "geometryCount": 10,
+          "observationBytes": 14949,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 14,
+          "work": 6144,
+          "geometryBytes": 14418,
+          "geometryCount": 10,
+          "observationBytes": 15077,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 15,
+          "work": 6144,
+          "geometryBytes": 14419,
+          "geometryCount": 10,
+          "observationBytes": 15078,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 16,
+          "work": 6144,
+          "geometryBytes": 14419,
+          "geometryCount": 10,
+          "observationBytes": 15284,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 17,
+          "work": 6144,
+          "geometryBytes": 15144,
+          "geometryCount": 11,
+          "observationBytes": 16008,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 18,
+          "work": 6144,
+          "geometryBytes": 15758,
+          "geometryCount": 11,
+          "observationBytes": 16486,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 19,
+          "work": 6144,
+          "geometryBytes": 15759,
+          "geometryCount": 11,
+          "observationBytes": 16487,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        },
+        {
+          "think": 20,
+          "work": 6144,
+          "geometryBytes": 16033,
+          "geometryCount": 7,
+          "observationBytes": 17037,
+          "observationTruncated": false,
+          "completedLandFields": 7,
+          "alternatives": [
+            0,
+            0,
+            0
+          ],
+          "roots": []
+        }
+      ]
+    },
+    {
+      "puzzle": "guarded-shore/strong",
+      "rootRequestHashes": [
+        "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 3664,
+          "geometryBytes": 2418,
+          "geometryCount": 1,
+          "observationBytes": 2960,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 85,
+          "geometryBytes": 15927,
+          "geometryCount": 17,
+          "observationBytes": 17214,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 72,
+          "geometryBytes": 16029,
+          "geometryCount": 17,
+          "observationBytes": 17179,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 16085,
+          "geometryCount": 16,
+          "observationBytes": 16764,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 16085,
+          "geometryCount": 16,
+          "observationBytes": 16696,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 16066,
+          "geometryCount": 15,
+          "observationBytes": 16884,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 16244,
+          "geometryCount": 15,
+          "observationBytes": 17062,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 16246,
+          "geometryCount": 15,
+          "observationBytes": 16994,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 5588,
+          "geometryBytes": 16098,
+          "geometryCount": 15,
+          "observationBytes": 16983,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 15080,
+          "geometryCount": 16,
+          "observationBytes": 16443,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 15936,
+          "geometryCount": 14,
+          "observationBytes": 16824,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 15936,
+          "geometryCount": 14,
+          "observationBytes": 16948,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 272,
+          "geometryBytes": 16322,
+          "geometryCount": 15,
+          "observationBytes": 17272,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 711,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17182,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 15,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 17,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 19,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "guarded-shore/weak",
+      "rootRequestHashes": [
+        "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 3664,
+          "geometryBytes": 2418,
+          "geometryCount": 1,
+          "observationBytes": 2960,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 85,
+          "geometryBytes": 15927,
+          "geometryCount": 17,
+          "observationBytes": 17214,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 72,
+          "geometryBytes": 16029,
+          "geometryCount": 17,
+          "observationBytes": 17179,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 16085,
+          "geometryCount": 16,
+          "observationBytes": 16764,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 16085,
+          "geometryCount": 16,
+          "observationBytes": 16696,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 16066,
+          "geometryCount": 15,
+          "observationBytes": 16884,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 16244,
+          "geometryCount": 15,
+          "observationBytes": 17062,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 16246,
+          "geometryCount": 15,
+          "observationBytes": 16994,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 5588,
+          "geometryBytes": 16098,
+          "geometryCount": 15,
+          "observationBytes": 16983,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 15080,
+          "geometryCount": 16,
+          "observationBytes": 16443,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 15936,
+          "geometryCount": 14,
+          "observationBytes": 16824,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 15936,
+          "geometryCount": 14,
+          "observationBytes": 16948,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 272,
+          "geometryBytes": 16322,
+          "geometryCount": 15,
+          "observationBytes": 17272,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 711,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17182,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 15,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 17,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 144,
+          "geometryBytes": 16360,
+          "geometryCount": 15,
+          "observationBytes": 17314,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": true,
+              "readyThink": 19,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 73,
+          "geometryBytes": 15683,
+          "geometryCount": 17,
+          "observationBytes": 17111,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "e7f60d8380fec63c7684f04aeefc4ab3d7af15613fb06bf715c2ee572b517e90",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "navy-zero/default",
+      "rootRequestHashes": [
+        "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 3294,
+          "geometryBytes": 2400,
+          "geometryCount": 1,
+          "observationBytes": 2939,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 81,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 10018,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9405,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 61,
+          "geometryBytes": 9005,
+          "geometryCount": 10,
+          "observationBytes": 9407,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "negative-return/default",
+      "rootRequestHashes": [
+        "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+        "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 6144,
+          "geometryBytes": 4779,
+          "geometryCount": 2,
+          "observationBytes": 5598,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 6144,
+          "geometryBytes": 14402,
+          "geometryCount": 14,
+          "observationBytes": 16153,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8,
+            24
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 2501,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17865,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 3,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 4,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 5,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 6,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 7,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 8,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 284,
+          "geometryBytes": 16377,
+          "geometryCount": 18,
+          "observationBytes": 17798,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 9,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 10,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 11,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 12,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 13,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 14,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 15,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 16,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 17,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 18,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 19,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 284,
+          "geometryBytes": 16381,
+          "geometryCount": 18,
+          "observationBytes": 17804,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0,
+            0
+          ],
+          "roots": [
+            {
+              "id": "90fed51c63f9cc8161b702fe25c5a07f4eb229b4e1fe4faa66b47d5fdd766585",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            },
+            {
+              "id": "a1e9f18af3174e4d6abb11ce03cbb3ba50d7c2f6f593525c595d25205c4807ba",
+              "present": true,
+              "readyThink": 20,
+              "work": 135
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/far",
+      "rootRequestHashes": [
+        "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 3294,
+          "geometryBytes": 2400,
+          "geometryCount": 1,
+          "observationBytes": 2939,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 85,
+          "geometryBytes": 15857,
+          "geometryCount": 17,
+          "observationBytes": 17142,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 66,
+          "geometryBytes": 15958,
+          "geometryCount": 17,
+          "observationBytes": 16698,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 16014,
+          "geometryCount": 16,
+          "observationBytes": 16691,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 16014,
+          "geometryCount": 16,
+          "observationBytes": 16623,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 16034,
+          "geometryCount": 15,
+          "observationBytes": 16850,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 16173,
+          "geometryCount": 15,
+          "observationBytes": 16989,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6096,
+          "geometryBytes": 16028,
+          "geometryCount": 15,
+          "observationBytes": 16911,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 253,
+          "geometryBytes": 15438,
+          "geometryCount": 17,
+          "observationBytes": 16863,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 144,
+          "geometryBytes": 16109,
+          "geometryCount": 15,
+          "observationBytes": 16991,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 10,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 12,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 14,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 16,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 18,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 20,
+              "work": 135
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "rootRequestHashes": [
+        "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 3294,
+          "geometryBytes": 2400,
+          "geometryCount": 1,
+          "observationBytes": 2939,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 85,
+          "geometryBytes": 15857,
+          "geometryCount": 17,
+          "observationBytes": 17142,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 66,
+          "geometryBytes": 15958,
+          "geometryCount": 17,
+          "observationBytes": 16698,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 16014,
+          "geometryCount": 16,
+          "observationBytes": 16691,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 16014,
+          "geometryCount": 16,
+          "observationBytes": 16623,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 16034,
+          "geometryCount": 15,
+          "observationBytes": 16850,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 16173,
+          "geometryCount": 15,
+          "observationBytes": 16989,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6096,
+          "geometryBytes": 16028,
+          "geometryCount": 15,
+          "observationBytes": 16911,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 1,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 253,
+          "geometryBytes": 15438,
+          "geometryCount": 17,
+          "observationBytes": 16863,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 144,
+          "geometryBytes": 16109,
+          "geometryCount": 15,
+          "observationBytes": 16991,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 10,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 12,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 14,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 16,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 18,
+              "work": 135
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 73,
+          "geometryBytes": 15450,
+          "geometryCount": 17,
+          "observationBytes": 16806,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            8
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": false,
+              "readyThink": null,
+              "work": null
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 144,
+          "geometryBytes": 16114,
+          "geometryCount": 15,
+          "observationBytes": 16996,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "33a92583f5f118f1d42c001cd8fa646611a846726ce54541ffc11baa7398cb3d",
+              "present": true,
+              "readyThink": 20,
+              "work": 135
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "supply-tier/footmen",
+      "rootRequestHashes": [
+        "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 148,
+          "geometryBytes": 3044,
+          "geometryCount": 1,
+          "observationBytes": 3444,
+          "observationTruncated": false,
+          "completedLandFields": 0,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13236,
+          "observationTruncated": false,
+          "completedLandFields": 0,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13317,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13251,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13335,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13266,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13351,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13283,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13367,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13300,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13386,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13319,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13402,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13417,
+          "observationTruncated": false,
+          "completedLandFields": 7,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 6144,
+          "geometryBytes": 12399,
+          "geometryCount": 9,
+          "observationBytes": 13351,
+          "observationTruncated": false,
+          "completedLandFields": 7,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 5220,
+          "geometryBytes": 12503,
+          "geometryCount": 9,
+          "observationBytes": 14100,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 173,
+          "geometryBytes": 12503,
+          "geometryCount": 9,
+          "observationBytes": 13403,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 173,
+          "geometryBytes": 12503,
+          "geometryCount": 9,
+          "observationBytes": 13403,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 173,
+          "geometryBytes": 12503,
+          "geometryCount": 9,
+          "observationBytes": 13403,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 173,
+          "geometryBytes": 12503,
+          "geometryCount": 9,
+          "observationBytes": 13403,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "cf41da5c868910878dc133610212f0ad83c1ab464fbbda242350a0e599d589f9",
+              "present": true,
+              "readyThink": 1,
+              "work": 143
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "supply-tier/knight",
+      "rootRequestHashes": [
+        "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43"
+      ],
+      "pinnedPeakBytes": null,
+      "pinnedPeakExplanation": "This source has no pin ledger and evicts at 16KiB; resident bytes cannot measure the required pinned working set.",
+      "progress": [
+        {
+          "think": 1,
+          "work": 147,
+          "geometryBytes": 2957,
+          "geometryCount": 1,
+          "observationBytes": 3357,
+          "observationTruncated": false,
+          "completedLandFields": 0,
+          "alternatives": [
+            0
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12453,
+          "observationTruncated": false,
+          "completedLandFields": 0,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12534,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12468,
+          "observationTruncated": false,
+          "completedLandFields": 1,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12552,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12483,
+          "observationTruncated": false,
+          "completedLandFields": 2,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12568,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12500,
+          "observationTruncated": false,
+          "completedLandFields": 3,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12584,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12517,
+          "observationTruncated": false,
+          "completedLandFields": 4,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12603,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12536,
+          "observationTruncated": false,
+          "completedLandFields": 5,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12619,
+          "observationTruncated": false,
+          "completedLandFields": 6,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12634,
+          "observationTruncated": false,
+          "completedLandFields": 7,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "work": 6144,
+          "geometryBytes": 11616,
+          "geometryCount": 9,
+          "observationBytes": 12568,
+          "observationTruncated": false,
+          "completedLandFields": 7,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "work": 5292,
+          "geometryBytes": 11720,
+          "geometryCount": 9,
+          "observationBytes": 13317,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "work": 173,
+          "geometryBytes": 11720,
+          "geometryCount": 9,
+          "observationBytes": 12620,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "work": 173,
+          "geometryBytes": 11720,
+          "geometryCount": 9,
+          "observationBytes": 12620,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "work": 173,
+          "geometryBytes": 11720,
+          "geometryCount": 9,
+          "observationBytes": 12620,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "work": 173,
+          "geometryBytes": 11720,
+          "geometryCount": 9,
+          "observationBytes": 12620,
+          "observationTruncated": false,
+          "completedLandFields": 8,
+          "alternatives": [
+            24
+          ],
+          "roots": [
+            {
+              "id": "ee0dafeaa8cbd17e87fde6bad6f4efd2e0cdbe889e3330b799ce319b9ae6fb43",
+              "present": true,
+              "readyThink": 1,
+              "work": 142
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
