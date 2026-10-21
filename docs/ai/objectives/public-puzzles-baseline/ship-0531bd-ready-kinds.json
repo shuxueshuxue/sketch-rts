@@ -1,0 +1,28 @@
+[
+  {
+    "puzzle": "ship-away/far",
+    "readyNodeOccurrences": {
+      "wait-income": 92
+    },
+    "firstReadyByKind": {
+      "wait-income": {
+        "think": 4,
+        "tick": 60
+      }
+    },
+    "thinkCount": 560
+  },
+  {
+    "puzzle": "ship-away/near",
+    "readyNodeOccurrences": {
+      "wait-income": 108
+    },
+    "firstReadyByKind": {
+      "wait-income": {
+        "think": 4,
+        "tick": 60
+      }
+    },
+    "thinkCount": 560
+  }
+]
