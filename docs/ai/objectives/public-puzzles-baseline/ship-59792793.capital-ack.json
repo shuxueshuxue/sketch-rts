@@ -1,0 +1,2024 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "sharedBase": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "scope": "Read-only central capital/output snapshots and post-foundation planning observations. No new acceptance assertion, AI, fact reader, navigation, SDK application or simulation. GoldSpentTotal is all native spending, not separately attributed hall cost. Plans after a foundation prove continued planning, not absence from the fresh collector (that fresh list is not separately captured). Physical guard proximity does not prove a lease or continuous protection.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "sourceStreamSha256": "d0257e8fed5330418695d5f6c2846c9b5102a670d340b433132a16e091ca9b99",
+      "first": {
+        "firstGoalBuildAdmission": {
+          "think": 512,
+          "tick": 7680,
+          "gold": 639,
+          "nativeGoldSpentTotal": 2231,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 120,
+              "plannedGold": 400,
+              "expectedPaymentTick": 7680,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v59",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v58"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "active",
+              "phase": "await-foundation",
+              "sinceTick": 7680,
+              "lastProgressTick": 7680,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [
+            {
+              "commandId": "planner:strategy-command:7680:512:1",
+              "source": "executor",
+              "executor": "goal.build",
+              "action": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "allocationRevision": 512,
+              "purpose": "task",
+              "command": {
+                "type": "build",
+                "unitId": "scene-public-planner-frame-planner-worker-1",
+                "buildingKind": "townHall",
+                "x": 2832,
+                "y": 720
+              },
+              "status": "accepted",
+              "admittedTick": 7680,
+              "queuedTick": null
+            }
+          ],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            },
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v53",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v60"
+              ],
+              "sinceTick": 120
+            }
+          ]
+        },
+        "firstPhysicalFoundationObserved": {
+          "think": 521,
+          "tick": 7815,
+          "gold": 289,
+          "nativeGoldSpentTotal": 2631,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v63",
+                "generation": 18
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 120,
+              "plannedGold": 400,
+              "expectedPaymentTick": 8148,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v59",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v58"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "await-foundation",
+              "sinceTick": 7680,
+              "lastProgressTick": 7680,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1106",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 107.35714285714283,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": false,
+              "buildProgress": 12,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v64",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v63"
+              ],
+              "sinceTick": 120
+            }
+          ]
+        },
+        "firstPostFoundationPlanObserved": {
+          "think": 521,
+          "tick": 7815,
+          "gold": 289,
+          "nativeGoldSpentTotal": 2631,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v63",
+                "generation": 18
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 120,
+              "plannedGold": 400,
+              "expectedPaymentTick": 8148,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v59",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v58"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "await-foundation",
+              "sinceTick": 7680,
+              "lastProgressTick": 7680,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1106",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 107.35714285714283,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": false,
+              "buildProgress": 12,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v64",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v63"
+              ],
+              "sinceTick": 120
+            }
+          ]
+        },
+        "firstCompleteBuildExecution": {
+          "think": 558,
+          "tick": 8370,
+          "gold": 168,
+          "nativeGoldSpentTotal": 2932,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v63",
+                "generation": 18
+              },
+              "amountGold": 309,
+              "paidGold": 0,
+              "state": "released",
+              "sinceTick": 120,
+              "plannedGold": 400,
+              "expectedPaymentTick": 8148,
+              "releasedTick": 7875,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v59",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v58"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "constructing",
+              "sinceTick": 7680,
+              "lastProgressTick": 7680,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v66",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [],
+                "parametersRef": "goal-ref:parameters:v65"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2",
+                "entityId": "building-planner-townHall-1106"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "complete",
+              "phase": "building-complete",
+              "sinceTick": 7875,
+              "lastProgressTick": 7875,
+              "state": {}
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1106",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 900,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": true,
+              "buildProgress": 560,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "selectedKinds": [
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v64",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v67"
+              ],
+              "sinceTick": 120
+            }
+          ]
+        },
+        "firstPhysicalHallCompleteObserved": {
+          "think": 558,
+          "tick": 8370,
+          "gold": 168,
+          "nativeGoldSpentTotal": 2932,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v63",
+                "generation": 18
+              },
+              "amountGold": 309,
+              "paidGold": 0,
+              "state": "released",
+              "sinceTick": 120,
+              "plannedGold": 400,
+              "expectedPaymentTick": 8148,
+              "releasedTick": 7875,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v59",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v58"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "constructing",
+              "sinceTick": 7680,
+              "lastProgressTick": 7680,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v66",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [],
+                "parametersRef": "goal-ref:parameters:v65"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2",
+                "entityId": "building-planner-townHall-1106"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "complete",
+              "phase": "building-complete",
+              "sinceTick": 7875,
+              "lastProgressTick": 7875,
+              "state": {}
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1106",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 900,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": true,
+              "buildProgress": 560,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "selectedKinds": [
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v64",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v67"
+              ],
+              "sinceTick": 120
+            }
+          ]
+        }
+      },
+      "distinctCentralFoundationPaymentReceipts": [],
+      "framesWithValidatedBuildBinding": 0,
+      "framesWithPlanAfterPhysicalFoundation": 40,
+      "firstPhysicalBuildProgressIncreases": [
+        {
+          "think": 522,
+          "tick": 7830,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 12,
+          "progress": 27,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 523,
+          "tick": 7845,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 27,
+          "progress": 42,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 524,
+          "tick": 7860,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 42,
+          "progress": 57,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 525,
+          "tick": 7875,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 57,
+          "progress": 72,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 526,
+          "tick": 7890,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 72,
+          "progress": 87,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 527,
+          "tick": 7905,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 87,
+          "progress": 102,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 528,
+          "tick": 7920,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 102,
+          "progress": 117,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 529,
+          "tick": 7935,
+          "buildingId": "building-planner-townHall-1106",
+          "priorProgress": 117,
+          "progress": 132,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v60",
+                "generation": 17
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v67",
+                "generation": 19
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        }
+      ],
+      "last": {
+        "think": 560,
+        "tick": 8400,
+        "gold": 58,
+        "nativeGoldSpentTotal": 3052,
+        "budgets": [
+          {
+            "id": "budget:goal-ref:spend:v4",
+            "spendId": "goal-ref:spend:v4",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v63",
+              "generation": 18
+            },
+            "amountGold": 309,
+            "paidGold": 0,
+            "state": "released",
+            "sinceTick": 120,
+            "plannedGold": 400,
+            "expectedPaymentTick": 8148,
+            "releasedTick": 7875,
+            "includedUtilityTermCodes": [
+              "remaining-plan-actions"
+            ],
+            "externalReservationIds": [
+              "naval:islandHall"
+            ]
+          }
+        ],
+        "buildExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v60",
+              "generation": 17
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.build",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v59",
+              "actionKind": "build",
+              "parameters": {},
+              "outputs": [
+                "building"
+              ],
+              "parametersRef": "goal-ref:parameters:v58"
+            },
+            "target": {
+              "point": {
+                "x": 2832,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "blocked",
+            "phase": "constructing",
+            "sinceTick": 7680,
+            "lastProgressTick": 7680,
+            "state": {
+              "goalOutputBindings": {}
+            }
+          },
+          {
+            "token": {
+              "actionId": "goal-ref:action:v67",
+              "generation": 19
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.build",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v66",
+              "actionKind": "build",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v65"
+            },
+            "target": {
+              "point": {
+                "x": 2832,
+                "y": 720
+              },
+              "landId": "land:2",
+              "entityId": "building-planner-townHall-1106"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "complete",
+            "phase": "building-complete",
+            "sinceTick": 7875,
+            "lastProgressTick": 7875,
+            "state": {}
+          }
+        ],
+        "guardExecutions": [],
+        "acceptedBuildAdmissions": [],
+        "foundationPayments": [],
+        "outputBindings": [],
+        "newOwnTownHalls": [
+          {
+            "id": "building-planner-townHall-1106",
+            "owner": "planner",
+            "kind": "townHall",
+            "x": 2832,
+            "y": 720,
+            "hp": 900,
+            "maxHp": 900,
+            "radius": 48,
+            "complete": true,
+            "buildProgress": 560,
+            "buildTime": 560,
+            "attackDamage": 0,
+            "attackRange": 0,
+            "attackCooldown": 1,
+            "cooldown": 0,
+            "rallyX": 2922,
+            "rallyY": 780,
+            "queue": [],
+            "researchQueue": []
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "selectedKinds": [
+              "assemble",
+              "hold-position"
+            ]
+          }
+        ],
+        "objectiveStatuses": [
+          {
+            "goalDefinitionRef": "goal-ref:objective:v64",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "status": "active",
+            "actionIds": [
+              "goal-ref:action:v67"
+            ],
+            "sinceTick": 120
+          }
+        ]
+      },
+      "perThinkFile": "capital-ack/far.jsonl.gz"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "sourceStreamSha256": "25bf9c48a418147d8afe5a41cf700ccb1850264a164639d2d881e5c2e5ea39e0",
+      "first": {
+        "firstGoalBuildAdmission": {
+          "think": 410,
+          "tick": 6150,
+          "gold": 569,
+          "nativeGoldSpentTotal": 1791,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6150,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v57",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v56"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "active",
+              "phase": "await-foundation",
+              "sinceTick": 6150,
+              "lastProgressTick": 6150,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [
+            {
+              "commandId": "planner:strategy-command:6150:410:1",
+              "source": "executor",
+              "executor": "goal.build",
+              "action": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "allocationRevision": 410,
+              "purpose": "task",
+              "command": {
+                "type": "build",
+                "unitId": "scene-public-planner-frame-planner-worker-1",
+                "buildingKind": "townHall",
+                "x": 2832,
+                "y": 720
+              },
+              "status": "accepted",
+              "admittedTick": 6150,
+              "queuedTick": null
+            }
+          ],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            },
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v33",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v58"
+              ],
+              "sinceTick": 105
+            }
+          ]
+        },
+        "firstPhysicalFoundationObserved": {
+          "think": 419,
+          "tick": 6285,
+          "gold": 219,
+          "nativeGoldSpentTotal": 2191,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v61",
+                "generation": 17
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6828,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v57",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v56"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "await-foundation",
+              "sinceTick": 6150,
+              "lastProgressTick": 6150,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1103",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 110.24999999999997,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": false,
+              "buildProgress": 14,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v62",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v61"
+              ],
+              "sinceTick": 105
+            }
+          ]
+        },
+        "firstPostFoundationPlanObserved": {
+          "think": 419,
+          "tick": 6285,
+          "gold": 219,
+          "nativeGoldSpentTotal": 2191,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v61",
+                "generation": 17
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6828,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v57",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v56"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "await-foundation",
+              "sinceTick": 6150,
+              "lastProgressTick": 6150,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1103",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 110.24999999999997,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": false,
+              "buildProgress": 14,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "selectedKinds": [
+                "wait-income",
+                "build",
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v62",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v61"
+              ],
+              "sinceTick": 105
+            }
+          ]
+        },
+        "firstCompleteBuildExecution": {
+          "think": 456,
+          "tick": 6840,
+          "gold": 68,
+          "nativeGoldSpentTotal": 2522,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v61",
+                "generation": 17
+              },
+              "amountGold": 239,
+              "paidGold": 0,
+              "state": "released",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6828,
+              "releasedTick": 6345,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v57",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v56"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "constructing",
+              "sinceTick": 6150,
+              "lastProgressTick": 6150,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v64",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [],
+                "parametersRef": "goal-ref:parameters:v63"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2",
+                "entityId": "building-planner-townHall-1103"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "complete",
+              "phase": "building-complete",
+              "sinceTick": 6345,
+              "lastProgressTick": 6345,
+              "state": {}
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1103",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 900,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": true,
+              "buildProgress": 560,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "selectedKinds": [
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v62",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v65"
+              ],
+              "sinceTick": 105
+            }
+          ]
+        },
+        "firstPhysicalHallCompleteObserved": {
+          "think": 456,
+          "tick": 6840,
+          "gold": 68,
+          "nativeGoldSpentTotal": 2522,
+          "budgets": [
+            {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v61",
+                "generation": 17
+              },
+              "amountGold": 239,
+              "paidGold": 0,
+              "state": "released",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6828,
+              "releasedTick": 6345,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            }
+          ],
+          "buildExecutions": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v57",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [
+                  "building"
+                ],
+                "parametersRef": "goal-ref:parameters:v56"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "blocked",
+              "phase": "constructing",
+              "sinceTick": 6150,
+              "lastProgressTick": 6150,
+              "state": {
+                "goalOutputBindings": {}
+              }
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "executor": "goal.build",
+              "intent": {
+                "kind": "goal-action",
+                "goalId": "ConquerIsland:planner:resource-1",
+                "declarationId": "goal-ref:declaration:v64",
+                "actionKind": "build",
+                "parameters": {},
+                "outputs": [],
+                "parametersRef": "goal-ref:parameters:v63"
+              },
+              "target": {
+                "point": {
+                  "x": 2832,
+                  "y": 720
+                },
+                "landId": "land:2",
+                "entityId": "building-planner-townHall-1103"
+              },
+              "dependsOn": [],
+              "completionEffects": [],
+              "status": "complete",
+              "phase": "building-complete",
+              "sinceTick": 6345,
+              "lastProgressTick": 6345,
+              "state": {}
+            }
+          ],
+          "guardExecutions": [],
+          "acceptedBuildAdmissions": [],
+          "foundationPayments": [],
+          "outputBindings": [],
+          "newOwnTownHalls": [
+            {
+              "id": "building-planner-townHall-1103",
+              "owner": "planner",
+              "kind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "hp": 900,
+              "maxHp": 900,
+              "radius": 48,
+              "complete": true,
+              "buildProgress": 560,
+              "buildTime": 560,
+              "attackDamage": 0,
+              "attackRange": 0,
+              "attackCooldown": 1,
+              "cooldown": 0,
+              "rallyX": 2922,
+              "rallyY": 780,
+              "queue": [],
+              "researchQueue": []
+            }
+          ],
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "selectedKinds": [
+                "assemble",
+                "hold-position"
+              ]
+            }
+          ],
+          "objectiveStatuses": [
+            {
+              "goalDefinitionRef": "goal-ref:objective:v62",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "status": "active",
+              "actionIds": [
+                "goal-ref:action:v65"
+              ],
+              "sinceTick": 105
+            }
+          ]
+        }
+      },
+      "distinctCentralFoundationPaymentReceipts": [],
+      "framesWithValidatedBuildBinding": 0,
+      "framesWithPlanAfterPhysicalFoundation": 118,
+      "firstPhysicalBuildProgressIncreases": [
+        {
+          "think": 420,
+          "tick": 6300,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 14,
+          "progress": 29,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 421,
+          "tick": 6315,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 29,
+          "progress": 44,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 422,
+          "tick": 6330,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 44,
+          "progress": 59,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 423,
+          "tick": 6345,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 59,
+          "progress": 74,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 424,
+          "tick": 6360,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 74,
+          "progress": 89,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 425,
+          "tick": 6375,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 89,
+          "progress": 104,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 426,
+          "tick": 6390,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 104,
+          "progress": 119,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        },
+        {
+          "think": 427,
+          "tick": 6405,
+          "buildingId": "building-planner-townHall-1103",
+          "priorProgress": 119,
+          "progress": 134,
+          "hasPlan": true,
+          "buildExecutionStates": [
+            {
+              "token": {
+                "actionId": "goal-ref:action:v58",
+                "generation": 16
+              },
+              "status": "blocked",
+              "phase": "constructing"
+            },
+            {
+              "token": {
+                "actionId": "goal-ref:action:v65",
+                "generation": 18
+              },
+              "status": "active",
+              "phase": "constructing"
+            }
+          ]
+        }
+      ],
+      "last": {
+        "think": 560,
+        "tick": 8400,
+        "gold": 53,
+        "nativeGoldSpentTotal": 3417,
+        "budgets": [
+          {
+            "id": "budget:goal-ref:spend:v4",
+            "spendId": "goal-ref:spend:v4",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v61",
+              "generation": 17
+            },
+            "amountGold": 239,
+            "paidGold": 0,
+            "state": "released",
+            "sinceTick": 105,
+            "plannedGold": 400,
+            "expectedPaymentTick": 6828,
+            "releasedTick": 6345,
+            "includedUtilityTermCodes": [
+              "remaining-plan-actions"
+            ],
+            "externalReservationIds": [
+              "naval:islandHall"
+            ]
+          }
+        ],
+        "buildExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v58",
+              "generation": 16
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.build",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v57",
+              "actionKind": "build",
+              "parameters": {},
+              "outputs": [
+                "building"
+              ],
+              "parametersRef": "goal-ref:parameters:v56"
+            },
+            "target": {
+              "point": {
+                "x": 2832,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "blocked",
+            "phase": "constructing",
+            "sinceTick": 6150,
+            "lastProgressTick": 6150,
+            "state": {
+              "goalOutputBindings": {}
+            }
+          },
+          {
+            "token": {
+              "actionId": "goal-ref:action:v65",
+              "generation": 18
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.build",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v64",
+              "actionKind": "build",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v63"
+            },
+            "target": {
+              "point": {
+                "x": 2832,
+                "y": 720
+              },
+              "landId": "land:2",
+              "entityId": "building-planner-townHall-1103"
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "complete",
+            "phase": "building-complete",
+            "sinceTick": 6345,
+            "lastProgressTick": 6345,
+            "state": {}
+          }
+        ],
+        "guardExecutions": [],
+        "acceptedBuildAdmissions": [],
+        "foundationPayments": [],
+        "outputBindings": [],
+        "newOwnTownHalls": [
+          {
+            "id": "building-planner-townHall-1103",
+            "owner": "planner",
+            "kind": "townHall",
+            "x": 2832,
+            "y": 720,
+            "hp": 900,
+            "maxHp": 900,
+            "radius": 48,
+            "complete": true,
+            "buildProgress": 560,
+            "buildTime": 560,
+            "attackDamage": 0,
+            "attackRange": 0,
+            "attackCooldown": 1,
+            "cooldown": 0,
+            "rallyX": 2922,
+            "rallyY": 780,
+            "queue": [],
+            "researchQueue": []
+          }
+        ],
+        "plans": [],
+        "objectiveStatuses": [
+          {
+            "goalDefinitionRef": "goal-ref:objective:v62",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "status": "complete",
+            "actionIds": [
+              "goal-ref:action:v65"
+            ],
+            "sinceTick": 105
+          }
+        ]
+      },
+      "perThinkFile": "capital-ack/near.jsonl.gz"
+    }
+  ]
+}
