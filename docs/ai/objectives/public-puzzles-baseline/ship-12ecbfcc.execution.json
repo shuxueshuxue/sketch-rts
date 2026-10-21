@@ -1,0 +1,228 @@
+{
+  "source": "d37c34d7939f18252c8aa99a602417cff40469c0",
+  "sharedBase": "12ecbfcc9cffe71d89af3ba5179c3cc7d1ec3d22",
+  "mode": "normal-collector-controlled-owner-public-execution",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 42,
+      "firstReadyTick": 120,
+      "firstFormalCommandTick": 150,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 37,
+        "goal.position-transport": 5
+      },
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "v6Economy": 15
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 324
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 18
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 218
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": false,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "farm-complete": 1465,
+          "shipyard-complete": 2799
+        },
+        "losses": [],
+        "final": {
+          "gold": 589,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 70,
+      "elapsedMs": 3895449.53,
+      "cpuMs": 4040580.508,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "assemble",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"farm-complete\":1465,\"shipyard-complete\":2799},\"commands\":[{\"tick\":17,\"command\":{\"type\":\"mine\",\"unitIds\""
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 19,
+      "firstReadyTick": 105,
+      "firstFormalCommandTick": 120,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 19
+      },
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "v6Economy": 15
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 351
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 6
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 203
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": false,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "farm-complete": 1465,
+          "shipyard-complete": 2799
+        },
+        "losses": [],
+        "final": {
+          "gold": 589,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 47,
+      "elapsedMs": 3825313.332,
+      "cpuMs": 3968934.768,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "assemble",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"farm-complete\":1465,\"shipyard-complete\":2799},\"commands\":[{\"tick\":17,\"command\":"
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "executionsAccepted": 0,
+    "physicalPassed": 0,
+    "withFormalCommands": 2,
+    "observedNativeThinks": 1120,
+    "formalCommandCount": 61
+  },
+  "testCounts": {
+    "numTotalTests": 12,
+    "numPassedTests": 7,
+    "numFailedTests": 3,
+    "numPendingTests": 2,
+    "numTodoTests": 0,
+    "numTotalTestSuites": 2,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 2,
+    "numPendingTestSuites": 0
+  }
+}
