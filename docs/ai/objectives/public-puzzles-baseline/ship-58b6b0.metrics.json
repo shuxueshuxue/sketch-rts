@@ -1,0 +1,1594 @@
+{
+  "coldSearch": {
+    "source": "ce20233dd1bd53a64a3598c1e7652583ebac4df7",
+    "sharedBase": "58b6b0ac5bebe6437c9746b7cfb01ac074a63065",
+    "mode": "cold",
+    "reporterSha256": "d160ac1fa6d50461f371ead39ec7d061325e0d43a4bee33d8beac1b699c298c1",
+    "semantics": {
+      "queue": "Actual ordered services are retained; service sum equals used for every think.",
+      "search": "Exact per-plan work/expansions/depth/limitReason; no sum of cumulative expansions.",
+      "scope": "Reported plan counters and the actual total queue ledger are separate; not added together.",
+      "operation": "Read-only extraction; no planning, geometry queries, simulation or source changes."
+    },
+    "cases": [
+      {
+        "puzzle": "ship-away/far",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/frames/ship-away-far.json.gz",
+        "inputSha256": "2feb33704a156aca80ca5eeafde6e5008088a15a9903b0594a8f78b9ba20dd01",
+        "metrics": "ship-away-far.metrics.jsonl.gz",
+        "metricsSha256": "255d2d2c0faca3904e80ae1dbf6022545110adbef0a416a554076a88e5a8dc24",
+        "thinkCount": 20,
+        "totalActualQueueWork": 80479,
+        "peakActualQueueWork": 6144,
+        "byTier": {
+          "background-field": 68444,
+          "critical-route": 8140,
+          "existing-field": 3895
+        },
+        "byService": [
+          {
+            "tier": "background-field",
+            "key": "field:land:112:816",
+            "work": 4641
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:1552:688",
+            "work": 728
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:07b493f4",
+            "work": 7
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:1d5e1703",
+            "work": 1
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:21a7e9c6",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:4fb7b87c",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:55956fea",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:57f1d028",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:951ae578",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:bd857fa4",
+            "work": 7
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:f046dbba",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+            "work": 62672
+          },
+          {
+            "tier": "critical-route",
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "work": 8140
+          },
+          {
+            "tier": "existing-field",
+            "key": "field:land:1552:688",
+            "work": 3895
+          }
+        ],
+        "first": {
+          "think": 1,
+          "tick": 1,
+          "passed": true,
+          "executable": false,
+          "error": null,
+          "planHash": "8140e8ac96be3d84cced01b6d2237480e4130fcb3d3ea308f4b8536831622791",
+          "readyActionCount": 0,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":176,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1488,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-time"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1488,\"y\":688},\"heading\":0,\"water\":{\"x\":1488,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":176,\"y\":816},\"heading\":0,\"water\":{\"x\":176,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12001,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12001,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12001}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12001}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12001}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [
+                {
+                  "code": "selected-native-berths-pending",
+                  "factIds": [
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {}
+                }
+              ],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 1,
+              "thinkSequence": 1,
+              "limit": 6144,
+              "used": 411,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "goal-geometry:57f1d028",
+                  "tier": "background-field",
+                  "work": 2
+                },
+                {
+                  "key": "goal-geometry:951ae578",
+                  "tier": "background-field",
+                  "work": 2
+                }
+              ]
+            },
+            "unused": 5733,
+            "byTier": {
+              "background-field": 4,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:57f1d028",
+                "work": 2
+              },
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:951ae578",
+                "work": 2
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        },
+        "final": {
+          "think": 20,
+          "tick": 1,
+          "passed": true,
+          "executable": true,
+          "error": null,
+          "planHash": "7a441b54e3dc89bdf3d8b2dbc88864254296ca068247424be2926de65ae3c28f",
+          "readyActionCount": 1,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-facts"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-facts"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1552,\"y\":688},\"heading\":1.5707963267948966,\"water\":{\"x\":1552,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":112,\"y\":816},\"heading\":1.5707963267948966,\"water\":{\"x\":112,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12001,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12001,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12001}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12001}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12001}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 1,
+              "thinkSequence": 20,
+              "limit": 6144,
+              "used": 5307,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                  "tier": "background-field",
+                  "work": 4900
+                }
+              ]
+            },
+            "unused": 837,
+            "byTier": {
+              "background-field": 4900,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "work": 4900
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/frames/ship-away-near.json.gz",
+        "inputSha256": "92918c9040a658da6834a2ae757199f453071f5a778d5cd47d0b7073900bde6b",
+        "metrics": "ship-away-near.metrics.jsonl.gz",
+        "metricsSha256": "af42694a0c499b7a1c24eb51a9ba5963f142e5f2123320e7aa0e653e85c4c5d6",
+        "thinkCount": 20,
+        "totalActualQueueWork": 80479,
+        "peakActualQueueWork": 6144,
+        "byTier": {
+          "background-field": 68444,
+          "critical-route": 8140,
+          "existing-field": 3895
+        },
+        "byService": [
+          {
+            "tier": "background-field",
+            "key": "field:land:112:816",
+            "work": 4641
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:1552:688",
+            "work": 728
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:07b493f4",
+            "work": 7
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:1d5e1703",
+            "work": 1
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:21a7e9c6",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:4fb7b87c",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:55956fea",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:57f1d028",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:951ae578",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:bd857fa4",
+            "work": 7
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:f046dbba",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+            "work": 62672
+          },
+          {
+            "tier": "critical-route",
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "work": 8140
+          },
+          {
+            "tier": "existing-field",
+            "key": "field:land:1552:688",
+            "work": 3895
+          }
+        ],
+        "first": {
+          "think": 1,
+          "tick": 1,
+          "passed": false,
+          "executable": false,
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:416:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:416:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:108:12"
+          },
+          "planHash": "76e4a2d6a049af174654515b23f4912c6ffdc3ebbe1cfee826e231cd23c977f5",
+          "readyActionCount": 0,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":176,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1488,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-time"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1488,\"y\":688},\"heading\":0,\"water\":{\"x\":1488,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":176,\"y\":816},\"heading\":0,\"water\":{\"x\":176,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12001,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12001,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12001}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12001}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12001}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [
+                {
+                  "code": "selected-native-berths-pending",
+                  "factIds": [
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {}
+                }
+              ],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 1,
+              "thinkSequence": 1,
+              "limit": 6144,
+              "used": 411,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "goal-geometry:57f1d028",
+                  "tier": "background-field",
+                  "work": 2
+                },
+                {
+                  "key": "goal-geometry:951ae578",
+                  "tier": "background-field",
+                  "work": 2
+                }
+              ]
+            },
+            "unused": 5733,
+            "byTier": {
+              "background-field": 4,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:57f1d028",
+                "work": 2
+              },
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:951ae578",
+                "work": 2
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        },
+        "final": {
+          "think": 20,
+          "tick": 1,
+          "passed": false,
+          "executable": false,
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:416:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:416:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:108:12"
+          },
+          "planHash": "f2b9f0158fc7880d4979a7264cb62f42aaa5d703a55442114fddbb66ed46f1a9",
+          "readyActionCount": 1,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-facts"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-facts"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1552,\"y\":688},\"heading\":1.5707963267948966,\"water\":{\"x\":1552,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12001,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":112,\"y\":816},\"heading\":1.5707963267948966,\"water\":{\"x\":112,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12001,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12001,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12001}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12001}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12001,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12001}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 1,
+              "thinkSequence": 20,
+              "limit": 6144,
+              "used": 5307,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                  "tier": "background-field",
+                  "work": 4900
+                }
+              ]
+            },
+            "unused": 837,
+            "byTier": {
+              "background-field": 4900,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "work": 4900
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "coldRefinement": {
+    "source": "ce20233dd1bd53a64a3598c1e7652583ebac4df7",
+    "sharedBase": "58b6b0ac5bebe6437c9746b7cfb01ac074a63065",
+    "mode": "cold",
+    "cases": [
+      {
+        "puzzle": "ship-away/far",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/frames/ship-away-far.json.gz",
+        "inputSha256": "2feb33704a156aca80ca5eeafde6e5008088a15a9903b0594a8f78b9ba20dd01",
+        "thinkCount": 20,
+        "firsts": {
+          "position-transport": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          },
+          "transport-worker": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          }
+        },
+        "perThink": "ship-away-far.refinement.jsonl.gz",
+        "perThinkSha256": "8e7d905426fa4826566c32df1adecf9b83f79f9702d46260e902db8cc504cebf"
+      },
+      {
+        "puzzle": "ship-away/near",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/frames/ship-away-near.json.gz",
+        "inputSha256": "92918c9040a658da6834a2ae757199f453071f5a778d5cd47d0b7073900bde6b",
+        "thinkCount": 20,
+        "firsts": {
+          "position-transport": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          },
+          "transport-worker": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          }
+        },
+        "perThink": "ship-away-near.refinement.jsonl.gz",
+        "perThinkSha256": "4e3bd50e4d2fdbbdd26a6e56f483156d6ea8a7cc1665c7df10c8d373a48154ec"
+      }
+    ],
+    "reporterSha256": "3035e273239cedf7af144c559aa41f5327c80c3a7f2becd60459460b8a7dbb14",
+    "semantics": "Known memory, known node annotation, exact selected declaration and output-ready are distinct observations. Firsts refer to any selected action of that kind; full original IDs/declarations/source revisions remain in per-think records. Runtime frames contain no retained memory; memory publication is not inferred there. No planning, simulation or geometry query is executed."
+  },
+  "runtimeSearch": {
+    "source": "ce20233dd1bd53a64a3598c1e7652583ebac4df7",
+    "sharedBase": "58b6b0ac5bebe6437c9746b7cfb01ac074a63065",
+    "mode": "runtime",
+    "reporterSha256": "d160ac1fa6d50461f371ead39ec7d061325e0d43a4bee33d8beac1b699c298c1",
+    "semantics": {
+      "queue": "Actual ordered services are retained; service sum equals used for every think.",
+      "search": "Exact per-plan work/expansions/depth/limitReason; no sum of cumulative expansions.",
+      "scope": "Reported plan counters and the actual total queue ledger are separate; not added together.",
+      "operation": "Read-only extraction; no planning, geometry queries, simulation or source changes."
+    },
+    "cases": [
+      {
+        "puzzle": "ship-away/far",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/runtime/ship-away-far.jsonl.gz",
+        "inputSha256": "4e053233d6040ddbad0abc0a1ac8624e90042f2638d3d3728b8469625b5cab45",
+        "metrics": "ship-away-far.metrics.jsonl.gz",
+        "metricsSha256": "229ee7e786308fc5c1efb660fa57c3591766cd637512035f91b135b7d4d9e682",
+        "thinkCount": 560,
+        "totalActualQueueWork": 32114,
+        "peakActualQueueWork": 6144,
+        "byTier": {
+          "background-field": 20304,
+          "critical-route": 11810
+        },
+        "byService": [
+          {
+            "tier": "background-field",
+            "key": "field:land:112:880",
+            "work": 4644
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:112:912",
+            "work": 4672
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:112:944",
+            "work": 4668
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:2932:316",
+            "work": 2802
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:2948:356",
+            "work": 2738
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:1a75747c",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:1c931847",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:34bba64f",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:37fbae66",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:44e09dcd",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:51080edc",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:57f1d028",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:615b1e7e",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:7982cc90",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:83c7cfef",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:89e3a0ad",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:951ae578",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:985943d0",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:a6982219",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:cb77fcb3",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:cbd386f2",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:ce89fe71",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:d0a7799a",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:decd4697",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:e6bd0096",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:e9dbd1f8",
+            "work": 4
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:ec6d6a03",
+            "work": 2
+          },
+          {
+            "tier": "critical-route",
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "work": 11206
+          },
+          {
+            "tier": "critical-route",
+            "key": "goal-search:ExpandLand:planner:resource-1",
+            "work": 604
+          }
+        ],
+        "first": {
+          "think": 1,
+          "tick": 15,
+          "readyActionCount": 0,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":176,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12015,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1488,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12015,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-time"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1488,\"y\":688},\"heading\":0,\"water\":{\"x\":1488,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12015,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12015,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":176,\"y\":816},\"heading\":0,\"water\":{\"x\":176,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12015,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12015,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12015}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12015}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12015}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [
+                {
+                  "code": "selected-native-berths-pending",
+                  "factIds": [
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {}
+                }
+              ],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 15,
+              "thinkSequence": 1,
+              "limit": 6144,
+              "used": 411,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "goal-geometry:57f1d028",
+                  "tier": "background-field",
+                  "work": 2
+                },
+                {
+                  "key": "goal-geometry:951ae578",
+                  "tier": "background-field",
+                  "work": 2
+                }
+              ]
+            },
+            "unused": 5733,
+            "byTier": {
+              "background-field": 4,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:57f1d028",
+                "work": 2
+              },
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:951ae578",
+                "work": 2
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        },
+        "final": {
+          "think": 560,
+          "tick": 8400,
+          "readyActionCount": 0,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 0,
+                "limitReason": null
+              },
+              "readyActionIds": [],
+              "actions": [],
+              "alternativeCount": 0,
+              "reasons": [
+                {
+                  "code": "goal-geometry-pinned-capacity",
+                  "factIds": [
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":112,\\\"y\\\":944}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1008}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1072}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1104}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1136}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1200}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1232}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1296}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":688}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":816}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":912}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":976}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":816}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":880}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":912}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":944}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v10\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v10\\\",18,\\\"shore:v12\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v13\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v13\\\",18,\\\"shore:v14\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v18\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v21\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v16\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v17\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v19\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v20\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v22\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v23\\\",15,\\\"shore:v21\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v23\\\",18,\\\"shore:v24\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v25\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v25\\\",18,\\\"shore:v26\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v27\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v27\\\",18,\\\"shore:v28\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v5\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v5\\\",18,\\\"shore:v7\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {
+                    "bytes": 30064,
+                    "limitBytes": 33776
+                  }
+                }
+              ],
+              "capacityPressure": [
+                {
+                  "kind": "geometry",
+                  "thinkSequence": 560,
+                  "bytes": 30064,
+                  "limitBytes": 33776,
+                  "planIds": [
+                    "ConquerIsland:planner:resource-1"
+                  ],
+                  "requestIds": [
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":112,\\\"y\\\":944}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1008}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1072}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1104}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1136}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1200}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1232}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":1296}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":688}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":816}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":912}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":976}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":816}}\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":880}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":912}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":176,\\\"y\\\":944}}\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v10\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v10\\\",18,\\\"shore:v12\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v13\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v13\\\",18,\\\"shore:v14\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v18\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v21\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v16\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v17\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v19\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v20\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v15\\\",18,\\\"shore:v22\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v23\\\",15,\\\"shore:v21\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v23\\\",18,\\\"shore:v24\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v25\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v25\\\",18,\\\"shore:v26\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v27\\\",15,\\\"shore:v11\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v27\\\",18,\\\"shore:v28\\\"]\",\"world-geometry:v9\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v5\\\",15,\\\"shore:v6\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v5\\\",18,\\\"shore:v7\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "overflowCount": 546
+                }
+              ]
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 8400,
+              "thinkSequence": 560,
+              "limit": 6144,
+              "used": 0,
+              "services": []
+            },
+            "unused": 6144,
+            "byTier": {},
+            "byService": []
+          }
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/runtime/ship-away-near.jsonl.gz",
+        "inputSha256": "143925e61f86b2270287c9ae14913b7092b0dc85336ac81eb1826a240942e7b3",
+        "metrics": "ship-away-near.metrics.jsonl.gz",
+        "metricsSha256": "1d7a2e81518f125a65e58e19ae1d25e5ed7dd735054f846ec27faac0ff6440cf",
+        "thinkCount": 560,
+        "totalActualQueueWork": 124695,
+        "peakActualQueueWork": 6144,
+        "byTier": {
+          "background-field": 11532,
+          "critical-route": 109229,
+          "existing-field": 3934
+        },
+        "byService": [
+          {
+            "tier": "background-field",
+            "key": "field:land:112:880",
+            "work": 4644
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:112:944",
+            "work": 4668
+          },
+          {
+            "tier": "background-field",
+            "key": "field:land:1552:720",
+            "work": 688
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:00268ea2",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:074bd092",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:1c931847",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:23db85bc",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:27ce78b9",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:28aa009f",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:33364166",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:4eab608e",
+            "work": 186
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:526a2287",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:54a823fc",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:57f1d028",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:781c7221",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:7982cc90",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:83508c74",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:951ae578",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:9c26cbc6",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:a12d3667",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:a5fc3663",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:aa76a678",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:ab9875db",
+            "work": 184
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:c58cc6f5",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:cb77fcb3",
+            "work": 190
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:df5129c9",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:e6bd0096",
+            "work": 2
+          },
+          {
+            "tier": "background-field",
+            "key": "goal-geometry:f31964d8",
+            "work": 190
+          },
+          {
+            "tier": "critical-route",
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "work": 109229
+          },
+          {
+            "tier": "existing-field",
+            "key": "field:land:1552:720",
+            "work": 3934
+          }
+        ],
+        "first": {
+          "think": 1,
+          "tick": 15,
+          "readyActionCount": 0,
+          "plans": [
+            {
+              "planId": "goal-plan:ConquerIsland:planner:resource-1",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "readyActionIds": [],
+              "actions": [
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":176,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12015,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "ready"
+                },
+                {
+                  "id": "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1488,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12015,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "position-transport",
+                  "state": "waiting-time"
+                },
+                {
+                  "id": "goal-action:transport-force:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":1488,\"y\":688},\"heading\":0,\"water\":{\"x\":1488,\"y\":688}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"loadingPost\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1184,\\\"y\\\":704}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-1\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-2\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-3\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-footman-4\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":420,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-force",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12015,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2352,\"y\":912}},\"fromScope\":\"pool\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:clear-camp:{\"at\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"byTick\":12015,\"campId\":\"camp:[\\\"scene-public-planner-frame-neutral-murlocPeon-1\\\",\\\"scene-public-planner-frame-neutral-murlocPeon-2\\\"]\",\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"memberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]}",
+                  "kind": "clear-camp",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:transport-worker:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"berthTolerance\":36,\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"}],\"departure\":{\"ground\":{\"x\":176,\"y\":816},\"heading\":0,\"water\":{\"x\":176,\"y\":816}},\"dependentUnitIds\":[],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"landing\":{\"ground\":{\"x\":2960,\"y\":304},\"heading\":0,\"water\":{\"x\":2960,\"y\":304}},\"loadedUnitIds\":[],\"optionId\":\"coarse-transport:[{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":544,\\\"y\\\":832}},{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},{\\\"cohort\\\":[{\\\"entityId\\\":\\\"scene-public-planner-frame-planner-worker-1\\\",\\\"kind\\\":\\\"existing\\\"}]}]:unit-planner-transport-1000\",\"origin\":\"land\",\"payloadMass\":75,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                  "kind": "transport-worker",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:build:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"pool-member\\\",\\\"slot\\\":\\\"[\\\\\\\"build\\\\\\\",\\\\\\\"townHall\\\\\\\",\\\\\\\"land:2\\\\\\\",{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}]\\\",\\\"unitKind\\\":\\\"worker\\\"}\",[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"building-complete\\\"}\",\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"hall-complete\\\",\\\"mineId\\\":\\\"resource-1\\\"}\"],[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":12015,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"fact:{\\\"byTick\\\":12015,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"throughTick\\\":12015}\"]]",
+                  "kind": "build",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "goal-action:assemble:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"byTick\":12015,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2783.8440906152086,\"y\":915.1534228132103}},\"fromScope\":\"post\"}",
+                  "kind": "assemble",
+                  "state": "waiting-actions"
+                },
+                {
+                  "id": "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12015}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\"},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-available\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":0}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":12015}\\\"]]\"]",
+                  "kind": "hold-position",
+                  "state": "waiting-actions"
+                }
+              ],
+              "alternativeCount": 126,
+              "reasons": [
+                {
+                  "code": "selected-native-berths-pending",
+                  "factIds": [
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v3\\\"]\",\"world-geometry:v1\"]",
+                    "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",18,\\\"shore:v4\\\"]\",\"world-geometry:v1\"]"
+                  ],
+                  "values": {}
+                }
+              ],
+              "capacityPressure": []
+            }
+          ],
+          "work": {
+            "receipt": {
+              "tick": 15,
+              "thinkSequence": 1,
+              "limit": 6144,
+              "used": 411,
+              "services": [
+                {
+                  "key": "goal-search:ConquerIsland:planner:resource-1",
+                  "tier": "critical-route",
+                  "work": 407
+                },
+                {
+                  "key": "goal-geometry:57f1d028",
+                  "tier": "background-field",
+                  "work": 2
+                },
+                {
+                  "key": "goal-geometry:951ae578",
+                  "tier": "background-field",
+                  "work": 2
+                }
+              ]
+            },
+            "unused": 5733,
+            "byTier": {
+              "background-field": 4,
+              "critical-route": 407
+            },
+            "byService": [
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:57f1d028",
+                "work": 2
+              },
+              {
+                "tier": "background-field",
+                "key": "goal-geometry:951ae578",
+                "work": 2
+              },
+              {
+                "tier": "critical-route",
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "work": 407
+              }
+            ]
+          }
+        },
+        "final": {
+          "think": 560,
+          "tick": 8400,
+          "readyActionCount": 0,
+          "plans": [],
+          "work": {
+            "receipt": {
+              "tick": 8400,
+              "thinkSequence": 560,
+              "limit": 6144,
+              "used": 0,
+              "services": []
+            },
+            "unused": 6144,
+            "byTier": {},
+            "byService": []
+          }
+        }
+      }
+    ]
+  },
+  "runtimeRefinement": {
+    "source": "ce20233dd1bd53a64a3598c1e7652583ebac4df7",
+    "sharedBase": "58b6b0ac5bebe6437c9746b7cfb01ac074a63065",
+    "mode": "runtime",
+    "cases": [
+      {
+        "puzzle": "ship-away/far",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/runtime/ship-away-far.jsonl.gz",
+        "inputSha256": "4e053233d6040ddbad0abc0a1ac8624e90042f2638d3d3728b8469625b5cab45",
+        "thinkCount": 560,
+        "firsts": {
+          "position-transport": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          },
+          "transport-worker": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          }
+        },
+        "perThink": "ship-away-far.refinement.jsonl.gz",
+        "perThinkSha256": "a7b69e93b02c35d0f0ecb35144e048268e52e0959846fb8f366e65c153d5f87a"
+      },
+      {
+        "puzzle": "ship-away/near",
+        "input": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-ce20233d/runtime/ship-away-near.jsonl.gz",
+        "inputSha256": "143925e61f86b2270287c9ae14913b7092b0dc85336ac81eb1826a240942e7b3",
+        "thinkCount": 560,
+        "firsts": {
+          "position-transport": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          },
+          "transport-worker": {
+            "selectedThink": 1,
+            "nodeKnownThink": null,
+            "memoryKnownThink": null,
+            "exactSelectedThink": null,
+            "readyThink": null,
+            "nodeInvalidThink": null,
+            "memoryInvalidThink": null,
+            "globalReadyCountsAfterFirstNodeKnown": null
+          }
+        },
+        "perThink": "ship-away-near.refinement.jsonl.gz",
+        "perThinkSha256": "057fdefb3085faea9f3332276b7f8c3a1d6305546643612d3a1a35415b308d8b"
+      }
+    ],
+    "reporterSha256": "3035e273239cedf7af144c559aa41f5327c80c3a7f2becd60459460b8a7dbb14",
+    "semantics": "Known memory, known node annotation, exact selected declaration and output-ready are distinct observations. Firsts refer to any selected action of that kind; full original IDs/declarations/source revisions remain in per-think records. Runtime frames contain no retained memory; memory publication is not inferred there. No planning, simulation or geometry query is executed."
+  }
+}
