@@ -2,7 +2,7 @@
 
 7 道题的 11 个变体已搭成真实场景，复用入口在 [scenes.ts](../../../../src/ai/strategy/puzzles/scenes.ts)。
 每个变体有冷帧依赖图判法与真实执行判法；真实搜索、事实源、scope 与正常 Objective collector 已接入，11个冷帧检查已全部开启。
-首轮结果为通过0、错误动作链0、缺能力11，逐题缺口见 [cold-plans-40e.zh.md](cold-plans-40e.zh.md)。11个执行检查仍等正式 bridge 而跳过。
+首轮结果为通过0、错误动作链0、缺能力11，逐题缺口见 [cold-plans-40e.zh.md](cold-plans-40e.zh.md)。11个执行检查现已全部开启，见[8934正式owner执行](execution-8934.zh.md)：5520次真实think，0/11新规划器通过，近船/弱滩头2项物理成功因正式goal命令0单独保留。
 最新[f27真实领域装配K20](domain-f27.zh.md)完成220次原生think，仍0题通过、首次可执行全部未出现；新候选和真实met/unmet/pending原因已逐题保留。穷矿题新增39项pin容量压力，其余10帧无overflow。此前[5ca缓存保持/容量等值对拍](geometry-capacity.zh.md)和[a0活锁原片](frozen-thinks-a0db.zh.md)独立保留，不混算。
 另有独立的人工合法命令解，用来证明局面本身能完成，不能拿它当 AI 成绩。
 
