@@ -1,0 +1,111 @@
+{
+  "format": "original-gzip-members-with-provenance-v1",
+  "exporter": "Codex26",
+  "originalMain": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "q8AndFootmanSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "fastRaiderSource": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "q8Boundaries": [
+    {
+      "case": "transport-sunk-loaded",
+      "trigger": null,
+      "confirmedLoss": null,
+      "scope": "Original main trajectory did not trigger sinking; initial/observer frames are not post-sinking response evidence."
+    },
+    {
+      "case": "transport-sunk-poor",
+      "trigger": null,
+      "confirmedLoss": null,
+      "scope": "Original main trajectory did not trigger sinking; initial/observer frames are not post-sinking response evidence."
+    },
+    {
+      "case": "transport-sunk-empty",
+      "trigger": null,
+      "confirmedLoss": null,
+      "scope": "Original main trajectory did not trigger sinking; initial/observer frames are not post-sinking response evidence."
+    }
+  ],
+  "mechanismContractScope": "native-interference.test.ts validates legal SDK/sim mechanics using authored owner commands; it is distinct from original main trajectories and is not exported here as a baseline result.",
+  "scope": "Only read and copied existing original files/gzip members, or projected existing JSON. Zero new AI/SDK/simulation/pathfinding.",
+  "parentManifestSha256": "c12b1933cf49e10270b472257a2fc0290d803eaa2ffd7e6db2f72152e3cfbafb",
+  "payloads": [
+    {
+      "file": "q8/loaded/initial.json.gz",
+      "bytes": 1947,
+      "sha256": "24568dffa92a6058799c04f6053ba646ad4ce5a2d6c649f7a7792377ae508296",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-loaded/transport-sunk-loaded/initial.json.gz",
+      "originalFileSha256": "24568dffa92a6058799c04f6053ba646ad4ce5a2d6c649f7a7792377ae508296",
+      "originalBytesUnchanged": true,
+      "plainBytes": 21905,
+      "plainSha256": "44c242efba78cf1901618a8f983e52da2072c92d016c610bab3e2e26f496fd7e",
+      "crcValidated": true
+    },
+    {
+      "file": "q8/poor/initial.json.gz",
+      "bytes": 1946,
+      "sha256": "9db67ef005ae01990e6a59660d7b9250128d206e6a45bdf6c545128cc97f2b6d",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-poor/transport-sunk-poor/initial.json.gz",
+      "originalFileSha256": "9db67ef005ae01990e6a59660d7b9250128d206e6a45bdf6c545128cc97f2b6d",
+      "originalBytesUnchanged": true,
+      "plainBytes": 21901,
+      "plainSha256": "bb1b430462a06f78f6268f5ad31e791e00dca218430f4040ce5acb620c93372f",
+      "crcValidated": true
+    },
+    {
+      "file": "q8/empty/initial.json.gz",
+      "bytes": 1946,
+      "sha256": "8ae0945c4fc63e227d08471da600259406c0ca39bee4e9d4da0c2b73bee20e75",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-empty/transport-sunk-empty/initial.json.gz",
+      "originalFileSha256": "8ae0945c4fc63e227d08471da600259406c0ca39bee4e9d4da0c2b73bee20e75",
+      "originalBytesUnchanged": true,
+      "plainBytes": 21908,
+      "plainSha256": "2c14b3e95aeebcf8769fe2562b4dcb72d0f964bc8d4020a724f499c5fa3bc340",
+      "crcValidated": true
+    },
+    {
+      "file": "q9-fast/initial.json.gz",
+      "bytes": 1513,
+      "sha256": "05e1cd4ec35ca649a70f6c6bc7e15677637fc844050516611887bb4e5a36d6c2",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run/worker-ambush-fast-hit-run/initial.json.gz",
+      "originalFileSha256": "05e1cd4ec35ca649a70f6c6bc7e15677637fc844050516611887bb4e5a36d6c2",
+      "originalBytesUnchanged": true,
+      "plainBytes": 17950,
+      "plainSha256": "e854ce19e140f3d8950fb30b7b591937a918f0661acd4c3b47537ef8edf82f83",
+      "crcValidated": true
+    },
+    {
+      "file": "q9-fast/observers/tick-3990.jsonl.gz",
+      "bytes": 2666,
+      "sha256": "d530765cdff692962bcb3fe04fb7abdd1d786755e496df1a64657895ed770868",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run/worker-ambush-fast-hit-run/thinks.jsonl.gz",
+      "originalFileSha256": "abca18889fae890b7ff3b76c4cc716cc41047ec5fc4d1808bdd0d4eb628de37c",
+      "originalOffset": 690091,
+      "memberIndex": 266,
+      "originalMemberBytesUnchanged": true,
+      "tick": 3990,
+      "plainBytes": 23818,
+      "plainSha256": "c0890fcb14535c8d533e99f0cf1d52ba23cf1a655c49356a62a1089c6a9a9d91",
+      "crcValidated": true
+    },
+    {
+      "file": "q9-fast/observers/tick-4005.jsonl.gz",
+      "bytes": 2727,
+      "sha256": "7ee276044ed9535e6fb0646312a4f605343c24341771657bb31b3db6e12ba0d1",
+      "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run/worker-ambush-fast-hit-run/thinks.jsonl.gz",
+      "originalFileSha256": "abca18889fae890b7ff3b76c4cc716cc41047ec5fc4d1808bdd0d4eb628de37c",
+      "originalOffset": 692757,
+      "memberIndex": 267,
+      "originalMemberBytesUnchanged": true,
+      "tick": 4005,
+      "plainBytes": 24281,
+      "plainSha256": "22a3b6b8e0dff6bfb2c728c1ab076cfecbe3c9ce4babc062542a4176ab900ffb",
+      "crcValidated": true
+    },
+    {
+      "file": "retreat-interception-witness.json",
+      "bytes": 46397,
+      "sha256": "6875257293cf098010d35afb764b32484a8d91d83f8cf6fb19342f78dbbfc896",
+      "derivedOnly": true,
+      "originalSummary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run/worker-ambush-fast-hit-run/summary.json"
+    }
+  ]
+}

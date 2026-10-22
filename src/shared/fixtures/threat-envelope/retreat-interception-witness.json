@@ -1,0 +1,1731 @@
+{
+  "source": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "fixedMain": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "originalInterception": {
+    "crossing": {
+      "x": 2432,
+      "y": 800
+    },
+    "workerStart": {
+      "x": 1280,
+      "y": 800
+    },
+    "retreatPoint": {
+      "x": 2432,
+      "y": 1792
+    },
+    "enemyDistance": 992,
+    "workerDistance": 1152,
+    "enemySpeed": 82,
+    "workerSpeed": 60,
+    "enemySeconds": 12.097560975609756,
+    "workerSeconds": 19.2,
+    "canArriveBeforeWorker": true,
+    "nativeAmbushContract": "Two original real attackers vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+    "attackerKinds": [
+      {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "kind": "raider",
+        "speed": 82
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-raider-2",
+        "kind": "raider",
+        "speed": 82
+      }
+    ],
+    "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+  },
+  "nearbyOriginalObserverPositions": [
+    {
+      "observerTick": 1710,
+      "snapshotTick": 1710,
+      "originalMember": "q9-fast/observers/tick-1710.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2241.9934386445284,
+          "y": 887.9575568687414,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2241.8177058166943,
+          "y": 902.5336885955771,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2175.4617557638285,
+          "y": 846.4138780039578,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2384,
+          "y": 512,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2384,
+            "y": 512
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2432,
+          "y": 512,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2432,
+            "y": 512
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2208.9504882180786,
+          "y": 850.5657915240124,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2223.9023900468205,
+          "y": 892.8512237030601,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2259.972887081768,
+          "y": 892.3446502313802,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 1725,
+      "snapshotTick": 1725,
+      "originalMember": "q9-fast/observers/tick-1725.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2275.729762325629,
+          "y": 886.9968464629577,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2275.5459882112737,
+          "y": 901.3231239704406,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2209.210906311393,
+          "y": 846.1744258843086,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2377.8493726906054,
+          "y": 535.8174860697728,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-planner-worker-1017"
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2423.167505020953,
+          "y": 534.9586193758633,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-planner-worker-1017"
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2242.699031316856,
+          "y": 850.2522014894737,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2257.6365123437326,
+          "y": 891.8160943115403,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2293.7066889626417,
+          "y": 891.2991309050343,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 1740,
+      "snapshotTick": 1740,
+      "originalMember": "q9-fast/observers/tick-1740.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2301.5235560372885,
+          "y": 882.7476703151835,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2309.274270605853,
+          "y": 900.1125593453041,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2226.172537829593,
+          "y": 869.5182132814602,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2363.8507470718982,
+          "y": 595.6964023671607,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-planner-worker-1017"
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2402.3605875138505,
+          "y": 592.8262394898919,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-planner-worker-1017"
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2276.447574415633,
+          "y": 849.938611454935,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2291.3706346406448,
+          "y": 890.7809649200204,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2291.0772592687326,
+          "y": 895.2882412074603,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 1755,
+      "snapshotTick": 1755,
+      "originalMember": "q9-fast/observers/tick-1755.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2335.2615930986117,
+          "y": 881.849140822839,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2343.0025530004323,
+          "y": 898.9019947201676,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2259.916485564424,
+          "y": 868.8790800645336,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2306.208255208519,
+          "y": 851.3490466390158,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "move",
+            "x": 2432,
+            "y": 1792
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2328.2757329211,
+          "y": 822.9056567671189,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "charge",
+            "targetId": "unit-planner-worker-1017",
+            "resume": {
+              "type": "attack",
+              "targetId": "unit-planner-worker-1017"
+            }
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2310.19611751441,
+          "y": 849.6250214203963,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2325.104756937557,
+          "y": 889.7458355285006,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2324.80886092988,
+          "y": 894.1739928628583,
+          "hp": 42,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 2055,
+      "snapshotTick": 2055,
+      "originalMember": "q9-fast/observers/tick-2055.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3092.657827750713,
+          "y": 786.4323565035749,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3047.4186697696414,
+          "y": 821.8957898152644,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2991.272413013562,
+          "y": 806.88728331282,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2413.7038914112004,
+          "y": 1741.7234640696643,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2413.7038914112004,
+            "y": 1741.7234640696643
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2445.4758148539204,
+          "y": 1758.651100666364,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2431.2379355504336,
+            "y": 1742.6162877967147
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3029.3981414016725,
+          "y": 802.0021050047891,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2973.9088733631897,
+          "y": 789.9531092777355,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3014.32280850424,
+          "y": 789.7457552987778,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 2070,
+      "snapshotTick": 2070,
+      "originalMember": "q9-fast/observers/tick-2070.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3137.657720549848,
+          "y": 786.3341319324907,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3092.418595680043,
+          "y": 821.9774479964929,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3036.272394164969,
+          "y": 806.9284703603837,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2413.7038914112004,
+          "y": 1741.7234640696643,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2413.7038914112004,
+            "y": 1741.7234640696643
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2445.4758148539204,
+          "y": 1758.651100666364,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2431.2379355504336,
+            "y": 1742.6162877967147
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3074.398076365,
+          "y": 801.9255981664649,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3018.908811364773,
+          "y": 790.0278076950773,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 3059.3227281261543,
+          "y": 789.8308083467334,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 3990,
+      "snapshotTick": 3990,
+      "originalMember": "q9-fast/observers/tick-3990.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1272.25,
+          "y": 784,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1200.8464455188027,
+          "y": 784.1469406055393,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 967.5918152167832,
+          "y": 784.1575942627805,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2413.7038914112004,
+          "y": 1741.7234640696643,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2413.7038914112004,
+            "y": 1741.7234640696643
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2445.4758148539204,
+          "y": 1758.651100666364,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2431.2379355504336,
+            "y": 1742.6162877967147
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1137.1830134490497,
+          "y": 784.1950551466499,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 882.1885236525511,
+          "y": 784.0004061071012,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1057.0313929566876,
+          "y": 784.0002926268525,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 4005,
+      "snapshotTick": 4005,
+      "originalMember": "q9-fast/observers/tick-4005.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1306,
+          "y": 784,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1234.5964454784826,
+          "y": 784.1452909075645,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1012.5918151635317,
+          "y": 784.1554050536986,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2396.9618165719166,
+          "y": 1712.7194808945171,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2427.126661291136,
+          "y": 1732.3684539736732,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1170.9330133809194,
+          "y": 784.1929106829201,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 927.1885236525511,
+          "y": 784.0004006106032,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1099.0313929566876,
+          "y": 784.0002887251228,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 4605,
+      "snapshotTick": 4605,
+      "originalMember": "q9-fast/observers/tick-4605.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2859.06192840222,
+          "y": 793.7392578132828,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3821.898602597036,
+            "y": 800.6573217041923,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2598.0608350525526,
+          "y": 792.9591648153537,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3742.97744103959,
+            "y": 801.0023353780826,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2415.3468088262607,
+          "y": 1730.1358207149383,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "move",
+            "x": 2432,
+            "y": 1792
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2424.71637904218,
+          "y": 1764.895152612559,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2418.8507906898467,
+            "y": 1743.1213761126346
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2774.4009657063266,
+          "y": 793.2739341513833,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3781.8779897339546,
+            "y": 800.3693680681116,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2533.655590976349,
+          "y": 792.9708558154988,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3704.0005230691654,
+            "y": 801.5641562357432,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2678.5011978929,
+          "y": 792.834187026634,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3781.8779360391304,
+            "y": 800.3771354471983,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1149",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1579.081867066937,
+          "y": 824.4478751559145,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 4620,
+      "snapshotTick": 4620,
+      "originalMember": "q9-fast/observers/tick-4620.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2904.060766874463,
+          "y": 794.0625783181109,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3821.898602597036,
+            "y": 800.6573217041923,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2634.0599467451557,
+          "y": 793.2120627067252,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3742.97744103959,
+            "y": 801.0023353780826,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2417.4749644494314,
+          "y": 1738.0548479022268,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2417.4749644494314,
+            "y": 1738.0548479022268
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2426.851508982853,
+          "y": 1772.8122990834163,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2418.8507906898467,
+            "y": 1743.1213761126346
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2819.399849732576,
+          "y": 793.5908511632051,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3781.8779897339546,
+            "y": 800.3693680681116,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2567.4046812339097,
+          "y": 793.2186597436745,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3704.0005230691654,
+            "y": 801.5641562357432,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 2723.500146410698,
+          "y": 793.1418106477546,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 3781.8779360391304,
+            "y": 800.3771354471983,
+            "avoidCombat": true
+          }
+        },
+        {
+          "id": "unit-planner-worker-1149",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1624.081866413397,
+          "y": 824.4402058219756,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 6615,
+      "snapshotTick": 6615,
+      "originalMember": "q9-fast/observers/tick-6615.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1265.4330131901547,
+          "y": 784.1869061844767,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1053.9330136171025,
+          "y": 784.2003448238501,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2417.4749644494314,
+          "y": 1738.0548479022268,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2417.4749644494314,
+            "y": 1738.0548479022268
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2426.851508982853,
+          "y": 1772.8122990834163,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "hold",
+            "x": 2418.8507906898467,
+            "y": 1743.1213761126346
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1197.9330133264152,
+          "y": 784.1911951119363,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 963.8042704063917,
+          "y": 784.2024243946156,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1130.4330134626757,
+          "y": 784.1954840393959,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1149",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1466.8731884015133,
+          "y": 802.1497936685857,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "return",
+            "timer": 0
+          }
+        }
+      ]
+    },
+    {
+      "observerTick": 6630,
+      "snapshotTick": 6630,
+      "originalMember": "q9-fast/observers/tick-6630.jsonl.gz",
+      "units": [
+        {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1299.1830131220245,
+          "y": 784.1847617207469,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1096.683013530806,
+          "y": 784.1976285031257,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2407.0316066722526,
+          "y": 1720.4198352049482,
+          "hp": 97,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-2"
+          }
+        },
+        {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "kind": "raider",
+          "owner": "pressure",
+          "x": 2415.9534672361206,
+          "y": 1755.4528915272622,
+          "hp": 115,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-2"
+          }
+        },
+        {
+          "id": "unit-planner-worker-1006",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1231.683013258285,
+          "y": 784.1890506482065,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1012",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1008.8042703187391,
+          "y": 784.1996157149993,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1017",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1164.1830133945455,
+          "y": 784.1933395756661,
+          "hp": 14,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        {
+          "id": "unit-planner-worker-1149",
+          "kind": "worker",
+          "owner": "planner",
+          "x": 1421.899001457559,
+          "y": 800.6265202837134,
+          "hp": 70,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "return",
+            "timer": 0
+          }
+        }
+      ]
+    }
+  ],
+  "exactEvents": [
+    {
+      "kind": "trigger",
+      "value": {
+        "tick": 1716,
+        "targetId": "unit-planner-worker-1017",
+        "point": {
+          "x": 2273.4664078341175,
+          "y": 891.9264425008419
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "cycle": 1
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 1716,
+        "command": {
+          "type": "attack",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-1",
+            "scene-public-planner-frame-pressure-raider-2"
+          ],
+          "targetId": "unit-planner-worker-1017"
+        }
+      }
+    },
+    {
+      "kind": "armed-native-alert-retreat",
+      "value": {
+        "tick": 1743,
+        "alerts": [
+          {
+            "raiderId": "scene-public-planner-frame-pressure-raider-2",
+            "armedId": "unit-planner-lancer-1015",
+            "gap": 227.59054122152347,
+            "nativeAcquireRadius": 230
+          }
+        ],
+        "retreat": {
+          "x": 2432,
+          "y": 1792
+        }
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 1743,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-1"
+          ],
+          "x": 2432,
+          "y": 1792
+        }
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 1743,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-2"
+          ],
+          "x": 2432,
+          "y": 1792
+        }
+      }
+    },
+    {
+      "kind": "actual-retreat-arrival",
+      "value": {
+        "tick": 2056,
+        "cycle": 1,
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1",
+          "scene-public-planner-frame-pressure-raider-2"
+        ]
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 3994,
+        "unitId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 1281.25,
+          "y": 784
+        }
+      }
+    },
+    {
+      "kind": "trigger",
+      "value": {
+        "tick": 3994,
+        "targetId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 1281.25,
+          "y": 784
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 3994,
+        "cycle": 2
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 3994,
+        "command": {
+          "type": "attack",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-1",
+            "scene-public-planner-frame-pressure-raider-2"
+          ],
+          "targetId": "scene-public-planner-frame-planner-worker-1"
+        }
+      }
+    },
+    {
+      "kind": "actual-retreat-arrival",
+      "value": {
+        "tick": 4606,
+        "cycle": 2,
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1",
+          "scene-public-planner-frame-pressure-raider-2"
+        ]
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 4606,
+        "command": {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-1"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6622,
+        "unitId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "trigger",
+      "value": {
+        "tick": 6622,
+        "targetId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 6622,
+        "cycle": 3
+      }
+    },
+    {
+      "kind": "opponent-proposal",
+      "value": {
+        "tick": 6622,
+        "command": {
+          "type": "attack",
+          "unitIds": [
+            "scene-public-planner-frame-pressure-raider-1",
+            "scene-public-planner-frame-pressure-raider-2"
+          ],
+          "targetId": "scene-public-planner-frame-planner-worker-2"
+        }
+      }
+    }
+  ],
+  "timeScope": "Native seconds are distance/speed; original event ticks retain native tick units. Do not subtract seconds from ticks.",
+  "pathScope": "Original summary stores native walkingDistance results only. No full route polyline was stored; no new native path query was run for this export.",
+  "observationScope": "Events at2056/3994 have exact event data, not complete snapshots. Complete snapshots at2055/2070 and3990/4005 are adjacent original observations, not interpolated frames.",
+  "environment": "No fog of war. Distance does not hide enemy units.",
+  "validationScope": "Pure original-byte extraction and JSON projection. No AI, SDK, simulation advance, pathfinding, or new game."
+}
