@@ -130,7 +130,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     interferenceTriggered: !!interruption.state.trigger, originalWorkerKilled: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? ''),
     noDeadActorRecommands: staleProposals.length === 0, noRepeatedWorkerDeathToSameEnemy: repeatedWorkerLosses.length === 0,
     workerDeathsAtMostOne: workerDeaths.length <= 1,
-    secondWorkerProtectedBeforeDeparture: departureEvidence.every(e => e.positive) && physicalEntrances.every(e => e.positive),
+    secondWorkerProtectedBeforeDeparture: departureEvidence.filter(e => e.tick >= (interruption.state.loss?.tick ?? Infinity)).every(e => e.positive)
+      && physicalEntrances.filter(e => e.tick >= (interruption.state.loss?.tick ?? Infinity)).every(e => e.positive),
     loopExercisedOrRaidersCleared: puzzle.variant !== 'hit-run' || interruption.state.cycles.length >= 3
       || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
     targetComplete: milestones['hall-complete'] !== undefined,

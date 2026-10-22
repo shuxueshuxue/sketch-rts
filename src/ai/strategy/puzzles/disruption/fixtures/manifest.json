@@ -1,0 +1,54 @@
+[
+  {
+    "file": "worker-ambush-stay-1680.jsonl.gz",
+    "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+    "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-stay/worker-ambush-stay/thinks.jsonl.gz",
+    "originalFileSha256": "f4895031e4fc7dfe1abf9c13336f39c3e7a944604de63b7a82b6178a52476b4a",
+    "memberIndex": 112,
+    "offset": 267829,
+    "bytes": 3155,
+    "sha256": "d980971a6e727b3e9dae8158731dc40241382ba436601e6ec8745dbe497eb2d3",
+    "plainSha256": "10b6a1143fc072b1fc931626490c7f40443850893d2c01ebf81d5587767b79f8",
+    "tick": 1680,
+    "case": "worker-ambush-stay"
+  },
+  {
+    "file": "worker-ambush-stay-1755.jsonl.gz",
+    "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+    "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-stay/worker-ambush-stay/thinks.jsonl.gz",
+    "originalFileSha256": "f4895031e4fc7dfe1abf9c13336f39c3e7a944604de63b7a82b6178a52476b4a",
+    "memberIndex": 117,
+    "offset": 283809,
+    "bytes": 3238,
+    "sha256": "63c30e7f85c8a59e1b5bcb0497e5d330644aaada5e7dd82e5d4ed41b3d4329bf",
+    "plainSha256": "cd10272c95c98f2ab03905fca43304cb79ff9bee12c70936c43445037b9c3d76",
+    "tick": 1755,
+    "case": "worker-ambush-stay"
+  },
+  {
+    "file": "worker-ambush-hit-run-1680.jsonl.gz",
+    "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+    "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-hit-run/worker-ambush-hit-run/thinks.jsonl.gz",
+    "originalFileSha256": "87347f8fcb4b17d8da8898b046e94eb4d27a6bee497dacd46c1df3ea477fdace",
+    "memberIndex": 112,
+    "offset": 267829,
+    "bytes": 3155,
+    "sha256": "d980971a6e727b3e9dae8158731dc40241382ba436601e6ec8745dbe497eb2d3",
+    "plainSha256": "10b6a1143fc072b1fc931626490c7f40443850893d2c01ebf81d5587767b79f8",
+    "tick": 1680,
+    "case": "worker-ambush-hit-run"
+  },
+  {
+    "file": "worker-ambush-hit-run-1890.jsonl.gz",
+    "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+    "originalFile": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-hit-run/worker-ambush-hit-run/thinks.jsonl.gz",
+    "originalFileSha256": "87347f8fcb4b17d8da8898b046e94eb4d27a6bee497dacd46c1df3ea477fdace",
+    "memberIndex": 126,
+    "offset": 310796,
+    "bytes": 3129,
+    "sha256": "86f39e9ed716a69139c1c4ac4c2c244a40575ffe6f2a6f3aff6d61e002efbdab",
+    "plainSha256": "098f0df36d65707c7bce0cee2175d09ac674551c04758db25d10d91fc26a3a3b",
+    "tick": 1890,
+    "case": "worker-ambush-hit-run"
+  }
+]

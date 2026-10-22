@@ -74,4 +74,17 @@ describe('native world-triggered interference mechanics', () => {
     expect(r.state.commands.some(c => c.command.type === 'move' && c.command.x === w.retreat.x && c.command.y === w.retreat.y)).toBe(true);
   }, 120000);
 
+  it('records native owner kills of the observed attackers as positive death evidence', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'stay')!;
+    const w = puzzle.create();
+    const r = runDisruption(puzzle, { maxTicks: seconds(180), ownerPlanner: c => {
+      const target = c.snapshot.units.find(u => w.interceptors.includes(u.id) && u.hp > 0);
+      const army = c.snapshot.units.filter(u => w.mainForce.includes(u.id) && u.hp > 0);
+      if (!target || !army.some(u => u.order.type !== 'attack' || u.order.targetId !== target.id)) return [];
+      return [{ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only',
+        command: { type: 'attack', unitIds: army.map(u => u.id), targetId: target.id } }];
+    } });
+    expect(r.state.kills.filter(e => w.interceptors.includes(e.unit.id) && e.source.owner === w.owner)).toHaveLength(2);
+  }, 120000);
+
 });
