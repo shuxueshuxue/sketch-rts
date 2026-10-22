@@ -1,0 +1,15 @@
+{
+  "source": "/tmp/goal-d888-first-hold-near/first-accepted-command/actual-frame.jsonl.gz",
+  "sourceTick": 4695,
+  "sourceCompressedSha256": "3b2e299bfa1ea5f83502909a8d24500edeba110f4fd640a6273f7ac499c80412",
+  "sourcePlainSha256": "b8efd2a947e01bcd3fcddaf4071a42e53605081fca566151b89d170b99dc1bad",
+  "projection": [
+    "snapshot",
+    "memoryAfter.strategyAllocation"
+  ],
+  "projectionJsonSha256": "2205bd2e185a0752c25d67aff67a79fdfdd04e21917c1c6422891df8e5a4008d",
+  "projectionCompressedSha256": "3519633442d293b9d3b106e99fe47f0c544db0f4a7044379eb91099107bf4a7e",
+  "projectionBytes": 102439,
+  "compressedBytes": 9060,
+  "scope": "Pure field projection of the original d888 near4695 member; no AI, reader, SDK or simulation. The canonical member is unchanged."
+}

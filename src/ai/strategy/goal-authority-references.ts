@@ -4,6 +4,7 @@ import type { DecisionFacts } from './decision';
 import type { Objective } from './types';
 import type { GoalParameter } from './goal-planner-types';
 import { internGoalReference, readGoalReference, retainGoalReferences, type GoalReferenceMemory } from './goal-versioned-references';
+import { readGoalGlobalStepKey } from './goal-search-format';
 
 type ReferenceOwner = Pick<StrategyAllocationMemory, 'goalReferences'>;
 const record = (value: GoalParameter | undefined): value is Readonly<Record<string, GoalParameter>> =>
@@ -52,8 +53,16 @@ function storeIntent(table: GoalReferenceMemory, intent: GoalExecutableIntent): 
   // option's escaped proposal). Their definition is already fully referenced.
   const naval = ['assemble', 'transport-force', 'transport-worker', 'position-transport', 'clear-camp',
     'clear-shore', 'defend', 'evacuate', 'hold-position'].includes(intent.actionKind);
+  const stable = expanded.declarationId.startsWith('goal-step:1:');
+  if (stable) {
+    const step = readGoalGlobalStepKey(expanded.declarationId);
+    if (step.goalId !== intent.goalId || step.selector.kind !== intent.actionKind)
+      throw Error('Goal intent selector belongs to another objective or action kind');
+  }
+  // Migrated naval definitions already carry a stable selector. Keep that
+  // exact body on re-store instead of allocating a selector-less version.
   const definition = { kind: intent.actionKind, goal: intent.goalId, parametersRef, outputs: [...intent.outputs],
-    ...(!naval ? { priorId: expanded.declarationId } : {}) };
+    ...(!naval || stable ? { priorId: expanded.declarationId } : {}) };
   return { ...intent, declarationId: internGoalReference(table, 'declaration', definition), parametersRef, parameters: {} };
 }
 
