@@ -142,7 +142,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     replacementOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : createdTransports.size > 0,
     targetOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : milestones['hall-complete'] !== undefined,
   } : puzzle.key === 'worker-ambush' ? {
-    interferenceTriggered: !!interruption.state.trigger,
+    ...(puzzle.variant === 'fast-hit-run' ? { ambushOrNativeClearanceObserved: !!interruption.state.trigger || world.interceptors.every(id => kills.some(k => k.unit.id === id)) }
+      : { interferenceTriggered: !!interruption.state.trigger }),
     ...(puzzle.variant === 'fast-hit-run' ? {} : { originalWorkerKilled: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? '') }),
     noDeadActorRecommands: staleProposals.length === 0, noRepeatedWorkerDeathToSameEnemy: repeatedWorkerLosses.length === 0,
     workerDeathsAtMostOne: workerDeaths.length <= 1,
