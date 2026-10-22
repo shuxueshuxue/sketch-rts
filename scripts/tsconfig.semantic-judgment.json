@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["goal-semantic-judgment.ts", "goal-semantic-judgment.test.ts", "planner-semantic-report.ts", "planner-semantic-report.test.ts"],
+  "compilerOptions": { "noEmit": true }
+}
