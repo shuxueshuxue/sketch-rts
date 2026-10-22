@@ -32,6 +32,7 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const departureEvidence: ReturnType<typeof departureProtection>[] = [], departureSeen = new Set<string>();
   const physicalEntrances: ReturnType<typeof departureProtection>[] = [], entrySeen = new Set<string>();
   const localDamage = new Set<string>(), firstResponse: unknown[] = [], attribution: unknown[] = [];
+  let actualOpponentCommands = 0;
   let firstLossThink: number | null = null, think = 0, lastMemory: AiPolicyMemory | undefined;
   const mark = (key: string, when: boolean) => { if (when && milestones[key] === undefined) milestones[key] = game.tick; };
   const ownPlanner: SdkGameCommandPlanner<AiGameAgent> = options.ownerPlanner ?? (context => {
@@ -74,7 +75,7 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     commandPlanner: context => context.owner === owner ? ownPlanner(context) : interruption.planner(context),
   }, {
     onCommand(e) { const row = { tick: e.tick, owner: e.owner, source: e.source, scriptId: e.scriptId, command: e.command };
-      write('sdk', row); if (e.owner === owner) ownCommands.push({ tick: e.tick, scriptId: e.scriptId, command: e.command });
+      write('sdk', row); if (e.owner === opponent) actualOpponentCommands++; if (e.owner === owner) ownCommands.push({ tick: e.tick, scriptId: e.scriptId, command: e.command });
     },
     onStep() {
       if (puzzle.key === 'worker-ambush' && interruption.state.trigger) for (const u of game.units) {
@@ -120,13 +121,13 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const newHullDamagedBySameLiveCause = interruption.state.damage.filter(e => e.target.owner === owner && e.target.kind === 'transport'
     && e.target.id !== originalHull && e.source.present && world.interceptors.includes(e.source.id));
   const checks = puzzle.key === 'transport-sunk' ? {
-    interferenceTriggered: !!interruption.state.trigger, originalHullSunk: !!interruption.state.loss,
+    interferenceTriggered: !!interruption.state.trigger, originalHullSunk: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? ''),
     correctPayloadLoss: puzzle.variant === 'empty' ? oldPassengerLosses.length === 0 : oldPassengerLosses.length > 0,
     noDeadActorRecommands: staleProposals.length === 0, noUnsafeReplacementHullDamage: newHullDamagedBySameLiveCause.length === 0, noSecondHullLostToSameEnemy: repeatedHullLosses.length === 0,
     replacementOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : createdTransports.size > 0,
     targetOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : milestones['hall-complete'] !== undefined,
   } : puzzle.key === 'worker-ambush' ? {
-    interferenceTriggered: !!interruption.state.trigger, originalWorkerKilled: !!interruption.state.loss,
+    interferenceTriggered: !!interruption.state.trigger, originalWorkerKilled: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? ''),
     noDeadActorRecommands: staleProposals.length === 0, noRepeatedWorkerDeathToSameEnemy: repeatedWorkerLosses.length === 0,
     workerDeathsAtMostOne: workerDeaths.length <= 1,
     secondWorkerProtectedBeforeDeparture: departureEvidence.every(e => e.positive) && physicalEntrances.every(e => e.positive),
@@ -152,7 +153,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     repeatedHullLosses, repeatedWorkerLosses, oldPassengerLosses, staleProposals, mainSwaps,
     createdTransportIds: [...createdTransports], createdSoldierIds: [...createdSoldiers], localDefenderIdsWithActualDamage: [...localDamage],
     abandonmentEvidence: { allocation: abandoned, naval: navalAbandoned }, deaths: attribution,
-    sdkCommands: ownCommands.length, opponentSdkCommands: interruption.state.commands.length,
+    sdkCommands: ownCommands.length, opponentSdkCommands: actualOpponentCommands, opponentProposals: interruption.state.commands.length,
+    scenarioStatus: interruption.state.trigger ? 'world-trigger-observed' : 'trigger-not-reached-no-postloss-verdict',
     elapsedMs: result.elapsedMs, cpuMs: result.cpuMs,
     final: { tick: result.snapshot.tick, ownerGold: result.snapshot.players[owner]!.gold,
       originalArmy: world.army.map(u => ({ id: u.id, present: game.units.includes(u), hp: u.hp, x: u.x, y: u.y })),
