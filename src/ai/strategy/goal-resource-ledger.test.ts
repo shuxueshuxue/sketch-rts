@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { UNIT_DEFS, BUILDING_DEFS } from '../../shared/catalog';
-import { projectGoalResources, type GoalScheduledAction } from './goal-resource-ledger';
+import { createGoalResourceProjector, projectGoalResources, type GoalScheduledAction } from './goal-resource-ledger';
 import type { GoalActionDeclaration, GoalResourceFlow } from './goal-planner-types';
 
 const gold = { kind: 'gold' as const };
@@ -15,6 +15,18 @@ const reward = (id: string, amount: number): GoalResourceFlow => ({ resource: go
 const income = (throughTick: number, amount: number, rate = 1): GoalResourceFlow => ({ resource: gold, delta: amount, at: 'finish', factIds: [],
   source: { kind: 'income', id: 'owner-income', segments: [{ fromTick: 0, throughTick, ratePerTick: rate }] } });
 const initial = (quantity: number) => [{ resource: gold, quantity, asOfTick: 0, factIds: ['native-bank'] }];
+
+it('shares only immutable resource keys while balances, rewards and source conflicts reset on every projection', () => {
+  const project = createGoalResourceProjector(), actions = [action('reward', 0, 10, [reward('one-native-kill', 20)])];
+  for (const quantity of [0, 80, 0]) {
+    const input = { epoch: 0, initial: initial(quantity), actions };
+    expect(project(input)).toEqual(projectGoalResources(input));
+    expect(project(input)).toMatchObject({ state: 'met', balances: [{ quantity: quantity + 20 }] });
+  }
+  const conflict = { epoch: 0, initial: initial(0), actions: [...actions, action('conflicting', 10, 20, [reward('one-native-kill', 21)])] };
+  expect(project(conflict)).toMatchObject({ state: 'pending', reason: { code: 'goal-reward-source-conflict' } });
+  expect(project({ epoch: 0, initial: initial(0), actions })).toMatchObject({ state: 'met', balances: [{ quantity: 20 }] });
+});
 
 it('permits spending then earning while proving every prefix solvent with native prices', () => {
   const train = UNIT_DEFS.footman.cost, hall = BUILDING_DEFS.townHall.cost;

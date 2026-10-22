@@ -38,3 +38,18 @@ export function goalReplayAncestors(actions: readonly Readonly<{ action: { id: s
   };
   return byId.size === actions.length && actions.every(action => visit(action.action.id)) ? result : null;
 }
+
+/** Validate the action graph without materializing its transitive closure.
+ * Cash events at distinct ticks need only this check and chronological order. */
+export function validGoalReplayDependencies(actions: readonly Readonly<{ action: { id: string }; dependsOn?: readonly string[] }>[]): boolean {
+  const byId = new Map(actions.map(action => [action.action.id, action])), done = new Set<string>(), visiting = new Set<string>();
+  const visit = (id: string): boolean => {
+    if (done.has(id)) return true;
+    const action = byId.get(id);
+    if (!action || visiting.has(id)) return false;
+    visiting.add(id);
+    if (!(action.dependsOn ?? []).every(visit)) return false;
+    visiting.delete(id); done.add(id); return true;
+  };
+  return byId.size === actions.length && actions.every(action => visit(action.action.id));
+}

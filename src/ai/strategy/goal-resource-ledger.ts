@@ -1,6 +1,6 @@
 import type { AllocationReason } from './allocation-types';
 import { goalResourceKey } from './goal-facts';
-import { goalReplayAncestors, orderGoalReplayEvents } from './goal-replay-order';
+import { goalReplayAncestors, orderGoalReplayEvents, validGoalReplayDependencies } from './goal-replay-order';
 import type { GoalActionDeclaration, GoalResource, GoalResourceBalance, GoalResourceEvent, GoalResourceFlow } from './goal-planner-types';
 
 export type GoalScheduledAction = Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number;
@@ -37,17 +37,35 @@ const integral = (segments: readonly Segment[]) => segments.reduce((sum, segment
 /** Solvency is checked at every event, never just on the final net total.
  * This pure projection does not reserve or create actual money/units. The
  * existing allocator remains the authority for every ready action's grant. */
-export function projectGoalResources(input: Readonly<{ epoch: number; initial: readonly GoalResourceBalance[];
-  actions: readonly GoalScheduledAction[] }>): GoalResourceProjection {
+type ProjectionInput = Readonly<{ epoch: number; initial: readonly GoalResourceBalance[]; actions: readonly GoalScheduledAction[] }>;
+function resourceKeys() {
+  const keys = new WeakMap<GoalResource, string>();
+  return (resource: GoalResource) => {
+    let key = keys.get(resource);
+    if (key === undefined) { key = goalResourceKey(resource); keys.set(resource, key); }
+    return key;
+  };
+}
+export function projectGoalResources(input: ProjectionInput): GoalResourceProjection {
+  return projectResources(input, resourceKeys());
+}
+/** One transient replay can share keys of immutable resource values between
+ * prefixes. Cash, sources, events and solvency are recomputed on every call;
+ * the closure must never enter owner memory. */
+export function createGoalResourceProjector(): typeof projectGoalResources {
+  const keyFor = resourceKeys();
+  return input => projectResources(input, keyFor);
+}
+function projectResources(input: ProjectionInput, keyFor: (resource: GoalResource) => string): GoalResourceProjection {
   const balances = new Map<string, GoalResourceBalance>(), amounts = new Map<string, number>();
   for (const balance of input.initial) {
-    const key = goalResourceKey(balance.resource), previous = balances.get(key);
+    const key = keyFor(balance.resource), previous = balances.get(key);
     if (!finite(balance.quantity) || balance.quantity < 0 || balance.asOfTick !== input.epoch
       || previous && !close(previous.quantity, balance.quantity)) return why('goal-initial-resource-conflict', balance.factIds);
     balances.set(key, balance); amounts.set(key, balance.quantity);
   }
   const unique = new Set<string>();
-  type Event = { actionId: string; tick: number; flow: GoalResourceFlow; index: number; finish: boolean };
+  type Event = { actionId: string; tick: number; flow: GoalResourceFlow; index: number; sequence: number; finish: boolean };
   const events: Event[] = [];
   for (const { action, startTick, finishTick } of input.actions) {
     if (unique.has(action.id) || !finite(startTick) || !finite(finishTick) || startTick < input.epoch || finishTick < startTick)
@@ -56,26 +74,37 @@ export function projectGoalResources(input: Readonly<{ epoch: number; initial: r
     for (let index = 0; index < action.flows.length; index++) {
       const flow = action.flows[index]!, tick = flow.at === 'start' ? startTick : flow.at === 'finish' ? finishTick : startTick + flow.at.offsetTicks;
       if (!finite(flow.delta) || !finite(tick) || tick < startTick || tick > finishTick) return why('goal-resource-flow-invalid', [action.id]);
-      events.push({ actionId: action.id, tick, flow, index, finish: flow.at === 'finish' });
+      events.push({ actionId: action.id, tick, flow, index, sequence: events.length, finish: flow.at === 'finish' });
     }
   }
-  const ancestors = goalReplayAncestors(input.actions);
-  if (!ancestors) return why('goal-action-dependencies-invalid');
+  if (!validGoalReplayDependencies(input.actions)) return why('goal-action-dependencies-invalid');
+  let ancestors: ReturnType<typeof goalReplayAncestors>;
   const phase = (event: Event) => event.flow.at === 'start' ? 0 : event.flow.at === 'finish' ? 2 : 1;
-  const ordered = orderGoalReplayEvents(events.map(event => ({ id: JSON.stringify([event.actionId, event.index]), tick: event.tick,
-    value: event, dependsOn: events.filter(previous => previous.tick <= event.tick && (
-      previous.actionId === event.actionId && (previous.tick < event.tick
-        || phase(previous) < phase(event) || phase(previous) === phase(event) && previous.index < event.index)
-      || previous.actionId !== event.actionId && ancestors.get(event.actionId)!.has(previous.actionId)))
-      .map(previous => JSON.stringify([previous.actionId, previous.index])) })),
-    (a, b) => Number(b.finish && b.flow.delta > 0) - Number(a.finish && a.flow.delta > 0)
-      || (a.actionId < b.actionId ? -1 : a.actionId > b.actionId ? 1 : a.index - b.index));
-  if (!ordered) return why('goal-resource-event-dependencies-invalid');
+  // Chronological order already settles different ticks. Build a causal graph
+  // only for ties, rather than copying every earlier event into every debit.
+  const groups = new Map<number, Event[]>(), ordered: Event[] = [];
+  for (const event of events) {
+    const group = groups.get(event.tick);
+    if (group) group.push(event); else groups.set(event.tick, [event]);
+  }
+  for (const [, group] of [...groups].sort(([a], [b]) => a - b)) {
+    if (group.length === 1) { ordered.push(group[0]!); continue; }
+    ancestors ??= goalReplayAncestors(input.actions);
+    const id = (event: Event) => String(event.sequence);
+    const ties = orderGoalReplayEvents(group.map(event => ({ id: id(event), tick: event.tick, value: event,
+      dependsOn: group.filter(previous => previous.actionId === event.actionId
+        ? phase(previous) < phase(event) || phase(previous) === phase(event) && previous.index < event.index
+        : ancestors!.get(event.actionId)!.has(previous.actionId)).map(id) })),
+      (a, b) => Number(b.finish && b.flow.delta > 0) - Number(a.finish && a.flow.delta > 0)
+        || (a.actionId < b.actionId ? -1 : a.actionId > b.actionId ? 1 : a.index - b.index));
+    if (!ties) return why('goal-resource-event-dependencies-invalid');
+    ordered.push(...ties);
+  }
   const timeline: GoalResourceEvent[] = [], deficits: GoalResourceDeficit[] = [], duplicateCredits: {
     actionId: string; sourceId: string; declared: number; credited: number }[] = [];
   const oneShot = new Map<string, number>(), income = new Map<string, Segment[]>();
   for (const event of ordered) {
-    const { flow, actionId, tick } = event, key = goalResourceKey(flow.resource), before = amounts.get(key) ?? 0;
+    const { flow, actionId, tick } = event, key = keyFor(flow.resource), before = amounts.get(key) ?? 0;
     let delta = flow.delta;
     if (delta > 0 && flow.resource.kind === 'gold' && !flow.source) return why('goal-positive-gold-source-unbound', [actionId]);
     if (flow.source && delta > 0) {

@@ -45,9 +45,11 @@ export type GoalSearchMemory = {
  * allocator, SDK, reservation or publication mutation port. */
 export type GoalRegenerateInput = Readonly<{
   snapshot: GameSnapshot; goalId: string; selector: GoalStepSelector;
+  /** Actual proposed start after causal/resource release, not world time. */
+  startTick?: number;
   bindings: Readonly<Record<string, GoalSearchBinding>>;
   prefix: readonly Readonly<{ selector: GoalStepSelector; action: GoalActionDeclaration;
-    startTick: number; finishTick: number }>[];
+    startTick: number; finishTick: number; dependsOn?: readonly string[] }>[];
   readPublished: (key: string) => GoalFactObservation | undefined;
 }>;
 export type GoalRegenerateResult = Readonly<{ state: 'known'; action: GoalActionDeclaration }>
