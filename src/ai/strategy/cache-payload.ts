@@ -1,8 +1,18 @@
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'three/examples/jsm/libs/fflate.module.js';
 import { observationJsonBytes } from './observation-json-bytes';
+import { readGoalSearchRecords, storeGoalSearchRecords } from './goal-search-record';
+import type { GoalFactReader, GoalPlanCacheEntry } from './goal-planner-types';
 
 type Node = { value: string | number | boolean | null } | { array: number[] } | { object: [string, number][] };
-export type CachePayload<T> = { entries: readonly T[]; packedEntries?: { encoding: 'json-deflate-v1' | 'json-dag-deflate-v2'; data: string } };
+export type CachePayload<T> = { entries: readonly T[]; packedEntries?: { encoding: 'json-deflate-v1' | 'json-dag-deflate-v2'; data: string };
+  referenceEncoding?: 'goal-definitions-v1'; references?: GoalPlanningReferences; searchRecordVersion?: 1 };
+export function storeGoalCachePayload<T>(entries: readonly T[]): CachePayload<T> {
+  const search = entries.every(entry => !!entry && typeof entry === 'object' && 'plan' in entry);
+  const rows = search ? storeGoalSearchRecords(entries as unknown as readonly GoalPlanCacheEntry[]) as readonly T[] : entries;
+  const encoded = encodeGoalPlanningValue(rows), references = goalPlanningStandaloneReferences();
+  return { entries: encoded, referenceEncoding: 'goal-definitions-v1', ...(search ? { searchRecordVersion: 1 as const } : {}),
+    ...(references ? { references: retainGoalPlanningReferences(references, encoded) } : {}) };
+}
 /** Only serialization changes. Large declarative continuations contain many
  * repeated fact IDs; lossless storage keeps their real working set inside the
  * existing byte quota without dropping a selected plan or its alternatives. */
@@ -23,7 +33,18 @@ export function storeCachePayload<T>(entries: readonly T[]): CachePayload<T> {
   const packed = { entries: [], packedEntries: { encoding: 'json-dag-deflate-v2' as const, data: btoa(parts.join('')) } };
   return observationJsonBytes(packed) < observationJsonBytes({ entries }) ? packed : { entries };
 }
-export function readCachePayload<T>(payload: CachePayload<T>): readonly T[] {
+export function readCachePayload<T>(payload: CachePayload<T>, readFact?: GoalFactReader): readonly T[] {
+  if (payload.referenceEncoding === 'goal-definitions-v1') {
+    if (payload.searchRecordVersion && !readFact && payload.entries.some(entry =>
+      (entry as unknown as GoalPlanCacheEntry).continuation?.demandDriven))
+      throw Error('A selected goal cache requires current fact observations');
+    const references = payload.references ?? currentGoalPlanningReferences();
+    if (!references) throw Error('Goal cache requires its seat reference table');
+    return withGoalPlanningReferences(references, () => {
+      const entries = hydrateGoalPlanningValue(payload.entries);
+      return payload.searchRecordVersion ? readGoalSearchRecords(entries as readonly GoalPlanCacheEntry[], readFact) as readonly T[] : entries;
+    });
+  }
   if (!payload.packedEntries) return payload.entries;
   const bytes = Uint8Array.from(atob(payload.packedEntries.data), character => character.charCodeAt(0));
   const stored = JSON.parse(strFromU8(inflateSync(bytes)));
@@ -38,3 +59,6 @@ export function readCachePayload<T>(payload: CachePayload<T>): readonly T[] {
   if (!Array.isArray(result)) throw Error('Invalid cache entries');
   return result as T[];
 }
+import { currentGoalPlanningReferences, encodeGoalPlanningValue, goalPlanningStandaloneReferences,
+  hydrateGoalPlanningValue, retainGoalPlanningReferences, withGoalPlanningReferences,
+  type GoalPlanningReferences } from './goal-planning-references';

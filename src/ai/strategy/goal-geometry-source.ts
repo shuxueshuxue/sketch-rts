@@ -6,6 +6,7 @@ import type { GoalGeometryMemory, GoalGeometryReader, GoalPublishedValue } from 
 import type { GoalParameter } from './goal-planner-types';
 import { observationJsonBytes } from './observation-json-bytes';
 import { navigationAuditActive } from '../../shared/navigation-audit';
+import { currentGoalPlanningReferences, goalPlanningIdentity } from './goal-planning-references';
 
 // Original eleven public cold frames, frozen world/K20/6144, measured on
 // a5764f96 (puzzle source b6cb3d85). The full pinned payload including its JSON
@@ -16,7 +17,9 @@ export const GOAL_GEOMETRY_ENTRIES = 19 * 2;
 export const GOAL_GEOMETRY_BYTES = 16888 * 2;
 const SLICE = 128;
 type Entry = GoalGeometryMemory['entries'][number];
-const entryRequestId = (entry: Pick<Entry, 'key' | 'revision'>) => `goal-geometry:${goalValueKey([entry.key, entry.revision])}`;
+const entryRequestId = (entry: Pick<Entry, 'key' | 'revision'>) => currentGoalPlanningReferences()
+  ? goalPlanningIdentity('geometry-request', { key: entry.key, revision: entry.revision })
+  : `goal-geometry:${goalValueKey([entry.key, entry.revision])}`;
 
 /** A publication cursor, not a second pathfinder or work allowance. Domains
  * supply finite native checks; only this queue may advance their cursors. */

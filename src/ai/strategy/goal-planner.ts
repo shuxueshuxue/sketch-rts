@@ -1,4 +1,6 @@
-import { readCachePayload, storeCachePayload } from './cache-payload';
+import { readCachePayload, storeGoalCachePayload as storeCachePayload } from './cache-payload';
+import { cloneGoalPlanningValue, goalPlanningIdentity, goalPlanningOrderKey, goalPlanningResidentBytes, protectGoalDeclarations } from './goal-planning-references';
+import { retainGoalComparisons, retainGoalSearchEntry } from './goal-search-retention';
 import { boundCache } from './bounded-cache';
 import type { AllocationReason } from './allocation-types';
 import { bindGoalAction, bindGoalFact, goalActionContributes, goalBindingsKey, goalQuantity, matchGoalFacts, type GoalBindings } from './goal-fact-matching';
@@ -15,7 +17,10 @@ export type { GoalSearchMemory } from './goal-search-state';
 import type { GoalActionDeclaration, GoalActionNode, GoalAlternative, GoalFact, GoalFactObservation, GoalPlan,
   GoalPlannerInput, GoalPlannerOutput, GoalRequest, GoalResourceBalance } from './goal-planner-types';
 
-const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+const order = (a: string, b: string) => {
+  const first = goalPlanningOrderKey(a), second = goalPlanningOrderKey(b);
+  return first < second ? -1 : first > second ? 1 : 0;
+};
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const finish = (path: Path, epoch: number) => Math.max(epoch, ...path.steps.map(step => step.finishTick));
 const pathKey = (path: Path) => goalValueKey([path.steps.map(step => [step.action.id, step.startTick, step.finishTick]), path.bindings]);
@@ -44,7 +49,7 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
   const { context, work } = input, plans: GoalPlan[] = [], entries: GoalPlannerOutput['cache']['entries'][number][] = [];
   const previousEntries = input.previous?.owner === context.owner
     && (input.previous.declarationRevision === undefined || input.previous.declarationRevision === input.declarationRevision)
-    ? readCachePayload(input.previous) : [];
+    ? readCachePayload(input.previous, context.readFact) : [];
   const providers = [...input.providers].sort((a, b) => order(a.id, b.id));
   const sharedInput = input;
   const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number; input: GoalPlannerInput }[] = [];
@@ -52,17 +57,22 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     const view = sharedInput.contextForGoal?.(goal);
     const input = view ? { ...sharedInput, ...view } : sharedInput;
     const context = input.context;
-    const goalKey = goalValueKey(['discounted-action-costs-v1', goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
+    const opening = goalPlanningIdentity('opening-balances', input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance));
+    const goalKey = goalPlanningIdentity('goal-key', goalValueKey(['discounted-action-costs-v1', goal, opening]));
     const previous = previousEntries.find(entry => entry.goalKey === goalKey
       && entry.declarationRevision === input.declarationRevision);
-    const unchanged = previous && !previous.continuation?.deferred?.length && work.withConsumer(goal.id, previous.plan.valueGold, () => previous.dependencies.every(dependency => {
+    const unchanged = previous && (input.searchRetention || !previous.continuation?.deferred?.length)
+      && work.withConsumer(goal.id, previous.plan.valueGold, () => input.searchRetention
+      ? !!input.cacheSourceRevision && previous.sourceRevision === input.cacheSourceRevision(previous.plan)
+      : previous.dependencies.every(dependency => {
       const prior = previous.plan.facts.find(node => node.id === dependency.factId)?.observation
         ?? previous.continuation?.observed.find(observed => observed.fact.id === dependency.factId);
       if (!prior) return false;
       const current = context.readFact(prior.fact);
       return current.revision === dependency.revision && current.state === dependency.state;
     }));
-    if (unchanged && previous.continuation?.phase === 'done' && !hasCapacityPressure(input, goal.id)
+    if (unchanged && !previous.continuation?.deferred?.length && !previous.continuation?.regenerateDeferred
+      && previous.continuation?.phase === 'done' && !hasCapacityPressure(input, goal.id)
       && (previous.plan.status === 'ready' || previous.plan.status === 'complete')) {
       const deadline = goal.deadlineTick;
       const refreshed = { ...previous.continuation, observed: previous.continuation.observed.map(observation => context.readFact(observation.fact)) };
@@ -95,16 +105,17 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     }
     let state: GoalSearchMemory;
     if (unchanged && previous.continuation && previous.plan.observedTick === context.tick)
-      state = structuredClone(previous.continuation);
+      state = cloneGoalPlanningValue(previous.continuation);
     else if (unchanged && previous.continuation && previous.continuation.phase !== 'done')
-      state = structuredClone(previous.continuation);
+      state = cloneGoalPlanningValue(previous.continuation);
     else if (unchanged && previous.continuation) {
       // Re-use the regressed alternatives, not stale absolute schedules. Time
       // can release a published fact without a second provider expansion.
-      state = { ...structuredClone(previous.continuation), phase: 'compose', frontier: [emptyPath()], active: null,
+      state = { ...cloneGoalPlanningValue(previous.continuation), phase: 'compose', frontier: [emptyPath()], active: null,
         solutions: [], visited: [], expansions: 0, limitReason: null };
       delete state.coarse;
-    } else state = { version: 1, phase: 'regress', requests: goal.effects.map(fact => ({ fact, depth: 0 })),
+    } else state = { version: 1, phase: input.searchRetention ? 'compose' : 'regress',
+      ...(input.searchRetention ? { demandDriven: true as const } : {}), requests: input.searchRetention ? [] : goal.effects.map(fact => ({ fact, depth: 0 })),
       regressed: [], observed: [], candidates: [], alternatives: [], frontier: [], active: null, solutions: [], visited: [],
       expansions: 0, depth: 0, limitReason: null };
     if (unchanged && previous.continuation?.phase !== 'done') {
@@ -134,7 +145,8 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
   // entire think before equally important goals enter the shared round robin.
   work.flush();
   for (const { goal, goalKey, state, beforeWork, input } of runs) {
-    const plan = work.withConsumer(goal.id, null, () => projectPlan(state, input, goal, state.expansions - beforeWork));
+    const projected = work.withConsumer(goal.id, null, () => projectPlan(state, input, goal, state.expansions - beforeWork));
+    const plan = input.searchRetention ? retainGoalComparisons(projected) : projected;
     plans.push(plan);
     entries.push({ goalKey, declarationRevision: input.declarationRevision,
       dependencies: state.observed.map(observed => ({ factId: observed.fact.id, revision: observed.revision, state: observed.state })),
@@ -165,6 +177,11 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
   }
 
   plans.sort((a, b) => order(a.goal.id, b.goal.id));
+  protectGoalDeclarations(plans.flatMap(plan => plan.readyActionIds));
+  if (input.searchRetention) for (let index = 0; index < entries.length; index++) {
+    const retained = retainGoalSearchEntry(entries[index]!);
+    entries[index] = { ...retained, ...(input.cacheSourceRevision ? { sourceRevision: input.cacheSourceRevision(retained.plan) } : {}) };
+  }
   let payloadEntries: readonly GoalPlannerOutput['cache']['entries'][number][] | undefined;
   let payload: ReturnType<typeof storeCachePayload<GoalPlannerOutput['cache']['entries'][number]>>;
   const stored = (rows: readonly GoalPlannerOutput['cache']['entries'][number][]) => {
@@ -176,7 +193,7 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
   const bounded = boundCache({ kind: 'search', entries: [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id)),
     id: entry => entry.plan.goal.id, lastUsed: entry => entry.plan.observedTick,
     plans: entry => [entry.plan.goal.id], maxBytes: 256 * 1024, thinkSequence: work.receipt.thinkSequence ?? context.tick,
-    capacity: input.previous?.capacity, bytes: entries => observationJsonBytes({ version: 1, owner: context.owner,
+    capacity: input.previous?.capacity, bytes: entries => goalPlanningResidentBytes({ version: 1, owner: context.owner,
       declarationRevision: input.declarationRevision, ...stored(entries) }) });
   const retained = bounded.entries;
   if (bounded.capacity.pressure) {
@@ -206,7 +223,7 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     const combined = next.plans.map(plan => ({ ...plan, search: { ...plan.search,
       work: plan.search.work + (plans.find(prior => prior.id === plan.id)?.search.work ?? 0) } }));
     const { entries: _entries, packedEntries: _packed, ...header } = next.cache;
-    return { ...next, plans: combined, cache: { ...header, ...storeCachePayload(readCachePayload(next.cache).map(entry => ({ ...entry,
+    return { ...next, plans: combined, cache: { ...header, ...storeCachePayload(readCachePayload(next.cache, input.context.readFact).map(entry => ({ ...entry,
       plan: combined.find(plan => plan.id === entry.plan.id) ?? entry.plan }))) } };
   }
   return output;
@@ -336,7 +353,7 @@ function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMem
 }
 
 function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest) {
-  if (input.context.precision === 'coarse') { composeCoarseOne(state, input, goal); return; }
+  if (state.demandDriven || input.context.precision === 'coarse') { composeCoarseOne(state, input, goal); return; }
   if (!state.active) {
     state.frontier.sort(pathOrder(input.context.tick));
     const path = state.frontier.shift();
@@ -390,9 +407,10 @@ function composeCoarseOne(state: GoalSearchMemory, input: GoalPlannerInput, goal
   const frame = search.stack.at(-1)!;
   if (satisfies(frame.fact, search.path, state, input).met) { search.stack.pop(); return; }
   if (!frame.options) {
-    if (input.contextForPrefix && frame.fact.predicate.kind === 'force-at'
+    if (state.demandDriven || input.contextForPrefix && frame.fact.predicate.kind === 'force-at'
       && search.path.steps.some(step => step.action.kind === 'assemble')) {
-      const context = input.contextForPrefix(search.path.steps);
+      const context = input.contextForPrefix && frame.fact.predicate.kind === 'force-at'
+        && search.path.steps.some(step => step.action.kind === 'assemble') ? input.contextForPrefix(search.path.steps) : input.context;
       for (const provider of input.providers) {
         const discovered = discoverGoalActions(provider, frame.fact, context);
         for (const item of discovered.deferred) {

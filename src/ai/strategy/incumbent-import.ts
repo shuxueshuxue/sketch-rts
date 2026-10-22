@@ -128,8 +128,18 @@ export function importExecutedIncumbents(snapshot: GameSnapshot, policy: AiPolic
         assignmentIds: Object.values(nextAssignments).filter(assignment => assignment.objectiveId === id).map(assignment => assignment.id).sort(),
         budgetIds: [], sinceTick: firstReceipt.acceptedTick, minimumStayUntilTick: snapshot.tick,
         challengerId: null, challengerThinks: 0, committedUtilityGold: null, force: null } } };
-    memory = appendAllocationEvent(memory, { objectiveId: id, methodId, action: token, kind: 'incumbent-adopted',
-      leaseIds: members.map(id => `lease:${id}`), reason: { code: 'observed-original-producer-order', factIds: members, values: {} } }, snapshot.tick);
+    const leaseIds = members.map(id => `lease:${id}`);
+    // Allocation may reconsider an unpriced imported task more than once for
+    // the same world. Re-observing the same order is not another adoption.
+    // Keep the original event and receipt instead of appending identical
+    // diagnostics on each frozen owner callback.
+    const observed = memory.events.some(event => event.kind === 'incumbent-adopted'
+      && event.tick === snapshot.tick && event.revision === memory.revision
+      && event.objectiveId === id && event.methodId === methodId
+      && event.action?.actionId === token.actionId && event.action.generation === token.generation
+      && event.leaseIds.length === leaseIds.length && event.leaseIds.every((id, index) => id === leaseIds[index]));
+    if (!observed) memory = appendAllocationEvent(memory, { objectiveId: id, methodId, action: token, kind: 'incumbent-adopted',
+      leaseIds, reason: { code: 'observed-original-producer-order', factIds: members, values: {} } }, snapshot.tick);
   }
   const objectives = { ...memory.objectives }, executions = { ...memory.executions };
   for (const [id, objective] of Object.entries(objectives)) if (id.startsWith('imported:')

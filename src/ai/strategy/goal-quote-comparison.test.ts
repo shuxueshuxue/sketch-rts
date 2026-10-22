@@ -56,6 +56,8 @@ it('quotes a coarse challenger before it can replace the confirmed executable ch
   expect(memory.entries.filter(entry => entry.state === 'known')).toHaveLength(2);
   const pressure = planGoals({ ...input(), refineSelected: createGoalPlanRefiner({ memory, providers: [provider], maxAlternativeQuotes: 0,
     exactContext: () => ({ ...context, precision: 'exact' }) }) });
-  expect(pressure.readyActions).toEqual([]);
-  expect(pressure.plans[0]!.capacityPressure?.[0]).toMatchObject({ entries: 2, limitEntries: 1 });
+  // Zero unreferenced quotes does not evict either side of a live comparison.
+  expect(pressure.readyActions.map(row => row.action.declaration.id)).toEqual([exactA.id]);
+  expect(memory.entries.filter(entry => entry.state === 'known')).toHaveLength(2);
+  expect(pressure.plans[0]!.capacityPressure).toBeUndefined();
 }, 60_000);

@@ -120,6 +120,7 @@ export type AiPolicyMemory = {
   strategyAllocation?: import('./strategy/allocation-types').StrategyAllocationMemory;
   /** Opt-in declarative search evidence only; not command/resource authority. */
   goalPlanning?: import('./strategy/goal-planner-input').GoalPlannerRuntimeMemory;
+  goalPlanningReferences?: import('./strategy/goal-planning-references').GoalPlanningReferences;
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
     objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;

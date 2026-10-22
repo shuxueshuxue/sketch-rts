@@ -78,6 +78,10 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
  * order through the same authority. Observations project this exact evaluation. */
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
+  return withGoalPlanningMemory(options.memory, () => referencedBootstrapCommands(snapshot, owner, version, scripts, options, observation));
+}
+function referencedBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
+  scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = restoreGoalAuthorityReferences(options.memory.strategyAllocation);
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = reconcileGoalCapitalReceipts(options.memory.strategyAllocation, snapshot);
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = refreshAllocationCapital(options.memory.strategyAllocation,
@@ -248,3 +252,4 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
     ...frame.project!(), mode: 'control', allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
   return { entries, context, strategy: output };
 }
+import { withGoalPlanningMemory } from './goal-planning-restore';

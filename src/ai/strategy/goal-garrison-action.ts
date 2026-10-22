@@ -25,10 +25,11 @@ export function declareGoalGarrison(input: GoalGarrisonInput, context: GoalPlann
     ...(input.requestedThroughTick === undefined ? {} : { throughTick: input.requestedThroughTick }) });
   const parameters = { ...base.executor.parameters, garrisonMineId: input.mineId, garrisonAt: input.at,
     protectionWindowTicks: context.situation.horizonTicks };
-  return { ...base, id: `action:hold-position:${goalValueKey([ready.id, base.id])}`,
+  return { ...base, id: goalPlanningIdentity('action', `action:hold-position:${goalValueKey([ready.id, base.id])}`),
     effects: [...base.effects, { fact: ready, operation: 'establish', at: 'start' }],
     executor: { ...base.executor, parameters }, reasons: [...base.reasons, {
       code: 'formal-garrison-obligation-required', factIds: [hall.id, ready.id],
       values: { throughTick: input.throughTick, commandAcknowledgementIsProof: false },
     }] };
 }
+import { goalPlanningIdentity } from './goal-planning-references';

@@ -26,8 +26,17 @@ function taskKey(intent: ActionIntent, unitIds: readonly string[], memory: Strat
     if (typeof row.entityId === 'string' && 'point' in row) return { entityId: row.entityId };
     return Object.fromEntries(Object.entries(row).map(([key, item]) => [key, semantic(item)]));
   };
+  const field = (name: string) => {
+    const value = intent.parameters[name];
+    // The observed foundation adds an entityId to the same exact build site.
+    // It is an output of this purchase, not a different construction task.
+    if (intent.actionKind === 'build' && name === 'at' && value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'entityId'));
+    }
+    return semantic(value);
+  };
   return goalValueKey([intent.goalId, intent.actionKind, [...unitIds].sort(),
-    fields[intent.actionKind].map(key => [key, semantic(intent.parameters[key])]),
+    fields[intent.actionKind].map(key => [key, field(key)]),
     intent.parameters.item, intent.parameters.consumable]);
 }
 

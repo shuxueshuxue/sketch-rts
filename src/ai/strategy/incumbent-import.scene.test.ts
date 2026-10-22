@@ -55,6 +55,13 @@ it('imports only the actual ferry producer after its accepted order advances in 
   expect(JSON.stringify([snapshot, frame.memory, adopted])).toBe(immutable);
   const restored: typeof adopted = JSON.parse(JSON.stringify(adopted));
   expect(importExecutedIncumbents(snapshot, frame.memory, evaluateSituation(snapshot, frame.owner, frame.memory), restored)).toEqual(adopted);
+  // Reconsidering an unpriced incumbent can rebuild its leases within the
+  // same owner epoch. The unchanged native order still has one adoption.
+  const reconsidered = importExecutedIncumbents(snapshot, frame.memory, evaluateSituation(snapshot, frame.owner, frame.memory),
+    { ...restored, leases: {}, assignments: {} });
+  expect(reconsidered.leases).toEqual(adopted.leases);
+  expect(reconsidered.events).toEqual(adopted.events);
+  expect(reconsidered.nextEventSequence).toBe(adopted.nextEventSequence);
 
   const canceled = structuredClone(snapshot), rider = canceled.units.find(unit => unit.id === 'unit-p0-worker-2')!;
   rider.order = { type: 'idle' }; canceled.tick++;

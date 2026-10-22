@@ -1,0 +1,1120 @@
+{
+  "source": "97f2436dbecb01569c3d8b40d12f52fdc7a6a747",
+  "sourceManifestSha256": "626534e7b56e727163347759c6f94eeb1b9271fe204b539bb7614edfc8fe56fa",
+  "extraction": "Complete snapshots from the original97f native command replay: all600/1800 recorded world rows and both full final snapshots match byte-for-byte. No AI command generated. Original memory-before and full objective rows retained; no missing world fields filled by assumption.",
+  "coverage": {
+    "maps": 2,
+    "seats": 8,
+    "thinkRows": 2400,
+    "selectedFrames": 24
+  },
+  "entries": [
+    {
+      "file": "0-gullIsland-p0-3045.json.gz",
+      "index": 0,
+      "map": "gullIsland",
+      "owner": "p0",
+      "tick": 3045,
+      "version": "v9_knight",
+      "goalCount": 12,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "ConquerIsland:p0:gold-gen-3",
+        "ConquerIsland:p0:gold-gen-4",
+        "DefendSite:p0:building-p0-townhall",
+        "DefendSite:p0:unit-p0-worker-1012",
+        "Evacuate:p0:building-p0-townhall",
+        "Evacuate:p0:unit-p0-worker-1012",
+        "ExpandLand:p0:gold-gen-1",
+        "ExpandLand:p0:gold-gen-2",
+        "ExpandLand:p0:gold-gen-5",
+        "ExpandLand:p0:gold-gen-6",
+        "ReinforceFront:p0:land:1"
+      ],
+      "gzipSha256": "b732a31e278fb4f3a7308287a5a1ca103a94e4bf1bcfec4288abd7b1fad8751d",
+      "plainSha256": "5d3823cd49ab405de0340c7ecb3af052cd5913b6393caa475a43e173b529dc13",
+      "snapshotSha256": "d5826fbe76b2b7e636b3b29e1508d9c1d7ce132ba12ef57a39cc5424174eac1e",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p0/rank-1-tick-3045/fact-requests.original-row.jsonl",
+          "sha256": "e3b71c5dab9eb8a000496c9182fed647a28df91fe9fc177196439ea445d044a4"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p0/rank-1-tick-3045/memory-before.original-row.jsonl",
+          "sha256": "6b047ec467366982e8398d9d840fbf7127aa2de365ac235b48cc9a2d381f64fd"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p0/rank-1-tick-3045/traces.original-row.jsonl",
+          "sha256": "456e64be3b63991e4acf3896057b0eb108ca79ddfb3b5b22b0337045f2f3373e"
+        }
+      ]
+    },
+    {
+      "file": "1-gullIsland-p0-3060.json.gz",
+      "index": 1,
+      "map": "gullIsland",
+      "owner": "p0",
+      "tick": 3060,
+      "version": "v9_knight",
+      "goalCount": 12,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "ConquerIsland:p0:gold-gen-3",
+        "ConquerIsland:p0:gold-gen-4",
+        "DefendSite:p0:building-p0-townHall-1166",
+        "DefendSite:p0:building-p0-townhall",
+        "Evacuate:p0:building-p0-townHall-1166",
+        "Evacuate:p0:building-p0-townhall",
+        "ExpandLand:p0:gold-gen-1",
+        "ExpandLand:p0:gold-gen-2",
+        "ExpandLand:p0:gold-gen-5",
+        "ExpandLand:p0:gold-gen-6",
+        "ReinforceFront:p0:land:1"
+      ],
+      "gzipSha256": "80e9cc55cb51d99701f67f6bd8009017da03070c6e21b25798af27ac899df6f1",
+      "plainSha256": "bb55adabb6c007844de9bb762a9858a2509c4a92d4617f70758d7ada16d25f33",
+      "snapshotSha256": "c1e7d609543f908c1d3c12d03f16042cc48ecb0ec551f6ab2ee98bf15608082d",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p0/rank-2-tick-3060/fact-requests.original-row.jsonl",
+          "sha256": "67108e85ef2cee53a1fd54b15525ac5f0c362aaaacf9de140f412623a3f471cc"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p0/rank-2-tick-3060/memory-before.original-row.jsonl",
+          "sha256": "7f392b73f7e0ad239759f958a9550f377103f499993b0f6250a468c9a23ef31b"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p0/rank-2-tick-3060/traces.original-row.jsonl",
+          "sha256": "4ce63e54d2f81d964ce52d1b05ba276f8e3a2acb570b053d97173499e9ec1089"
+        }
+      ]
+    },
+    {
+      "file": "2-gullIsland-p0-3075.json.gz",
+      "index": 2,
+      "map": "gullIsland",
+      "owner": "p0",
+      "tick": 3075,
+      "version": "v9_knight",
+      "goalCount": 12,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "ConquerIsland:p0:gold-gen-3",
+        "ConquerIsland:p0:gold-gen-4",
+        "DefendSite:p0:building-p0-townHall-1166",
+        "DefendSite:p0:building-p0-townhall",
+        "Evacuate:p0:building-p0-townHall-1166",
+        "Evacuate:p0:building-p0-townhall",
+        "ExpandLand:p0:gold-gen-1",
+        "ExpandLand:p0:gold-gen-2",
+        "ExpandLand:p0:gold-gen-5",
+        "ExpandLand:p0:gold-gen-6",
+        "ReinforceFront:p0:land:1"
+      ],
+      "gzipSha256": "c16c479b171a1c27d3f61c5ef1f3712af1b464a96bf7d3cd64bbc885684cd3b7",
+      "plainSha256": "7bc4bf71275544bf9cce85bf2a56b6aaf360c53575a023371981fdb3c48a71ca",
+      "snapshotSha256": "eff5f0070abc2181f5d4ccdafa3a318ecef6090b81e1c71665565fa6680c49ab",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p0/rank-3-tick-3075/fact-requests.original-row.jsonl",
+          "sha256": "65bb207dc2187ec8d9f2047a9035d18ec37dc290a9abe107111fd20ba7bdcc99"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p0/rank-3-tick-3075/memory-before.original-row.jsonl",
+          "sha256": "8660a6daf4cee53d03d826142a4e0e4e2e383004e16f08f028e85924445a5e0d"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p0/rank-3-tick-3075/traces.original-row.jsonl",
+          "sha256": "bc5449f82001d45860f3c945a91b58f4b9ac618e1a2cabc5eb6463496e839394"
+        }
+      ]
+    },
+    {
+      "file": "3-gullIsland-p1-4372.json.gz",
+      "index": 3,
+      "map": "gullIsland",
+      "owner": "p1",
+      "tick": 4372,
+      "version": "v9_archer",
+      "goalCount": 13,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townHall-1166",
+        "AttackSite:p1:building-p0-townhall",
+        "ConquerIsland:p1:gold-gen-3",
+        "ConquerIsland:p1:gold-gen-4",
+        "DefendSite:p1:building-p1-townHall-1347",
+        "DefendSite:p1:building-p1-townhall",
+        "Evacuate:p1:building-p1-townHall-1347",
+        "Evacuate:p1:building-p1-townhall",
+        "ExpandLand:p1:gold-gen-2",
+        "ExpandLand:p1:gold-gen-5",
+        "ExpandLand:p1:gold-gen-6",
+        "ExpandLand:p1:gold-gen-7",
+        "ReinforceFront:p1:land:1"
+      ],
+      "gzipSha256": "6fa32d9410a9b6c00f7fa1ee8e5484316aa09d491a973e17ae3c1b23298a5d2d",
+      "plainSha256": "eb7b16c1200004653bdecd7d3245aa375481fd815bdbbefd39de87821ae0e143",
+      "snapshotSha256": "334ecd9d98d436518c1efec162738c5d28c2e4fc1f2f6cf55abbd73a320ab28e",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p1/rank-1-tick-4372/fact-requests.original-row.jsonl",
+          "sha256": "5e91941b40307a1485d6d0d424ee742e113697ab0f8f004d88110dcfb9a46a83"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p1/rank-1-tick-4372/memory-before.original-row.jsonl",
+          "sha256": "d66a05b3eaa4475e375cf7c85a3e499b8164bbc813cdcb227fc34fb26b596a22"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p1/rank-1-tick-4372/traces.original-row.jsonl",
+          "sha256": "f7504b54fb8b9466600299919f55268144387262dd0a7bd242360cbd587d1e4a"
+        }
+      ]
+    },
+    {
+      "file": "4-gullIsland-p1-4387.json.gz",
+      "index": 4,
+      "map": "gullIsland",
+      "owner": "p1",
+      "tick": 4387,
+      "version": "v9_archer",
+      "goalCount": 13,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townHall-1166",
+        "AttackSite:p1:building-p0-townhall",
+        "ConquerIsland:p1:gold-gen-3",
+        "ConquerIsland:p1:gold-gen-4",
+        "DefendSite:p1:building-p1-townHall-1347",
+        "DefendSite:p1:building-p1-townhall",
+        "Evacuate:p1:building-p1-townHall-1347",
+        "Evacuate:p1:building-p1-townhall",
+        "ExpandLand:p1:gold-gen-2",
+        "ExpandLand:p1:gold-gen-5",
+        "ExpandLand:p1:gold-gen-6",
+        "ExpandLand:p1:gold-gen-7",
+        "ReinforceFront:p1:land:1"
+      ],
+      "gzipSha256": "a60ae6a910f2cb9c7d1c2e9787ad0f58928f5a94b433141f1223d719ed1bac0b",
+      "plainSha256": "39a457e81dc13ef3ca0fc648e34ef27efd216b4f415e66804a21bd32b1290e24",
+      "snapshotSha256": "2464c9210459617768b12e356fb41c69d8ccfc56ec685749725f3427a0164d2d",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p1/rank-2-tick-4387/fact-requests.original-row.jsonl",
+          "sha256": "363eecb9719654a2c1ec0ca3a363308cfd380e85242b6b8b8f40b71c26fe48b9"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p1/rank-2-tick-4387/memory-before.original-row.jsonl",
+          "sha256": "e42996e1696150892c876748716e2879a74db634fb55fec62a5dcceb4533c59f"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p1/rank-2-tick-4387/traces.original-row.jsonl",
+          "sha256": "efc147d3f6f0e0afaf97f1d9b20f48f438e3c9b43937c96ed1eeef3ef98f1758"
+        }
+      ]
+    },
+    {
+      "file": "5-gullIsland-p1-4402.json.gz",
+      "index": 5,
+      "map": "gullIsland",
+      "owner": "p1",
+      "tick": 4402,
+      "version": "v9_archer",
+      "goalCount": 13,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townHall-1166",
+        "AttackSite:p1:building-p0-townhall",
+        "ConquerIsland:p1:gold-gen-3",
+        "ConquerIsland:p1:gold-gen-4",
+        "DefendSite:p1:building-p1-townHall-1347",
+        "DefendSite:p1:building-p1-townhall",
+        "Evacuate:p1:building-p1-townHall-1347",
+        "Evacuate:p1:building-p1-townhall",
+        "ExpandLand:p1:gold-gen-2",
+        "ExpandLand:p1:gold-gen-5",
+        "ExpandLand:p1:gold-gen-6",
+        "ExpandLand:p1:gold-gen-7",
+        "ReinforceFront:p1:land:1"
+      ],
+      "gzipSha256": "96ce09f5a9effa743c9782c6f66de2b08dfb0df45f0c0976ad3b087dd9580947",
+      "plainSha256": "058f218de8aed38a75910674f0d71582e1610030cb9460cb68e32279805c5b1a",
+      "snapshotSha256": "c8edc4deb7c07ab32243d2320b0e6508072bbca308677fae521ef00f01739b33",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "gullIsland/p1/rank-3-tick-4402/fact-requests.original-row.jsonl",
+          "sha256": "8c7d2576edd3490040ce067288528c26d01957b1a15c26a3e24252f105bcb4fa"
+        },
+        {
+          "stream": "memory-before",
+          "file": "gullIsland/p1/rank-3-tick-4402/memory-before.original-row.jsonl",
+          "sha256": "d1e8893cfbeda69bca543d3b5a03875d6b4015678c174448dbab0af9aa647ae1"
+        },
+        {
+          "stream": "traces",
+          "file": "gullIsland/p1/rank-3-tick-4402/traces.original-row.jsonl",
+          "sha256": "f481e56607242fc6aae3379c901d124b7f0321ebf067ffff84e60cc0d0bd4fbf"
+        }
+      ]
+    },
+    {
+      "file": "6-sapphireArchipelago-p0-3675.json.gz",
+      "index": 6,
+      "map": "sapphireArchipelago",
+      "owner": "p0",
+      "tick": 3675,
+      "version": "v9_archer",
+      "goalCount": 20,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "AttackSite:p0:building-p3-townhall",
+        "AttackSite:p0:building-p5-townhall",
+        "ConquerIsland:p0:gold-mainland-0",
+        "ConquerIsland:p0:gold-mainland-1",
+        "ConquerIsland:p0:gold-mainland-2",
+        "ConquerIsland:p0:gold-mainland-3",
+        "ConquerIsland:p0:gold-mainland-4",
+        "ConquerIsland:p0:gold-mainland-5",
+        "ConquerIsland:p0:gold-satellite-0",
+        "ConquerIsland:p0:gold-satellite-1",
+        "ConquerIsland:p0:gold-satellite-2",
+        "ConquerIsland:p0:gold-satellite-3",
+        "ConquerIsland:p0:gold-satellite-4",
+        "ConquerIsland:p0:gold-satellite-5",
+        "ExpandLand:p0:gold-mainland-0",
+        "ExpandLand:p0:gold-mainland-2",
+        "ExpandLand:p0:gold-mainland-3",
+        "ExpandLand:p0:gold-mainland-4",
+        "ReinforceFront:p0:land:6"
+      ],
+      "gzipSha256": "de98a76f8864f2d4897dbdc117ec4384b335e85668ee1b1143884b64c6b2c91e",
+      "plainSha256": "5c060c7e17b3dc623aaf358789ca7feee46a4f7557a07f273e1f4cee7d8013b5",
+      "snapshotSha256": "d4ece79e470e45f15160346180ce542ddbda2ce8d5dcb0a0948d209390e7da4e",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p0/rank-1-tick-3675/fact-requests.original-row.jsonl",
+          "sha256": "e6e0a014ff806da84ccb6f72f2c3539f2102513aaea7073b78846df4c4631048"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p0/rank-1-tick-3675/memory-before.original-row.jsonl",
+          "sha256": "b22ff41fc0c8bfd56a3e5ecc1b7d475c654b948088e52e6acf5e72d40501c7c2"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p0/rank-1-tick-3675/traces.original-row.jsonl",
+          "sha256": "c70ae5728a2f721371d3687e8dd55797fc17e43a554015a7769c87dc941564d8"
+        }
+      ]
+    },
+    {
+      "file": "7-sapphireArchipelago-p0-3690.json.gz",
+      "index": 7,
+      "map": "sapphireArchipelago",
+      "owner": "p0",
+      "tick": 3690,
+      "version": "v9_archer",
+      "goalCount": 20,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "AttackSite:p0:building-p3-townhall",
+        "AttackSite:p0:building-p5-townhall",
+        "ConquerIsland:p0:gold-mainland-0",
+        "ConquerIsland:p0:gold-mainland-1",
+        "ConquerIsland:p0:gold-mainland-2",
+        "ConquerIsland:p0:gold-mainland-3",
+        "ConquerIsland:p0:gold-mainland-4",
+        "ConquerIsland:p0:gold-mainland-5",
+        "ConquerIsland:p0:gold-satellite-0",
+        "ConquerIsland:p0:gold-satellite-1",
+        "ConquerIsland:p0:gold-satellite-2",
+        "ConquerIsland:p0:gold-satellite-3",
+        "ConquerIsland:p0:gold-satellite-4",
+        "ConquerIsland:p0:gold-satellite-5",
+        "ExpandLand:p0:gold-mainland-0",
+        "ExpandLand:p0:gold-mainland-2",
+        "ExpandLand:p0:gold-mainland-3",
+        "ExpandLand:p0:gold-mainland-4",
+        "ReinforceFront:p0:land:6"
+      ],
+      "gzipSha256": "a19218d7346f0701e55ad1c35d4d8fafd3ec407dfaedd71d7bf088d0495cfca4",
+      "plainSha256": "bd02018ad2b9795e04a7e1645aa250bf701d5ff52658f4aff0e12d389e58240a",
+      "snapshotSha256": "e2cc98f76e08243a060e1bc27a68c18fecde958cc07c47e9c9c79685d64f711b",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p0/rank-2-tick-3690/fact-requests.original-row.jsonl",
+          "sha256": "4377b77d5b8d946298df72f9a84e479305a9921c082d7ac2b226ca3af1c554be"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p0/rank-2-tick-3690/memory-before.original-row.jsonl",
+          "sha256": "1acd72d697dabd3af5290a49c835b493805b507261e26096d55efc2baf19c707"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p0/rank-2-tick-3690/traces.original-row.jsonl",
+          "sha256": "87e865d2921ba079013acc206b86a1752ebe30d42b9f76a22a3d965913d7967a"
+        }
+      ]
+    },
+    {
+      "file": "8-sapphireArchipelago-p0-3705.json.gz",
+      "index": 8,
+      "map": "sapphireArchipelago",
+      "owner": "p0",
+      "tick": 3705,
+      "version": "v9_archer",
+      "goalCount": 20,
+      "goalIds": [
+        "AttackSite:p0:building-p1-townhall",
+        "AttackSite:p0:building-p3-townhall",
+        "AttackSite:p0:building-p5-townhall",
+        "ConquerIsland:p0:gold-mainland-0",
+        "ConquerIsland:p0:gold-mainland-1",
+        "ConquerIsland:p0:gold-mainland-2",
+        "ConquerIsland:p0:gold-mainland-3",
+        "ConquerIsland:p0:gold-mainland-4",
+        "ConquerIsland:p0:gold-mainland-5",
+        "ConquerIsland:p0:gold-satellite-0",
+        "ConquerIsland:p0:gold-satellite-1",
+        "ConquerIsland:p0:gold-satellite-2",
+        "ConquerIsland:p0:gold-satellite-3",
+        "ConquerIsland:p0:gold-satellite-4",
+        "ConquerIsland:p0:gold-satellite-5",
+        "ExpandLand:p0:gold-mainland-0",
+        "ExpandLand:p0:gold-mainland-2",
+        "ExpandLand:p0:gold-mainland-3",
+        "ExpandLand:p0:gold-mainland-4",
+        "ReinforceFront:p0:land:6"
+      ],
+      "gzipSha256": "3036904c50035c18d36f60da3c5b40d4b00b1cc46aa23c41b37cae2bdd9aa650",
+      "plainSha256": "c353fbf2ec267c0283e8056c1c8b3b570b9c5030d0230ceb97e517b834adc5d3",
+      "snapshotSha256": "5197b20c1f2a8e8864de48d32e38406d9975a4d0b33bc2d0fc6f28b107d4eecd",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p0/rank-3-tick-3705/fact-requests.original-row.jsonl",
+          "sha256": "32b77c5b2eb18462ff7d3698c9bc454d4fe8e49ecbbbdfce1acb0e22e0f33f1c"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p0/rank-3-tick-3705/memory-before.original-row.jsonl",
+          "sha256": "d589d075867467464721cfe383c6e5a138d97381273cef7699e07b2cd7d83e82"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p0/rank-3-tick-3705/traces.original-row.jsonl",
+          "sha256": "42b1becba0cd4d3a8559828745b7503dfd28fb514b5d244e5412617c53b9e0fb"
+        }
+      ]
+    },
+    {
+      "file": "9-sapphireArchipelago-p1-4457.json.gz",
+      "index": 9,
+      "map": "sapphireArchipelago",
+      "owner": "p1",
+      "tick": 4457,
+      "version": "v9_archer",
+      "goalCount": 16,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townhall",
+        "AttackSite:p1:building-p2-townhall",
+        "AttackSite:p1:building-p4-townhall",
+        "ConquerIsland:p1:gold-mainland-0",
+        "ConquerIsland:p1:gold-mainland-1",
+        "ConquerIsland:p1:gold-mainland-2",
+        "ConquerIsland:p1:gold-mainland-3",
+        "ConquerIsland:p1:gold-mainland-4",
+        "ConquerIsland:p1:gold-mainland-5",
+        "ConquerIsland:p1:gold-satellite-0",
+        "ConquerIsland:p1:gold-satellite-1",
+        "ConquerIsland:p1:gold-satellite-2",
+        "ConquerIsland:p1:gold-satellite-3",
+        "ConquerIsland:p1:gold-satellite-4",
+        "ConquerIsland:p1:gold-satellite-5",
+        "ExpandLand:p1:gold-satellite-0"
+      ],
+      "gzipSha256": "5b5c41174182e7542c54e6f14f81792966b08101e5a9bf028f715087f02c67c0",
+      "plainSha256": "0fabfe3cdbe4caec2e423d8700397b7e5b16aacb3ddada62c123fe8d9e162ff6",
+      "snapshotSha256": "8c1a62592217ced416f770e8d7a4896e383639afa240b383d4450376a12b9259",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p1/rank-1-tick-4457/fact-requests.original-row.jsonl",
+          "sha256": "df333e107b379c46780de6a1f4b19d4a13bf581c0c1f6f3b03a754e29370d759"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p1/rank-1-tick-4457/memory-before.original-row.jsonl",
+          "sha256": "f85934bdcd56d297c9a1bb0181d6a2feaff9502028916854bdff9f06d2ec9e54"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p1/rank-1-tick-4457/traces.original-row.jsonl",
+          "sha256": "bac95a6e5288577b996672caabd3692d78d160ab8b752a0c03b3a969027acdbb"
+        }
+      ]
+    },
+    {
+      "file": "10-sapphireArchipelago-p1-2.json.gz",
+      "index": 10,
+      "map": "sapphireArchipelago",
+      "owner": "p1",
+      "tick": 2,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townhall",
+        "AttackSite:p1:building-p2-townhall",
+        "AttackSite:p1:building-p4-townhall",
+        "ConquerIsland:p1:gold-mainland-0",
+        "ConquerIsland:p1:gold-mainland-1",
+        "ConquerIsland:p1:gold-mainland-2",
+        "ConquerIsland:p1:gold-mainland-3",
+        "ConquerIsland:p1:gold-mainland-4",
+        "ConquerIsland:p1:gold-mainland-5",
+        "ConquerIsland:p1:gold-satellite-0",
+        "ConquerIsland:p1:gold-satellite-1",
+        "ConquerIsland:p1:gold-satellite-2",
+        "ConquerIsland:p1:gold-satellite-3",
+        "ConquerIsland:p1:gold-satellite-4",
+        "ConquerIsland:p1:gold-satellite-5"
+      ],
+      "gzipSha256": "cc7c020db8c846eba602730d91f0d90d506657386b5da53ba67dd465ee66b922",
+      "plainSha256": "7b2b8d460edd41d26a509e47ead6567a8361b2d4fb067501eb92aa677b94bc00",
+      "snapshotSha256": "71e880536db93f563a13cd2dc1094a4c0a97e28852f465cb93ca0c1ac75adf81",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p1/rank-2-tick-2/fact-requests.original-row.jsonl",
+          "sha256": "140aab621ee1581caa4a74c2618e4301748e20a047ab97b77aba20db60073512"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p1/rank-2-tick-2/memory-before.original-row.jsonl",
+          "sha256": "ac57baa924ca11bd599bffa25b4007b9a6a6cd5d4a802a35bc2dc04cfc52c17a"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p1/rank-2-tick-2/traces.original-row.jsonl",
+          "sha256": "c69f908a7a1f450d0af9fcb495e8cbd439bf34ec34986d47ef4d1b4f706ffbc8"
+        }
+      ]
+    },
+    {
+      "file": "11-sapphireArchipelago-p1-17.json.gz",
+      "index": 11,
+      "map": "sapphireArchipelago",
+      "owner": "p1",
+      "tick": 17,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p1:building-p0-townhall",
+        "AttackSite:p1:building-p2-townhall",
+        "AttackSite:p1:building-p4-townhall",
+        "ConquerIsland:p1:gold-mainland-0",
+        "ConquerIsland:p1:gold-mainland-1",
+        "ConquerIsland:p1:gold-mainland-2",
+        "ConquerIsland:p1:gold-mainland-3",
+        "ConquerIsland:p1:gold-mainland-4",
+        "ConquerIsland:p1:gold-mainland-5",
+        "ConquerIsland:p1:gold-satellite-0",
+        "ConquerIsland:p1:gold-satellite-1",
+        "ConquerIsland:p1:gold-satellite-2",
+        "ConquerIsland:p1:gold-satellite-3",
+        "ConquerIsland:p1:gold-satellite-4",
+        "ConquerIsland:p1:gold-satellite-5"
+      ],
+      "gzipSha256": "e7e375e34b3fd3fd1ed7e38be9fc6cebee7acf33c734e55bd59e00973eb6b6fd",
+      "plainSha256": "c51299850768dc962913e4d0c2a7aa736b9e0860aabd60430e5365dfd436905e",
+      "snapshotSha256": "f0cc87e8647a577204c720fdcaf79933a9ff138e4f94569cfc4707f04d421df2",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p1/rank-3-tick-17/fact-requests.original-row.jsonl",
+          "sha256": "0432751da29a8c1f77cd58196778021a6ca5cff57a1ffa08664988c57b96aedb"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p1/rank-3-tick-17/memory-before.original-row.jsonl",
+          "sha256": "158a391c72d00d28c1da3903007715549b0fb09ed4b3cd96007ea9168c8f9392"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p1/rank-3-tick-17/traces.original-row.jsonl",
+          "sha256": "a49017e9c9e5be583c94e143eb68d2ae78d0f8776e1265c5bdce0d2d5aea3a73"
+        }
+      ]
+    },
+    {
+      "file": "12-sapphireArchipelago-p2-5.json.gz",
+      "index": 12,
+      "map": "sapphireArchipelago",
+      "owner": "p2",
+      "tick": 5,
+      "version": "v9_summoner",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p2:building-p1-townhall",
+        "AttackSite:p2:building-p3-townhall",
+        "AttackSite:p2:building-p5-townhall",
+        "ConquerIsland:p2:gold-mainland-0",
+        "ConquerIsland:p2:gold-mainland-1",
+        "ConquerIsland:p2:gold-mainland-2",
+        "ConquerIsland:p2:gold-mainland-3",
+        "ConquerIsland:p2:gold-mainland-4",
+        "ConquerIsland:p2:gold-mainland-5",
+        "ConquerIsland:p2:gold-satellite-0",
+        "ConquerIsland:p2:gold-satellite-1",
+        "ConquerIsland:p2:gold-satellite-2",
+        "ConquerIsland:p2:gold-satellite-3",
+        "ConquerIsland:p2:gold-satellite-4",
+        "ConquerIsland:p2:gold-satellite-5"
+      ],
+      "gzipSha256": "f2c825ef7b14461d88b4bbe1280c3ab22b0e2836b73f2082278fc24583d3af2c",
+      "plainSha256": "c68c60ed7772916007acba5736eac6bf96425fb22146254a3cf80193da185dd1",
+      "snapshotSha256": "f7620c121a4b3739c5dd59ad09d73922aa39f3be8fbf5c436b27c5edf07911b4",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p2/rank-1-tick-5/fact-requests.original-row.jsonl",
+          "sha256": "8ed115d88b25b04f608b3c74992a62e62ba9479b7c7403ad21f7ee326fe0288f"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p2/rank-1-tick-5/memory-before.original-row.jsonl",
+          "sha256": "98e2dbe3a5254d5ae5d32a3ad8ea124a0aa2e98a01c6805a2f1183f9ba466602"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p2/rank-1-tick-5/traces.original-row.jsonl",
+          "sha256": "18614cb9e573e832af32c4d9576ad591049ac643fd043cd454be79ac580aad42"
+        }
+      ]
+    },
+    {
+      "file": "13-sapphireArchipelago-p2-20.json.gz",
+      "index": 13,
+      "map": "sapphireArchipelago",
+      "owner": "p2",
+      "tick": 20,
+      "version": "v9_summoner",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p2:building-p1-townhall",
+        "AttackSite:p2:building-p3-townhall",
+        "AttackSite:p2:building-p5-townhall",
+        "ConquerIsland:p2:gold-mainland-0",
+        "ConquerIsland:p2:gold-mainland-1",
+        "ConquerIsland:p2:gold-mainland-2",
+        "ConquerIsland:p2:gold-mainland-3",
+        "ConquerIsland:p2:gold-mainland-4",
+        "ConquerIsland:p2:gold-mainland-5",
+        "ConquerIsland:p2:gold-satellite-0",
+        "ConquerIsland:p2:gold-satellite-1",
+        "ConquerIsland:p2:gold-satellite-2",
+        "ConquerIsland:p2:gold-satellite-3",
+        "ConquerIsland:p2:gold-satellite-4",
+        "ConquerIsland:p2:gold-satellite-5"
+      ],
+      "gzipSha256": "59fe7b910a6878826a1f440698590392af4065639a15c4c0e975ebb4bd4e74eb",
+      "plainSha256": "9368839bea4790bc08a9ed458cacd7842ef5ea4dab68bfab0299a93de8b7fcac",
+      "snapshotSha256": "6bb63672997e25647a1d9faaaadaf875271edc5e89a8992d4e8be5fde0effd66",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p2/rank-2-tick-20/fact-requests.original-row.jsonl",
+          "sha256": "aadfdccc63857d6f5f70b913e44963a09f54f31fbc9543833fd84f15e2f68bcc"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p2/rank-2-tick-20/memory-before.original-row.jsonl",
+          "sha256": "399a8ae88b71cf1c892e566cef07fa051b3be9124913b8436dc65921d96116f6"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p2/rank-2-tick-20/traces.original-row.jsonl",
+          "sha256": "901dbdf2bd3e8bfefcbc19715493f7e41c5e01fac12cec97f2a16a7387636cc5"
+        }
+      ]
+    },
+    {
+      "file": "14-sapphireArchipelago-p2-35.json.gz",
+      "index": 14,
+      "map": "sapphireArchipelago",
+      "owner": "p2",
+      "tick": 35,
+      "version": "v9_summoner",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p2:building-p1-townhall",
+        "AttackSite:p2:building-p3-townhall",
+        "AttackSite:p2:building-p5-townhall",
+        "ConquerIsland:p2:gold-mainland-0",
+        "ConquerIsland:p2:gold-mainland-1",
+        "ConquerIsland:p2:gold-mainland-2",
+        "ConquerIsland:p2:gold-mainland-3",
+        "ConquerIsland:p2:gold-mainland-4",
+        "ConquerIsland:p2:gold-mainland-5",
+        "ConquerIsland:p2:gold-satellite-0",
+        "ConquerIsland:p2:gold-satellite-1",
+        "ConquerIsland:p2:gold-satellite-2",
+        "ConquerIsland:p2:gold-satellite-3",
+        "ConquerIsland:p2:gold-satellite-4",
+        "ConquerIsland:p2:gold-satellite-5"
+      ],
+      "gzipSha256": "dd1604d147564298a06fa91f383fb66ce8d4cea93a88d3ca29d44a2fa0cf7903",
+      "plainSha256": "1b327359c117a65edc2d033828727bccd8692356d6fa9d3ad5893d024a9f7a82",
+      "snapshotSha256": "73073254315978bc96049438d888838908598a24c2aea88c81b13698c811ca60",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p2/rank-3-tick-35/fact-requests.original-row.jsonl",
+          "sha256": "13ad7d1e32d5e0aa0b97c99a207e2cd7688c388c3d69b5ee66f5be6e8b9d22b1"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p2/rank-3-tick-35/memory-before.original-row.jsonl",
+          "sha256": "77c9bc20d63670d66f2cd60316fb96400dd4e6f49993aca42e0c1ab6c9da2530"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p2/rank-3-tick-35/traces.original-row.jsonl",
+          "sha256": "e2a68ecbd854a4e70b90d3bee3c219e08130fabd4039a5a48042d8c4e475dcfc"
+        }
+      ]
+    },
+    {
+      "file": "15-sapphireArchipelago-p3-7.json.gz",
+      "index": 15,
+      "map": "sapphireArchipelago",
+      "owner": "p3",
+      "tick": 7,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p3:building-p0-townhall",
+        "AttackSite:p3:building-p2-townhall",
+        "AttackSite:p3:building-p4-townhall",
+        "ConquerIsland:p3:gold-mainland-0",
+        "ConquerIsland:p3:gold-mainland-1",
+        "ConquerIsland:p3:gold-mainland-2",
+        "ConquerIsland:p3:gold-mainland-3",
+        "ConquerIsland:p3:gold-mainland-4",
+        "ConquerIsland:p3:gold-mainland-5",
+        "ConquerIsland:p3:gold-satellite-0",
+        "ConquerIsland:p3:gold-satellite-1",
+        "ConquerIsland:p3:gold-satellite-2",
+        "ConquerIsland:p3:gold-satellite-3",
+        "ConquerIsland:p3:gold-satellite-4",
+        "ConquerIsland:p3:gold-satellite-5"
+      ],
+      "gzipSha256": "b2754c9db7b512f60c45f34246cd6f5c83987c527eab3f6992009234da029de8",
+      "plainSha256": "4434bdedc84de051f56a697cdc83e1100f944bceebd24700db6dcfd078a1ceae",
+      "snapshotSha256": "a3b043980da22ee44ad8d9b09a835cf1f727020b34ab746da741ccebed2e8dad",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p3/rank-1-tick-7/fact-requests.original-row.jsonl",
+          "sha256": "5b1f4e1faa771c00af3b5a51812bef08ab739dce663ad3e3a1bbbbdc137d8333"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p3/rank-1-tick-7/memory-before.original-row.jsonl",
+          "sha256": "a6f281cca73b9c4ee9fa0cbf6f9c1f22b634186c83a0d4d7af54e1f5e96f5e35"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p3/rank-1-tick-7/traces.original-row.jsonl",
+          "sha256": "f8ce1a1781ec683bb6a496c48cacff4995244b2e432a6fa5b10a1458ea86485f"
+        }
+      ]
+    },
+    {
+      "file": "16-sapphireArchipelago-p3-22.json.gz",
+      "index": 16,
+      "map": "sapphireArchipelago",
+      "owner": "p3",
+      "tick": 22,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p3:building-p0-townhall",
+        "AttackSite:p3:building-p2-townhall",
+        "AttackSite:p3:building-p4-townhall",
+        "ConquerIsland:p3:gold-mainland-0",
+        "ConquerIsland:p3:gold-mainland-1",
+        "ConquerIsland:p3:gold-mainland-2",
+        "ConquerIsland:p3:gold-mainland-3",
+        "ConquerIsland:p3:gold-mainland-4",
+        "ConquerIsland:p3:gold-mainland-5",
+        "ConquerIsland:p3:gold-satellite-0",
+        "ConquerIsland:p3:gold-satellite-1",
+        "ConquerIsland:p3:gold-satellite-2",
+        "ConquerIsland:p3:gold-satellite-3",
+        "ConquerIsland:p3:gold-satellite-4",
+        "ConquerIsland:p3:gold-satellite-5"
+      ],
+      "gzipSha256": "1cef19e7d076214165f69479c9444b30e930d72448fdb79e0cde8979c3053987",
+      "plainSha256": "43e5708ac552af60e9a5d988b7d2295a66a38e9ff2f12516f487c54183ea004b",
+      "snapshotSha256": "4df7d030dcb2d4123e3cd3239f9209cca68a950a2c8a5639faa89cca39de022a",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p3/rank-2-tick-22/fact-requests.original-row.jsonl",
+          "sha256": "3565dcfe46f1ff418e2907ae0b6d8471f7df3857de5b9904f642d45e5f6fb026"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p3/rank-2-tick-22/memory-before.original-row.jsonl",
+          "sha256": "667a6998ff2ef207911c18d780654beadf12cdbf86bddbc6dd22d84a5417c4dd"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p3/rank-2-tick-22/traces.original-row.jsonl",
+          "sha256": "165273b11a9c2577250ec380ece1a68869d0d5e148176d7c2afddee5f8a49fe0"
+        }
+      ]
+    },
+    {
+      "file": "17-sapphireArchipelago-p3-37.json.gz",
+      "index": 17,
+      "map": "sapphireArchipelago",
+      "owner": "p3",
+      "tick": 37,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p3:building-p0-townhall",
+        "AttackSite:p3:building-p2-townhall",
+        "AttackSite:p3:building-p4-townhall",
+        "ConquerIsland:p3:gold-mainland-0",
+        "ConquerIsland:p3:gold-mainland-1",
+        "ConquerIsland:p3:gold-mainland-2",
+        "ConquerIsland:p3:gold-mainland-3",
+        "ConquerIsland:p3:gold-mainland-4",
+        "ConquerIsland:p3:gold-mainland-5",
+        "ConquerIsland:p3:gold-satellite-0",
+        "ConquerIsland:p3:gold-satellite-1",
+        "ConquerIsland:p3:gold-satellite-2",
+        "ConquerIsland:p3:gold-satellite-3",
+        "ConquerIsland:p3:gold-satellite-4",
+        "ConquerIsland:p3:gold-satellite-5"
+      ],
+      "gzipSha256": "d0e555115a38de776f3b962253baca7cf2593ab984d6e5829390ff8033ec53d8",
+      "plainSha256": "8e1eefa6fd56b7038000bbd6fb186c4bbafd4603ca5d37d0da4e6cfb34638111",
+      "snapshotSha256": "a3c6dc63745446953cb25248e29aabcf72e43ea258433b68e30470f92219efee",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p3/rank-3-tick-37/fact-requests.original-row.jsonl",
+          "sha256": "7b8d5b22170339063e01da97bb383b7edc4e5f72b172ab9dffedf06327f4ad1e"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p3/rank-3-tick-37/memory-before.original-row.jsonl",
+          "sha256": "b675306d196710d0d3873a182acf2aade3b44d49da5bd4c3d8d4ae5653810fce"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p3/rank-3-tick-37/traces.original-row.jsonl",
+          "sha256": "a9c00888715092277c90023eaeb9a733c98d99ecebbf44db529aada386595e2a"
+        }
+      ]
+    },
+    {
+      "file": "18-sapphireArchipelago-p4-4195.json.gz",
+      "index": 18,
+      "map": "sapphireArchipelago",
+      "owner": "p4",
+      "tick": 4195,
+      "version": "v9_archer",
+      "goalCount": 16,
+      "goalIds": [
+        "AttackSite:p4:building-p1-townhall",
+        "AttackSite:p4:building-p3-townhall",
+        "AttackSite:p4:building-p5-townhall",
+        "ConquerIsland:p4:gold-mainland-0",
+        "ConquerIsland:p4:gold-mainland-1",
+        "ConquerIsland:p4:gold-mainland-2",
+        "ConquerIsland:p4:gold-mainland-3",
+        "ConquerIsland:p4:gold-mainland-4",
+        "ConquerIsland:p4:gold-mainland-5",
+        "ConquerIsland:p4:gold-satellite-0",
+        "ConquerIsland:p4:gold-satellite-1",
+        "ConquerIsland:p4:gold-satellite-2",
+        "ConquerIsland:p4:gold-satellite-3",
+        "ConquerIsland:p4:gold-satellite-4",
+        "ConquerIsland:p4:gold-satellite-5",
+        "ExpandLand:p4:gold-satellite-3"
+      ],
+      "gzipSha256": "aa898ae256dab1ff6e36145e92f40a9a378cd151a3f742f4c311fc7678860e75",
+      "plainSha256": "b48785ba20dc73221bebb635919fa9b164385c0e2f1f0c705828bce703a89907",
+      "snapshotSha256": "8f846d6e0154b41fff1bda0b64e0a187281a9bf7f456a7710edc663b05f3612c",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p4/rank-1-tick-4195/fact-requests.original-row.jsonl",
+          "sha256": "0b056c8fbe7d3ff89ba9bf8d4d50687b58cfa733530e4c699039459f0e6cd67f"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p4/rank-1-tick-4195/memory-before.original-row.jsonl",
+          "sha256": "f314522d6333647a468f9328d0f6b70fc7286c12feacc13692e05747f59d5ed8"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p4/rank-1-tick-4195/traces.original-row.jsonl",
+          "sha256": "623d7ac64dadd7cb82ee1c0f5c97acb0684d052e8af3336e36ac1f266e59d3f2"
+        }
+      ]
+    },
+    {
+      "file": "19-sapphireArchipelago-p4-10.json.gz",
+      "index": 19,
+      "map": "sapphireArchipelago",
+      "owner": "p4",
+      "tick": 10,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p4:building-p1-townhall",
+        "AttackSite:p4:building-p3-townhall",
+        "AttackSite:p4:building-p5-townhall",
+        "ConquerIsland:p4:gold-mainland-0",
+        "ConquerIsland:p4:gold-mainland-1",
+        "ConquerIsland:p4:gold-mainland-2",
+        "ConquerIsland:p4:gold-mainland-3",
+        "ConquerIsland:p4:gold-mainland-4",
+        "ConquerIsland:p4:gold-mainland-5",
+        "ConquerIsland:p4:gold-satellite-0",
+        "ConquerIsland:p4:gold-satellite-1",
+        "ConquerIsland:p4:gold-satellite-2",
+        "ConquerIsland:p4:gold-satellite-3",
+        "ConquerIsland:p4:gold-satellite-4",
+        "ConquerIsland:p4:gold-satellite-5"
+      ],
+      "gzipSha256": "25b1d0c29b4832b3406801e41699292c8de245524c5c75082b930e7c028c99d6",
+      "plainSha256": "96529697293a5def5b3b99e45adcc3edd4c2353dcfacdf4dfe2ae7b95b6038e4",
+      "snapshotSha256": "3fc4c94a5c4aaefa30a1055de3801a68706338731b22843af9758d0235e86f92",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p4/rank-2-tick-10/fact-requests.original-row.jsonl",
+          "sha256": "7df5e5b658662ec571ac662e6cdd92a92c1606aeab04cd5ca31baea566e522a4"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p4/rank-2-tick-10/memory-before.original-row.jsonl",
+          "sha256": "2b41ac135db6f9bb5f65b0ae0dd93c9e005fe22ef89111a4ef1fdde5c9f82e3b"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p4/rank-2-tick-10/traces.original-row.jsonl",
+          "sha256": "7a0dd18797b0ada2111a3296ab17f5dcb0e2fc6064040fa2596e2e801dac7790"
+        }
+      ]
+    },
+    {
+      "file": "20-sapphireArchipelago-p4-25.json.gz",
+      "index": 20,
+      "map": "sapphireArchipelago",
+      "owner": "p4",
+      "tick": 25,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p4:building-p1-townhall",
+        "AttackSite:p4:building-p3-townhall",
+        "AttackSite:p4:building-p5-townhall",
+        "ConquerIsland:p4:gold-mainland-0",
+        "ConquerIsland:p4:gold-mainland-1",
+        "ConquerIsland:p4:gold-mainland-2",
+        "ConquerIsland:p4:gold-mainland-3",
+        "ConquerIsland:p4:gold-mainland-4",
+        "ConquerIsland:p4:gold-mainland-5",
+        "ConquerIsland:p4:gold-satellite-0",
+        "ConquerIsland:p4:gold-satellite-1",
+        "ConquerIsland:p4:gold-satellite-2",
+        "ConquerIsland:p4:gold-satellite-3",
+        "ConquerIsland:p4:gold-satellite-4",
+        "ConquerIsland:p4:gold-satellite-5"
+      ],
+      "gzipSha256": "6a28101374cbd584a29aa98be4be706b6d8721e1698ddffc5ec2bf175e5a56af",
+      "plainSha256": "9d8d201638aa9cfbcba033ebcbe490559f00371dedcd72553c59ef3dc7615f96",
+      "snapshotSha256": "b0b280000298049f51753978821cd5327618a685d507dfe697b168b9a6474ae2",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p4/rank-3-tick-25/fact-requests.original-row.jsonl",
+          "sha256": "c0b62dddf7e70d32502b1146b70f2a30174c536a2eaa7acf8257a5c6ba09d647"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p4/rank-3-tick-25/memory-before.original-row.jsonl",
+          "sha256": "a22576e0c460e3598c8d200fadb10c3522f15fd43f7a622ad9009e8834bd3b5c"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p4/rank-3-tick-25/traces.original-row.jsonl",
+          "sha256": "e8552030b74f98267da1aa2e42a1095a5fd7a0c4bd64506f2034058f18b033b5"
+        }
+      ]
+    },
+    {
+      "file": "21-sapphireArchipelago-p5-3042.json.gz",
+      "index": 21,
+      "map": "sapphireArchipelago",
+      "owner": "p5",
+      "tick": 3042,
+      "version": "v9_archer",
+      "goalCount": 16,
+      "goalIds": [
+        "AttackSite:p5:building-p0-townhall",
+        "AttackSite:p5:building-p2-townhall",
+        "AttackSite:p5:building-p4-townhall",
+        "ConquerIsland:p5:gold-mainland-0",
+        "ConquerIsland:p5:gold-mainland-1",
+        "ConquerIsland:p5:gold-mainland-2",
+        "ConquerIsland:p5:gold-mainland-3",
+        "ConquerIsland:p5:gold-mainland-4",
+        "ConquerIsland:p5:gold-mainland-5",
+        "ConquerIsland:p5:gold-satellite-0",
+        "ConquerIsland:p5:gold-satellite-1",
+        "ConquerIsland:p5:gold-satellite-2",
+        "ConquerIsland:p5:gold-satellite-3",
+        "ConquerIsland:p5:gold-satellite-4",
+        "ConquerIsland:p5:gold-satellite-5",
+        "ExpandLand:p5:gold-satellite-4"
+      ],
+      "gzipSha256": "58749285c5a5d0f1efe73c4b9f8355176be02c9afb484b8970f76a9620bb680e",
+      "plainSha256": "7b0d612ddd6fd12f5484ae77ee65a7b39892eb74695fa1ef2d0872ee97adb584",
+      "snapshotSha256": "61c5728f46a7bdb1987cc92fb0459e61dd0442aa5ef99110df1097690de5bf67",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p5/rank-1-tick-3042/fact-requests.original-row.jsonl",
+          "sha256": "346e42ef5461d554e293691d4bdc45d565b8006b0132e6593b3fc288900f41e5"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p5/rank-1-tick-3042/memory-before.original-row.jsonl",
+          "sha256": "5d123d95d48d1466bcf300eb7033ba0afff5a26fd7f84cba183d63d922ec2f97"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p5/rank-1-tick-3042/traces.original-row.jsonl",
+          "sha256": "eb05e3fb4e5c2b70f25de0eee9253aae7580dcc99f7a3a3497df41764deb791c"
+        }
+      ]
+    },
+    {
+      "file": "22-sapphireArchipelago-p5-12.json.gz",
+      "index": 22,
+      "map": "sapphireArchipelago",
+      "owner": "p5",
+      "tick": 12,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p5:building-p0-townhall",
+        "AttackSite:p5:building-p2-townhall",
+        "AttackSite:p5:building-p4-townhall",
+        "ConquerIsland:p5:gold-mainland-0",
+        "ConquerIsland:p5:gold-mainland-1",
+        "ConquerIsland:p5:gold-mainland-2",
+        "ConquerIsland:p5:gold-mainland-3",
+        "ConquerIsland:p5:gold-mainland-4",
+        "ConquerIsland:p5:gold-mainland-5",
+        "ConquerIsland:p5:gold-satellite-0",
+        "ConquerIsland:p5:gold-satellite-1",
+        "ConquerIsland:p5:gold-satellite-2",
+        "ConquerIsland:p5:gold-satellite-3",
+        "ConquerIsland:p5:gold-satellite-4",
+        "ConquerIsland:p5:gold-satellite-5"
+      ],
+      "gzipSha256": "18bde75b48ccde5b99052a5ffb41ba00686d41a7da45a0d3d1668e1065f81f70",
+      "plainSha256": "a93d22c1bc77557cc0509cbe49cada03429982a4136c1a60bf839b4100a6f71f",
+      "snapshotSha256": "4adf19ecc2d501490f0a5ad99faf1b311fa30c317190d0b64bbcd3b2749e7d1b",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p5/rank-2-tick-12/fact-requests.original-row.jsonl",
+          "sha256": "90915a9dc3e6d45f3025d030e477d51dc73e85a423494d88a2db5eb4d3374709"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p5/rank-2-tick-12/memory-before.original-row.jsonl",
+          "sha256": "2579051686daf4a3d3dae6c2a193a3167f3af8354cd85f3294dd1510b6509183"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p5/rank-2-tick-12/traces.original-row.jsonl",
+          "sha256": "378b2419640e6adc7b4ac24e34abd9ddbc9d06d35bb990745284d1ccd9a00b4b"
+        }
+      ]
+    },
+    {
+      "file": "23-sapphireArchipelago-p5-27.json.gz",
+      "index": 23,
+      "map": "sapphireArchipelago",
+      "owner": "p5",
+      "tick": 27,
+      "version": "v9_archer",
+      "goalCount": 15,
+      "goalIds": [
+        "AttackSite:p5:building-p0-townhall",
+        "AttackSite:p5:building-p2-townhall",
+        "AttackSite:p5:building-p4-townhall",
+        "ConquerIsland:p5:gold-mainland-0",
+        "ConquerIsland:p5:gold-mainland-1",
+        "ConquerIsland:p5:gold-mainland-2",
+        "ConquerIsland:p5:gold-mainland-3",
+        "ConquerIsland:p5:gold-mainland-4",
+        "ConquerIsland:p5:gold-mainland-5",
+        "ConquerIsland:p5:gold-satellite-0",
+        "ConquerIsland:p5:gold-satellite-1",
+        "ConquerIsland:p5:gold-satellite-2",
+        "ConquerIsland:p5:gold-satellite-3",
+        "ConquerIsland:p5:gold-satellite-4",
+        "ConquerIsland:p5:gold-satellite-5"
+      ],
+      "gzipSha256": "a133618d64899af45d3b63465d35a5b7aec5f67f6b816084eb2546c287993be8",
+      "plainSha256": "e5ff82331fd14517b7008ec643b2cdd20f870601dc73ccfa1ba945244ecb54ce",
+      "snapshotSha256": "5c2c9166346cf885b3a2d7606a37463a0ad1c3269b5c63364f526c5a665e8625",
+      "originalRows": [
+        {
+          "stream": "fact-requests",
+          "file": "sapphireArchipelago/p5/rank-3-tick-27/fact-requests.original-row.jsonl",
+          "sha256": "f945deab8afc4f73bbfb07ba518d2968583959f67e1ea3349989afc98f25c689"
+        },
+        {
+          "stream": "memory-before",
+          "file": "sapphireArchipelago/p5/rank-3-tick-27/memory-before.original-row.jsonl",
+          "sha256": "b014246faab7601f7ac21579eea06ed7c86f867f04422cebb1eea7566ad1066a"
+        },
+        {
+          "stream": "traces",
+          "file": "sapphireArchipelago/p5/rank-3-tick-27/traces.original-row.jsonl",
+          "sha256": "532b413ebff274c5fffc3f97a4b161f1b2884b5e56102c71dfab7f64bd352b97"
+        }
+      ]
+    }
+  ]
+}

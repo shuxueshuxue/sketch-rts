@@ -1,4 +1,4 @@
-import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
+import { goalFact, goalResourceKey, goalValueKey, semanticGoalPredicate } from './goal-facts';
 import { replaceGoalActionFacts } from './goal-action-facts';
 import type { GoalActionDeclaration, GoalEntityReference, GoalFact, GoalFactPredicate, GoalResource } from './goal-planner-types';
 
@@ -27,7 +27,9 @@ export function bindGoalAction(action: GoalActionDeclaration, bindings: GoalBind
   const result = bindGoalValue(action, bindings);
   const facts = new Map([...result.preconditions, ...result.effects.map(effect => effect.fact)]
     .map(fact => [fact.id, goalFact(fact.predicate)] as const).filter(([id, fact]) => id !== fact.id));
-  return replaceGoalActionFacts(result, facts);
+  const bound = replaceGoalActionFacts(result, facts);
+  return action.regeneration && Object.keys(bindings).length ? { ...bound, regeneration: {
+    ...action.regeneration, bindings: { ...action.regeneration.bindings, ...bindings } } } : bound;
 }
 
 /** Structural entailment, with numeric/deadline relations handled explicitly.
@@ -50,7 +52,7 @@ export function matchGoalFacts(produced: GoalFact, required: GoalFact, input: Go
   };
   // Canonical pool predicates ignore same-region point aliases. Exact post
   // predicates retain their actual point, cohort and physical metric.
-  const semantic = (fact: GoalFact) => JSON.parse(goalFact(fact.predicate).id.slice(5)) as GoalFactPredicate;
+  const semantic = (fact: GoalFact) => semanticGoalPredicate(fact.predicate);
   return compare(semantic(produced), semantic(required)) ? bindings : null;
 }
 

@@ -1,11 +1,25 @@
 import { boundCache, touchCache, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { discoverGoalActions } from './goal-provider-candidates';
 import { goalFact, goalValueKey } from './goal-facts';
-import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningContext } from './goal-planner-types';
+import type { GoalActionDeclaration, GoalActionProvider, GoalFact, GoalPlan, GoalPlanningContext } from './goal-planner-types';
+import { compareConfirmedGoalChoices } from './goal-quote-comparison';
 
 type Entry = CacheUse & { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
   exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number]; preferredExactIndex?: number };
-export type GoalRefinementMemory = { revision: number; entries: Entry[]; capacities?: Record<string, CacheCapacity> };
+export type GoalRefinementDenial = CacheUse & { planId: string; declaration: GoalActionDeclaration; sourceRevision?: string;
+  proofRecipe?: GoalActionDeclaration;
+  dependencies: readonly { fact: GoalFact; revision: string; state: string }[];
+  rewardGold: number; value: { durationTicks: number; costs: readonly import('./goal-planner-types').GoalActionCost[]; probability: number } };
+export type GoalRefinementMemory = { revision: number; entries: Entry[]; capacities?: Record<string, CacheCapacity>;
+  denials?: GoalRefinementDenial[]; denialCapacity?: CacheCapacity };
+
+/** A discarded proof leaves its exact price, never an executable declaration.
+ * This temporary view is used only to compare a regenerated challenger. */
+export function goalDeniedComparison(denial: GoalRefinementDenial): GoalActionDeclaration {
+  return { ...denial.declaration, precision: 'exact', duration: { state: 'met', value: denial.value.durationTicks, factIds: [] },
+    cost: { state: 'met', value: denial.value.costs, factIds: [] },
+    successProbability: { state: 'met', value: denial.value.probability, factIds: [] } };
+}
 export type GoalExactPreparation = Readonly<{ plan: GoalPlan; deferActionIds: readonly string[]; changed: boolean }>;
 /** Optional transient diagnostic. Never retained in owner memory or authority. */
 export type GoalRefinementChange = Readonly<{ revision: number; planId: string; actionId: string;
@@ -20,14 +34,15 @@ export type GoalRefinementChange = Readonly<{ revision: number; planId: string; 
 const semantic = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(semantic);
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value)
-      .filter(([key]) => !['id', 'byTick', 'throughTick', 'factIds', 'reasons', 'precision', 'refinementFor'].includes(key))
+      .filter(([key]) => !['id', 'predicateRef', 'byTick', 'throughTick', 'factIds', 'reasons', 'precision', 'refinementFor', 'regeneration'].includes(key))
       .map(([key, item]) => [key, semantic(item)]));
     return value;
   };
 const choiceFamily = (action: GoalActionDeclaration) => goalValueKey([action.kind,
   action.refinementFor?.providerId, semantic(action.refinementFor?.effect.predicate)]);
 function proposalKey(action: GoalActionDeclaration): string {
-  return goalValueKey(semantic({ kind: action.kind, preconditions: action.preconditions, effects: action.effects,
+  return goalValueKey(semantic({ kind: action.kind, preconditions: action.preconditions.map(fact => semantic(fact))
+    .sort((a, b) => goalValueKey(a).localeCompare(goalValueKey(b))), effects: action.effects,
     preconditionWindows: action.preconditionWindows?.map(window => ({ through: window.through,
       predicate: action.preconditions.find(fact => fact.id === window.factId)?.predicate })),
     executor: action.executor, demands: action.demands, flows: action.flows,
@@ -263,10 +278,39 @@ export function applyGoalRefinements(provider: GoalActionProvider, memory: GoalR
   return { id: provider.id, actionsFor(effect, context) {
     const coarse = provider.actionsFor(effect, context);
     return coarse.flatMap(action => {
-      const entry = memory.entries.find(entry => proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision?.(action));
-      const owns = (candidate: Entry) => candidate.planId === undefined || !currentPlans || currentPlans().includes(candidate.planId);
+      const entry = memory.entries.find(entry => (entry.coarse.id === action.id || proposalKey(entry.coarse) === proposalKey(action))
+        && entry.sourceRevision === sourceRevision?.(action));
+      // The provider has just regenerated this coarse proposal. A cached
+      // recipe can have expired prerequisites without changing the physical
+      // proposal or its independently retained exact proof. Compare using the
+      // current proposal, not an expired recipe's non-executable placeholder.
+      if (entry && context.declarationContext && context.declarationSourceRevision) entry.coarse = { ...action,
+        refinementFor: { providerId: provider.id, effect }, regeneration: { providerId: provider.id, effect,
+          groundingKey: action.id, context: context.declarationContext,
+          sourceRevision: context.declarationSourceRevision(action), dependencies: action.preconditions.map(fact => {
+            const current = context.readFact(fact); return { fact, revision: current.revision, state: current.state };
+          }) } };
+      const owns = (candidate: { planId?: string }) => candidate.planId === undefined || !currentPlans || currentPlans().includes(candidate.planId);
       const incumbent = memory.entries.find(candidate => candidate.preferredExactIndex !== undefined
         && candidate.preferredExactIndex >= 0 && owns(candidate) && choiceFamily(candidate.coarse) === choiceFamily(action));
+      const denied = memory.denials?.find(row => owns(row) && (row.declaration.id === action.id || proposalKey(row.declaration) === proposalKey(action))
+        && row.sourceRevision === sourceRevision?.(action) && row.dependencies.every(dependency => {
+          const fact = context.readFact(dependency.fact);
+          return fact.revision === dependency.revision && fact.state === dependency.state;
+        }));
+      if (!entry && denied) {
+        const confirmed = memory.entries.filter(candidate => owns(candidate) && candidate.state === 'known'
+          && candidate.sourceRevision === sourceRevision?.(candidate.coarse) && choiceFamily(candidate.coarse) === choiceFamily(action))
+          .flatMap(candidate => candidate.exact.map((exact, index) => candidate.preferredExactIndex === index
+            ? { ...exact, reasons: [...exact.reasons, { code: 'goal-exact-incumbent-choice', factIds: [], values: {} }] } : exact));
+        const priced = goalDeniedComparison(denied);
+        // Compare both exact values before discarding the regenerated loser.
+        // If the confirmed side disappears, rebuild the proof before granting.
+        if (confirmed.some(exact => compareConfirmedGoalChoices(priced, exact, denied.rewardGold) >= 0)) return [];
+        if (denied.proofRecipe?.precision === 'exact') return [denied.proofRecipe];
+        return [{ ...priced, precision: 'coarse', reasons: [...action.reasons,
+          { code: 'goal-denied-challenger-proof-required', factIds: denied.dependencies.map(row => row.fact.id), values: {} }] }];
+      }
       if (!entry || entry.state === 'pending') return [{ ...action, ...(incumbent ? { reasons: [...action.reasons,
         { code: 'goal-exact-challenger-awaits-quote', factIds: action.refinementFor ? [action.refinementFor.effect.id] : [], values: {} }] } : {}) }];
       if (entry.state === 'invalid') return [];

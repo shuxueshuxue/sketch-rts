@@ -4,6 +4,7 @@ import type { DecisionFacts } from './decision';
 import type { Objective } from './types';
 import type { GoalParameter } from './goal-planner-types';
 import { internGoalReference, readGoalReference, retainGoalReferences, type GoalReferenceMemory } from './goal-versioned-references';
+import { currentGoalPlanningReferences } from './goal-planning-references';
 
 type ReferenceOwner = Pick<StrategyAllocationMemory, 'goalReferences'>;
 const record = (value: GoalParameter | undefined): value is Readonly<Record<string, GoalParameter>> =>
@@ -24,7 +25,8 @@ export function readGoalIntent(owner: ReferenceOwner, intent: GoalExecutableInte
   }
   const declaration = readGoalReference(table, intent.declarationId);
   return { ...intent, parameters: expanded,
-    declarationId: record(declaration) && typeof declaration.priorId === 'string' ? declaration.priorId : intent.declarationId };
+    declarationId: record(declaration) && typeof declaration.priorId === 'string'
+      ? currentGoalPlanningReferences()?.priorDeclarations?.[intent.declarationId] ?? declaration.priorId : intent.declarationId };
 }
 
 export function readGoalActionReference(owner: ReferenceOwner, id: string) {

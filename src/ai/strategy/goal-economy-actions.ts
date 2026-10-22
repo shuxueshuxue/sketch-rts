@@ -40,7 +40,7 @@ export function declareGoalTraining(input: Readonly<{
   const room = goalFact({ kind: 'population-room', minimum: count * rules.supplyUsed, byTick });
   const cap = goalFact({ kind: 'supply-cap', minimum: requiredSupplyCap(unitKind) });
   const effect = goalFact({ kind: 'unit-available', unitKind, count, at, byTick });
-  const id = `action:train:${goalFact({ kind: 'production', unitKind, producer, at, byTick }).id}:${count}`;
+  const id = goalPlanningIdentity('action', `action:train:${goalFact({ kind: 'production', unitKind, producer, at, byTick }).id}:${count}`);
   // Native derived stats include this owner's current upgrades. Assessment
   // copies never enter outputs/entityIds, leases or the world snapshot.
   const recruit = trainingRecruitPrototype(context.snapshot, source, { unitKind, remaining: 0 });
@@ -140,8 +140,8 @@ export function declareGoalBuilding(input: Readonly<{
     ...(buildingKind === 'townHall' && mine && binding
       ? [goalFact({ kind: 'site-safe', site: binding.logicalTarget, throughTick: byTick })] : [])]);
   const preconditions = unique([workers, ...(route ? [route] : []), ...(foundation ? [] : [site, gold]), ...safety, ...additionalPreconditions]);
-  const id = `action:build:${JSON.stringify([baseEffect.id, route?.id ?? goalValueKey(worker.ref),
-    effects.map(fact => fact.id), preconditions.map(fact => fact.id)])}`;
+  const id = goalPlanningIdentity('action', `action:build:${JSON.stringify([baseEffect.id, route?.id ?? goalValueKey(worker.ref),
+    effects.map(fact => fact.id), preconditions.map(fact => fact.id)])}`);
   const building: GoalEntityReference = foundation ? { kind: 'existing', entityId: foundation.id }
     : { kind: 'output', actionId: id, output: 'building' };
   // A native new producer completes with an empty training lane. Declare the
@@ -216,7 +216,7 @@ export function declareGoalWaitIncome(effect: GoalFact, context: GoalPlanningCon
     ? { state: 'pending' as const, requestIds: [observed.requestId], reason: observed.reason }
     : known(Math.ceil(segments.at(-1)!.throughTick - context.tick), forecast.factIds);
   return {
-    id: `action:wait-income:${creditedFact.id}`, kind: 'wait-income', precision: context.precision ?? 'exact', preconditions: [],
+    id: goalPlanningIdentity('action', `action:wait-income:${creditedFact.id}`), kind: 'wait-income', precision: context.precision ?? 'exact', preconditions: [],
     effects: [{ fact: creditedFact, operation: 'establish', at: 'finish' }], demands: [],
     flows: [{ resource: { kind: 'gold' }, delta: credited, at: 'finish',
       factIds: forecast.factIds, source: { ...forecast.source, segments } }], duration,
@@ -225,3 +225,4 @@ export function declareGoalWaitIncome(effect: GoalFact, context: GoalPlanningCon
     outputs: [], reasons: partial ? [reason('income-partial-contribution', forecast.factIds)] : [],
   };
 }
+import { goalPlanningIdentity } from './goal-planning-references';

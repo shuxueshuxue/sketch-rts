@@ -1,4 +1,9 @@
 import { retainGoalCohortCommitments, type GoalCohortCommitments } from './goal-cohort-commitments';
+import { restoreGoalPlanningIdentities, withGoalPlanningMemory } from './goal-planning-restore';
+import { goalDeclarationContext } from './goal-provider-candidates';
+import { retainGoalRefinementChoices } from './goal-search-retention';
+import { goalPlanningIdentity, versionGoalObservation } from './goal-planning-references';
+import { installGoalDeclarationReconstruction } from './goal-declaration-reconstruction';
 import { readGoalIntent } from './goal-authority-references';
 import { boundCache, touchCache, retainCachePins, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { setBuildingBodies, withGoalDistanceFieldLease } from '../../shared/terrain';
@@ -112,6 +117,13 @@ export function planOwnerGoals(input: GoalPlannerOwnerInput) {
 /** Native tooling and owner-think entry. The callback covers assembly AND
  * search in one terrain/query/work scope. It does not grant or issue commands. */
 export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (input: GoalPlannerInput, frame: GoalPlannerNativeFrame) => T): T {
+  // An explicitly empty request list is the domain-service API. Its caller
+  // owns any independent declarations/cache, rather than a native goal set.
+  if (input.goals?.length === 0) return withReferencedGoalPlannerInput(input, run);
+  return withGoalPlanningMemory(input.memory, () => withReferencedGoalPlannerInput({ ...input,
+    ...(input.goals ? { goals: restoreGoalPlanningIdentities(input.goals) } : {}) }, run));
+}
+function withReferencedGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (input: GoalPlannerInput, frame: GoalPlannerNativeFrame) => T): T {
   const { snapshot, owner, memory } = input;
   const precision = input.precision ?? (input.goals === undefined ? 'coarse' : 'exact');
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick, () => withStrategyFrame(() => {
@@ -208,10 +220,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
       const ownerGeometry = geometry;
+      let declarationSourceRevision: (action: import('./goal-planner-types').GoalActionDeclaration) => string = () => '';
       function makeContext(allowedUnitIds?: readonly string[], interruptedUnitIds?: readonly string[],
         unavailableProduction: readonly import('./types').ProductionUse[] = [], reserved = reservedGold,
-        mode: 'coarse' | 'exact' = precision, selected: readonly import('./goal-planner-types').GoalActionDeclaration[] = [],
-        prefix: Parameters<NonNullable<GoalPlannerInput['contextForPrefix']>>[0] = []): GoalPlanningContext {
+        mode: 'coarse' | 'exact' = precision, selected: readonly Pick<import('./goal-planner-types').GoalActionDeclaration, 'id' | 'kind' | 'executor'>[] = [],
+        prefix: Parameters<NonNullable<GoalPlannerInput['contextForPrefix']>>[0] = [], plannedCampIdsOverride?: readonly string[]): GoalPlanningContext {
         // Unsupported coarse-domain branches suspend without registering any
         // precise geometry. They cannot quietly spend the refinement allowance.
         const geometry: GoalGeometryReader = mode === 'exact' ? ownerGeometry : request => ({ state: 'pending',
@@ -221,9 +234,18 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             : { status: 'unreachable', reasonCode: 'coarse-land-components-differ' };
         const arrivalPhysics = createArrivalPlanningPhysics({ snapshot, geometry, geometryRevision, landRoute: exactLandRoute, regions });
         const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
+          ...(input.goals?.length === 0 ? {} : { declarationContext: { precision: mode, reservedGold: reserved,
+            ...(allowedUnitIds ? { allowedUnitIds } : {}), ...(interruptedUnitIds ? { interruptedUnitIds } : {}),
+            campIds: plannedCampIdsOverride ?? selectedGoalCampBattles(selected),
+            ...(selected.some(action => ['transport-force', 'transport-worker', 'position-transport'].includes(action.kind))
+              ? { transportSelections: selected.filter(action => ['transport-force', 'transport-worker', 'position-transport'].includes(action.kind))
+                .map(({ id, kind, executor }) => ({ id, kind, executor })) } : {}),
+            ...(prefix.length ? { prefix } : {}) },
+            declarationSourceRevision: (action: import('./goal-planner-types').GoalActionDeclaration) => declarationSourceRevision(action) }),
           precision: mode, ...(precision === 'coarse' ? { planThroughTick: snapshot.tick + STRATEGY_PARAMETERS.knownThreatHorizonTicks } : {}), readFact: fact => read(fact) };
         const worldReader = (worldSnapshot: GameSnapshot) => createGoalFactReader({ ...context, snapshot: worldSnapshot, memory: retained!.world,
-          cacheUse: { thinkSequence: work.receipt.thinkSequence ?? snapshot.tick, planIds: () => mode === 'exact' && selected.length ? work.consumerPlanIds() : [] },
+          cacheUse: { thinkSequence: work.receipt.thinkSequence ?? snapshot.tick,
+            planIds: () => mode === 'exact' && (selected.length || plannedCampIdsOverride !== undefined) ? work.consumerPlanIds() : [] },
           ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }),
           ports: { geometry, geometryRevision, regionAt, reservedGold: reserved,
@@ -300,7 +322,12 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             reason: { code: 'counterfactual-production-occupied-until', factIds: [fact.id], values: { availableTick } } };
         };
         const read: GoalPlanningContext['readFact'] = fact => {
-          const observation = readBase(fact);
+          const native = readBase(fact);
+          // A prerequisite version identifies the published answer, not a
+          // second serialized copy of every native input used to compute it.
+          // Current actors and numeric quotes are validated independently on
+          // deterministic declaration reconstruction.
+          const observation = versionGoalObservation(fact, native);
           input.onFactObservation?.(observation, goalValueKey([mode, allowedUnitIds, interruptedUnitIds, reserved, unavailableProduction]));
           return observation;
         };
@@ -386,7 +413,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             factIds: posts.flatMap(post => post.factIds), ...(landings.state === 'met' && landings.deferred ? { deferred: landings.deferred }
               : landings.state === 'pending' ? { deferred: [{ id: `post-alternative:${effect.id}`, requestIds: landings.requestIds, reason: landings.reason }] } : {}) };
         };
-        const plannedCampIds = selectedGoalCampBattles(selected);
+        const plannedCampIds = plannedCampIdsOverride ?? selectedGoalCampBattles(selected);
         const combatPorts = { landRoute, resolveCohort, coarseSeaTicks, startedCohort,
           movementRisk: request => mode === 'coarse' ? { state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 }, factIds: ['coarse-movement-bound'] }
             : assessGoalCombatMovementRisk({ snapshot, situation, request: { ...request, plannedCampIds } }),
@@ -411,7 +438,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       }
       const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
-      const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
+      const goals = input.goals ? restoreGoalPlanningIdentities(input.goals) : collectGoalRequests(observed.objectives, grounded);
       for (const id of Object.keys(retained.startedCohorts ?? {})) if (!goals.some(goal => goal.id === id)) delete retained.startedCohorts![id];
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
       berthBindings.retain(goals.map(goal => `goal-plan:${goal.id}`));
@@ -452,8 +479,55 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return contactPreparation.get(context)?.(plan, selected);
         } });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
+      const publicationRevision = () => {
+        const sequence = work.receipt.thinkSequence ?? snapshot.tick;
+        const available = (readyThink: number | undefined) => readyThink === undefined || readyThink < sequence;
+        // Published values are immutable under these source identities. LRU
+        // ages, consumers and diagnostic counters do not identify new proof.
+        return goalPlanningIdentity('publications', {
+          geometry: retained.geometry!.entries.filter(entry => entry.readyTick !== null && entry.readyTick !== undefined)
+            .map(entry => [goalPlanningIdentity('geometry-request', { key: entry.key, revision: entry.revision }), available(entry.readyThink)]),
+          berths: retained.selectedBerths!.revision,
+          voyage: retained.voyageRisk!.publications.map(entry => [entry.id, available(entry.readyThink)]),
+          fields: [preparation.terrain, preparation.landBodies, ...['land', 'sea'].map(mover => preparation.fields[mover as 'land' | 'sea']
+            .filter(entry => entry.readyTick !== null && entry.readyTick !== undefined)
+            .map(entry => [entry.goal, entry.readyTick, available(entry.readyThink)]))],
+          points: preparation.pointRoutes?.entries.filter(entry => entry.readyTick !== null && entry.readyTick !== undefined)
+            .map(entry => [entry.key, available(entry.readyThink)]) ?? [],
+        });
+      };
       const quoteRevision = () => `goal-domain-v5:${goalValueKey(cohortRevision())}:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
+      declarationSourceRevision = () => goalPlanningIdentity('provider-context', { owner, version: input.version, geometry: worldGeometry });
+      installGoalDeclarationReconstruction({ providers: baseProviders, context: saved => makeContext(saved.allowedUnitIds,
+        saved.interruptedUnitIds, [], saved.reservedGold, saved.precision, saved.transportSelections ?? [], saved.prefix ?? [], saved.campIds) });
+      for (const entry of refinements.entries) if (!entry.coarse.regeneration && entry.coarse.refinementFor) {
+        const objectiveId = entry.planId?.replace(/^goal-plan:/, '');
+        const reserved = memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, objectiveId) : 0;
+        const currentQuote = entry.sourceRevision === sourceRevision(entry.coarse);
+        const capture = (action: import('./goal-planner-types').GoalActionDeclaration) => {
+          const request = action.refinementFor ?? entry.coarse.refinementFor!;
+          const context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved,
+            action.precision ?? 'coarse', [entry.coarse]);
+          // The stored native quotation is still only a proposed numeric
+          // result. Capture today's prerequisites, then reconstruct the full
+          // declaration through its provider and compare its exact numbers.
+          // Old plan graphs need not have observed every derived prerequisite.
+          const observations = currentQuote ? action.preconditions.map(fact => ({ fact, row: context.readFact(fact) })) : [];
+          return { ...action, regeneration: { providerId: request.providerId, effect: request.effect,
+            groundingKey: action.id, context: goalDeclarationContext(action, context.declarationContext!),
+            sourceRevision: currentQuote ? context.declarationSourceRevision!(action) : 'prior-declaration-dependencies-unrecorded',
+            dependencies: observations.map(({ fact, row }) => ({ fact, revision: row.revision, state: row.state })) } };
+        };
+        entry.coarse = capture(entry.coarse); entry.exact = entry.exact.map(capture);
+      }
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
+        searchRetention: 'selected-and-opponent',
+        cacheSourceRevision: plan => goalPlanningIdentity('cache-source', goalValueKey([publicationRevision(), [...plan.actions.map(node => node.declaration),
+          ...plan.alternatives.flatMap(alternative => alternative.declaration ? [alternative.declaration] : [])]
+          .map(action => [action.id, action.precision, action.duration.state === 'met' ? action.duration.value : action.duration.state,
+            action.cost.state === 'met' ? action.cost.value.map(({ code, gold, at }) => ({ code, gold, at })) : action.cost.state,
+            action.successProbability.state === 'met' ? action.successProbability.value : action.successProbability.state,
+            action.preconditions.map(fact => { const current = grounded.readFact(fact); return [fact.id, current.revision, current.state]; })])])),
         ...(reservedGold > 0 ? { contextForGoal(goal: GoalRequest) {
           const reserved = memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, goal.id) : 0;
           const context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved);
@@ -469,6 +543,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),
         retainFactRequests: plans => {
           if (precision !== 'coarse') return;
+          retainGoalRefinementChoices(refinements, plans, grounded.readFact, work.receipt.thinkSequence ?? snapshot.tick);
           const ids = (value: unknown, found = new Set<string>()): Set<string> => {
             if (typeof value === 'string') found.add(value);
             else if (Array.isArray(value)) value.forEach(item => ids(item, found));
@@ -482,7 +557,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
               for (const node of plan.facts) if (used.has(node.id)) for (const fact of node.observation.derived?.allOf ?? []) used.add(fact.id);
               if (before === used.size) break;
             }
-            return [plan.goal.id, ids([plan.actions, plan.facts.filter(node => used.has(node.id)), plan.deferredCandidates ?? [], berthBindings.requests(plan.id)])] as const;
+            return [plan.goal.id, ids([plan.actions, plan.facts.filter(node => used.has(node.id)), plan.deferredCandidates ?? [], berthBindings.requests(plan.id),
+              refinements.entries.filter(entry => entry.planId === plan.id), refinements.denials?.filter(entry => entry.planId === plan.id) ?? []])] as const;
           }));
           const sequence = work.receipt.thinkSequence ?? snapshot.tick;
           retainGoalGeometryRequests(retained.geometry!, [...references].map(([planId, requestIds]) => ({ planId, requestIds: [...requestIds] })), sequence);
@@ -505,7 +581,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           }
           boundObservationMemory(preparation);
         },
-        capacityPressure: () => [retained.geometry?.capacity?.pressure, ...Object.values(refinements.capacities ?? {}).map(value => value.pressure),
+        capacityPressure: () => [retained.geometry?.capacity?.pressure, refinements.denialCapacity?.pressure, ...Object.values(refinements.capacities ?? {}).map(value => value.pressure),
           retained.requoteCapacity?.pressure, retained.voyageRisk?.publicationCapacity?.pressure, retained.voyageRisk?.batchCapacity?.pressure,
           ...Object.values(retained.world.capacity ?? {}).map(value => value.pressure), preparation.pointRoutes?.capacity?.pressure,
           ...Object.values(preparation.cacheCapacities ?? {}).map(value => value.pressure)].filter((value): value is import('./goal-planner-types').GoalCapacityPressure => !!value && value.thinkSequence === (work.receipt.thinkSequence ?? snapshot.tick)),

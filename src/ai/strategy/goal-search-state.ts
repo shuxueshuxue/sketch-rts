@@ -5,6 +5,8 @@ export type GoalSearchPath = { steps: GoalSearchStep[]; bindings: Readonly<Recor
 /** Serializable search state contains declarations and observed facts, never
  * query closures, world snapshots, executable tasks or invented world IDs. */
 export type GoalSearchMemory = {
+  demandDriven?: true;
+  regenerateDeferred?: true;
   version: 1; phase: 'regress' | 'compose' | 'done';
   requests: { fact: GoalFact; depth: number }[]; regressed: string[]; observed: GoalFactObservation[];
   candidates: GoalActionDeclaration[]; alternatives: GoalAlternative[];

@@ -30,5 +30,6 @@ export function retimeGoalActionPreconditions(action: GoalActionDeclaration, fin
     const retimed = goalFact({ ...fact.predicate, throughTick: finishTick });
     if (retimed.id !== fact.id) facts.set(fact.id, retimed);
   }
-  return { ...replaceGoalActionFacts(action, facts), effects: action.effects };
+  return { ...replaceGoalActionFacts(action, facts), effects: action.effects,
+    ...(action.regeneration ? { regeneration: { ...action.regeneration, finishTick } } : {}) };
 }

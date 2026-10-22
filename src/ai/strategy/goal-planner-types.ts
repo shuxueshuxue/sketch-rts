@@ -93,6 +93,14 @@ export type GoalFactObservation = Readonly<{
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
   | Readonly<{ state: 'met' | 'unmet' }>);
 export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
+export type GoalDeclarationContext = Readonly<{ precision: 'coarse' | 'exact'; reservedGold: number;
+  allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[]; campIds: readonly string[];
+  transportSelections?: readonly Pick<GoalActionDeclaration, 'id' | 'kind' | 'executor'>[];
+  prefix?: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[] }>;
+export type GoalDeclarationRegeneration = Readonly<{ providerId: string; effect: GoalFact; groundingKey: string;
+  context: GoalDeclarationContext; sourceRevision: string;
+  dependencies: readonly Readonly<{ fact: GoalFact; revision: string; state: GoalFactState }>[];
+  bindings?: Readonly<Record<string, GoalEntityReference>>; finishTick?: number }>;
 
 /** Fact sources must use the same think's shared readers. Unknown geometry,
  * exit, tier or queue work is pending with a stable request, never false. */
@@ -103,6 +111,8 @@ export type GoalPlanningContext = Readonly<{
    * Exact native geometry is requested after a plan has been selected. An
    * omitted value retains the existing exact declaration contract. */
   precision?: 'coarse' | 'exact';
+  declarationContext?: GoalDeclarationContext;
+  declarationSourceRevision?: (action: GoalActionDeclaration) => string;
   /** Absolute search horizon, independent of the observation support window.
    * Explicit fact deadlines and threat windows still take precedence. */
   planThroughTick?: number;
@@ -165,6 +175,7 @@ export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: rea
  * planned producer slots, never invented world IDs or allocation leases. */
 export type GoalActionDeclaration = Readonly<{
   id: string; kind: GoalActionKind; preconditions: readonly GoalFact[];
+  regeneration?: GoalDeclarationRegeneration;
   /** Admission evidence covers this action's scheduled completion, rather
    * than its goal's deadline. The scheduler rewrites these fact IDs whenever
    * the action is delayed; persistent protection effects keep their own clock. */
@@ -315,6 +326,7 @@ export type GoalPlan = Readonly<{
   reasons: readonly AllocationReason[];
 }>;
 export type GoalPlanCacheEntry = Readonly<{
+  sourceRevision?: string;
   goalKey: string; declarationRevision: string;
   dependencies: readonly Readonly<{ factId: string; revision: string; state: GoalFactState }>[];
   plan: GoalPlan;
@@ -324,6 +336,10 @@ export type GoalPlanCacheEntry = Readonly<{
 export type GoalPlannerCache = Readonly<import('./cache-payload').CachePayload<GoalPlanCacheEntry> & { version: 1; owner: PlayerId; declarationRevision?: string; capacity?: import('./bounded-cache').CacheCapacity; truncated?: true }>;
 export type GoalCapacityPressure = import('./bounded-cache').CachePressure;
 export type GoalPlannerInput = Readonly<{
+  searchRetention?: 'selected-and-opponent';
+  /** Exact quotation sources for the retained incumbent and its opponents.
+   * Cached world observations are reread, never restored as current proof. */
+  cacheSourceRevision?: (plan: GoalPlan) => string;
   campModelUsage?: () => Readonly<import('./goal-camp-default-model').GoalCampModelUsage>;
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
   /** Finish publication leases against this chosen graph, not historical alternatives. */

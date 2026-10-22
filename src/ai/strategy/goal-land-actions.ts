@@ -34,7 +34,7 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
   const preconditions = [...new Map([force, ...(input.preconditions ?? []), ...extra].map(fact => [fact.id, fact])).values()]
     .sort((a, b) => order(a.id, b.id));
   return withGoalSafetyPreconditionWindows({
-    id: `action:${kind}:${JSON.stringify([effect.id, preconditions.map(fact => fact.id)])}`,
+    id: goalPlanningIdentity('action', `action:${kind}:${JSON.stringify([effect.id, preconditions.map(fact => fact.id)])}`),
     // Holding has an exact on-post force precondition. Control begins when
     // that precondition is satisfied, while the cohort stays leased through
     // the full holding interval. Destruction and interception finish later.
@@ -98,3 +98,4 @@ export const goalLandActionProvider: GoalActionProvider = {
       .sort((a, b) => order(a.id, b.id));
   },
 };
+import { goalPlanningIdentity } from './goal-planning-references';

@@ -34,7 +34,7 @@ function canonical(value: unknown): unknown {
   return value;
 }
 function identity(kind: GoalActionDeclaration['kind'], parameters: Record<string, GoalParameter>) {
-  return `goal-action:${kind}:${JSON.stringify(canonical(parameters))}`;
+  return goalPlanningIdentity('action', `goal-action:${kind}:${JSON.stringify(canonical(parameters))}`);
 }
 const existing = (entityId: string): GoalEntityReference => ({ kind: 'existing', entityId });
 function assessmentId(input: GoalNavalCohort, reference: GoalEntityReference): string {
@@ -113,8 +113,9 @@ function movementFlows(units: readonly Unit[], from: Target, to: Target, force: 
 function declaration(kind: GoalActionDeclaration['kind'], executor: string, parameters: Record<string, GoalParameter>,
   input: GoalNavalCohort, preconditions: readonly GoalFact[], effects: readonly GoalFactEffect[],
   resources: GoalActionDeclaration['demands'], flows: readonly GoalResourceFlow[]): GoalActionDeclaration {
-  return withGoalSafetyPreconditionWindows({ id: identity(kind, parameters), kind, preconditions: facts(preconditions), effects, demands: resources, flows,
-    ...input.estimates, executor: { executor, parameters }, outputs: [], reasons: [] }, input.snapshot.tick);
+  const quoted = typeof parameters.optionId === 'string' ? { ...parameters, optionId: goalPlanningIdentity('option', parameters.optionId) } : parameters;
+  return withGoalSafetyPreconditionWindows({ id: identity(kind, quoted), kind, preconditions: facts(preconditions), effects, demands: resources, flows,
+    ...input.estimates, executor: { executor, parameters: quoted }, outputs: [], reasons: [] }, input.snapshot.tick);
 }
 function bounties(snapshot: GameSnapshot, unitIds: readonly string[], factIds: readonly string[]): GoalResourceFlow[] {
   const ids = new Set(unitIds);
@@ -382,3 +383,4 @@ export function declareGoalForceTransport(input: GoalTransportInput): GoalAction
 export function declareGoalWorkerTransport(input: GoalTransportInput): GoalActionDeclaration | null {
   return transport(input, true);
 }
+import { goalPlanningIdentity } from './goal-planning-references';
