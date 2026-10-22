@@ -23,10 +23,10 @@ for (const puzzle of selected) {
   try {
     const result = runDisruption(puzzle, { version: version as 'v9_knight' | 'v9_archer' | 'v9_summoner', out: dir,
       ...(option('--ticks') ? { maxTicks: Number(option('--ticks')) } : {}) });
-    console.log(JSON.stringify({ puzzle: result.summary.puzzle, passed: result.summary.passed, checks: result.summary.checks,
+    console.log(JSON.stringify({ puzzle: result.summary.puzzle, behaviorChecksPassed: result.summary.behaviorChecksPassed, checks: result.summary.checks,
       trigger: result.summary.trigger?.tick ?? null, victimLoss: result.summary.confirmedLoss?.tick ?? null,
       milestones: result.summary.milestones, cpuMs: result.summary.cpuMs }));
-    if (!result.summary.passed) failures++;
+    if (!result.summary.behaviorChecksPassed) failures++;
   } catch (error) {
     mkdirSync(dir, { recursive: true }); writeFileSync(resolve(dir, 'error.json'), JSON.stringify({ source, main: base,
       name: error instanceof Error ? error.name : 'ThrownValue', message: error instanceof Error ? error.message : String(error),

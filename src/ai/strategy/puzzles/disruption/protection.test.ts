@@ -16,7 +16,7 @@ for (const record of manifest) it(`joins original native protection evidence ${r
   const w = puzzle.create();
   const worker = row.snapshot.units.find(u => u.id === 'unit-planner-worker-1011')!;
   expect(worker.kind).toBe('worker');
-  const nativeDeaths = new Set(row.snapshot.corpses.map(c => c.unitId));
+  const nativeDeaths = new Set((row.snapshot.corpses ?? []).map(c => c.unitId));
   const proof = departureProtection(row.snapshot, w, worker, nativeDeaths);
   expect(proof.positive).toBe(true);
   if (record.tick === 1680) {
