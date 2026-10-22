@@ -30,6 +30,7 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const mainSwaps: { tick: number; unitId: string; region: string }[] = [];
   const lastRegion = new Map<string, string>(), createdTransports = new Set<string>(), createdSoldiers = new Set<string>();
   const departureEvidence: ReturnType<typeof departureProtection>[] = [], departureSeen = new Set<string>();
+  const previousWorkerX = new Map(game.units.filter(u => u.owner === owner && u.kind === 'worker').map(u => [u.id, u.x]));
   const physicalEntrances: ReturnType<typeof departureProtection>[] = [], entrySeen = new Set<string>();
   const localDamage = new Set<string>(), firstResponse: unknown[] = [], attribution: unknown[] = [];
   let actualOpponentCommands = 0;
@@ -50,7 +51,7 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
         const actors = 'unitIds' in cmd ? cmd.unitIds : 'unitId' in cmd ? [cmd.unitId] : [];
         if (going) for (const id of actors) {
           const u = context.snapshot.units.find(u => u.id === id && u.kind === 'worker');
-          if (u && id !== interruption.state.trigger.targetId && !departureSeen.has(id)) {
+          if (u && u.x < 1280 && id !== interruption.state.trigger.targetId && !departureSeen.has(id)) {
             departureSeen.add(id); const proof = departureProtection(context.snapshot, world, u, new Set(interruption.state.kills.map(k => k.unit.id)));
             departureEvidence.push(proof); write('departure-protection', { ...proof, nativeProposal: e });
           }
@@ -80,11 +81,12 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     onStep() {
       if (puzzle.key === 'worker-ambush' && interruption.state.trigger) for (const u of game.units) {
         if (u.owner === owner && u.kind === 'worker' && u.x >= 1280 && u.x < 3712 && u.y >= 704 && u.y <= 896
-          && u.id !== interruption.state.trigger.targetId && !entrySeen.has(u.id)) {
+          && (previousWorkerX.get(u.id) ?? u.x) < 1280 && u.id !== interruption.state.trigger.targetId && !entrySeen.has(u.id)) {
           entrySeen.add(u.id); const proof = departureProtection(snapshotGame(game), world, u, new Set(interruption.state.kills.map(k => k.unit.id)));
           physicalEntrances.push(proof); write('road-entrances', proof);
         }
       }
+      for (const u of game.units) if (u.owner === owner && u.kind === 'worker') previousWorkerX.set(u.id, u.x);
       const guardsAlive = world.guards.some(u => game.units.includes(u) && u.hp > 0);
       mark('trigger', interruption.state.trigger !== null); mark('victim-loss', interruption.state.loss !== null);
       mark('camp-cleared', world.guards.length > 0 && !guardsAlive);
