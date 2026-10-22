@@ -1,8 +1,9 @@
+import { goalValueKey } from '../ai/strategy/goal-facts';
 import type { AiPlanTrace } from '../ai/plan-trace';
 import type { GoalActionNode, GoalPlan, GoalPlanFactNode } from '../ai/strategy/goal-planner-types';
 import { planHtml as h, planClock as clock } from './ai-plan-strategy-panel';
 import { goalDeclarationLabel, goalFactLabel, goalFactSummary, goalStates } from './ai-goal-plan-words';
-import { goalFactTime, goalTimeAxis, goalTimeTicks, goalTimeX } from './ai-goal-plan-time';
+import { goalEffectTime, goalFactTime, goalTimeAxis, goalTimeTicks, goalTimeX } from './ai-goal-plan-time';
 import { goalResourceBand } from './ai-goal-plan-resources';
 
 const actors = [{ id:'worker',label:'工人' },{ id:'ship',label:'船' },{ id:'army',label:'部队' },{ id:'economy',label:'经济（钱 / 生产）' }] as const;
@@ -81,6 +82,21 @@ export function goalGanttLinks(plan:GoalPlan):Link[]{
   linkCache.set(plan,result);return result;
 }
 const available=(fact:GoalPlanFactNode,tick:number)=>fact.observation.state==='met'&&(fact.observation.availableTick==null||fact.observation.availableTick<=tick);
+/** The planner also records causal producers as action/resource predecessors.
+ * A fact link follows its declared effect; order-only links still leave at finish. */
+function departureTick(link:Link,source:GoalActionNode,tick:number):number|null {
+  const missing=link.facts.filter(fact=>!available(fact,tick));
+  if(!missing.length)return source.finishTick;
+  const times=missing.flatMap(fact=>{
+    const effects=source.declaration.effects.filter(effect=>effect.operation==='establish'&&effect.fact.id===fact.observation.fact.id);
+    return effects.length?effects.map(effect=>goalEffectTime(source,effect)):[source.finishTick];
+  });
+  return times.every((time):time is number=>time!=null&&Number.isFinite(time))?Math.max(...times):null;
+}
+function sharesRecordedDemand(source:GoalActionNode,target:GoalActionNode):boolean {
+  return source.declaration.demands.some(demand=>target.declaration.demands.some(other=>
+    goalValueKey(demand.resource)===goalValueKey(other.resource)));
+}
 function conditionText(row:GoalPlanFactNode,tick:number):string {
   const observation=row.observation,p=observation.fact.predicate,name=goalFactLabel(p);
   if(observation.availableTick!=null&&observation.availableTick>tick)return `${name} · ${clock(observation.availableTick)} 才可用`;
@@ -93,18 +109,34 @@ const metText=(fact:GoalPlanFactNode)=>fact.observation.fact.predicate.kind==='g
 
 export function goalGanttGraph(plan:GoalPlan,trace:AiPlanTrace,selected:string):string {
   const graph=goalGanttLayout(plan),{axis}=graph,bars=new Map(graph.bars.map(row=>[row.action.id,row]));
-  const shown=goalGanttLinks(plan).filter(link=>{
+  const shown=goalGanttLinks(plan).flatMap(link=>{
     const from=bars.get(link.from),to=bars.get(link.to);
-    return from&&to&&from.actor!==to.actor&&from.end<=to.x&&(link.facts.some(fact=>!available(fact,trace.tick))||link.resource&&to.action.startTick!>trace.tick||!link.facts.length&&!link.resource);
+    if(!from||!to||from.actor===to.actor)return [];
+    const tick=departureTick(link,from.action,trace.tick);
+    if(tick==null)return [];
+    const missing=link.facts.some(fact=>!available(fact,trace.tick));
+    const needed=missing||link.resource&&to.action.startTick!>trace.tick||!link.facts.length&&!link.resource;
+    if(!needed)return [];
+    // A causal predecessor can also hold a declared resource. Keep its release
+    // as a separate finish constraint rather than replacing the fact's activation.
+    const shared=link.resource&&sharesRecordedDemand(from.action,to.action);
+    const points=[{tick,release:shared&&!missing}];
+    if(shared&&from.action.finishTick!==tick)points.push({tick:from.action.finishTick!,release:true});
+    return points.flatMap(point=>{
+      const sx=goalTimeX(axis,point.tick);
+      return sx<=to.x?[{link,from,to,sx,release:point.release}]:[];
+    });
   });
-  const wireParts=shown.map((link,index)=>{
-    const from=bars.get(link.from)!,to=bars.get(link.to)!,sx=from.end,sy=from.y+23,tx=to.x,ty=to.y+23;
+  const wireParts=shown.map(({link,from,to,sx,release},index)=>{
+    const interior=sx<from.end;
+    const sy=interior?(to.y>from.y?from.y+48:from.y):from.y+23,tx=to.x,ty=to.y+23;
     const equal=tx-sx<12,turn=equal?sx+8:tx-10;
     const endY=equal?(ty>sy?to.y:to.y+46):ty;
-    const path=equal?`M${sx} ${sy} H${turn} V${endY}`:`M${sx} ${sy} H${turn} V${ty} H${tx}`;
+    const exit=interior?` V${sy+(to.y>from.y?10:-10)}`:'';
+    const path=equal?`M${sx} ${sy}${exit} H${turn} V${endY}`:`M${sx} ${sy}${exit} H${turn} V${ty} H${tx}`;
     const missing=link.facts.filter(fact=>!available(fact,trace.tick));
-    const text=missing.length?missing.map(fact=>conditionText(fact,trace.tick)).join('、'):link.resource?'收入入账':'前一步完成';
-    const id=missing[0]?.id??link.to;
+    const text=release?'资源释放':missing.length?missing.map(fact=>conditionText(fact,trace.tick)).join('、'):link.resource?'收入入账':'前一步完成';
+    const id=release?link.to:missing[0]?.id??link.to;
     return {path,from:link.from,to:link.to,label:`<button class="goal-gantt-condition" data-plan-node="${h(id)}" data-plan-condition="${h(id)}" title="${h(text)}" style="left:${turn+5}px;top:${(sy+endY)/2-9+index%2*2}px">${h(text)}</button>`};
   });
   const actionBars=graph.bars.map(bar=>{

@@ -1,5 +1,7 @@
 import { expect, it } from 'vitest';
 import { goalNavyFixture } from './ai-goal-navy.test-fixture';
+import { goalDependencyFixture } from './ai-goal-plan.test-fixture';
+import type { GoalActionNode, GoalPlan } from '../ai/strategy/goal-planner-types';
 import { goalGraphLayout } from './ai-goal-plan-layout';
 import { goalGoldEvents, goalResourceBand } from './ai-goal-plan-resources';
 import { goalPlanGraph } from './ai-goal-plan';
@@ -106,4 +108,47 @@ it('keeps concurrent actions distinct inside their executor lane without shiftin
   const graph=goalGanttLayout(next),first=graph.bars.find(row=>row.action.id===buildYard.id)!,other=graph.bars.find(row=>row.action.id==='other-worker')!;
   expect(graph.lanes).toHaveLength(4);expect(first.actor).toBe('worker');expect(other.actor).toBe('worker');
   expect(first.y).not.toBe(other.y);expect(first.x).toBe(other.x);expect(first.end).toBe(other.end);
+});
+
+it('starts sustained-action dependency arrows at effect activation while preserving full actions and order-only dependencies',()=>{
+  const fixture=goalDependencyFixture();
+  const consumer:GoalActionNode={...fixture.action,id:'build-after-safe',startTick:300,finishTick:400,
+    declaration:{...fixture.action.declaration,id:'build-after-safe',kind:'build',preconditions:[fixture.safe],effects:[]},
+    prerequisiteFactIds:[fixture.safe.id],dependsOnActionIds:[fixture.action.id]};
+  const arrowStart=(plan:GoalPlan)=>{
+    const html=goalPlanGraph(plan,fixture.trace);
+    const path=html.match(/<path class="goal-gantt-dependency" data-from="defend-node" data-to="build-after-safe"[^>]* d="M([^ ]+) ([^ ]+) /);
+    expect(path,'activation precedes the consumer even though the sustained action ends later').not.toBeNull();
+    return {x:Number(path![1]),y:Number(path![2]),html};
+  };
+  for(const [kind,executor] of [['defend','defend'],['hold-position','hold'],['hold-position','garrison']] as const){
+    const source:GoalActionNode={...fixture.action,startTick:100,finishTick:1000,prerequisiteFactIds:[],
+      declaration:{...fixture.action.declaration,kind,preconditions:[],executor:{executor,parameters:{}},
+        effects:[{fact:fixture.safe,operation:'establish',at:{offsetTicks:100}}]}};
+    const plan:GoalPlan={...fixture.plan,actions:[source,consumer],facts:[fixture.plan.facts[0]!],completedTick:200,
+      edges:[{from:source.id,to:fixture.safe.id,kind:'establishes'},{from:fixture.safe.id,to:consumer.id,kind:'requires'},{from:source.id,to:consumer.id,kind:'resource-before'}],resourceTimeline:[]};
+    const before=JSON.stringify(plan),graph=goalGanttLayout(plan),bar=graph.bars.find(row=>row.action.id===source.id)!;
+    const wire=arrowStart(plan);
+    expect(wire.x).toBeCloseTo(goalTimeX(graph.axis,200));
+    expect(wire.x).not.toBeCloseTo(bar.end);
+    expect(wire.y).toBe(bar.y); // Exits the top edge toward the worker lane, never hidden inside the bar.
+    expect(bar.end).toBeCloseTo(goalTimeX(graph.axis,1000));
+    expect(graph.axis.through).toBe(1000);expect(graph.complete).toBe(200);
+    expect(wire.html).toContain('data-plan-time="100" data-plan-finish="1000"');
+    const orderedConsumer={...consumer,prerequisiteFactIds:[],declaration:{...consumer.declaration,preconditions:[]}};
+    const waitsForFinish:GoalPlan={...plan,actions:[source,orderedConsumer],edges:[{from:source.id,to:consumer.id,kind:'resource-before'}]};
+    expect(goalPlanGraph(waitsForFinish,fixture.trace)).not.toContain('data-from="defend-node" data-to="build-after-safe"');
+    const afterRelease:GoalPlan={...waitsForFinish,actions:[source,{...orderedConsumer,startTick:1100,finishTick:1200}]};
+    expect(arrowStart(afterRelease).x).toBeCloseTo(goalTimeX(goalTimeAxis(afterRelease),1000));
+    const demand={resource:{kind:'entity-control' as const,entity:{kind:'existing' as const,entityId:'shared-unit'}},quantity:1,from:'start' as const,until:'finish' as const};
+    const mixed:GoalPlan={...plan,actions:[{...source,declaration:{...source.declaration,demands:[demand]}},
+      {...consumer,startTick:1100,finishTick:1200,declaration:{...consumer.declaration,demands:[demand]}}]};
+    const mixedHtml=goalPlanGraph(mixed,fixture.trace),mixedAxis=goalTimeAxis(mixed);
+    const starts=[...mixedHtml.matchAll(/<path class="goal-gantt-dependency" data-from="defend-node" data-to="build-after-safe"[^>]* d="M([^ ]+) /g)].map(match=>Number(match[1]));
+    expect(starts).toHaveLength(2);
+    expect(starts[0]).toBeCloseTo(goalTimeX(mixedAxis,200));
+    expect(starts[1]).toBeCloseTo(goalTimeX(mixedAxis,1000));
+    expect(mixedHtml).toContain('资源释放');
+    expect(JSON.stringify(plan)).toBe(before);
+  }
 });

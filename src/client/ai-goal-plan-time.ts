@@ -1,8 +1,14 @@
-import type { GoalPlan, GoalPlanFactNode } from '../ai/strategy/goal-planner-types';
+import type { GoalActionNode, GoalFactEffect, GoalPlan, GoalPlanFactNode } from '../ai/strategy/goal-planner-types';
 
 export type GoalTimeAxis = { from: number; through: number; width: number; left: number; right: number };
 export const goalTimeX = (axis: GoalTimeAxis, tick: number) => axis.left + (tick-axis.from)/(axis.through-axis.from)*(axis.width-axis.left-axis.right);
 export const goalTimeTicks = (axis: GoalTimeAxis) => Array.from({ length: 5 }, (_, i) => axis.from+(axis.through-axis.from)*i/4);
+
+/** Effect activation is independent of the producer's continuing obligation. */
+export function goalEffectTime(action:Pick<GoalActionNode,'startTick'|'finishTick'>,effect:GoalFactEffect):number|null {
+  return effect.at==='start'?action.startTick:effect.at==='finish'?action.finishTick
+    :action.startTick==null?null:action.startTick+effect.at.offsetTicks;
+}
 
 /** Use recorded availability first; projected effects retain their declared event time.
  * A missing contributor ETA leaves the condition unscheduled. */
@@ -14,8 +20,7 @@ export function goalFactTime(plan: GoalPlan, row: GoalPlanFactNode): number | nu
     || action.declaration.effects.some(effect => effect.operation==='establish' && effect.fact.id===observation.fact.id));
   const times = producers.flatMap(action => {
     const effects = action.declaration.effects.filter(effect => effect.operation==='establish' && effect.fact.id===observation.fact.id);
-    return effects.length ? effects.map(effect => effect.at==='start' ? action.startTick : effect.at==='finish' ? action.finishTick
-      : action.startTick==null ? null : action.startTick+effect.at.offsetTicks) : [action.finishTick];
+    return effects.length ? effects.map(effect => goalEffectTime(action,effect)) : [action.finishTick];
   });
   return times.length && times.every((tick): tick is number => tick!=null && Number.isFinite(tick)) ? Math.max(...times) : null;
 }
