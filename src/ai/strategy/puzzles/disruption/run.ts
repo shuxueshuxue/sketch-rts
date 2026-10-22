@@ -13,10 +13,12 @@ import { sameGround } from '../../../../shared/terrain';
 import type { GameCommand } from '../../../../shared/types';
 import { createInterference } from './interference';
 import type { DisruptionCase } from './scenes';
+import { departureProtection, retreatInterception } from './protection';
 
 export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScriptVersion;
   out?: string; maxTicks?: number; ownerPlanner?: SdkGameCommandPlanner<AiGameAgent> } = {}) {
   const world = puzzle.create(), { game, owner, opponent } = world;
+  const interception = retreatInterception(world);
   const initial = snapshotGame(game), initialBuildingIds = new Set(game.buildings.map(b => b.id));
   const originalUnits = new Set(game.units.filter(u => u.owner === owner).map(u => u.id));
   const out = options.out && resolve(options.out); if (out) mkdirSync(out, { recursive: true });
@@ -27,6 +29,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const staleProposals: { tick: number; unitIds: string[]; command: GameCommand }[] = [];
   const mainSwaps: { tick: number; unitId: string; region: string }[] = [];
   const lastRegion = new Map<string, string>(), createdTransports = new Set<string>(), createdSoldiers = new Set<string>();
+  const departureEvidence: ReturnType<typeof departureProtection>[] = [], departureSeen = new Set<string>();
+  const physicalEntrances: ReturnType<typeof departureProtection>[] = [], entrySeen = new Set<string>();
   const localDamage = new Set<string>(), firstResponse: unknown[] = [], attribution: unknown[] = [];
   let firstLossThink: number | null = null, think = 0, lastMemory: AiPolicyMemory | undefined;
   const mark = (key: string, when: boolean) => { if (when && milestones[key] === undefined) milestones[key] = game.tick; };
@@ -38,6 +42,19 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     lastMemory = memoryProvider.get(owner);
     const dead = new Set(interruption.state.removed.filter(e => e.reason === 'death').map(e => e.unit.id));
     for (const e of entries) {
+      if (puzzle.key === 'worker-ambush' && interruption.state.trigger) {
+        const cmd = e.command;
+        const going = (cmd.type === 'move' || cmd.type === 'attackMove' || cmd.type === 'build') && cmd.x > world.road!.x
+          || cmd.type === 'mine' && cmd.resourceId === world.mine.id;
+        const actors = 'unitIds' in cmd ? cmd.unitIds : 'unitId' in cmd ? [cmd.unitId] : [];
+        if (going) for (const id of actors) {
+          const u = context.snapshot.units.find(u => u.id === id && u.kind === 'worker');
+          if (u && id !== interruption.state.trigger.targetId && !departureSeen.has(id)) {
+            departureSeen.add(id); const proof = departureProtection(context.snapshot, world, u, new Set(interruption.state.kills.map(k => k.unit.id)));
+            departureEvidence.push(proof); write('departure-protection', { ...proof, nativeProposal: e });
+          }
+        }
+      }
       const ids = 'unitIds' in e.command ? e.command.unitIds : 'unitId' in e.command ? [e.command.unitId] : [];
       const missing = ids.filter(id => dead.has(id)); if (missing.length) staleProposals.push({ tick: context.snapshot.tick, unitIds: missing, command: e.command });
     }
@@ -60,6 +77,13 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
       write('sdk', row); if (e.owner === owner) ownCommands.push({ tick: e.tick, scriptId: e.scriptId, command: e.command });
     },
     onStep() {
+      if (puzzle.key === 'worker-ambush' && interruption.state.trigger) for (const u of game.units) {
+        if (u.owner === owner && u.kind === 'worker' && u.x >= 1280 && u.x < 3712 && u.y >= 704 && u.y <= 896
+          && u.id !== interruption.state.trigger.targetId && !entrySeen.has(u.id)) {
+          entrySeen.add(u.id); const proof = departureProtection(snapshotGame(game), world, u, new Set(interruption.state.kills.map(k => k.unit.id)));
+          physicalEntrances.push(proof); write('road-entrances', proof);
+        }
+      }
       const guardsAlive = world.guards.some(u => game.units.includes(u) && u.hp > 0);
       mark('trigger', interruption.state.trigger !== null); mark('victim-loss', interruption.state.loss !== null);
       mark('camp-cleared', world.guards.length > 0 && !guardsAlive);
@@ -78,7 +102,7 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
       }
       for (const e of firstObserver.slice(attribution.length)) attribution.push({ native: e,
         actualMatchingKill: interruption.state.kills.find(k => k.unit.id === e.unit.id) ?? null,
-        assignments: Object.values(lastMemory?.strategyAllocation?.assignments ?? {}).filter(a => a.unitId === e.unit.id),
+        assignments: structuredClone(Object.values(lastMemory?.strategyAllocation?.assignments ?? {}).filter(a => a.unitId === e.unit.id)),
         note: 'Only original native source and original authority at observation time; empty attribution is not invented.' });
     },
   });
@@ -91,16 +115,23 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     && e.unit.id !== interruption.state.trigger?.targetId && world.interceptors.includes(e.source.id));
   const oldPassengerLosses = kills.filter(e => interruption.state.trigger?.passengerIds.includes(e.unit.id));
   const abandoned = Object.values(lastMemory?.strategyAllocation?.objectives ?? {}).filter(o => o.status === 'abandoned');
-  const navalAbandoned = Object.values(lastMemory?.naval?.conquests ?? {}).filter(o => 'status' in o && o.status === 'abandoned');
+  const navalAbandoned = Object.values(lastMemory?.naval?.conquests ?? {}).filter(o => o.abandonedTick !== undefined);
+  const workerDeaths = interruption.state.removed.filter(e => e.unit.owner === owner && e.unit.kind === 'worker' && e.reason === 'death');
+  const newHullDamagedBySameLiveCause = interruption.state.damage.filter(e => e.target.owner === owner && e.target.kind === 'transport'
+    && e.target.id !== originalHull && e.source.present && world.interceptors.includes(e.source.id));
   const checks = puzzle.key === 'transport-sunk' ? {
     interferenceTriggered: !!interruption.state.trigger, originalHullSunk: !!interruption.state.loss,
     correctPayloadLoss: puzzle.variant === 'empty' ? oldPassengerLosses.length === 0 : oldPassengerLosses.length > 0,
-    noDeadActorRecommands: staleProposals.length === 0, noSecondHullLostToSameEnemy: repeatedHullLosses.length === 0,
+    noDeadActorRecommands: staleProposals.length === 0, noUnsafeReplacementHullDamage: newHullDamagedBySameLiveCause.length === 0, noSecondHullLostToSameEnemy: repeatedHullLosses.length === 0,
     replacementOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : createdTransports.size > 0,
     targetOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : milestones['hall-complete'] !== undefined,
   } : puzzle.key === 'worker-ambush' ? {
     interferenceTriggered: !!interruption.state.trigger, originalWorkerKilled: !!interruption.state.loss,
     noDeadActorRecommands: staleProposals.length === 0, noRepeatedWorkerDeathToSameEnemy: repeatedWorkerLosses.length === 0,
+    workerDeathsAtMostOne: workerDeaths.length <= 1,
+    secondWorkerProtectedBeforeDeparture: departureEvidence.every(e => e.positive) && physicalEntrances.every(e => e.positive),
+    loopExercisedOrRaidersCleared: puzzle.variant !== 'hit-run' || interruption.state.cycles.length >= 3
+      || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
     targetComplete: milestones['hall-complete'] !== undefined,
   } : {
     interferenceTriggered: !!interruption.state.trigger,
@@ -112,6 +143,11 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const summary = { puzzle: `${puzzle.key}/${puzzle.variant}`, thinkCount: think, maxTicks: options.maxTicks ?? puzzle.maxTicks,
     initialSnapshotSha256: createHash('sha256').update(JSON.stringify(initial)).digest('hex'), initialTick: initial.tick,
     triggerRule: puzzle.triggerRule, responseRule: puzzle.responseRule, passed: Object.values(checks).every(Boolean), checks, milestones,
+    interception, fogOfWar: false, cycles: interruption.state.cycles,
+    cycleCoverage: puzzle.variant !== 'hit-run' ? null : { actualCycles: interruption.state.cycles.length,
+      atLeast3OrAttackersCleared: interruption.state.cycles.length >= 3 || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
+      limitation: 'No owner worker or retry is injected to force cycles; if AI stalls, coverage remains explicit and target liveness fails.' },
+    departureEvidence, physicalEntrances, workerDeaths, newHullDamagedBySameLiveCause,
     trigger: interruption.state.trigger, confirmedLoss: interruption.state.loss, firstPostLossThink: firstLossThink,
     repeatedHullLosses, repeatedWorkerLosses, oldPassengerLosses, staleProposals, mainSwaps,
     createdTransportIds: [...createdTransports], createdSoldierIds: [...createdSoldiers], localDefenderIdsWithActualDamage: [...localDamage],

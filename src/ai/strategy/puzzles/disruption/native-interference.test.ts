@@ -4,6 +4,7 @@ import type { AiGameAgent } from '../../../game-runner';
 import { seconds } from '../../../../shared/time';
 import { DISRUPTION_CASES } from './scenes';
 import { runDisruption } from './run';
+import { retreatInterception } from './protection';
 
 // Authored legal commands validate the interference mechanics only. No owner
 // policy is run here, and these results cannot count as a main AI baseline.
@@ -48,4 +49,29 @@ describe('native world-triggered interference mechanics', () => {
     expect(r.state.trigger!.tick).toBeGreaterThanOrEqual(r.state.firstCampDamageTick!);
     expect(r.state.commands.some(c => c.command.type === 'attack' && c.command.targetId === r.state.trigger!.targetId)).toBe(true);
   }, 120000);
+  it('far raiders can reach the real corridor before a newly departing worker', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'hit-run')!;
+    const w = puzzle.create(), comparison = retreatInterception(w)!;
+    expect(comparison.enemyDistance).not.toBeNull();
+    expect(comparison.workerDistance).not.toBeNull();
+    expect(comparison.canArriveBeforeWorker).toBe(true);
+    expect(comparison.enemySeconds!).toBeLessThan(comparison.workerSeconds!);
+  });
+  it('real retreat and return commands produce at least3 native ambush cycles without spawning victims', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'hit-run')!;
+    const w = puzzle.create(), workers = w.workers.map(u => u.id), sent = new Set<string>();
+    const r = runDisruption(puzzle, { maxTicks: seconds(480), ownerPlanner: c => {
+      if ([...sent].some(id => c.snapshot.units.some(u => u.id === id && u.hp > 0))) return [];
+      if (sent.size && !c.snapshot.units.filter(u => w.interceptors.includes(u.id))
+        .every(u => Math.hypot(u.x - w.retreat.x, u.y - w.retreat.y) <= 64)) return [];
+      const next = workers.find(id => !sent.has(id)); if (!next) return []; sent.add(next);
+      return [{ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only',
+        command: { type: 'move', unitIds: [next], x: w.mine.x, y: w.mine.y } }];
+    } });
+    expect(r.state.cycles).toHaveLength(3);
+    expect(r.state.cycles.every(c => c.outcome === 'native-death' && c.retreatedTick !== null)).toBe(true);
+    expect(r.state.kills.filter(k => workers.includes(k.unit.id))).toHaveLength(3);
+    expect(r.state.commands.some(c => c.command.type === 'move' && c.command.x === w.retreat.x && c.command.y === w.retreat.y)).toBe(true);
+  }, 120000);
+
 });
