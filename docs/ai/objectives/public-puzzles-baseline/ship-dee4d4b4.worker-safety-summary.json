@@ -1,0 +1,79 @@
+{
+  "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+  "candidate": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+  "sameCriterionAs": "d888/cdb worker safety, current original native observer and separate same-SDK trajectory crosscheck",
+  "receipts": [
+    {
+      "variant": "far",
+      "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+      "candidate": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+      "exitCode": 0,
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/replay-worker-safety.ts",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-far.jsonl.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/sdk/ship-away-far.jsonl.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-far.result.json.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/worker-safety-replay/far"
+      ],
+      "scope": "Same original native SDK trajectory;0AI/FactReader/newcommands. All560 original snapshots plus final equality are prerequisite.",
+      "inputs": [
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-far.jsonl.gz",
+          "bytes": 575815360,
+          "sha256": "6bb9db918d27fea1f577040660f2087792b4f8b76a31fdf11b4880bce230c063"
+        },
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/sdk/ship-away-far.jsonl.gz",
+          "bytes": 5648,
+          "sha256": "3e1acb2161ea038ed82333902f5e9e00aeacb0a254567636443f76eb0d9c03ba"
+        },
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-far.result.json.gz",
+          "bytes": 47335,
+          "sha256": "061faf9231951d7598e177643ff8414540ce2136383b79eeb4c488f0c9efef1b"
+        }
+      ],
+      "safetyPassed": true,
+      "revisedExecutionPassed": false
+    },
+    {
+      "variant": "near",
+      "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+      "candidate": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+      "exitCode": 0,
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/replay-worker-safety.ts",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-near.jsonl.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/sdk/ship-away-near.jsonl.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-near.result.json.gz",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/worker-safety-replay/near"
+      ],
+      "scope": "Same original native SDK trajectory;0AI/FactReader/newcommands. All560 original snapshots plus final equality are prerequisite.",
+      "inputs": [
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-near.jsonl.gz",
+          "bytes": 523955784,
+          "sha256": "fab424ade300bc65bd2f02d5b756a5a76d0ebe7987e7e521e78f59206bd3eacd"
+        },
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/sdk/ship-away-near.jsonl.gz",
+          "bytes": 5042,
+          "sha256": "5557ba9813d5ca773becfa35f52f8dacb84fc7d88887c194148a706ad50c1a32"
+        },
+        {
+          "path": "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime/ship-away-near.result.json.gz",
+          "bytes": 41765,
+          "sha256": "389bb3c5b11e89c6a019674bbd067f43834e8396327063bd9e0b4b24ab2427d1"
+        }
+      ],
+      "safetyPassed": true,
+      "revisedExecutionPassed": false
+    }
+  ]
+}

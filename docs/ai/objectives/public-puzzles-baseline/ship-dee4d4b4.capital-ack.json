@@ -1,0 +1,139 @@
+{
+  "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+  "sharedBase": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+  "scope": "Read-only central capital/output snapshots and post-foundation planning observations. No new acceptance assertion, AI, fact reader, navigation, SDK application or simulation. GoldSpentTotal is all native spending, not separately attributed hall cost. Plans after a foundation prove continued planning, not absence from the fresh collector (that fresh list is not separately captured). Physical guard proximity does not prove a lease or continuous protection.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "sourceStreamSha256": "6bb9db918d27fea1f577040660f2087792b4f8b76a31fdf11b4880bce230c063",
+      "first": {},
+      "distinctCentralFoundationPaymentReceipts": [],
+      "framesWithValidatedBuildBinding": 0,
+      "framesWithPlanAfterPhysicalFoundation": 0,
+      "firstPhysicalBuildProgressIncreases": [],
+      "last": {
+        "think": 560,
+        "tick": 8400,
+        "gold": 559,
+        "nativeGoldSpentTotal": 2531,
+        "budgets": [
+          {
+            "id": "budget:goal-ref:spend:v4",
+            "spendId": "goal-ref:spend:v4",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v18",
+              "generation": 5
+            },
+            "amountGold": 400,
+            "paidGold": 0,
+            "state": "reserved",
+            "sinceTick": 105,
+            "plannedGold": 400,
+            "expectedPaymentTick": 2198,
+            "releasedTick": null,
+            "includedUtilityTermCodes": [
+              "remaining-plan-actions"
+            ],
+            "externalReservationIds": [
+              "naval:islandHall"
+            ]
+          }
+        ],
+        "buildExecutions": [],
+        "guardExecutions": [],
+        "acceptedBuildAdmissions": [],
+        "foundationPayments": [],
+        "outputBindings": [],
+        "newOwnTownHalls": [],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "search-pending",
+            "selectedKinds": []
+          }
+        ],
+        "objectiveStatuses": [
+          {
+            "goalDefinitionRef": "goal-ref:objective:v9",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "status": "active",
+            "actionIds": [
+              "goal-ref:action:v18"
+            ],
+            "sinceTick": 105
+          }
+        ]
+      },
+      "perThinkFile": "capital-ack/far.jsonl.gz"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "sourceStreamSha256": "fab424ade300bc65bd2f02d5b756a5a76d0ebe7987e7e521e78f59206bd3eacd",
+      "first": {},
+      "distinctCentralFoundationPaymentReceipts": [],
+      "framesWithValidatedBuildBinding": 0,
+      "framesWithPlanAfterPhysicalFoundation": 0,
+      "firstPhysicalBuildProgressIncreases": [],
+      "last": {
+        "think": 560,
+        "tick": 8400,
+        "gold": 559,
+        "nativeGoldSpentTotal": 2531,
+        "budgets": [
+          {
+            "id": "budget:goal-ref:spend:v4",
+            "spendId": "goal-ref:spend:v4",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v3",
+              "generation": 1
+            },
+            "amountGold": 400,
+            "paidGold": 0,
+            "state": "reserved",
+            "sinceTick": 60,
+            "plannedGold": 400,
+            "expectedPaymentTick": 1435,
+            "releasedTick": null,
+            "includedUtilityTermCodes": [
+              "remaining-plan-actions"
+            ],
+            "externalReservationIds": [
+              "naval:islandHall"
+            ]
+          }
+        ],
+        "buildExecutions": [],
+        "guardExecutions": [],
+        "acceptedBuildAdmissions": [],
+        "foundationPayments": [],
+        "outputBindings": [],
+        "newOwnTownHalls": [],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "search-pending",
+            "selectedKinds": []
+          }
+        ],
+        "objectiveStatuses": [
+          {
+            "goalDefinitionRef": "goal-ref:objective:v6",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "status": "active",
+            "actionIds": [
+              "goal-ref:action:v3"
+            ],
+            "sinceTick": 60
+          }
+        ]
+      },
+      "perThinkFile": "capital-ack/near.jsonl.gz"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "scope": "Pure original member JSON/gzip and JS JSON.stringify byte measures. No AI, FactReader, SDK or simulation. Not a heap/RAM measurement.",
+  "phaseCorrectionSource": "Codex32 original owner/observer code inspection, session message msg:8afeb9dd-9ed1-4b12-9f99-80277b97521a, 2026-10-22 04:35 UTC",
+  "phases": {
+    "memoryBefore": "Actual provider owner memory persisted before this think; measures the previous sealed wire at the start of original think100.",
+    "memoryAfter": "Original observer deep copy taken before owner wire sealing. Expanded observer projection; not measured end-of-think sealed provider residency."
+  },
+  "priorMeasurement": {
+    "path": "serialized-memory-bytes.json",
+    "sha256": "866f32b23d624babe5c244b906911c07e4b5e2e48a745848e8ec5bcf5a046831",
+    "preservedUnmodified": true,
+    "note": "Its numeric values are correct for original memoryAfter, but its resident label must be read with the phase correction above."
+  },
+  "rows": [
+    {
+      "variant": "far",
+      "think": 100,
+      "tick": 1500,
+      "originalCompressedSha256": "ab358927ba4c3795f2565e91461a915253165e80c6da4b15c36a0998f4056ae2",
+      "originalPlainSha256": "55c1ea887f2b16e18755b3fbf3c3e645df0f03a5732f4ba164ba4eb26e6cf145",
+      "phases": {
+        "memoryBefore": {
+          "ownerMemorySerializedBytes": 2599462,
+          "threeRootsSerializedBytes": 2575420,
+          "goalPlanningSerializedBytes": 355392,
+          "sharedDefinitionsSerializedBytes": 2202865,
+          "authoritySerializedBytes": 17098
+        },
+        "memoryAfter": {
+          "ownerMemorySerializedBytes": 5644710,
+          "threeRootsSerializedBytes": 5620617,
+          "goalPlanningSerializedBytes": 2984493,
+          "sharedDefinitionsSerializedBytes": 2618960,
+          "authoritySerializedBytes": 17099
+        }
+      },
+      "capacityPressure": [
+        {
+          "kind": "refinement-denial",
+          "bytes": 2568698,
+          "entries": 192,
+          "limitBytes": 262144
+        }
+      ]
+    },
+    {
+      "variant": "near",
+      "think": 100,
+      "tick": 1500,
+      "originalCompressedSha256": "878c23bf215ff9191df71d97b905e8b4d83c4bc371f9ba686e9bd0f944064ac6",
+      "originalPlainSha256": "292a4f2dac9b7b4579eef4a9feaa2de81fcdb6f61142014bd5539bd69c0b1293",
+      "phases": {
+        "memoryBefore": {
+          "ownerMemorySerializedBytes": 1926676,
+          "threeRootsSerializedBytes": 1921857,
+          "goalPlanningSerializedBytes": 241438,
+          "sharedDefinitionsSerializedBytes": 1670033,
+          "authoritySerializedBytes": 10321
+        },
+        "memoryAfter": {
+          "ownerMemorySerializedBytes": 4940643,
+          "threeRootsSerializedBytes": 4935818,
+          "goalPlanningSerializedBytes": 2896774,
+          "sharedDefinitionsSerializedBytes": 2028657,
+          "authoritySerializedBytes": 10322
+        }
+      },
+      "capacityPressure": [
+        {
+          "kind": "refinement-denial",
+          "bytes": 1937261,
+          "entries": 168,
+          "limitBytes": 262144
+        }
+      ]
+    }
+  ]
+}

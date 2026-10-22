@@ -1,0 +1,48 @@
+{
+  "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+  "candidate": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+  "scope": "Pure same-original-table reference metadata decoding only. No AI/provider/FactReader/SDK/sim. Original reader scripts, partial outputs and failure logs remain untouched. Recipe bodies are not regenerated.",
+  "readers": [
+    {
+      "name": "report-ship-garrison",
+      "argv": [
+        "python3",
+        "/codegeex/jeffry/sketch-public-puzzles/report-ship-garrison-dee4.py",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3",
+        "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+        "dee4d4b4e048064ba07d9546e0536a0ad5315f81"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "cold-refinement",
+      "argv": [
+        "python3",
+        "/codegeex/jeffry/sketch-public-puzzles/report-ship-refinement-dee4.py",
+        "cold",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/frames",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/cold-refinement-corrected",
+        "--source",
+        "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+        "--base",
+        "dee4d4b4e048064ba07d9546e0536a0ad5315f81"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "runtime-refinement",
+      "argv": [
+        "python3",
+        "/codegeex/jeffry/sketch-public-puzzles/report-ship-refinement-dee4.py",
+        "runtime",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/ship-26ad3fd3/runtime-refinement-corrected",
+        "--source",
+        "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+        "--base",
+        "dee4d4b4e048064ba07d9546e0536a0ad5315f81"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

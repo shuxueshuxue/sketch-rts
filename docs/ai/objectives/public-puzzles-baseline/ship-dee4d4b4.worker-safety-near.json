@@ -1,0 +1,435 @@
+{
+  "puzzle": "ship-away/near",
+  "criterion": "native-worker-safety-2026-10-21T23:39Z",
+  "originalCriterion": {
+    "passed": false,
+    "checks": {
+      "islandHallComplete": false,
+      "campCleared": false,
+      "armyTransported": false,
+      "noWorkerCampExposure": true,
+      "noWorkerCampDamage": true,
+      "workersSurvived": true
+    },
+    "tick": 8400,
+    "first": {
+      "transport-at-embark": 1,
+      "farm-complete": 2737,
+      "shipyard-complete": 4074
+    },
+    "commands": [
+      {
+        "tick": 17,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-3"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 17,
+        "command": {
+          "type": "train",
+          "buildingId": "scene-public-planner-frame-planner-townHall-1",
+          "unitKind": "worker"
+        }
+      },
+      {
+        "tick": 32,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-2",
+            "scene-public-planner-frame-planner-worker-1"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 32,
+        "command": {
+          "type": "build",
+          "unitId": "scene-public-planner-frame-planner-worker-2",
+          "buildingKind": "barracks",
+          "x": 776,
+          "y": 884
+        }
+      },
+      {
+        "tick": 107,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-1"
+          ],
+          "x": 1520,
+          "y": 720,
+          "avoidCombat": true
+        }
+      },
+      {
+        "tick": 107,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-2"
+          ],
+          "x": 1520,
+          "y": 720,
+          "avoidCombat": true
+        }
+      },
+      {
+        "tick": 107,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-3"
+          ],
+          "x": 1520,
+          "y": 720,
+          "avoidCombat": true
+        }
+      },
+      {
+        "tick": 107,
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-4"
+          ],
+          "x": 1520,
+          "y": 720,
+          "avoidCombat": true
+        }
+      },
+      {
+        "tick": 137,
+        "command": {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-3"
+          ]
+        }
+      },
+      {
+        "tick": 152,
+        "command": {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-2"
+          ]
+        }
+      },
+      {
+        "tick": 167,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "unit-planner-worker-1010"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 167,
+        "command": {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        }
+      },
+      {
+        "tick": 302,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-2"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 1262,
+        "command": {
+          "type": "train",
+          "buildingId": "scene-public-planner-frame-planner-townHall-1",
+          "unitKind": "worker"
+        }
+      },
+      {
+        "tick": 1412,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "unit-planner-worker-1014"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 1517,
+        "command": {
+          "type": "train",
+          "buildingId": "scene-public-planner-frame-planner-townHall-1",
+          "unitKind": "worker"
+        }
+      },
+      {
+        "tick": 1667,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "unit-planner-worker-1017"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 1847,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 2177,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 2537,
+        "command": {
+          "type": "build",
+          "unitId": "unit-planner-worker-1010",
+          "buildingKind": "farm",
+          "x": 810,
+          "y": 684
+        }
+      },
+      {
+        "tick": 2747,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "unit-planner-worker-1010"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 2867,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 3197,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 3707,
+        "command": {
+          "type": "build",
+          "unitId": "scene-public-planner-frame-planner-worker-3",
+          "buildingKind": "shipyard",
+          "x": 208,
+          "y": 784
+        }
+      },
+      {
+        "tick": 4037,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 4082,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-3"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 4397,
+        "command": {
+          "type": "build",
+          "unitId": "unit-planner-worker-1017",
+          "buildingKind": "farm",
+          "x": 950,
+          "y": 712
+        }
+      },
+      {
+        "tick": 4637,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "unit-planner-worker-1017"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 4727,
+        "command": {
+          "type": "train",
+          "buildingId": "building-planner-barracks-1004",
+          "unitKind": "lancer"
+        }
+      },
+      {
+        "tick": 5177,
+        "command": {
+          "type": "research",
+          "buildingId": "building-planner-barracks-1004",
+          "upgradeKind": "weaponTraining"
+        }
+      },
+      {
+        "tick": 5687,
+        "command": {
+          "type": "build",
+          "unitId": "scene-public-planner-frame-planner-worker-1",
+          "buildingKind": "stables",
+          "x": 916,
+          "y": 912
+        }
+      },
+      {
+        "tick": 6002,
+        "command": {
+          "type": "mine",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ],
+          "resourceId": "resource-0"
+        }
+      },
+      {
+        "tick": 6257,
+        "command": {
+          "type": "research",
+          "buildingId": "building-planner-barracks-1004",
+          "upgradeKind": "reinforcedPlating"
+        }
+      },
+      {
+        "tick": 7082,
+        "command": {
+          "type": "research",
+          "buildingId": "building-planner-barracks-1004",
+          "upgradeKind": "weaponTraining"
+        }
+      },
+      {
+        "tick": 8027,
+        "command": {
+          "type": "research",
+          "buildingId": "building-planner-barracks-1004",
+          "upgradeKind": "reinforcedPlating"
+        }
+      }
+    ],
+    "losses": [],
+    "workerSafety": {
+      "passed": true,
+      "samples": 16801,
+      "exposedSamples": 0,
+      "workerIds": [
+        "scene-public-planner-frame-planner-worker-1",
+        "scene-public-planner-frame-planner-worker-2",
+        "scene-public-planner-frame-planner-worker-3",
+        "unit-planner-worker-1010",
+        "unit-planner-worker-1014",
+        "unit-planner-worker-1017"
+      ],
+      "campMemberIds": [
+        "scene-public-planner-frame-neutral-murlocPeon-1",
+        "scene-public-planner-frame-neutral-murlocPeon-2"
+      ],
+      "firstExposures": [],
+      "campDamage": [],
+      "workerDeaths": [],
+      "scope": "Every sampled native tick. Idle native alert/reach and active native leash/response envelope; returning is not idle. All positive neutral-source damage, including residual sources, and all worker deaths are separate native events. This observer does not supply planner safety facts."
+    },
+    "originalChecks": {
+      "islandHallComplete": false,
+      "campCleared": false,
+      "armyTransported": false,
+      "safeWorkerSequence": false
+    },
+    "final": {
+      "gold": 559,
+      "homeAlive": true,
+      "armyAlive": 4,
+      "workersRescued": 0,
+      "guardsAlive": 2,
+      "localGuardsAlive": 0,
+      "buildings": {
+        "townHall": 1,
+        "farm": 4,
+        "barracks": 1,
+        "shipyard": 1,
+        "stables": 1
+      }
+    }
+  },
+  "originalError": {
+    "name": "AssertionError",
+    "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"noWorkerCampExposure\":true,\"noWorkerCampDamage\":true,\"workersSurvived\":true},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"farm-complete\":2737,\"shipyard-complete\":4074},\"commands\":[{\"tick\":17,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":17,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":32,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":32,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-2\",\"buildingKind\":\"barracks\",\"x\":776,\"y\":884}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":137,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":152,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":167,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":167,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":302,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\"],\"resourceId\":\"resource-0\"}},{\"tick\":1262,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1412,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1014\"],\"resourceId\":\"resource-0\"}},{\"tick\":1517,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1667,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":1847,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2177,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2537,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1010\",\"buildingKind\":\"farm\",\"x\":810,\"y\":684}},{\"tick\":2747,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":2867,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3197,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3707,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-3\",\"buildingKind\":\"shipyard\",\"x\":208,\"y\":784}},{\"tick\":4037,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":4082,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":4397,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"farm\",\"x\":950,\"y\":712}},{\"tick\":4637,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4727,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":5177,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":5687,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-1\",\"buildingKind\":\"stables\",\"x\":916,\"y\":912}},{\"tick\":6002,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":6257,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}},{\"tick\":7082,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":8027,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}}],\"losses\":[],\"workerSafety\":{\"passed\":true,\"samples\":16801,\"exposedSamples\":0,\"workerIds\":[\"scene-public-planner-frame-planner-worker-1\",\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-3\",\"unit-planner-worker-1010\",\"unit-planner-worker-1014\",\"unit-planner-worker-1017\"],\"campMemberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"],\"firstExposures\":[],\"campDamage\":[],\"workerDeaths\":[],\"scope\":\"Every sampled native tick. Idle native alert/reach and active native leash/response envelope; returning is not idle. All positive neutral-source damage, including residual sources, and all worker deaths are separate native events. This observer does not supply planner safety facts.\"},\"originalChecks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"final\":{\"gold\":559,\"homeAlive\":true,\"armyAlive\":4,\"workersRescued\":0,\"guardsAlive\":2,\"localGuardsAlive\":0,\"buildings\":{\"townHall\":1,\"farm\":4,\"barracks\":1,\"shipyard\":1,\"stables\":1}}}: expected false to be true // Object.is equality",
+    "stack": "AssertionError: {\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"noWorkerCampExposure\":true,\"noWorkerCampDamage\":true,\"workersSurvived\":true},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"farm-complete\":2737,\"shipyard-complete\":4074},\"commands\":[{\"tick\":17,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":17,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":32,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":32,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-2\",\"buildingKind\":\"barracks\",\"x\":776,\"y\":884}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":107,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":1520,\"y\":720,\"avoidCombat\":true}},{\"tick\":137,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":152,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":167,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":167,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":302,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\"],\"resourceId\":\"resource-0\"}},{\"tick\":1262,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1412,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1014\"],\"resourceId\":\"resource-0\"}},{\"tick\":1517,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1667,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":1847,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2177,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2537,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1010\",\"buildingKind\":\"farm\",\"x\":810,\"y\":684}},{\"tick\":2747,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":2867,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3197,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3707,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-3\",\"buildingKind\":\"shipyard\",\"x\":208,\"y\":784}},{\"tick\":4037,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":4082,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":4397,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"farm\",\"x\":950,\"y\":712}},{\"tick\":4637,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4727,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":5177,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":5687,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-1\",\"buildingKind\":\"stables\",\"x\":916,\"y\":912}},{\"tick\":6002,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":6257,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}},{\"tick\":7082,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":8027,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}}],\"losses\":[],\"workerSafety\":{\"passed\":true,\"samples\":16801,\"exposedSamples\":0,\"workerIds\":[\"scene-public-planner-frame-planner-worker-1\",\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-3\",\"unit-planner-worker-1010\",\"unit-planner-worker-1014\",\"unit-planner-worker-1017\"],\"campMemberIds\":[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"],\"firstExposures\":[],\"campDamage\":[],\"workerDeaths\":[],\"scope\":\"Every sampled native tick. Idle native alert/reach and active native leash/response envelope; returning is not idle. All positive neutral-source damage, including residual sources, and all worker deaths are separate native events. This observer does not supply planner safety facts.\"},\"originalChecks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":false,\"safeWorkerSequence\":false},\"final\":{\"gold\":559,\"homeAlive\":true,\"armyAlive\":4,\"workersRescued\":0,\"guardsAlive\":2,\"localGuardsAlive\":0,\"buildings\":{\"townHall\":1,\"farm\":4,\"barracks\":1,\"shipyard\":1,\"stables\":1}}}: expected false to be true // Object.is equality\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/register-tests.ts:135:75\n    at file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1271:3)"
+  },
+  "originalFinalSnapshotEqual": true,
+  "originalSdkEventsReapplied": 35,
+  "noAiPlanning": true,
+  "noFactReader": true,
+  "safety": {
+    "passed": true,
+    "samples": 16800,
+    "exposedSamples": 0,
+    "workerIds": [
+      "scene-public-planner-frame-planner-worker-1",
+      "scene-public-planner-frame-planner-worker-2",
+      "scene-public-planner-frame-planner-worker-3",
+      "unit-planner-worker-1010",
+      "unit-planner-worker-1014",
+      "unit-planner-worker-1017"
+    ],
+    "campMemberIds": [
+      "scene-public-planner-frame-neutral-murlocPeon-1",
+      "scene-public-planner-frame-neutral-murlocPeon-2"
+    ],
+    "firstExposures": [],
+    "campDamage": [],
+    "workerDeaths": [],
+    "scope": "Every sampled native tick. Idle native alert/reach and active native leash/response envelope; returning is not idle. All positive neutral-source damage, including residual sources, and all worker deaths are separate native events. This observer does not supply planner safety facts."
+  },
+  "buildingSafety": [],
+  "workerSafetyPassed": true,
+  "revisedExecutionPassed": false,
+  "limitation": "Same recorded trajectory, no additional AI game. Snapshot mismatches throw before a new verdict is written. Current hold and full future protection are separate.",
+  "snapshotChecksReviewProjection": {
+    "count": 560,
+    "allOriginalAndFinalEqual": true,
+    "fullArtifactFile": "worker-safety-replay/near/result.json"
+  }
+}
