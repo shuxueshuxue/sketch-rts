@@ -1,8 +1,10 @@
 import type { AllocationReason } from './allocation-types';
 import { goalResourceKey } from './goal-facts';
+import { goalReplayAncestors, orderGoalReplayEvents } from './goal-replay-order';
 import type { GoalActionDeclaration, GoalResource, GoalResourceBalance, GoalResourceEvent, GoalResourceFlow } from './goal-planner-types';
 
-export type GoalScheduledAction = Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>;
+export type GoalScheduledAction = Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number;
+  dependsOn?: readonly string[] }>;
 export type GoalResourceDeficit = Readonly<{ actionId: string; resource: GoalResource; tick: number; required: number; available: number }>;
 export type GoalResourceProjection = Readonly<{
   state: 'met' | 'unmet'; timeline: readonly GoalResourceEvent[]; balances: readonly GoalResourceBalance[];
@@ -57,12 +59,22 @@ export function projectGoalResources(input: Readonly<{ epoch: number; initial: r
       events.push({ actionId: action.id, tick, flow, index, finish: flow.at === 'finish' });
     }
   }
-  events.sort((a, b) => a.tick - b.tick || Number(b.finish && b.flow.delta > 0) - Number(a.finish && a.flow.delta > 0)
-    || (a.actionId < b.actionId ? -1 : a.actionId > b.actionId ? 1 : a.index - b.index));
+  const ancestors = goalReplayAncestors(input.actions);
+  if (!ancestors) return why('goal-action-dependencies-invalid');
+  const phase = (event: Event) => event.flow.at === 'start' ? 0 : event.flow.at === 'finish' ? 2 : 1;
+  const ordered = orderGoalReplayEvents(events.map(event => ({ id: JSON.stringify([event.actionId, event.index]), tick: event.tick,
+    value: event, dependsOn: events.filter(previous => previous.tick <= event.tick && (
+      previous.actionId === event.actionId && (previous.tick < event.tick
+        || phase(previous) < phase(event) || phase(previous) === phase(event) && previous.index < event.index)
+      || previous.actionId !== event.actionId && ancestors.get(event.actionId)!.has(previous.actionId)))
+      .map(previous => JSON.stringify([previous.actionId, previous.index])) })),
+    (a, b) => Number(b.finish && b.flow.delta > 0) - Number(a.finish && a.flow.delta > 0)
+      || (a.actionId < b.actionId ? -1 : a.actionId > b.actionId ? 1 : a.index - b.index));
+  if (!ordered) return why('goal-resource-event-dependencies-invalid');
   const timeline: GoalResourceEvent[] = [], deficits: GoalResourceDeficit[] = [], duplicateCredits: {
     actionId: string; sourceId: string; declared: number; credited: number }[] = [];
   const oneShot = new Map<string, number>(), income = new Map<string, Segment[]>();
-  for (const event of events) {
+  for (const event of ordered) {
     const { flow, actionId, tick } = event, key = goalResourceKey(flow.resource), before = amounts.get(key) ?? 0;
     let delta = flow.delta;
     if (delta > 0 && flow.resource.kind === 'gold' && !flow.source) return why('goal-positive-gold-source-unbound', [actionId]);

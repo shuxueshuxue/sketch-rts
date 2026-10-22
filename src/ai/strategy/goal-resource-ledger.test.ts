@@ -67,3 +67,27 @@ it('does not extend income support or credit unproved gold, and preserves finite
   expect(projectGoalResources({ epoch: 0, initial: [...initial(100), ...initial(200)], actions: [] }))
     .toMatchObject({ state: 'pending', reason: { code: 'goal-initial-resource-conflict' } });
 });
+
+it('cannot fund a zero-duration action start from its own finish reward', () => {
+  const result = projectGoalResources({ epoch: 0, initial: initial(0), actions: [
+    action('camp', 0, 0, [spend(30), reward('native-camp', 30)]),
+  ] });
+  expect(result.state).toBe('unmet');
+  if (result.state !== 'pending') {
+    expect(result.timeline.map(event => event.after)).toEqual([-30, 0]);
+    expect(result.deficits).toMatchObject([{ actionId: 'camp', tick: 0, required: 30, available: 0 }]);
+  }
+});
+
+it('orders equal-time dependent credits after their own start and before the successor, independent of IDs or array order', () => {
+  const producer = action('z-producer', 0, 0, [spend(10), reward('native-reward', 30)]);
+  const successor = { ...action('a-successor', 0, 1, [spend(30)]), dependsOn: ['z-producer'] };
+  const result = projectGoalResources({ epoch: 0, initial: initial(10), actions: [successor, producer] });
+  expect(result.state).toBe('met');
+  if (result.state !== 'pending') expect(result.timeline.map(event => [event.actionId, event.delta, event.after]))
+    .toEqual([['z-producer', -10, 0], ['z-producer', 30, 30], ['a-successor', -30, 0]]);
+  expect(projectGoalResources({ epoch: 0, initial: initial(10), actions: [producer, successor] })).toEqual(result);
+  expect(projectGoalResources({ epoch: 0, initial: initial(10), actions: [
+    { ...producer, dependsOn: ['a-successor'] }, successor,
+  ] })).toMatchObject({ state: 'pending', reason: { code: 'goal-action-dependencies-invalid' } });
+});

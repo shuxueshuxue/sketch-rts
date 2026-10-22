@@ -70,8 +70,19 @@ it('projects only the selected actual cohort at its landing, with future availab
       });
       expect(projectedHull(goalFact({ kind: 'transport-at', transport: ref(boat.id), at: { seaId: 'sea:1', point: { x: 2500, y: 2000 } },
         tolerance: 36, byTick: 200 }), { actions: [{ action: delivered, startTick: 0, finishTick: 100 },
-        { action: returned, startTick: 100, finishTick: 100 }], bindings: {} })).toMatchObject({ availableTick: 100 });
+        { action: returned, startTick: 100, finishTick: 100, dependsOn: [delivered.id] }], bindings: {} })).toMatchObject({ availableTick: 100 });
       expect(seen[0]!.units.find(unit => unit.id === boat.id)).toMatchObject({ x: 2500, y: 2000 });
+      expect(projectedHull(goalFact({ kind: 'transport-at', transport: ref(boat.id), at: { seaId: 'sea:1', point: { x: 2500, y: 2000 } },
+        tolerance: 36, byTick: 200 }), { actions: [
+        { action: returned, startTick: 100, finishTick: 100, dependsOn: [delivered.id] },
+        { action: delivered, startTick: 0, finishTick: 100 }], bindings: {} })).toMatchObject({ availableTick: 100 });
+      expect(seen[1]!.units.find(unit => unit.id === boat.id)).toMatchObject({ x: 2500, y: 2000 });
+      expect(projectedHull(goalFact({ kind: 'transport-at', transport: ref(boat.id), at: { seaId: 'sea:1', point: { x: 2500, y: 2000 } },
+        tolerance: 36, byTick: 200 }), { actions: [
+        { action: returned, startTick: 100, finishTick: 100, dependsOn: [delivered.id] },
+        { action: delivered, startTick: 0, finishTick: 100, dependsOn: [returned.id] }], bindings: {} }))
+        .toMatchObject({ state: 'unmet', reason: { code: 'projected-prefix-dependencies-invalid' } });
+      expect(seen).toHaveLength(2); // Invalid causality must not call the world/query reader.
       snapshot.units.pop();
     }));
   expect(work.receipt.used).toBe(0);

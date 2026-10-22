@@ -2,6 +2,7 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { bindGoalFact } from './goal-fact-matching';
 import { goalValueKey } from './goal-facts';
 import { goalPoolMemberCandidates } from './goal-pool-members';
+import { goalReplayAncestors, orderGoalReplayEvents } from './goal-replay-order';
 import type { GoalFactReader, GoalPlanningContext } from './goal-planner-types';
 
 type RecordValue = Record<string, unknown>;
@@ -40,9 +41,16 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
       }
       moved.set(id, { unit, tick, actionId });
     };
-    // Prefix order breaks equal finish times. A zero-time optimistic return
-    // follows the voyage which released its hull, even if its ID sorts first.
-    for (const step of [...projection.actions].sort((a, b) => a.finishTick - b.finishTick)) {
+    const ancestors = goalReplayAncestors(projection.actions);
+    const ordered = ancestors && orderGoalReplayEvents(projection.actions.map(step => ({ id: step.action.id,
+      tick: step.finishTick, value: step, dependsOn: projection.actions.filter(parent =>
+        parent.finishTick <= step.finishTick && ancestors.get(step.action.id)!.has(parent.action.id)).map(parent => parent.action.id) })),
+      (a, b) => a.action.id < b.action.id ? -1 : a.action.id > b.action.id ? 1 : 0);
+    if (!ordered) return { fact, state: 'unmet', observedTick: context.tick, revision: 'invalid-projected-causality',
+      evidence: [], reason: { code: 'projected-prefix-dependencies-invalid', factIds: [fact.id], values: {} } };
+    // An equal-finish return follows the voyage that released its hull,
+    // regardless of saved array order or allocated action version numbers.
+    for (const step of ordered) {
       const kind = step.action.kind, parameters = step.action.executor.parameters;
       if (kind === 'transport-force' || kind === 'transport-worker') {
         const landing = record(parameters.landing), ground = point(landing?.ground), water = point(landing?.water);

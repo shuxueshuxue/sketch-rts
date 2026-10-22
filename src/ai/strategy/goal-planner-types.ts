@@ -96,7 +96,7 @@ export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
 export type GoalDeclarationContext = Readonly<{ precision: 'coarse' | 'exact'; reservedGold: number;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[]; campIds: readonly string[];
   transportSelections?: readonly Pick<GoalActionDeclaration, 'id' | 'kind' | 'executor'>[];
-  prefix?: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[] }>;
+  prefix?: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number; dependsOn?: readonly string[] }>[] }>;
 export type GoalDeclarationRegeneration = Readonly<{ providerId: string; effect: GoalFact; groundingKey: string;
   context: GoalDeclarationContext; sourceRevision: string;
   dependencies: readonly Readonly<{ fact: GoalFact; revision: string; state: GoalFactState }>[];
@@ -122,7 +122,7 @@ export type GoalPlanningContext = Readonly<{
   /** The same fact source evaluates explicit planned output references and
    * moved cohorts. It never treats a projected entity as currently available. */
   readProjectedFact?: (fact: GoalFact, projection: Readonly<{
-    actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[];
+    actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number; dependsOn?: readonly string[] }>[];
     bindings: Readonly<Record<string, GoalEntityReference>>;
   }>) => GoalFactObservation | null;
 }>;
