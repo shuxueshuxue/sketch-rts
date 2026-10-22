@@ -1,19 +1,22 @@
 import {applyAiPlanDelta, type AiPlanPacket, type AiPlanBuildingLoss} from '../ai/plan-stream';
-import type {AiPlanNode, AiPlanTrace} from '../ai/plan-trace';
+import type {AiPlanTrace} from '../ai/plan-trace';
 import type {AiUnitDeathRecord} from '../ai/death-ledger-types';
+import { planPhase, planViewNodes, type PlanAllocationEvent, type PlanViewNode } from './ai-plan-strategy';
 export type PlanBand = {owner:string;id:string;label:string;kind:string;from:number;to:number;status:string;segments:{from:number;to:number;phase:string;reason:string}[]};
 export class AiPlanHistory {
   readonly frames = new Map<string,AiPlanTrace[]>();
   readonly bands: PlanBand[] = [];
   readonly deaths: AiUnitDeathRecord[] = [];
   readonly buildings: AiPlanBuildingLoss[] = [];
+  readonly allocationEvents: PlanAllocationEvent[] = [];
+  private allocationEventIds = new Set<string>();
   readonly coverage = new Map<number,{from:number;to:number|null;availability?:'after-match'}>();
   readonly paths = new Map<string,{tick:number;x:number;y:number;session:number;goals:string[]}[]>();
   private current = new Map<string,{trace:AiPlanTrace;session:number}>();
   revision=0;
   receive(packet:AiPlanPacket) {
     this.revision++;
-    if(packet.type==='reset'){this.frames.clear();this.bands.length=0;this.deaths.length=0;this.buildings.length=0;this.coverage.clear();this.paths.clear();this.current.clear();return;}
+    if(packet.type==='reset'){this.frames.clear();this.bands.length=0;this.deaths.length=0;this.buildings.length=0;this.allocationEvents.length=0;this.allocationEventIds.clear();this.coverage.clear();this.paths.clear();this.current.clear();return;}
     if(packet.type==='coverage'){this.coverage.set(packet.session,{from:packet.from,to:packet.to,...(packet.availability?{availability:packet.availability}:{})});return;}
     if(packet.type==='events'){
       for(const death of packet.deaths) if(!this.deaths.some(d=>d.id===death.id))this.deaths.push(death);
@@ -25,19 +28,30 @@ export class AiPlanHistory {
     if(!trace)return;
     this.current.set(trace.owner,{trace,session:packet.session});
     const frames=this.frames.get(trace.owner)??[];frames.push(trace);this.frames.set(trace.owner,frames);
-    for(const p of packet.positions??[]){const points=this.paths.get(p.id)??[];points.push({...p,tick:packet.tick,session:packet.session,goals:trace.nodes.filter(n=>trace.roots.includes(n.id)&&n.resources.unitIds.includes(p.id)).map(n=>n.id)});this.paths.set(p.id,points);}
-    if(before?.session===packet.session)for(const oldId of before.trace.roots)if(!trace.roots.includes(oldId)){
-      const ended=this.bands.find(b=>b.owner===trace.owner&&b.id===oldId&&b.status!=='done'&&b.status!=='abandoned'&&b.status!=='released');
+    const nodes = planViewNodes(trace), ids = new Set(nodes.map(node => node.id));
+    const interval = this.coverage.get(packet.session);
+    for (const event of trace.strategy?.allocation?.events ?? []) {
+      // A retained business journal is not a recording of a time when observation was off.
+      const key = JSON.stringify([trace.owner, event.id]);
+      if (!interval || interval.availability || event.tick < interval.from || event.tick > trace.tick
+        || (interval.to !== null && event.tick > interval.to) || this.allocationEventIds.has(key)) continue;
+      this.allocationEventIds.add(key);
+      this.allocationEvents.push({ owner: trace.owner, event, observedTick: trace.tick, session: packet.session });
+    }
+    for(const p of packet.positions??[]){const points=this.paths.get(p.id)??[];points.push({...p,tick:packet.tick,session:packet.session,goals:nodes.filter(n=>n.resources.unitIds.includes(p.id)).map(n=>n.id)});this.paths.set(p.id,points);}
+    if(before?.session===packet.session)for(const oldId of planViewNodes(before.trace).map(node => node.id))if(!ids.has(oldId)){
+      const ended=this.bands.find(b=>b.owner===trace.owner&&b.id===oldId&&!terminal(b.status)&&b.from>=(interval?.from??packet.tick));
       if(ended){ended.to=packet.tick;ended.status='released';}
     }
-    for(const id of trace.roots){
-      const node=trace.nodes.find(n=>n.id===id);if(!node)continue;
-      let band=this.bands.find(b=>b.owner===trace.owner&&b.id===id&&b.status!=='released'&&b.from>=(this.coverage.get(packet.session)?.from??packet.tick));
-      if(!band){band={owner:trace.owner,id,label:node.label,kind:node.kind,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
-      if(band.status==='done'||band.status==='abandoned')continue;
+    for(const node of nodes){
+      const id = node.id;
+      const since = Math.max(interval?.from ?? packet.tick, node.strategy ? node.sinceTick ?? 0 : 0);
+      let band=this.bands.filter(b=>b.owner===trace.owner&&b.id===id&&b.status!=='released'&&b.from>=since).at(-1);
+      if(band&&terminal(band.status)&&node.goalPlan&&node.status!=='complete'&&packet.tick>band.to)band=undefined;
+      if(!band){band={owner:trace.owner,id,label:node.label,kind:node.goalPlan?'goal':node.strategy?'strategy':node.kind,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
+      if(terminal(band.status))continue;
       band.to=packet.tick;band.status=node.status;
-      const phase=trace.nodes.find(n=>node.children.includes(n.id))?.label??node.reasons[0]?.code??node.status;
-      const reason=node.reasons.map(r=>r.detail).join('；');
+      const {phase,reason}=planPhase(trace,node);
       const last=band.segments.at(-1);
       if(last?.phase===phase&&last.reason===reason)last.to=packet.tick;
       else band.segments.push({from:packet.tick,to:packet.tick,phase,reason});
@@ -59,8 +73,10 @@ export class AiPlanHistory {
     const interval=[...this.coverage.values()].find(c=>!c.availability&&tick>=c.from&&(c.to===null||tick<=c.to));
     return frame&&interval&&frame.tick>=interval.from?frame:undefined;
   }
-  nodes(tick:number):{trace:AiPlanTrace;node:AiPlanNode}[]{return [...this.frames.keys()].flatMap(owner=>{const trace=this.at(owner,tick);return trace?trace.roots.flatMap(id=>{const node=trace.nodes.find(n=>n.id===id);return node?[{trace,node}]:[];}):[];});}
+  nodes(tick:number):{trace:AiPlanTrace;node:PlanViewNode}[]{return [...this.frames.keys()].flatMap(owner=>{const trace=this.at(owner,tick);return trace?planViewNodes(trace).map(node=>({trace,node})):[];});}
+  eventsAt(tick:number){return this.recorded(tick)?this.allocationEvents.filter(entry=>entry.observedTick<=tick&&entry.event.tick<=tick):[];}
 }
+const terminal=(status:string)=>['done','complete','failed','abandoned','released'].includes(status);
 export function deathStyle(death:AiUnitDeathRecord){
   const disposition=death.classification.disposition;
   return disposition==='normal'?{kind:'normal',label:'战损（正常）',icon:'×',color:'#58765b'}
@@ -79,8 +95,11 @@ export function planTimelineRows<T>(items:readonly T[],start:(item:T)=>number,en
 }
 
 /** Link only an explicitly recorded task identity, never nearby units or positions. */
-export function planDeathMatches(owner:string,node:AiPlanNode,death:AiUnitDeathRecord,fromTick:number){
+export function planDeathMatches(owner:string,node:PlanViewNode,death:AiUnitDeathRecord,fromTick:number){
   if(death.owner!==owner||!death.actualDeath||death.tick<fromTick)return false;
+  if(node.goalPlan)return death.attributionContext.objectiveId===node.goalPlan.goal.id
+    ||node.goalPlan.actions.some(action=>action.allocation?.objectiveId===death.attributionContext.objectiveId);
+  if(node.strategy)return death.attributionContext.objectiveId===node.strategy.objectiveId;
   const id=death.assignment.task?.id;
   if(!id)return false;
   if(id===node.id)return true;

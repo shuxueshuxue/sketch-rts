@@ -10,6 +10,8 @@ import {checksumGame} from '../shared/sim/checksum';
 import {LocalGameAdapter} from '../client/net/local-adapter';
 import {replaySnapshotToTick} from '../shared/replay';
 import {createRoomLifecycleHost} from '../shared/room-lifecycle';
+import {strategyFixture} from '../client/ai-plan-strategy.test-fixture';
+import type {AiThinkObservation} from './runtime';
 
 it('constructs no trace, context or ledger while both switches are off; observation does not change a single command or tick hash', () => {
   const project = vi.spyOn(traceModule,'buildAiPlanTrace'), context = vi.spyOn(contextModule,'projectDeathThinkContext');
@@ -85,4 +87,20 @@ it('does not let an observation consumer discard an already planned command',()=
  const commands:any[]=[];
  expect(()=>executor.submit(game,{tick:0,deliveryTick:0,requests:[{playerId:'enemy',memory:runtime.memories.enemy!}]},frame=>commands.push(...frame))).not.toThrow();
  expect(commands.some(c=>c.command.type==='mine')).toBe(true);expect(log).toHaveBeenCalled();log.mockRestore();
+});
+
+it('samples formal assignees outside old module claims, excluding observed proposal memberships', () => {
+  const { game, snapshot, trace, first, second } = strategyFixture();
+  const ai = createAiRuntime(['player']), executor = createInlineAiThinkExecutor(ai);
+  let consume: ((observation: AiThinkObservation) => void) | undefined;
+  executor.observe = listener => { consume = listener; };
+  const before = checksumGame(game), observer = new AiPlanObserver(game, ['player'], executor), packets: AiPlanPacket[] = [];
+  const close = observer.subscribe(packet => packets.push(packet));
+  consume!({ trace, context: contextModule.projectDeathThinkContext(snapshot, 'player', { jobs: [], unitClaims: {} }) });
+  const packet = packets.find(packet => packet.type === 'trace');
+  expect(packet?.type === 'trace' ? packet.positions?.map(position => position.id) : []).toEqual([first.id]);
+  expect(packet?.type === 'trace' ? packet.positions?.map(position => position.id) : []).not.toContain(second.id);
+  expect(checksumGame(game)).toBe(before);
+  close();
+  expect(observer.active).toBe(false);
 });

@@ -1,0 +1,273 @@
+{
+  "contract": {
+    "source": "f5c25a3492afa45c25dcd6728e8acb39ae4450b4",
+    "kind": "synthetic-contract-fixture",
+    "watermark": "browser-rendered",
+    "rawGroup": "contract-watermarked",
+    "summary": {
+      "evidence": "synthetic-contract-fixture",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "throughTick": 120,
+      "packets": 7,
+      "incremental": 5,
+      "checked": [
+        "utility",
+        "assignments",
+        "preemption",
+        "unmet",
+        "vacancies",
+        "blocked",
+        "backward-seek",
+        "unrecorded-gap"
+      ]
+    }
+  },
+  "existingModuleRegression": {
+    "source": "607e5973e737aabd5e511a9dc64d2e77a712405d",
+    "kind": "real-four-AI-twoShores-match-without-formal-producer",
+    "summary": {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "tick": 4860,
+      "seek": 4443,
+      "requestedSeek": 4443,
+      "chosen": {
+        "tick": 4443,
+        "owner": "enemy",
+        "id": "expansion:gold-gen-2:2493",
+        "label": "建立分矿",
+        "position": {
+          "x": 1912,
+          "y": 5723
+        }
+      },
+      "focus": "建立分矿",
+      "metrics": [
+        {
+          "open": false,
+          "recording": false,
+          "advancedTicks": 115,
+          "file": "trace-0-closed.json.gz",
+          "sha256": "38e21082c8876f09569fd7d3a5490a582d150ebde7f3a07ab58c3faa078f183b",
+          "planMs": {},
+          "frames": 56,
+          "jsMedianMs": 4.527,
+          "jsP95Ms": 8.198,
+          "jsMaxMs": 9.276,
+          "planTimingEvents": 0
+        },
+        {
+          "open": true,
+          "recording": false,
+          "advancedTicks": 116,
+          "file": "trace-1-open.json.gz",
+          "sha256": "2bcfd519aa04f0f675ebe0bba8801aa103c6d49254616ac902facead636ec590",
+          "planMs": {
+            "ai-plan:receive": {
+              "count": 20,
+              "median": 0.1,
+              "p95": 0.201,
+              "max": 0.201
+            },
+            "ai-plan:draw": {
+              "count": 59,
+              "median": 0.1,
+              "p95": 4.199,
+              "max": 26.5
+            }
+          },
+          "frames": 65,
+          "jsMedianMs": 5.245,
+          "jsP95Ms": 9.268,
+          "jsMaxMs": 11.4,
+          "planTimingEvents": 175
+        },
+        {
+          "open": false,
+          "recording": false,
+          "advancedTicks": 111,
+          "file": "trace-2-closed.json.gz",
+          "sha256": "2abb990d9e2f4706e02412682fc12d63b652403e9d9be3d6754b0a761299dabb",
+          "planMs": {},
+          "frames": 72,
+          "jsMedianMs": 4.647,
+          "jsP95Ms": 5.818,
+          "jsMaxMs": 7.095,
+          "planTimingEvents": 0
+        },
+        {
+          "open": true,
+          "recording": false,
+          "advancedTicks": 108,
+          "file": "trace-3-open.json.gz",
+          "sha256": "3cf3bef41d59bede9abd9a9b7e66a63684eb938be31772e9b1aa009c5d3b6c94",
+          "planMs": {
+            "ai-plan:draw": {
+              "count": 58,
+              "median": 0.1,
+              "p95": 27.4,
+              "max": 50.3
+            },
+            "ai-plan:receive": {
+              "count": 21,
+              "median": 0.1,
+              "p95": 0.2,
+              "max": 0.699
+            }
+          },
+          "frames": 73,
+          "jsMedianMs": 4.099,
+          "jsP95Ms": 7.472,
+          "jsMaxMs": 10.429,
+          "planTimingEvents": 180
+        }
+      ],
+      "traffic": {
+        "bytes": 1377521,
+        "packets": 1352,
+        "baselines": 12,
+        "deltas": 1327,
+        "nodes": 909
+      },
+      "packets": 1290,
+      "recordingFrom": 60,
+      "recordingThrough": 4860,
+      "deathRecords": 8
+    }
+  },
+  "baseModuleRegression": {
+    "source": "3bbeb2aeb1d6fa9c4d3d74fc85a7a44ea6557f03",
+    "summary": {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "tick": 4860,
+      "seek": 4443,
+      "requestedSeek": 4443,
+      "chosen": {
+        "tick": 4443,
+        "owner": "enemy",
+        "id": "expansion:gold-gen-2:2493",
+        "label": "建立分矿",
+        "position": {
+          "x": 1912,
+          "y": 5723
+        }
+      },
+      "focus": "建立分矿",
+      "metrics": [
+        {
+          "open": false,
+          "recording": false,
+          "advancedTicks": 115,
+          "file": "trace-0-closed.json.gz",
+          "sha256": "a8fe4c3260479219ff0a576d34562821bb28b3c10746b56d36941b197f1b3e03",
+          "planMs": {},
+          "frames": 96,
+          "jsMedianMs": 3.834,
+          "jsP95Ms": 6.621,
+          "jsMaxMs": 8.012,
+          "planTimingEvents": 0
+        },
+        {
+          "open": true,
+          "recording": false,
+          "advancedTicks": 115,
+          "file": "trace-1-open.json.gz",
+          "sha256": "e7b5603afe21fb037c4b3698c5f31c692047cec71455358ed0af346dc9c22058",
+          "planMs": {
+            "ai-plan:receive": {
+              "count": 20,
+              "median": 0.1,
+              "p95": 0.201,
+              "max": 0.201
+            },
+            "ai-plan:draw": {
+              "count": 59,
+              "median": 0.1,
+              "p95": 3.6,
+              "max": 4.8
+            }
+          },
+          "frames": 74,
+          "jsMedianMs": 5.06,
+          "jsP95Ms": 8.723,
+          "jsMaxMs": 10.415,
+          "planTimingEvents": 184
+        },
+        {
+          "open": false,
+          "recording": false,
+          "advancedTicks": 115,
+          "file": "trace-2-closed.json.gz",
+          "sha256": "cf297f26d1d1e1aa76a3f55887f97bae2140f38b67ca072a32c8ab15972c51e8",
+          "planMs": {},
+          "frames": 73,
+          "jsMedianMs": 5.066,
+          "jsP95Ms": 7.583,
+          "jsMaxMs": 8.892,
+          "planTimingEvents": 0
+        },
+        {
+          "open": true,
+          "recording": false,
+          "advancedTicks": 115,
+          "file": "trace-3-open.json.gz",
+          "sha256": "5ded90bae11a08c90219e90c138450be8161ee723e71b5c50582699d38f81c69",
+          "planMs": {
+            "ai-plan:draw": {
+              "count": 67,
+              "median": 0.1,
+              "p95": 2.8,
+              "max": 5.7
+            },
+            "ai-plan:receive": {
+              "count": 20,
+              "median": 0.1,
+              "p95": 0.2,
+              "max": 0.2
+            }
+          },
+          "frames": 85,
+          "jsMedianMs": 4.67,
+          "jsP95Ms": 7.448,
+          "jsMaxMs": 11.629,
+          "planTimingEvents": 203
+        }
+      ],
+      "traffic": {
+        "bytes": 1381189,
+        "packets": 1355,
+        "baselines": 12,
+        "deltas": 1330,
+        "nodes": 910
+      },
+      "packets": 1290,
+      "recordingFrom": 60,
+      "recordingThrough": 4860,
+      "deathRecords": 8
+    }
+  },
+  "wallTimeCheck": {
+    "planDrawWallMs": 50.3,
+    "enclosingRafWallMs": 55.421,
+    "enclosingRafCpuMs": 4.328,
+    "note": "Wall time includes non-CPU waiting or scheduling. Exact cause not isolated; no full formal-allocation load is measured here."
+  },
+  "rawArchive": "/codegeex/jeffry/sketch-rts-camps/plan-allocation-fe15e971/browser-evidence",
+  "files": {
+    "allocation-contract-intent.png": {
+      "sha256": "9fada4e1b1ec00a25fdba64a16722212bb39f6012a0c07fcd4c5622f4a434d4a",
+      "bytes": 352310
+    },
+    "allocation-contract-assignment.png": {
+      "sha256": "8f119e8b34053b1db9ef1f00aa6d8813fd182977ed93157b014b84209a35dd37",
+      "bytes": 347814
+    },
+    "allocation-wiring-spectator.png": {
+      "sha256": "025bc54fa4591df4ccc016630d1aace4abe0b72bb0f4ad9ca6ff4de114158a85",
+      "bytes": 562686
+    },
+    "allocation-wiring-replay.png": {
+      "sha256": "29e8a5740980ffd2d3996b4aa3d69dde3de32397331a237b1069027066fbe542",
+      "bytes": 598349
+    }
+  }
+}

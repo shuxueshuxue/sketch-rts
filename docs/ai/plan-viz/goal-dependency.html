@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>阵前手记 · 从所求，到所得</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="goal-dependency.css">
+</head>
+<body>
+  <main class="notebook">
+    <header class="masthead">
+      <div class="brand"><span class="seal" aria-hidden="true">谋<br>行</span><div><small>SKETCH RTS / THE COMMANDER'S NOTES</small><h1>阵前手记 <em>从所求，到所得</em></h1></div></div>
+      <div class="edition"><span class="sample-label">人工样稿 · 非真实 AI 决策</span><p>依照 #584 §5 · 等待规划器正式类型</p></div>
+    </header>
+    <div class="notice"><b>版式演示</b><span>所有目标、数值、时刻与执行记录均为假数据；不代表规划器输出，也不作为行为验收证据。</span><a href="index.html">样稿目录 ↗</a></div>
+    <section class="workspace" aria-label="计划依赖图和选中节点详情">
+      <div class="graph-sheet">
+        <header class="graph-heading"><div><small>BLUE / 蓝方 AI · 回放样稿</small><h2 id="scene-title">条件尚未成立，计划从这里长出来</h2></div><div class="graph-tools"><button id="zoom-out" aria-label="缩小依赖图">−</button><output id="zoom-label">100%</output><button id="zoom-in" aria-label="放大依赖图">＋</button><button id="zoom-reset">适合窗口</button></div></header>
+        <div class="graph-key"><span class="key unmet">◇ 缺条件</span><span class="key pending">◌ 等事实</span><span class="key met">✓ 已成立</span><span>虚线反推依赖 → 实线追踪执行与证据</span><strong id="frame-clock">04:20</strong></div>
+        <div class="graph-viewport" id="graph-viewport" tabindex="0" aria-label="可缩放、可横向滚动的依赖图">
+          <div class="graph-size" id="graph-size"><div class="graph-canvas" id="graph-canvas">
+            <div class="column-label" style="left:16px">01 <b>想得到什么</b></div>
+            <div class="column-label" style="left:230px">02 <b>还缺什么条件</b></div>
+            <div class="column-label" style="left:452px">03 <b>为什么推出这个动作</b></div>
+            <div class="column-label" style="left:675px">04 <b>谁在做 · 到哪一步</b></div>
+            <div class="column-label" style="left:905px">05 <b>用什么证明结果</b></div>
+            <svg id="graph-links" viewBox="0 0 1100 460" aria-hidden="true"></svg>
+            <div id="graph-nodes"></div>
+            <div class="sample-watermark" aria-hidden="true">人工样稿</div>
+          </div></div>
+          <div id="unrecorded" hidden><strong>未记录</strong><p>该时段没有样稿帧，不补建、不插值。</p><button data-moment="260">返回首个样稿帧 04:20</button></div>
+        </div>
+        <footer class="graph-caption"><b id="graph-summary"></b><span>点击任一节点，沿证据检查它的上下游；拖动底部时间轴，回看当时所知。</span></footer>
+      </div>
+      <aside class="dossier" aria-label="选中节点的依赖、方案、执行和结果"><header><small>INTENT → CONSEQUENCE</small><h2>把每一步问清楚</h2></header><div id="node-detail" aria-live="polite"></div></aside>
+    </section>
+    <section class="chronology" aria-label="目标与动作时间轴">
+      <header><div><small>THE CAMPAIGN / 时间是主轴</small><h2>何时决定，何时改变，最后怎样</h2></div><nav id="moments" aria-label="跳到关键时刻"></nav></header>
+      <div class="axis"><span class="axis-label">目标 / 行动</span><div id="ticks"></div></div>
+      <div id="timeline-lanes"></div>
+      <div class="scrubber"><output id="seek-clock">04:20</output><input id="time-seek" type="range" min="0" max="900" value="260" step="1" aria-label="回看样稿时刻"><span>15:00</span></div>
+      <footer><span>条带明暗 = 阶段 · ↗ = 资源被抢占 · ✓ = 效果已被观测</span><span id="sample-frame-note"></span></footer>
+    </section>
+    <footer class="page-foot"><span>只读版式样稿 · 不运行 AI，不发命令，不定义 shared 规划器契约。</span><span>观战 / 回放看已记录内容；联机仍由服务端裁剪。</span></footer>
+  </main>
+  <script src="goal-dependency.js"></script>
+</body>
+</html>

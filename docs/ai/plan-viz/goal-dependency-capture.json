@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "evidence": "artificial-layout-only",
+  "source": "d22bff3e1f3da79e6be81492ddaa3c9eccd4d460",
+  "contractMain": "d4ca2668",
+  "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+  "checked": [
+    "goal",
+    "unmet-and-pending-facts",
+    "recursive-prerequisites",
+    "rejected-options",
+    "execution-and-effect",
+    "interruption",
+    "pointer-seek",
+    "unrecorded-gap",
+    "file-open"
+  ],
+  "rawDirectory": "/root/.cache/sketch-cli/runs/mvhkddvc-def70b/d22bff3",
+  "stagedDirectory": "/Users/mac1/work/sketch-cli/runs/camps-goal-preview-d22bff3e",
+  "stagingReason": "CLI incremental copy omitted new docs assets; git archive of the source commit supplied these three files to an isolated run directory.",
+  "sourceFiles": [
+    {
+      "path": "goal-dependency.html",
+      "sha256": "8598d2fb86b2fbaf7dd1431634c3f490c1b7160b7a1f367730666813ac695597"
+    },
+    {
+      "path": "goal-dependency.css",
+      "sha256": "83ce37857d10958c25f389e59aac016d15521757ede02ee03fc71aa42ee65ac6"
+    },
+    {
+      "path": "goal-dependency.js",
+      "sha256": "ede60a7d47f12e7993059679fde347aa4f25b7b11bae212648f7144d9839fb0c"
+    }
+  ],
+  "shots": [
+    {
+      "path": "goal-dependency-plan.png",
+      "sha256": "3e115112bcebb308983b3eac6a148f6ba39dd3e5b302d4d3219b62f0c7b48413",
+      "bytes": 291234,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-dependency-options.png",
+      "sha256": "3815a69fcd0d4bd62a39f1481a3bc76daf2c69977303c8d6befcaa3ec589758c",
+      "bytes": 288759,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-dependency-interruption.png",
+      "sha256": "c235c6410adc60930cae3f008659cb67e8945976cc9ad657ab2771fe3243e58b",
+      "bytes": 290411,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-dependency-progress.png",
+      "sha256": "92d644583852f73c571a5b51f87899e315ae644ac7b863403382cf7aab0e11d8",
+      "bytes": 274130,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "goal-dependency-result.png",
+      "sha256": "4a39c0c3f7d814e6fe81234fceb48d874cb4c51e65e59b9ca68dd88cc935e886",
+      "bytes": 275269,
+      "width": 1600,
+      "height": 900
+    }
+  ],
+  "notEvidenceOf": [
+    "planner correctness",
+    "AI execution",
+    "runtime performance"
+  ]
+}
