@@ -1,0 +1,51 @@
+import { describe, expect, it } from 'vitest';
+import type { SdkGameCommandPlanner } from '../../../../sdk/game-runner';
+import type { AiGameAgent } from '../../../game-runner';
+import { seconds } from '../../../../shared/time';
+import { DISRUPTION_CASES } from './scenes';
+import { runDisruption } from './run';
+
+// Authored legal commands validate the interference mechanics only. No owner
+// policy is run here, and these results cannot count as a main AI baseline.
+describe('native world-triggered interference mechanics', () => {
+  for (const variant of ['loaded', 'empty'] as const) it(`one real warship sinks the ${variant} transport`, () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'transport-sunk' && p.variant === variant)!;
+    const w = puzzle.create(), army = w.army.map(u => u.id), hull = w.transport!.id;
+    const planner: SdkGameCommandPlanner<AiGameAgent> = c => {
+      const ship = c.snapshot.units.find(u => u.id === hull); if (!ship) return [];
+      const troops = c.snapshot.units.filter(u => army.includes(u.id));
+      const waiting = troops.filter(u => !u.deck && !u.cabin);
+      const commands = variant === 'empty' ? (ship.order.type === 'idle' ? [{ type: 'move' as const, unitIds: [hull], x: 1664, y: 768 }] : [])
+        : waiting.length ? (waiting.some(u => u.order.type !== 'board') ? [{ type: 'board' as const, unitIds: waiting.map(u => u.id), transportId: hull }] : [])
+        : ship.order.type !== 'move' ? [{ type: 'move' as const, unitIds: [hull], x: 2272, y: 768 }] : [];
+      return commands.map(command => ({ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only', command }));
+    };
+    const r = runDisruption(puzzle, { ownerPlanner: planner, maxTicks: seconds(180) });
+    expect(r.state.trigger, 'world-state trigger must actually happen').not.toBeNull();
+    expect(r.state.loss?.actualKill?.source.id).toBe(w.interceptors[0]);
+    expect(r.final.units.some(u => u.id === hull)).toBe(false);
+    if (variant === 'loaded') {
+      expect(r.state.trigger!.passengerIds.length).toBeGreaterThan(0);
+      expect(r.state.kills.some(k => r.state.trigger!.passengerIds.includes(k.unit.id) && k.cause === 'sinking')).toBe(true);
+    } else expect(r.state.trigger!.passengerIds).toHaveLength(0);
+  }, 120000);
+  it('two real footmen kill a worker after its actual midpoint crossing', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'stay')!;
+    const w = puzzle.create(), worker = w.workers[0]!.id; let sent = false;
+    const r = runDisruption(puzzle, { maxTicks: seconds(180), ownerPlanner: c => {
+      if (sent) return []; sent = true;
+      return [{ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only', command: { type: 'move', unitIds: [worker], x: w.mine.x, y: w.mine.y } }];
+    } });
+    expect(r.state.trigger?.targetId).toBe(worker);
+    expect(r.state.trigger!.point.x).toBeGreaterThanOrEqual(w.road!.x - 160);
+    expect(r.state.loss?.actualKill?.source.owner).toBe(w.opponent);
+    expect(r.final.units.some(u => u.id === worker)).toBe(false);
+  }, 120000);
+  it('small raid is issued only after actual damage in the original island camp', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'small-harassment' && p.variant === 'small')!;
+    const r = runDisruption(puzzle, { maxTicks: seconds(60), ownerPlanner: () => [] });
+    expect(r.state.firstCampDamageTick).not.toBeNull();
+    expect(r.state.trigger!.tick).toBeGreaterThanOrEqual(r.state.firstCampDamageTick!);
+    expect(r.state.commands.some(c => c.command.type === 'attack' && c.command.targetId === r.state.trigger!.targetId)).toBe(true);
+  }, 120000);
+});
