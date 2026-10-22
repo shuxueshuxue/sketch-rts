@@ -72,15 +72,18 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   });
   const firstObserver = interruption.state.removed;
   const result = runAiGameLoop({ name: `public-disruption:${puzzle.key}:${puzzle.variant}`, game,
-    maxTicks: game.tick + (options.maxTicks ?? puzzle.maxTicks), thinkInterval: 15,
+    maxTicks: game.tick + (options.maxTicks ?? puzzle.maxTicks), thinkInterval: puzzle.variant === 'fast-hit-run' ? 1 : 15,
     agents: { [owner]: { controller: 'internal-ai', team: owner, race: 'grove', version: options.version ?? 'v9_knight' },
       [opponent]: { controller: 'external-agent', team: opponent, race: 'ember', version: 'v9_knight' } },
-    commandPlanner: context => context.owner === owner ? ownPlanner(context) : interruption.planner(context),
+    commandPlanner: context => context.owner === owner
+      ? puzzle.variant === 'fast-hit-run' && context.snapshot.tick % 15 !== 0 ? [] : ownPlanner(context)
+      : interruption.planner(context),
   }, {
     onCommand(e) { const row = { tick: e.tick, owner: e.owner, source: e.source, scriptId: e.scriptId, command: e.command };
       write('sdk', row); if (e.owner === opponent) actualOpponentCommands++; if (e.owner === owner) ownCommands.push({ tick: e.tick, scriptId: e.scriptId, command: e.command });
     },
     onStep() {
+      interruption.observeWorld();
       if (puzzle.variant === 'fast-hit-run') {
         for (const u of game.units) if (u.owner === owner && u.kind !== 'worker' && !UNIT_DEFS[u.kind].naval && u.hp > 0) {
           const prior = speedObservations.get(u.id);

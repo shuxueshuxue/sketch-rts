@@ -81,7 +81,8 @@ export const DISRUPTION_CASES: readonly DisruptionCase[] = [
     title: variant === 'stay' ? '游击兵守路截杀工人' : variant === 'fast-hit-run' ? '快骑游击反复往返截杀' : '游击兵反复往返截杀', maxTicks: seconds(480),
     triggerRule: 'First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).',
     responseRule: variant === 'stay' ? 'Two initial footmen attack that worker, then hold at the actual death position.'
-      : `After each actual ambush, both surviving initial ${variant === 'fast-hit-run' ? 'raiders (native speed82)' : 'footmen'} retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.`,
+      : variant === 'fast-hit-run' ? 'Only target workers. On each native tick, any reachable armed owner unit inside native idle acquisition radius (230) causes immediate move retreat to fixed2432,1792, also retreat after an actual victim death; native SDK delay3 still applies. After all survivors arrive and armed alert is clear, only a different worker newly crossing home x<1280 to corridor x>=1280 can trigger return; workers already in transit cannot. Repeat at least3 unless native-killed. No tick trigger or injected worker retry.'
+      : `After each actual ambush, both surviving initial footmen retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.`,
     create: () => workerScene(variant === 'fast-hit-run') })),
   ...(['small', 'large'] as const).map(variant => ({ key: 'small-harassment' as const, variant,
     title: variant === 'small' ? '小股骚扰保主力清营' : '大军骚扰允许比较后中止', maxTicks: seconds(420),
