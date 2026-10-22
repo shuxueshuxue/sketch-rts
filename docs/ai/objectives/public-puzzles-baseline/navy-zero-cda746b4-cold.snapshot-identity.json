@@ -1,0 +1,12 @@
+{
+  "source": "1b8103c5dabad721f0f62905f61c0837d70aec1c",
+  "production": "cda746b4a8ae52c4f4233fedfc2bbde589dc2489",
+  "baselineSource": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "allIdentical": true,
+  "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+  "snapshotJsonBytes": 19535,
+  "baselineOriginalGzipSha256": "ef6840709369677406aec48e8b3a06d3cff71db58c31b3af8315d81f013f2965",
+  "tick": 1,
+  "all20SameSnapshot": true,
+  "semantics": "Pure JSON parsing/stringify comparison of original carriers. No AI, FactReader, route, SDK or sim."
+}

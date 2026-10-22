@@ -1,0 +1,523 @@
+{
+  "production": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "variant": "far",
+  "scope": "Final original8400 member plus full261-event SDK stream and first5415 transport member; no new replay/game.",
+  "manifest": {
+    "path": "/tmp/goal-d888-complete-far-originals/manifest.json",
+    "sha256": "7bafda617799e591ec5965b5a383add86db66323a34054e018000ed676d13631",
+    "verifiedFiles": [
+      {
+        "file": "far/last-original-member/actual-frame.jsonl.gz",
+        "bytes": 1039926,
+        "sha256": "9b657754cf83276230cb649f7a423da30fbddffd2e883473893df13a3b2cd78f",
+        "plainSha256": "a19922cc60ef542372c204a2e2c8025cebc11a4d0bef17fa7f201f2a46ad76e0"
+      },
+      {
+        "file": "far/last-original-member/provenance.json",
+        "bytes": 766,
+        "sha256": "4b1fd7ffc2f83cd2e53bfb935d38b042968cb40d9d3292d536e3e2ff30924e5b"
+      },
+      {
+        "file": "far/summary.json",
+        "bytes": 1057,
+        "sha256": "630cf23c4f015a00dde4c31eceefb1148af26ec67513d82f5a4ab96b812b6870"
+      },
+      {
+        "file": "result/ship-away-far.result.json.gz",
+        "bytes": 717654,
+        "sha256": "e4b007a03bf80d43f00373c676c9651f6de8044ba52df00d560ecb71810d1f6c",
+        "plainSha256": "08b9b2d5edc42b6e1ad2890f1248088f782979040780c0433100dea8842fcb82"
+      },
+      {
+        "file": "sdk/ship-away-far.jsonl.gz",
+        "bytes": 38040,
+        "sha256": "1fc0d1b61115c218e3fdc79ceca0488b5a76f9d1008e28aaa62938f3979735f1",
+        "plainSha256": "70129fb525fc8abae2de86257e502b0f74c73fba6c2f76401f0b3091015ac1d1"
+      }
+    ]
+  },
+  "firstTransport": {
+    "path": "/tmp/goal-d888-first-force-far/actual-frame.jsonl.gz",
+    "compressedSha256": "ecc0ac5ebed949fedcb8aba9c2b9b1e2c53a3c6c1390b853809df0cb96eb6c10",
+    "plainSha256": "b46e0e8b2f42cdd6ac11a3fd862314f9dce868c576cf12d4770dfa9657543d2f",
+    "token": {
+      "actionId": "goal-ref:action:v39",
+      "generation": 11
+    },
+    "acceptedBoardTick": 5415,
+    "matchingActualSdkTick": 5418,
+    "originalFourLeaseAndAssignmentMatched": true
+  },
+  "terminalTransport": {
+    "token": {
+      "actionId": "goal-ref:action:v39",
+      "generation": 11
+    },
+    "objectiveId": "ConquerIsland:planner:resource-1",
+    "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+    "executor": "goal.transport-force",
+    "intent": {
+      "kind": "goal-action",
+      "goalId": "ConquerIsland:planner:resource-1",
+      "declarationId": "goal-ref:declaration:v38",
+      "actionKind": "transport-force",
+      "parameters": {},
+      "outputs": [],
+      "parametersRef": "goal-ref:parameters:v37"
+    },
+    "target": {
+      "entityId": "resource-1",
+      "point": {
+        "x": 2976,
+        "y": 896
+      },
+      "landId": "land:2"
+    },
+    "dependsOn": [],
+    "completionEffects": [],
+    "status": "complete",
+    "phase": "delivered",
+    "sinceTick": 5415,
+    "lastProgressTick": 6225,
+    "state": {
+      "goalLoadedIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalLandedIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalRendezvousEstablished": true,
+      "goalDeparturePose": {
+        "x": 1577.546482649919,
+        "y": 717.2825792518734
+      },
+      "goalSailingObserved": true,
+      "goalWorldEffectTick": 6225,
+      "goalWorldUnitIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalWorldEntityIds": []
+    }
+  },
+  "parameters": {
+    "optionId": "goal-ref:option:v36",
+    "transport": {
+      "kind": "existing",
+      "entityId": "unit-planner-transport-1000"
+    },
+    "cohort": [
+      {
+        "kind": "existing",
+        "entityId": "scene-public-planner-frame-planner-footman-1"
+      },
+      {
+        "kind": "existing",
+        "entityId": "scene-public-planner-frame-planner-footman-2"
+      },
+      {
+        "kind": "existing",
+        "entityId": "scene-public-planner-frame-planner-footman-3"
+      },
+      {
+        "kind": "existing",
+        "entityId": "scene-public-planner-frame-planner-footman-4"
+      }
+    ],
+    "origin": "land",
+    "loadingPost": {
+      "landId": "land:1",
+      "point": {
+        "x": 1488,
+        "y": 688
+      }
+    },
+    "from": {
+      "landId": "land:1",
+      "point": {
+        "x": 1438.8656563438492,
+        "y": 713.5170971209544
+      }
+    },
+    "at": {
+      "entityId": "resource-1",
+      "point": {
+        "x": 2976,
+        "y": 896
+      },
+      "landId": "land:2"
+    },
+    "departure": {
+      "water": {
+        "x": 1577.546482649919,
+        "y": 717.2825792518734
+      },
+      "heading": 2.594202617030369,
+      "ground": {
+        "x": 1488,
+        "y": 688
+      }
+    },
+    "landing": {
+      "water": {
+        "x": 2288,
+        "y": 912
+      },
+      "ground": {
+        "x": 2352,
+        "y": 912
+      },
+      "heading": 1.5707963267948966
+    },
+    "loadedUnitIds": [],
+    "payloadMass": 420,
+    "dependentUnitIds": [],
+    "byTick": 12015,
+    "berthTolerance": 36
+  },
+  "nativeActualLocations": {
+    "production": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+    "tick": 8400,
+    "units": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "owner": "planner",
+        "kind": "footman",
+        "x": 2340,
+        "y": 860,
+        "homeX": 1184,
+        "homeY": 704,
+        "hp": 167,
+        "maxHp": 167,
+        "speed": 62,
+        "attackDamage": 18,
+        "attackRange": 48,
+        "attackClass": "melee",
+        "attackCooldown": 22,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 1488,
+          "y": 688
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 18,
+        "landId": "land:2",
+        "carrier": null
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "owner": "planner",
+        "kind": "footman",
+        "x": 2244,
+        "y": 972,
+        "homeX": 1232,
+        "homeY": 704,
+        "hp": 167,
+        "maxHp": 167,
+        "speed": 62,
+        "attackDamage": 18,
+        "attackRange": 48,
+        "attackClass": "melee",
+        "attackCooldown": 22,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 1552,
+          "y": 688
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 18,
+        "landId": "land:2",
+        "carrier": null
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "owner": "planner",
+        "kind": "footman",
+        "x": 2364,
+        "y": 892,
+        "homeX": 1280,
+        "homeY": 704,
+        "hp": 167,
+        "maxHp": 167,
+        "speed": 62,
+        "attackDamage": 18,
+        "attackRange": 48,
+        "attackClass": "melee",
+        "attackCooldown": 22,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 18,
+        "landId": "land:2",
+        "carrier": null
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "owner": "planner",
+        "kind": "footman",
+        "x": 2316,
+        "y": 828,
+        "homeX": 1184,
+        "homeY": 752,
+        "hp": 167,
+        "maxHp": 167,
+        "speed": 62,
+        "attackDamage": 18,
+        "attackRange": 48,
+        "attackClass": "melee",
+        "attackCooldown": 22,
+        "cooldown": 0,
+        "radius": 18,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 1488,
+          "y": 688
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 18,
+        "landId": "land:2",
+        "carrier": null
+      },
+      {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2356.6165549813354,
+        "y": 214.42965968783938,
+        "homeX": 592,
+        "homeY": 832,
+        "hp": 70,
+        "maxHp": 70,
+        "speed": 60,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackClass": "melee",
+        "attackCooldown": 34,
+        "cooldown": 0,
+        "radius": 15,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "idle"
+        },
+        "orderQueue": [],
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 15,
+        "landId": "land:2",
+        "carrier": null
+      }
+    ],
+    "mine": {
+      "id": "resource-1",
+      "kind": "goldMine",
+      "x": 2976,
+      "y": 896,
+      "amount": 40000,
+      "startAmount": 40000,
+      "harvestCooldownRemaining": 0,
+      "landId": "land:2"
+    }
+  },
+  "originalCampStillPresent": [
+    {
+      "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+      "owner": "neutral",
+      "kind": "murlocPeon",
+      "x": 3191,
+      "y": 960,
+      "homeX": 3191,
+      "homeY": 960,
+      "hp": 80,
+      "maxHp": 80,
+      "speed": 72,
+      "attackDamage": 11,
+      "attackRange": 40,
+      "attackClass": "melee",
+      "attackCooldown": 30,
+      "cooldown": 0,
+      "radius": 14,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "gearMass": 0
+    },
+    {
+      "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+      "owner": "neutral",
+      "kind": "murlocPeon",
+      "x": 3081,
+      "y": 960,
+      "homeX": 3081,
+      "homeY": 960,
+      "hp": 80,
+      "maxHp": 80,
+      "speed": 72,
+      "attackDamage": 11,
+      "attackRange": 40,
+      "attackClass": "melee",
+      "attackCooldown": 30,
+      "cooldown": 0,
+      "radius": 14,
+      "carryingGold": 0,
+      "kills": 0,
+      "xp": 0,
+      "level": 0,
+      "effects": [],
+      "order": {
+        "type": "idle"
+      },
+      "orderQueue": [],
+      "gearMass": 0
+    }
+  ],
+  "finalPlans": [
+    {
+      "goalId": "ConquerIsland:planner:resource-1",
+      "status": "search-pending",
+      "search": {
+        "expansions": 357,
+        "depth": 7,
+        "work": 714,
+        "limitReason": null
+      },
+      "reasons": [
+        {
+          "code": "goal-search-pinned-capacity",
+          "factIds": [
+            "ConquerIsland:planner:resource-1",
+            "ExpandLand:planner:resource-1"
+          ],
+          "values": {
+            "bytes": 284352,
+            "limitBytes": 262144
+          }
+        }
+      ]
+    },
+    {
+      "goalId": "ExpandLand:planner:resource-1",
+      "status": "search-pending",
+      "search": {
+        "expansions": 1179,
+        "depth": 7,
+        "work": 2358,
+        "limitReason": null
+      },
+      "reasons": [
+        {
+          "code": "goal-plan-net-nonpositive",
+          "factIds": [],
+          "values": {
+            "valueGold": -0.9572413586657494
+          }
+        },
+        {
+          "code": "goal-search-pinned-capacity",
+          "factIds": [
+            "ConquerIsland:planner:resource-1",
+            "ExpandLand:planner:resource-1"
+          ],
+          "values": {
+            "bytes": 284352,
+            "limitBytes": 262144
+          }
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "sameOriginalFourTransportCompletedAt6225AndOnLand2At8400": true,
+    "workerStillAliveOnLand2At8400": true,
+    "noTownHallBuildInFullSdk": true,
+    "noFormalClearBuildHoldDefendInFullSdk": true,
+    "twoOriginalCampMembersAlive80IdleAt8400": true,
+    "newTargetHallCompleted": false,
+    "formalGarrisonEstablished": false,
+    "cachePendingBytes": 284352,
+    "cacheLimitBytes": 262144
+  },
+  "nativeSource": {
+    "file": "src/ai/strategy/regions.ts",
+    "sha256": "f0db0562ea14e0a43962ded242778a024a25d7b5a4ce90022d83c04378f11175"
+  },
+  "work": {
+    "used": 3072,
+    "limit": 6144
+  },
+  "readOnlyCounts": {
+    "AI": 0,
+    "GoalFactReader": 0,
+    "routeQuery": 0,
+    "SDKInvocation": 0,
+    "simulationStep": 0,
+    "nativePureLocationFrames": 1
+  },
+  "limits": [
+    "Transport complete state and final native land2 are distinct from clearing the camp or constructing a hall.",
+    "Footmen actual upgraded HP167 is retained, not replaced with original145.",
+    "The full SDK stream is another view of this same far game, not a separate game.",
+    "This audit does not reconstruct every intermediate tick or independently evaluate full worker exposure.",
+    "Final search capacity reasons are original planner observations; no core/source revision or capacity change by37.",
+    "No missing build/hold markers were fabricated; original canonical remains sealed and this is a later appendix."
+  ]
+}

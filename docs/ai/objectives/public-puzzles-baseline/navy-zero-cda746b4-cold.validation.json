@@ -1,0 +1,1168 @@
+{
+  "source": "1b8103c5dabad721f0f62905f61c0837d70aec1c",
+  "production": "cda746b4a8ae52c4f4233fedfc2bbde589dc2489",
+  "scope": "Original puzzle3/default cold K20 only; execution/witness filtered; no dynamic game, SDK application or fact injection.",
+  "passed": false,
+  "stable": true,
+  "firstPublicPassingThink": null,
+  "firstPublicExecutablePlanThink": null,
+  "firstActualReadyThink": 6,
+  "originalVitestExitCode": 1,
+  "coldContracts": {
+    "passed": 3,
+    "failed": 1,
+    "executionAndWitnessFiltered": 2
+  },
+  "classification": "cold-adapter-contract-gap",
+  "snapshotIdentity": {
+    "source": "1b8103c5dabad721f0f62905f61c0837d70aec1c",
+    "production": "cda746b4a8ae52c4f4233fedfc2bbde589dc2489",
+    "baselineSource": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "allIdentical": true,
+    "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+    "snapshotJsonBytes": 19535,
+    "baselineOriginalGzipSha256": "ef6840709369677406aec48e8b3a06d3cff71db58c31b3af8315d81f013f2965",
+    "tick": 1,
+    "all20SameSnapshot": true,
+    "semantics": "Pure JSON parsing/stringify comparison of original carriers. No AI, FactReader, route, SDK or sim."
+  },
+  "maxWork": 6144,
+  "workSum": 40656,
+  "errors": {
+    "actual allocation trace, not a hand-authored amount: expected null not to be null": 19,
+    "army transport before camp: predecessor: expected 0 to be greater than 0": 1
+  },
+  "progress": [
+    {
+      "think": 1,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 1,
+        "limit": 6144,
+        "used": 5491,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "field:land:1488:688",
+            "tier": "background-field",
+            "work": 4631
+          },
+          {
+            "key": "goal-geometry:7cc4f3ae",
+            "tier": "background-field",
+            "work": 11
+          },
+          {
+            "key": "goal-geometry:8033a176",
+            "tier": "background-field",
+            "work": 42
+          }
+        ]
+      },
+      "readyActionCount": 0,
+      "plans": [
+        {
+          "status": "waiting-facts",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [],
+          "search": {
+            "expansions": 807,
+            "depth": 5,
+            "work": 807,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 2,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+        "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:96:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 2,
+        "limit": 6144,
+        "used": 6144,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "field:land:112:112",
+            "tier": "background-field",
+            "work": 4510
+          },
+          {
+            "key": "field:land:112:80",
+            "tier": "background-field",
+            "work": 827
+          }
+        ]
+      },
+      "readyActionCount": 0,
+      "plans": [
+        {
+          "status": "search-pending",
+          "kinds": [],
+          "readyKinds": [],
+          "search": {
+            "expansions": 0,
+            "depth": 0,
+            "work": 807,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 3,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 3,
+        "limit": 6144,
+        "used": 6144,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "field:land:112:80",
+            "tier": "existing-field",
+            "work": 3681
+          },
+          {
+            "key": "field:land:80:112",
+            "tier": "background-field",
+            "work": 1656
+          }
+        ]
+      },
+      "readyActionCount": 0,
+      "plans": [
+        {
+          "status": "waiting-facts",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [],
+          "search": {
+            "expansions": 807,
+            "depth": 5,
+            "work": 807,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 4,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 4,
+        "limit": 6144,
+        "used": 6144,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "field:land:80:112",
+            "tier": "existing-field",
+            "work": 2856
+          },
+          {
+            "key": "field:land:80:80",
+            "tier": "background-field",
+            "work": 2481
+          }
+        ]
+      },
+      "readyActionCount": 0,
+      "plans": [
+        {
+          "status": "waiting-facts",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [],
+          "search": {
+            "expansions": 807,
+            "depth": 5,
+            "work": 807,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 5,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 5,
+        "limit": 6144,
+        "used": 2837,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "field:land:80:80",
+            "tier": "existing-field",
+            "work": 2029
+          },
+          {
+            "key": "goal-geometry:2087448f",
+            "tier": "background-field",
+            "work": 1
+          }
+        ]
+      },
+      "readyActionCount": 0,
+      "plans": [
+        {
+          "status": "waiting-facts",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [],
+          "search": {
+            "expansions": 807,
+            "depth": 5,
+            "work": 807,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 6,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 6,
+        "limit": 6144,
+        "used": 2444,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 807
+          },
+          {
+            "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:3:berths:0:sea:[]:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          },
+          {
+            "key": "goal-geometry:831c9bf7",
+            "tier": "background-field",
+            "work": 1
+          },
+          {
+            "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:3:berths:0:sea:[]:refine:2:goal-domain-v5:[]:coarse:4:berths:0:sea:[]:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 1,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 2443,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 7,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 7,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 8,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 8,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 9,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 9,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 10,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 10,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 11,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 11,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 12,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 12,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 13,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 13,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 14,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 14,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 15,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 15,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 16,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 16,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 17,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 17,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 18,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 18,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 19,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 19,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    },
+    {
+      "think": 20,
+      "passed": false,
+      "executable": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+        "stack": "AssertionError: actual allocation trace, not a hand-authored amount: expected null not to be null\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:106:94)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:597:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:122:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:118:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+      },
+      "work": {
+        "tick": 1,
+        "thinkSequence": 20,
+        "limit": 6144,
+        "used": 818,
+        "services": [
+          {
+            "key": "goal-search:ConquerIsland:planner:resource-1",
+            "tier": "critical-route",
+            "work": 818
+          }
+        ]
+      },
+      "readyActionCount": 2,
+      "plans": [
+        {
+          "status": "ready",
+          "kinds": [
+            "build",
+            "train",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "readyKinds": [
+            "build",
+            "assemble"
+          ],
+          "search": {
+            "expansions": 818,
+            "depth": 5,
+            "work": 818,
+            "limitReason": null
+          }
+        }
+      ]
+    }
+  ],
+  "adapterContract": {
+    "producer": "goal-planner-native.ts exports withInput/createExecution, no allocation; withInput only enters withGoalPlannerInput.",
+    "binding": "planner-binding.ts optional allocation export is unavailable.",
+    "consumer": "frozen-planning.ts supplies publicPuzzlePlanner.allocation?.(input,output) ?? null.",
+    "checker": "planner-checks.ts navy-zero requires actual allocation and hall capital joined to real action/generation.",
+    "decision": "Do not change checker or synthesize allocation from goalPlanCapital. Central owner will add normal production allocator/ledger cold observation projection after cache gate; no SDK/dynamic here."
+  },
+  "code": {
+    "src/ai/strategy/puzzles/goal-planner-native.ts": {
+      "gitBlob": "1c449f4b6edf03597b11952d49f2c5480b0dcd41",
+      "sha256": "c647b3b320e46e33e612d8770f4c62d9a3e9d12878a29be18b7fdb2bdbb86221"
+    },
+    "src/ai/strategy/puzzles/planner-binding.ts": {
+      "gitBlob": "a4df75260cde5254df50d5f85b644f6894da2fbf",
+      "sha256": "82577663548b84e8ced0e6ed6e0ded5611eb59abcc1723f6b67d0f36d6751d1a"
+    },
+    "src/ai/strategy/puzzles/frozen-planning.ts": {
+      "gitBlob": "8dbaf32ba15d08289df71f0ad2d7027b8c74f2d9",
+      "sha256": "7e5c032105de378b2ec4e4ca05c016fee6a5b13106c08c683054cd778c0c3c0a"
+    },
+    "src/ai/strategy/puzzles/planner-checks.ts": {
+      "gitBlob": "fb3ee9196dd8ffb932c687bacc2c82b6bce5c324",
+      "sha256": "0dc1c6e1525eb9778a8bc6d63849942afc81c2589795394102a698f5eed009cf"
+    },
+    "src/ai/strategy/puzzles/navy-zero.scene.test.ts": {
+      "gitBlob": "d21265b4a66e66c0b93c045a5f76f0d67c65c917",
+      "sha256": "1b62804f044930c0d3e4daaae6632e3eb50886cce0d96c76a35894eb4483d03a"
+    }
+  },
+  "sourceSyncNote": "An inherited missing-ancestor Git auto-GC warning did not prevent exact checkout. Source clean and production diff0 verified; no history repair or gc.log deletion."
+}

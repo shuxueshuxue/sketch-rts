@@ -201,3 +201,5 @@
 [完整证据指针](ship-d88878eb.evidence.json)：SHA`b15e25caaa89b3d3ef2c5dee09fed6ea3d9428826f5d9f3e2675a69f719f7a9a`，631973158B，存储端字节与SHA已核。包括两条原运行、SDK、before/after memory、原判法及新版同轨迹安全记录、checker源码/失败开发日志和23/37独立审计；重叠审计不叠加分母。实际运行源码归档`archive/public-puzzles-ship-d88878eb-source-20261021`，PR585保持draft，不合并。
 
 Git审阅资金附件的两处旧字段标签映射为`rejectedOlderHall`，附件内保留可解码的原键映射。首次SDK命名边界检查因此失败，修正仅限Git审阅标签，原canonical与23审计SHA/值均不改；复核日志另存。
+
+原canonical封存后，37恢复并补完远船原件独审，见[独立迟到附录](ship-d88878eb.far-domain-addendum-37.zh.md)；原封存字节、结论和分母不变。
