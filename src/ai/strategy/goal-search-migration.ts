@@ -7,6 +7,7 @@ import { goalSearchWire } from './goal-search-wire';
 import { readGoalReference } from './goal-versioned-references';
 import { retainGoalPlanningReferences } from './goal-planning-references';
 import type { GoalPlannerRuntimeMemory } from './goal-planner-input';
+import { goalMigrationScopes } from './goal-migration-scopes';
 
 const prior = /^goal-v[1-9][0-9]*$/;
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -43,6 +44,7 @@ export function migrateGoalSearchMemory(memory: AiPolicyMemory, select: GoalPrio
 
 export function migrateGoalAuthoritySelectors(authority: StrategyAllocationMemory,
   table: GoalPlanningReferences | undefined, select: GoalPriorSelector): StrategyAllocationMemory {
+  const { scope, goals } = goalMigrationScopes(authority);
   if (authority.goalReferences && table?.priorDeclarations) {
     const entries = Object.fromEntries(Object.entries(authority.goalReferences.entries).map(([id, entry]) => {
       const priorId = table.priorDeclarations?.[id];
@@ -103,8 +105,7 @@ export function migrateGoalAuthoritySelectors(authority: StrategyAllocationMemor
   // These composite formats were written by the goal method/capital bridge.
   // Entity IDs and arbitrary physical strings are never substring-rewritten.
   const aliases = new Map<string, string>();
-  const goals = new Set([...Object.keys(authority.objectives), ...authority.events.map(event => event.objectiveId),
-    ...Object.values(authority.methods).map(method => method.objectiveId), ...Object.values(authority.executions).map(action => action.objectiveId)]);
+  Object.keys(authority.objectives).forEach(goal => goals.add(goal));
   for (const action of [...Object.values(authority.methods).flatMap(method => method.actions),
     ...Object.values(authority.executions).map(execution => ({ id: execution.token.actionId, intent: execution.intent }))]) {
     if (action.intent.kind !== 'goal-action') continue;
@@ -114,9 +115,6 @@ export function migrateGoalAuthoritySelectors(authority: StrategyAllocationMemor
       aliases.set(`goal-capital:${action.id}`, `goal-capital:${aliases.get(action.id)!}`);
     }
   }
-  const scope = (value: unknown, fallback?: string): string | undefined => record(value)
-    ? typeof value.goalId === 'string' ? value.goalId : typeof value.objectiveId === 'string' ? value.objectiveId
-      : typeof value.goal === 'string' ? value.goal : fallback : fallback;
   // Authority parameter definitions can be shared. Follow their existing
   // goal-ref edges to establish scope; conflicting rewrites must fail rather
   // than allocate a second version or silently borrow another goal's output.
@@ -130,7 +128,8 @@ export function migrateGoalAuthoritySelectors(authority: StrategyAllocationMemor
     } else if (Array.isArray(value)) value.forEach(item => discover(item, goalId));
     else if (record(value)) Object.values(value).forEach(item => discover(item, goalId));
   };
-  for (const group of [authority.methods, authority.executions, authority.events, authority.budgets]) discover(group);
+  const { goalReferences: _references, ...roots } = authority;
+  discover(roots);
   for (const [id, entry] of Object.entries(authority.goalReferences?.entries ?? {})) {
     const goalId = scope(entry.content); if (goalId) discover(id, goalId);
   }
