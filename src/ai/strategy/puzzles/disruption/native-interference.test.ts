@@ -80,6 +80,32 @@ describe('native world-triggered interference mechanics', () => {
     expect(r.state.commands.some(c => c.command.type === 'move' && c.command.x === w.retreat.x && c.command.y === w.retreat.y)).toBe(true);
   }, 120000);
 
+  it('fast raiders ignore an already-in-transit worker after completing retreat', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.variant === 'fast-hit-run')!;
+    const w = puzzle.create(); let sent = false;
+    const r = runDisruption(puzzle, { maxTicks: seconds(180), ownerPlanner: c => {
+      if (sent) return []; sent = true;
+      return [{ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only',
+        command: { type: 'move', unitIds: w.workers.slice(0, 2).map(u => u.id), x: w.mine.x, y: w.mine.y } }];
+    } });
+    expect(r.state.cycles).toHaveLength(1);
+    expect(r.state.cycles[0]!.retreatedTick).not.toBeNull();
+    expect(r.state.kills.filter(k => k.unit.kind === 'worker')).toHaveLength(1);
+  }, 120000);
+
+  it('fast raiders retreat on native armed alert and never issue an attack against armed units', () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.variant === 'fast-hit-run')!;
+    const w = puzzle.create(); let sent = false;
+    const r = runDisruption(puzzle, { maxTicks: seconds(180), ownerPlanner: c => {
+      if (sent) return []; sent = true;
+      return [{ playerId: c.owner, source: c.source, scriptId: 'native-mechanics-only',
+        command: { type: 'move', unitIds: w.mainForce, x: w.road!.x, y: 512 } }];
+    } });
+    expect(r.state.commands.some(e => e.command.type === 'move' && e.command.x === w.retreat.x && e.command.y === w.retreat.y)).toBe(true);
+    expect(r.state.commands.filter(e => e.command.type === 'attack')).toHaveLength(0);
+    expect(r.summary.opponentSdkCommands).toBeGreaterThan(0); // SDK applies the retreat; survival is a real tactical outcome, not imposed.
+  }, 120000);
+
   it('records native owner kills of the observed attackers as positive death evidence', () => {
     const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'stay')!;
     const w = puzzle.create();

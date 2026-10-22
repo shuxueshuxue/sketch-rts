@@ -1,11 +1,14 @@
 import type { SdkGameCommandPlanner } from '../../../../sdk/game-runner';
+import { unitAutoAcquireRadius } from '../../../../shared/combat-acquisition';
+import { strikeReach } from '../../../../shared/combat-geometry';
+import { canReach } from '../../../../shared/naval';
 import { UNIT_DEFS } from '../../../../shared/catalog';
 import { observeSimulation } from '../../../../shared/sim';
 import type { SimulationDamageEvent, SimulationKillEvent, SimulationRemovalEvent } from '../../../../shared/sim/observation';
 import type { GameCommand, Unit } from '../../../../shared/types';
 import type { DisruptionCase, DisruptionWorld } from './scenes';
 
-type Trigger = { tick: number; targetId: string; point: { x: number; y: number }; passengerIds: string[]; rule: string };
+type Trigger = { tick: number; targetId: string; point: { x: number; y: number }; passengerIds: string[]; rule: string; departureObservedTick?: number };
 export type InterferenceRecord = {
   trigger: Trigger | null; cycles: { trigger: Trigger; endedTick: number | null; outcome: string | null; retreatedTick: number | null }[]; firstCampDamageTick: number | null;
   loss: { tick: number; targetId: string; point: { x: number; y: number }; actualKill: SimulationKillEvent | null } | null;
@@ -26,6 +29,18 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
   const carriedBy = (u: Unit, id: string) => u.deck?.shipId === id || u.cabin?.shipId === id;
   let cycleTarget: string | null = null, retreating = false;
   const triedWorkers = new Set<string>();
+  const strictHitRun = puzzle.variant === 'fast-hit-run';
+  const priorWorkerX = new Map(game.units.filter(u => u.owner === owner && u.kind === 'worker').map(u => [u.id, u.x]));
+  const roadDepartures = new Map<string, number>();
+  function observeWorld() {
+    if (!strictHitRun) return;
+    for (const u of game.units) if (u.owner === owner && u.kind === 'worker' && u.hp > 0) {
+      if ((priorWorkerX.get(u.id) ?? u.x) < 1280 && u.x >= 1280 && u.y >= 704 && u.y <= 896 && !u.deck && !u.cabin) {
+        roadDepartures.set(u.id, game.tick); record('actual-worker-road-departure', { tick: game.tick, unitId: u.id, point: { x: u.x, y: u.y } });
+      }
+      priorWorkerX.set(u.id, u.x);
+    }
+  }
   const stop = observeSimulation(game, {
     damage(e) {
       if (originalArmy.has(e.source.id) && camp.has(e.target.id) && e.damage > 0 && state.firstCampDamageTick === null)
@@ -58,14 +73,15 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
       if (puzzle.variant === 'empty' ? !aboard.length && towardEmbark : aboard.some(u => originalArmy.has(u.id))) victim = ship;
     } else if (puzzle.key === 'worker-ambush') {
       victim = game.units.filter(u => u.owner === owner && u.kind === 'worker' && u.hp > 0 && !u.deck && !u.cabin)
-        .find(u => world.road && !triedWorkers.has(u.id) && (state.cycles.length ? u.x >= 1280 && u.x < world.mine.x : Math.abs(u.x - world.road.x) <= 160) && u.y >= 704 && u.y <= 896);
+        .find(u => world.road && !triedWorkers.has(u.id) && (state.cycles.length ? u.x >= 1280 && u.x < world.mine.x && (!strictHitRun || (roadDepartures.get(u.id) ?? -Infinity) > (state.cycles.at(-1)?.retreatedTick ?? Infinity)) : Math.abs(u.x - world.road.x) <= 160) && u.y >= 704 && u.y <= 896);
     } else if (state.firstCampDamageTick !== null) {
       victim = game.units.filter(u => u.owner === owner && u.kind === 'worker' && u.hp > 0 && !u.deck && !u.cabin)
         .sort((a, b) => Math.hypot(a.x - world.home.x, a.y - world.home.y) - Math.hypot(b.x - world.home.x, b.y - world.home.y))[0];
     }
     if (victim) {
       const trigger = { tick: game.tick, targetId: victim.id, point: { x: victim.x, y: victim.y },
-        passengerIds: game.units.filter(u => carriedBy(u, victim.id)).map(u => u.id), rule: puzzle.triggerRule };
+        passengerIds: game.units.filter(u => carriedBy(u, victim.id)).map(u => u.id), rule: puzzle.triggerRule,
+        ...(strictHitRun && state.cycles.length ? { departureObservedTick: roadDepartures.get(victim.id)! } : {}) };
       state.trigger ??= trigger; cycleTarget = victim.id; triedWorkers.add(victim.id);
       state.cycles.push({ trigger, endedTick: null, outcome: null, retreatedTick: null });
       record('trigger', { ...trigger, cycle: state.cycles.length });
@@ -73,22 +89,32 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
   }
   const planner: SdkGameCommandPlanner = context => {
     if (context.owner !== opponent) return [];
-    if (retreating && active().every(u => Math.hypot(u.x - world.retreat.x, u.y - world.retreat.y) <= 64)) {
+    const armed = strictHitRun ? game.units.filter(u => u.owner === owner && u.kind !== 'worker' && u.hp > 0 && u.attackDamage > 0) : [];
+    const alerts = strictHitRun ? active().flatMap(raider => armed.filter(u => {
+      const range = strikeReach(raider, u, unitAutoAcquireRadius(game, raider, 'idle'));
+      return range >= 0 && Math.hypot(u.x - raider.x, u.y - raider.y) <= range && canReach(game.map, raider, u, game.units);
+    }).map(u => ({ raiderId: raider.id, armedId: u.id, gap: Math.hypot(u.x - raider.x, u.y - raider.y), nativeAcquireRadius: unitAutoAcquireRadius(game, raider, 'idle') }))) : [];
+    if (alerts.length && !retreating) {
+      retreating = true;
+      const cycle = state.cycles.at(-1); if (cycle && cycle.endedTick === null) { cycle.endedTick = game.tick; cycle.outcome = 'armed-alert-retreat'; }
+      record('armed-native-alert-retreat', { tick: game.tick, alerts, retreat: world.retreat });
+    }
+    if (retreating && !alerts.length && active().length > 0 && active().every(u => Math.hypot(u.x - world.retreat.x, u.y - world.retreat.y) <= 64)) {
       const cycle = state.cycles.at(-1); if (cycle) cycle.retreatedTick = game.tick;
       record('actual-retreat-arrival', { tick: game.tick, cycle: state.cycles.length, unitIds: active().map(u => u.id) });
       retreating = false; cycleTarget = null;
     }
     chooseTrigger();
-    if (!state.trigger) return [];
+    if (!state.trigger && !retreating) return [];
     const commands: GameCommand[] = [];
-    let victim = game.units.find(u => u.id === (cycleTarget ?? state.trigger!.targetId) && u.hp > 0);
+    let victim = game.units.find(u => u.id === (cycleTarget ?? (!strictHitRun ? state.trigger?.targetId : undefined)) && u.hp > 0);
     if (puzzle.key === 'small-harassment' && !victim) victim = game.units.find(u => u.owner === owner && u.kind === 'worker' && u.hp > 0);
     if (victim && !retreating) {
       const ready = active().filter(u => u.order.type !== 'attack' || u.order.targetId !== victim!.id);
       if (ready.length) commands.push({ type: 'attack', unitIds: ready.map(u => u.id), targetId: victim.id });
     } else {
       const target = puzzle.key === 'worker-ambush' && (puzzle.variant === 'hit-run' || puzzle.variant === 'fast-hit-run') ? world.retreat
-        : state.loss?.point ?? state.trigger.point;
+        : state.loss?.point ?? state.trigger!.point;
       for (const u of active()) {
         if (Math.hypot(u.x - target.x, u.y - target.y) > 64) {
           if (u.order.type !== 'move' || u.order.x !== target.x || u.order.y !== target.y)
@@ -99,7 +125,7 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
     for (const command of commands) { const e = { tick: game.tick, command }; state.commands.push(e); record('opponent-proposal', e); }
     return commands.map(command => ({ playerId: opponent, source: context.source, scriptId: 'fixed-world-triggered-opponent', command }));
   };
-  return { planner, state, dispose: stop,
+  return { planner, state, observeWorld, dispose: stop,
     originalArmyIds: [...originalArmy], liveInterceptors: active,
     liveOwnerTransports() { return game.units.filter(u => u.owner === owner && u.kind === 'transport' && u.hp > 0); },
     liveMainlandCombat() { return game.units.filter(u => u.owner === owner && u.hp > 0 && u.kind !== 'worker'
