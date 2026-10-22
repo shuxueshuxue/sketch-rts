@@ -18,7 +18,8 @@ export function retreatInterception(world: DisruptionWorld) {
     enemySeconds: enemyDistance === undefined ? null : enemyDistance / enemySpeed,
     workerSeconds: workerDistance === undefined ? null : workerDistance / worker.speed,
     canArriveBeforeWorker: enemyDistance !== undefined && workerDistance !== undefined && enemyDistance / enemySpeed < workerDistance / worker.speed,
-    nativeAmbushContract: 'Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.',
+    nativeAmbushContract: 'Two original real attackers vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.',
+    attackerKinds: raiders.map(u => ({ id: u.id, kind: u.kind, speed: u.speed })),
     environment: 'No fog of war: unchanged native plannerView includes all units; distance never hides an enemy.' };
 }
 /** Positive physical escort evidence, kept distinct from a formal action/lease.

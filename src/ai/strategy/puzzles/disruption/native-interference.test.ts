@@ -57,8 +57,8 @@ describe('native world-triggered interference mechanics', () => {
     expect(comparison.canArriveBeforeWorker).toBe(true);
     expect(comparison.enemySeconds!).toBeLessThan(comparison.workerSeconds!);
   });
-  it('real retreat and return commands produce at least3 native ambush cycles without spawning victims', () => {
-    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === 'hit-run')!;
+  for (const variant of ['hit-run', 'fast-hit-run'] as const) it(`${variant}: real retreat and return commands produce at least3 native ambush cycles without spawning victims`, () => {
+    const puzzle = DISRUPTION_CASES.find(p => p.key === 'worker-ambush' && p.variant === variant)!;
     const w = puzzle.create(), workers = w.workers.map(u => u.id), sent = new Set<string>();
     const r = runDisruption(puzzle, { maxTicks: seconds(480), ownerPlanner: c => {
       if ([...sent].some(id => c.snapshot.units.some(u => u.id === id && u.hp > 0))) return [];
@@ -69,6 +69,12 @@ describe('native world-triggered interference mechanics', () => {
         command: { type: 'move', unitIds: [next], x: w.mine.x, y: w.mine.y } }];
     } });
     expect(r.state.cycles).toHaveLength(3);
+    if (variant === 'fast-hit-run') {
+      expect(r.summary.interception?.enemySpeed).toBe(82);
+      expect(r.summary.interception?.canArriveBeforeWorker).toBe(true);
+      expect(r.summary.speedPremise?.allObservedOwnCombatSlower).toBe(true);
+      expect(r.summary.speedPremise?.allProducerPotentialKindsSlower).toBe(true);
+    }
     expect(r.state.cycles.every(c => c.outcome === 'native-death' && c.retreatedTick !== null)).toBe(true);
     expect(r.state.kills.filter(k => workers.includes(k.unit.id))).toHaveLength(3);
     expect(r.state.commands.some(c => c.command.type === 'move' && c.command.x === w.retreat.x && c.command.y === w.retreat.y)).toBe(true);

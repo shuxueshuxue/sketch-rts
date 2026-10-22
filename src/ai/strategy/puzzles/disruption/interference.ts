@@ -46,7 +46,7 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
     },
   });
   function chooseTrigger() {
-    if ((state.trigger && !(puzzle.key === 'worker-ambush' && puzzle.variant === 'hit-run')) || !active().length || retreating) return;
+    if ((state.trigger && !(puzzle.key === 'worker-ambush' && (puzzle.variant === 'hit-run' || puzzle.variant === 'fast-hit-run'))) || !active().length || retreating) return;
     if (cycleTarget && game.units.some(u => u.id === cycleTarget && u.hp > 0)) return;
     let victim: Unit | undefined;
     if (puzzle.key === 'transport-sunk') {
@@ -87,7 +87,7 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
       const ready = active().filter(u => u.order.type !== 'attack' || u.order.targetId !== victim!.id);
       if (ready.length) commands.push({ type: 'attack', unitIds: ready.map(u => u.id), targetId: victim.id });
     } else {
-      const target = puzzle.key === 'worker-ambush' && puzzle.variant === 'hit-run' ? world.retreat
+      const target = puzzle.key === 'worker-ambush' && (puzzle.variant === 'hit-run' || puzzle.variant === 'fast-hit-run') ? world.retreat
         : state.loss?.point ?? state.trigger.point;
       for (const u of active()) {
         if (Math.hypot(u.x - target.x, u.y - target.y) > 64) {
