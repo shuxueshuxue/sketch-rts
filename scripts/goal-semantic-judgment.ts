@@ -127,7 +127,9 @@ export function validateSemanticFrames(frames: readonly SemanticFrame[]): void {
     semanticIdentity(f.incumbent);
     if (f.incumbent && f.incumbent.goalId !== f.goalId) throw Error('Incumbent belongs to a different goal');
     const key = JSON.stringify([f.run, f.seat, f.goalId]), old = previous.get(key);
-    if (old && (old.think >= f.think || old.tick >= f.tick)) throw Error('Duplicate or unordered observation');
+    // Frozen cold frames repeat one world tick across thinks; only a repeated
+    // think or a clock moving backwards is an ordering error.
+    if (old && (old.think >= f.think || old.tick > f.tick)) throw Error('Duplicate or unordered observation');
     previous.set(key, f);
   }
 }

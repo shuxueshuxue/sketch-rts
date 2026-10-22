@@ -149,6 +149,9 @@ describe('real-game switching by observed seat and game minute', () => {
   it('marks observation gaps and refuses duplicated/out-of-order or missing wire', () => {
     expect(switches([row(1), row(3)]).minutes[0]!.observationGaps).toBe(1);
     expect(() => validateSemanticFrames([row(1), row(1)])).toThrow('Duplicate');
+    expect(() => validateSemanticFrames([row(1, plan(), { tick: 900 }), row(2, plan(), { tick: 900 })])).not.toThrow();
+    expect(() => validateSemanticFrames([row(1, plan(), { tick: 900 }), row(2, plan(), { tick: 899 })])).toThrow('unordered');
+    expect(cold(twenty(i => row(i, plan(), { tick: 7485 }))).solving.firstReady).toEqual({ think: 1, tick: 7485 });
     expect(() => validateSemanticFrames([{ ...row(1), incumbent: undefined } as any])).toThrow();
     expect(() => validateSemanticFrames([row(1, { ...plan(), goalId: 'other' })])).toThrow('different goal');
   });
