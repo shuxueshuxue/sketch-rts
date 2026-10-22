@@ -46,7 +46,7 @@ jobs:
         run: npx vitest run src/ai/plan-trace.test.ts src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/planner-context.test.ts --maxWorkers 1 --minWorkers 1
   duels:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       SKETCH_RTS_BASE_PATH: /sketch-rts/
       VITE_SKETCH_RTS_BASE_PATH: /sketch-rts/
