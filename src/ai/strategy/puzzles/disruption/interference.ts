@@ -32,7 +32,7 @@ export function createInterference(puzzle: DisruptionCase, world: DisruptionWorl
         { state.firstCampDamageTick = e.tick; record('first-actual-camp-damage', e); }
       if (attackers.has(e.source.id) || attackers.has(e.target.id)) { state.damage.push(e); record('damage', e); }
     },
-    kill(e) { if (attackers.has(e.source.id) || e.unit.id === state.trigger?.targetId) {
+    kill(e) { if (attackers.has(e.source.id) || attackers.has(e.unit.id) || e.unit.id === state.trigger?.targetId) {
       state.kills.push(e); record('kill', e);
     } },
     removed(e) {

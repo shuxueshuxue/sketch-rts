@@ -29,10 +29,16 @@ export function departureProtection(snapshot: GameSnapshot, world: DisruptionWor
     && u.hp > 0 && !u.deck && !u.cabin && sameGround(snapshot.map, u, worker) && Math.hypot(u.x - worker.x, u.y - worker.y) <= 240
     && (u.order.type === 'follow' && u.order.targetId === worker.id
       || (u.order.type === 'move' || u.order.type === 'attackMove') && u.order.x >= 1280 && u.order.y >= 704 && u.order.y <= 896));
+  const screens = snapshot.units.filter(u => u.owner === world.owner && u.kind !== 'worker' && !UNIT_DEFS[u.kind].naval
+    && u.hp > 0 && !u.deck && !u.cabin && sameGround(snapshot.map, u, worker)
+    && (u.order.type === 'attack' || u.order.type === 'attackMove') && 'targetId' in u.order
+    && threats.some(t => t.id === ('targetId' in u.order ? u.order.targetId : undefined) && Math.hypot(t.x - u.x, t.y - u.y) <= 240));
+  const screenPower = strengthOf(screens);
   const confirmedAllDead = world.interceptors.every(id => confirmedDead.has(id));
   const escortPower = strengthOf(escorts), threatPower = strengthOf(threats);
-  return { tick: snapshot.tick, workerId: worker.id, positive: confirmedAllDead || escorts.length > 0 && escortPower >= threatPower,
-    confirmedAllDead, escortIds: escorts.map(u => u.id), escortPower, threatPower,
+  return { tick: snapshot.tick, workerId: worker.id, positive: confirmedAllDead || escorts.length > 0 && escortPower >= threatPower || screens.length > 0 && screenPower >= threatPower,
+    confirmedAllDead, screenIds: screens.map(u => u.id), screenPower,
+    actualScreenOrders: screens.map(u => ({ unitId: u.id, order: u.order })), escortIds: escorts.map(u => u.id), escortPower, threatPower,
     actualEscortOrders: escorts.map(u => ({ unitId: u.id, order: u.order })),
-    note: 'Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed.' };
+    note: 'Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed.' };
 }
