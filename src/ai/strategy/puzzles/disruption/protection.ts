@@ -23,7 +23,7 @@ export function retreatInterception(world: DisruptionWorld) {
 }
 /** Positive physical escort evidence, kept distinct from a formal action/lease.
  * Reaching a region after the raider left it is deliberately insufficient. */
-export function departureProtection(snapshot: GameSnapshot, world: DisruptionWorld, worker: Unit, confirmedDead: ReadonlySet<string>) {
+export function departureProtection(snapshot: GameSnapshot, world: Pick<DisruptionWorld, 'owner' | 'interceptors'>, worker: Unit, confirmedDead: ReadonlySet<string>) {
   const threats = snapshot.units.filter(u => world.interceptors.includes(u.id) && u.hp > 0);
   const escorts = snapshot.units.filter(u => u.owner === world.owner && u.kind !== 'worker' && !UNIT_DEFS[u.kind].naval
     && u.hp > 0 && !u.deck && !u.cabin && sameGround(snapshot.map, u, worker) && Math.hypot(u.x - worker.x, u.y - worker.y) <= 240
