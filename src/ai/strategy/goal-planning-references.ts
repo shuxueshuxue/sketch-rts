@@ -11,7 +11,6 @@ export type GoalPlanningReferences = {
 export const createGoalPlanningReferences = (): GoalPlanningReferences => ({ version: 1, nextVersion: 1, entries: {} });
 const reference = /^goal-v([1-9][0-9]*)$/;
 let current: GoalPlanningReferences | undefined;
-const standalone = createGoalPlanningReferences();
 const indexes = new WeakMap<GoalPlanningReferences, Map<string, string>>();
 const semanticOrderKeys = new WeakMap<GoalPlanningReferences, Map<string, string>>();
 const stored = new WeakMap<object, Readonly<Record<string, string>>>();
@@ -23,19 +22,22 @@ export function setGoalDeclarationResolver(resolve: (recipe: GoalDeclarationReci
   if (current) resolvers.set(current, resolve);
 }
 export function protectGoalDeclarations(ids: readonly string[]) {
-  const memory = table(), live = completeDeclarations.get(memory) ?? new Set<string>();
-  ids.forEach(id => live.add(id)); completeDeclarations.set(memory, live);
+  if (current) completeDeclarations.set(current, new Set(ids));
 }
 export function clearGoalDeclarationRuntime(memory: GoalPlanningReferences) {
   resolvers.delete(memory); completeDeclarations.delete(memory);
 }
-const table = () => current ?? standalone;
+const table = () => {
+  if (!current) throw Error('A goal definition requires its owning memory scope');
+  return current;
+};
 export const currentGoalPlanningReferences = () => current;
 export const goalPlanningReferenceProjection = (value: unknown) => value && typeof value === 'object' ? stored.get(value) : undefined;
 /** A grounding selector is not a declaration or a grant. Naval action
  * identities already own these canonical parameters, even if their cached
  * exact quotation has expired. Keep actors/contact identity for comparison. */
 export function goalPlanningGroundingParameters(id: string): GoalActionDeclaration['executor']['parameters'] | undefined {
+  if (!current) return undefined;
   const entry = table().entries[id];
   if (entry?.namespace !== 'action') return undefined;
   const body = hydrateGoalPlanningValue(entry.content) as { prefix?: unknown; value?: unknown };
@@ -117,11 +119,16 @@ function deferredDeclaration(id: string): GoalActionDeclaration {
   return project(action, { recipeRef: id });
 }
 export function referenceGoalFact(predicate: GoalFactPredicate, semantic: GoalFactPredicate): GoalFact {
+  // A domain-only caller has no seat-owned version table. Its independent
+  // facts keep deterministic semantic identities; a native planner imports
+  // them into its own persistent table at the owner entry.
+  if (!current) return { id: `fact:${JSON.stringify(canonical(semantic))}`,
+    predicate: JSON.parse(JSON.stringify(canonical(predicate))) as GoalFactPredicate };
   const id = internGoalPlanningReference('fact', encodeGoalPlanningValue(semantic)),
     body = internGoalPlanningReference('fact', encodeGoalPlanningValue(predicate));
   const projection = { id, ...(id === body ? {} : { predicateRef: body }) };
   const fact = { ...projection, predicate: hydrateGoalPlanningValue(content(body)) as GoalFactPredicate };
-  return current ? project(fact, projection) : fact;
+  return project(fact, projection);
 }
 
 /** Regional pools intentionally share one semantic fact identity. A cached
@@ -134,8 +141,8 @@ export function versionGoalObservation(fact: GoalFact, observed: GoalFactObserva
 /** Action identity is separate from its changing exact quotation. Parameters
  * are stored once and referenced before IDs enter edges, outputs or leases. */
 export function goalPlanningIdentity(namespace: string, identity: unknown): string {
+  if (!current) return typeof identity === 'string' ? identity : `${namespace}:${JSON.stringify(canonical(identity))}`;
   if (typeof identity === 'string' && table().entries[identity]?.namespace === namespace) return identity;
-  if (!current && typeof identity === 'string') return identity;
   if (typeof identity === 'string') for (let index = 0; index < identity.length; index++) if (identity[index] === '{' || identity[index] === '[') {
     try {
       const tail = identity.slice(index), value = JSON.parse(tail);
@@ -248,7 +255,7 @@ export function hydrateGoalPlanningValue<T>(value: T): T {
       const body = visit(content(row.declarationRef, 'declaration')) as object;
       return project(body, { declarationRef: row.declarationRef });
     }
-    if (typeof row.id === 'string' && table().entries[row.id]?.namespace === 'fact'
+    if (typeof row.id === 'string' && current && table().entries[row.id]?.namespace === 'fact'
       && (row.predicate || Object.keys(row).every(key => key === 'id' || key === 'predicateRef'))) {
       const predicate = row.predicate ?? content(typeof row.predicateRef === 'string' ? row.predicateRef : row.id, 'fact');
       const fact = { ...row, predicate: visit(predicate) };
@@ -302,9 +309,6 @@ export function detachGoalPlanningTrace<T>(value: T): T {
   return visit(value) as T;
 }
 
-/** Standalone planner APIs carry their definitions in the cache. Native owner
- * frames store the table exactly once in the seat memory instead. */
-export function goalPlanningStandaloneReferences(): GoalPlanningReferences | undefined { return current ? undefined : standalone; }
 export function collectGoalPlanningReferences(memory: GoalPlanningReferences, roots: unknown): void {
   // Only the actual wire roots keep definitions. Unencoded physical targets
   // in unrelated observation/authority records must not create phantom roots.

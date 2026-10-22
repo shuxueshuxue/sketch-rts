@@ -73,6 +73,14 @@ it('keeps a ready declaration in full for admission and execution without a prov
     expect(restored.executor).toEqual(f.original.executor); expect(restored.preconditions).toEqual(f.original.preconditions); });
 });
 
+it('returns a displaced ready declaration to a recipe after the selected ready set changes', () => {
+  const f = fixture();
+  f.scoped(() => {
+    protectGoalDeclarations([f.original.id]); expect(encodeGoalPlanningValue(f.original)).toHaveProperty('declarationRef');
+    protectGoalDeclarations([]); expect(encodeGoalPlanningValue(f.original)).toHaveProperty('recipeRef');
+  });
+});
+
 it('does not treat a recipe outside its provider scope as an admitted declaration', () => {
   const f = fixture(); f.clear();
   f.scoped(() => expect(() => hydrateGoalPlanningValue(f.wire).executor).toThrow('native provider scope'));

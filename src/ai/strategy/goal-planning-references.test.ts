@@ -7,6 +7,8 @@ import { versionGoalObservation } from './goal-planning-references';
 import { internGoalPlanningReference } from './goal-planning-references';
 import { withGoalPlanningMemory } from './goal-planning-restore';
 import { createAiPolicyMemory } from '../memory';
+import { createGoalWorldFactMemory } from './goal-world-facts';
+import type { GoalActionDeclaration } from './goal-planner-types';
 
 it('persists canonical fact versions across JSON and call order without hashing or content in IDs', () => {
   let memory = createGoalPlanningReferences(), first = '';
@@ -21,6 +23,13 @@ it('persists canonical fact versions across JSON and call order without hashing 
     expect(goalFact({ kind: 'assets-safe', at: { landId: 'land:1', point: { x: 1, y: 2 } }, unitIds: ['b', 'a'], throughTick: 100 }).id).toBe(first);
     expect(first.length).toBeLessThan(32);
   });
+});
+
+it('keeps independent domain facts deterministic without a hidden process-global version table', () => {
+  const fact = goalFact({ kind: 'supply-cap', minimum: 4 });
+  for (let value = 10; value < 20; value++) goalFact({ kind: 'supply-cap', minimum: value });
+  expect(goalFact({ minimum: 4, kind: 'supply-cap' }).id).toBe(fact.id);
+  expect(fact.id).toBe('fact:{"kind":"supply-cap","minimum":4}');
 });
 
 it('shares regional pool identity while preserving each precise predicate view without input/table aliases', () => {
@@ -96,4 +105,30 @@ it('rejects non-JSON identity collisions before serialization and leaves the ver
       expect(() => internGoalPlanningReference('fact', invalid)).toThrow();
     expect(memory.nextVersion).toBe(1); expect(memory.entries).toEqual({});
   });
+});
+
+it('retains the recipe itself in live owner memory, without full declarations hidden behind serialization hooks', () => {
+  const memory = createAiPolicyMemory();
+  withGoalPlanningMemory(memory, () => {
+    const fact = goalFact({ kind: 'supply-cap', minimum: 1 });
+    const action: GoalActionDeclaration = { id: goalPlanningIdentity('action', { selector: 'test' }), kind: 'assemble', precision: 'exact',
+      preconditions: [], effects: [{ fact, operation: 'establish', at: 'finish' }], demands: [], flows: [], outputs: [],
+      executor: { executor: 'test', parameters: {} }, duration: { state: 'met', value: 1, factIds: [] },
+      cost: { state: 'met', value: [], factIds: [] }, successProbability: { state: 'met', value: 1, factIds: [] }, reasons: [],
+      regeneration: { providerId: 'test', effect: fact, groundingKey: 'test', sourceRevision: 'test', dependencies: [],
+        context: { precision: 'exact', reservedGold: 0, campIds: [] } } };
+    memory.goalPlanning = { version: 1, owner: 'us', world: createGoalWorldFactMemory('us'), refinements: { revision: 0,
+      entries: [{ coarse: action, exact: [action], state: 'known', reason: { code: 'test', factIds: [], values: {} } }] } };
+  });
+  expect(memory.goalPlanning!.refinements!.entries[0]!.coarse).toHaveProperty('recipeRef');
+  expect(memory.goalPlanning!.refinements!.entries[0]!.coarse).not.toHaveProperty('preconditions');
+  const inspect = (value: unknown) => {
+    if (!value || typeof value !== 'object') return;
+    expect(Object.hasOwn(value, 'toJSON')).toBe(false);
+    for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))) {
+      expect('value' in descriptor).toBe(true); inspect(descriptor.value);
+    }
+  };
+  inspect(memory.goalPlanning);
+  expect(Object.values(memory.goalPlanningReferences!.entries).some(entry => entry.namespace === 'declaration')).toBe(false);
 });

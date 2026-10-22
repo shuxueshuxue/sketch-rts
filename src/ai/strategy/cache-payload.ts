@@ -7,11 +7,14 @@ type Node = { value: string | number | boolean | null } | { array: number[] } | 
 export type CachePayload<T> = { entries: readonly T[]; packedEntries?: { encoding: 'json-deflate-v1' | 'json-dag-deflate-v2'; data: string };
   referenceEncoding?: 'goal-definitions-v1'; references?: GoalPlanningReferences; searchRecordVersion?: 1 };
 export function storeGoalCachePayload<T>(entries: readonly T[]): CachePayload<T> {
+  // Independent declarative callers do not own a native seat/version table.
+  // Keep their plain deterministic values, with no hidden process-global store.
+  if (!currentGoalPlanningReferences()) return { entries };
   const search = entries.every(entry => !!entry && typeof entry === 'object' && 'plan' in entry);
   const rows = search ? storeGoalSearchRecords(entries as unknown as readonly GoalPlanCacheEntry[]) as readonly T[] : entries;
-  const encoded = encodeGoalPlanningValue(rows), references = goalPlanningStandaloneReferences();
+  const encoded = encodeGoalPlanningValue(rows);
   return { entries: encoded, referenceEncoding: 'goal-definitions-v1', ...(search ? { searchRecordVersion: 1 as const } : {}),
-    ...(references ? { references: retainGoalPlanningReferences(references, encoded) } : {}) };
+  };
 }
 /** Only serialization changes. Large declarative continuations contain many
  * repeated fact IDs; lossless storage keeps their real working set inside the
@@ -59,6 +62,6 @@ export function readCachePayload<T>(payload: CachePayload<T>, readFact?: GoalFac
   if (!Array.isArray(result)) throw Error('Invalid cache entries');
   return result as T[];
 }
-import { currentGoalPlanningReferences, encodeGoalPlanningValue, goalPlanningStandaloneReferences,
-  hydrateGoalPlanningValue, retainGoalPlanningReferences, withGoalPlanningReferences,
+import { currentGoalPlanningReferences, encodeGoalPlanningValue,
+  hydrateGoalPlanningValue, withGoalPlanningReferences,
   type GoalPlanningReferences } from './goal-planning-references';

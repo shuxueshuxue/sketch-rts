@@ -160,7 +160,13 @@ export function withGoalPlanningMemory<T>(memory: AiPolicyMemory, run: () => T):
     let result: T | undefined;
     try { result = run(); return detachGoalPlanningTrace(result); }
     finally {
-      if (memory.goalPlanning) sealGoalPlanningValue(memory.goalPlanning);
+      if (memory.goalPlanning) {
+        sealGoalPlanningValue(memory.goalPlanning);
+        // The resident owner memory is the recipe wire form itself. Keeping
+        // expanded declarations behind toJSON hooks would reduce save bytes
+        // while still retaining their full bodies between real owner thinks.
+        memory.goalPlanning = JSON.parse(JSON.stringify(memory.goalPlanning));
+      }
       if (references.priorDeclarations) references.priorDeclarations = Object.fromEntries(Object.entries(references.priorDeclarations)
         .filter(([id]) => !!memory.strategyAllocation?.goalReferences?.entries[id]));
       try { collectGoalPlanningReferences(references, [memory.goalPlanning, memory.strategyAllocation, references.priorDeclarations]); }

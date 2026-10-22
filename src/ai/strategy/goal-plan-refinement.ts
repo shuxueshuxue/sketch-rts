@@ -141,10 +141,11 @@ export function createGoalPlanRefiner(input: Readonly<{
         || alternativeIds.has(entry.coarse.id) || entry.exact.some(exact => alternativeIds.has(exact.id))
         || entry.preferredExactIndex !== undefined && entry.preferredExactIndex >= 0
           && plan.actions.some(node => choiceFamily(node.declaration) === choiceFamily(entry.coarse)));
+      const selectedCount = owned.filter(entry => !!matchingNode(entry)).length;
       for (const entry of referenced) { entry.planId = plan.id; touchCache(entry, sequence, [plan.goal.id]); }
       const result = boundCache({ kind: 'refinement', entries: owned, id: entry => entry.coarse.id,
         lastUsed: entry => entry.lastUsedThink ?? -1, plans: entry => entry.lastUsedThink === sequence ? entry.planIds ?? [] : [],
-        maxEntries: referenced.length + (input.maxAlternativeQuotes ?? 0), thinkSequence: sequence,
+        maxEntries: selectedCount + (input.maxAlternativeQuotes ?? Math.max(0, referenced.length - selectedCount)), thinkSequence: sequence,
         capacity: memory.capacities?.[plan.id] });
       const removed = new Set(result.evicted);
       memory.entries = memory.entries.filter(entry => !removed.has(entry));
