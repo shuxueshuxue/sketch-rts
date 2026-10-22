@@ -1,0 +1,12 @@
+{
+  "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "reader": "ad50656b9ef85b4f7e7b04d26fe99f1cfc48edcc",
+  "games": 7,
+  "nativeThinks": 4320,
+  "version": "v9_knight",
+  "originalBehaviorFlagsPassed": 2,
+  "publicPlannerAcceptance": null,
+  "scope": "Original main worlds, AI, SDK commands and exits unchanged. Reader defects and missing formal contracts are not AI failures. No enemy position/trigger change after baseline, no new risk model. No fog of war. Topic3 fixedhead+cold actual allocation projection takes priority.",
+  "classification": "3 transport prefixes untriggered;2 native worker recoveries;small raid main passing regression;large raid weak OR check insufficient (home destroyed/5worker deaths)."
+}

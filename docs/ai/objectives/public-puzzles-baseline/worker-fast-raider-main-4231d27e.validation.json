@@ -1,0 +1,23 @@
+{
+  "finalMainSource": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "integrationSource": "7f3055edf48e93d7e79a16b2101ff6199ce2f575",
+  "mainContracts": 29,
+  "integrationContracts": 29,
+  "overlapNotSummed": true,
+  "mainTsc": {
+    "root": 0,
+    "tools-ai": 0,
+    "tools-cli": 0
+  },
+  "integrationRootTsc": 0,
+  "canonical": {
+    "sha256": "28478ee21c84984e56720e1cf16408dc7a5df3072a7c7d22af3f40046bf118fb",
+    "bytes": 1505278,
+    "allPayloadsReopened": 30
+  },
+  "preparationFailure": {
+    "scope": "Test scene narrowing, corrected before fixed baseline; not a production AI failure",
+    "log": "src/ai/strategy/puzzles/disruption/scenes.ts(85,61): error TS2367: This comparison appears to be unintentional because the types '\"hit-run\"' and '\"fast-hit-run\"' have no overlap.\n",
+    "sha256": "76814720c7c472b2917287efdf54581fe9763e4e03900de14eee58dfb508e4cd"
+  }
+}

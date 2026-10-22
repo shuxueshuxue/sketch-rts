@@ -1,0 +1,221 @@
+{
+  "source": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "sharedBase": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+  "mode": "explicit-mixed-488-far106-interrupted-near560-complete",
+  "warning": "Far attempt107 has no observer member/memory/work. It is not reconstructed or counted as a completed think. Near alone reached8400. Original full-coverage rejection logs retained.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "coverage": {
+        "interrupted": true,
+        "completedThinks": 106,
+        "attemptedThinks": 107,
+        "lastCompletedTick": 1590,
+        "fullTimeLimitReached": false
+      },
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": null,
+      "goalTracesObserved": 106,
+      "formalCommandCount": 21,
+      "firstReadyTick": 120,
+      "firstFormalCommandTick": 150,
+      "plannedThinks": 106,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 14,
+        "goal.position-transport": 3,
+        "goal.transport-force": 4
+      },
+      "incumbentExecutors": {
+        "economy": 7,
+        "miningWorkforce": 3,
+        "v6Economy": 5
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 92
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 10
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 4
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": null,
+      "commandCount": 0,
+      "elapsedMs": null,
+      "cpuMs": null,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "assemble",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "position-transport",
+            "transport-worker",
+            "wait-income",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "Error",
+        "message": "Strategy allocation byte limit exceeded: 280600"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "coverage": {
+        "interrupted": false,
+        "completedThinks": 560,
+        "attemptedThinks": 560,
+        "lastCompletedTick": 8400,
+        "fullTimeLimitReached": true
+      },
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 21,
+      "firstReadyTick": 105,
+      "firstFormalCommandTick": 120,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 7,
+        "goal.transport-force": 9,
+        "goal.position-transport": 5
+      },
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "v6Economy": 15
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 369
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 33
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 158
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 241,
+          "army-on-island": 961,
+          "landing-near": 961,
+          "farm-complete": 1465,
+          "shipyard-complete": 2799
+        },
+        "losses": [],
+        "final": {
+          "gold": 589,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 49,
+      "elapsedMs": 548049.321,
+      "cpuMs": 594558.547,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "actions": [
+            "assemble",
+            "clear-camp",
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"army-boarded\":241,\"army-on-island\":961,\"landing-near\":961,\"farm-complete\":1465,\""
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "completeTimeLimitCases": 1,
+    "interruptedCases": 1,
+    "attemptedNativeThinks": 667,
+    "executionsAccepted": 0,
+    "physicalPassed": 0,
+    "withFormalCommands": 2,
+    "observedNativeThinks": 666,
+    "formalCommandCount": 42
+  },
+  "testCounts": {
+    "numTotalTests": 12,
+    "numPassedTests": 7,
+    "numFailedTests": 3,
+    "numPendingTests": 2,
+    "numTodoTests": 0,
+    "numTotalTestSuites": 2,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 2,
+    "numPendingTestSuites": 0
+  }
+}

@@ -1,0 +1,423 @@
+{
+  "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "reader": "ad50656b",
+  "scope": "Read original JSON/gzip and existing component/strength helpers only. No AI, FactReader, route search, SDK application, sim or new match. No original file rewritten.",
+  "thinkTotal": 4320,
+  "originalBehaviorPassed": 2,
+  "rows": [
+    {
+      "case": "transport-sunk-loaded",
+      "originalBehaviorFlag": false,
+      "originalChecks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": false,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "originalExit": 1,
+      "thinkCount": 640,
+      "triggerTick": null,
+      "nativeVictimDeath": null,
+      "milestones": {},
+      "homeAlive": true,
+      "ownerWorkerDeaths": 0,
+      "fogOfWar": false,
+      "interception": null,
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "be625245660a4c432d03c7ef48e37bca9763efe9ce74b6cfa2cac49b40ffc919",
+      "classification": "prefix-did-not-reach-interference",
+      "postLossAcceptance": null,
+      "conclusion": "No world trigger or sinking in this unchanged main run. Mechanical contracts separately prove real sinking is possible. Do not claim post-loss AI failure or adjust enemy positions/trigger."
+    },
+    {
+      "case": "transport-sunk-poor",
+      "originalBehaviorFlag": false,
+      "originalChecks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": false,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "originalExit": 1,
+      "thinkCount": 640,
+      "triggerTick": null,
+      "nativeVictimDeath": null,
+      "milestones": {},
+      "homeAlive": true,
+      "ownerWorkerDeaths": 0,
+      "fogOfWar": false,
+      "interception": null,
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "e1c68d89b57a532ee96a71bfbfaae456e63ce8e7e376e1f9e77e36248cfff6c1",
+      "classification": "prefix-did-not-reach-interference",
+      "postLossAcceptance": null,
+      "conclusion": "No world trigger or sinking in this unchanged main run. Mechanical contracts separately prove real sinking is possible. Do not claim post-loss AI failure or adjust enemy positions/trigger."
+    },
+    {
+      "case": "transport-sunk-empty",
+      "originalBehaviorFlag": false,
+      "originalChecks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": true,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "originalExit": 1,
+      "thinkCount": 640,
+      "triggerTick": null,
+      "nativeVictimDeath": null,
+      "milestones": {},
+      "homeAlive": true,
+      "ownerWorkerDeaths": 0,
+      "fogOfWar": false,
+      "interception": null,
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "5dfdb6f4bd561f3a47e2d321879e2f05f72dda1389ae19f85155d8a75d8dd1c0",
+      "classification": "prefix-did-not-reach-interference",
+      "postLossAcceptance": null,
+      "conclusion": "No world trigger or sinking in this unchanged main run. Mechanical contracts separately prove real sinking is possible. Do not claim post-loss AI failure or adjust enemy positions/trigger."
+    },
+    {
+      "case": "worker-ambush-stay",
+      "originalBehaviorFlag": false,
+      "originalChecks": {
+        "interferenceTriggered": true,
+        "originalWorkerKilled": true,
+        "noDeadActorRecommands": true,
+        "noRepeatedWorkerDeathToSameEnemy": true,
+        "workerDeathsAtMostOne": true,
+        "secondWorkerProtectedBeforeDeparture": false,
+        "loopExercisedOrRaidersCleared": true,
+        "targetComplete": true
+      },
+      "originalExit": 1,
+      "thinkCount": 640,
+      "triggerTick": 1492,
+      "nativeVictimDeath": 1677,
+      "milestones": {
+        "trigger": 1493,
+        "victim-loss": 1677,
+        "interceptors-cleared": 1755,
+        "hall-complete": 3033
+      },
+      "homeAlive": true,
+      "ownerWorkerDeaths": 1,
+      "fogOfWar": false,
+      "interception": {
+        "crossing": {
+          "x": 2432,
+          "y": 800
+        },
+        "workerStart": {
+          "x": 1280,
+          "y": 800
+        },
+        "retreatPoint": {
+          "x": 2432,
+          "y": 1792
+        },
+        "enemyDistance": 992,
+        "workerDistance": 1152,
+        "enemySpeed": 62,
+        "workerSpeed": 60,
+        "enemySeconds": 16,
+        "workerSeconds": 19.2,
+        "canArriveBeforeWorker": true,
+        "nativeAmbushContract": "Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+        "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+      },
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "5d13392192adc6cba3fabdf15055f43f9c54e69b5e8993cf3a5bd5fbfa806af3",
+      "classification": "native-recovery-observed-original-reader-false-negatives",
+      "confirmedAttackerCorpses": [
+        {
+          "id": "corpse-scene-public-planner-frame-pressure-footman-1-1606",
+          "unitId": "scene-public-planner-frame-pressure-footman-1",
+          "kind": "footman",
+          "owner": "pressure",
+          "x": 2459.164049627356,
+          "y": 691.7884136020161,
+          "radius": 18,
+          "diedAtTick": 1606,
+          "equipmentCaptured": true,
+          "ownerRace": "ember"
+        },
+        {
+          "id": "corpse-scene-public-planner-frame-pressure-footman-2-1755",
+          "unitId": "scene-public-planner-frame-pressure-footman-2",
+          "kind": "footman",
+          "owner": "pressure",
+          "x": 2645.035154950973,
+          "y": 710.081809772055,
+          "radius": 18,
+          "diedAtTick": 1755,
+          "equipmentCaptured": true,
+          "ownerRace": "ember"
+        }
+      ],
+      "originalNativeCycles": 1,
+      "cycleExceptionAttackersConfirmedDead": true,
+      "actualFreshPostLossDepartures": [],
+      "allFreshDeparturesProtected": true,
+      "armedScreenAt1680": {
+        "tick": 1680,
+        "workerId": "unit-planner-worker-1011",
+        "positive": true,
+        "confirmedAllDead": false,
+        "screenIds": [
+          "scene-public-planner-frame-planner-footman-1",
+          "scene-public-planner-frame-planner-footman-2",
+          "scene-public-planner-frame-planner-footman-3"
+        ],
+        "screenPower": 3,
+        "actualScreenOrders": [
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-1",
+            "order": {
+              "type": "attackMove",
+              "x": 2825.13740038782,
+              "y": 702.6570498363938,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          },
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-2",
+            "order": {
+              "type": "attackMove",
+              "x": 2892.5907917967597,
+              "y": 700.1490651011934,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          },
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-3",
+            "order": {
+              "type": "attackMove",
+              "x": 2892.5907917967597,
+              "y": 700.1490651011934,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          }
+        ],
+        "escortIds": [],
+        "escortPower": 0,
+        "threatPower": 1,
+        "actualEscortOrders": [],
+        "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+      },
+      "victimPriorNativeClaim": {
+        "kind": "build",
+        "targetId": "build:townHall:4080:656",
+        "x": 4080,
+        "y": 656,
+        "sinceTick": 870,
+        "expiresTick": 1770
+      },
+      "conclusion": "Actual1worker death, actual attacker deaths, target hall completed. Original reader omitted owner kills, ignored an armed screen, and called existing corridor presence a new entry. Preserve original failure; these are reader defects, not proof main repeated a suicidal retry. Formal fact/requote and cause-linked goal death ledger remain unassessed."
+    },
+    {
+      "case": "worker-ambush-hit-run",
+      "originalBehaviorFlag": false,
+      "originalChecks": {
+        "interferenceTriggered": true,
+        "originalWorkerKilled": true,
+        "noDeadActorRecommands": true,
+        "noRepeatedWorkerDeathToSameEnemy": true,
+        "workerDeathsAtMostOne": true,
+        "secondWorkerProtectedBeforeDeparture": false,
+        "loopExercisedOrRaidersCleared": false,
+        "targetComplete": true
+      },
+      "originalExit": 1,
+      "thinkCount": 640,
+      "triggerTick": 1492,
+      "nativeVictimDeath": 1677,
+      "milestones": {
+        "trigger": 1493,
+        "victim-loss": 1677,
+        "interceptors-cleared": 1885,
+        "hall-complete": 2982
+      },
+      "homeAlive": true,
+      "ownerWorkerDeaths": 1,
+      "fogOfWar": false,
+      "interception": {
+        "crossing": {
+          "x": 2432,
+          "y": 800
+        },
+        "workerStart": {
+          "x": 1280,
+          "y": 800
+        },
+        "retreatPoint": {
+          "x": 2432,
+          "y": 1792
+        },
+        "enemyDistance": 992,
+        "workerDistance": 1152,
+        "enemySpeed": 62,
+        "workerSpeed": 60,
+        "enemySeconds": 16,
+        "workerSeconds": 19.2,
+        "canArriveBeforeWorker": true,
+        "nativeAmbushContract": "Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+        "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+      },
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "a39ab1446a998b25f7c4febeeb7aea53034e8fc551a870f07d38f9d80356c48d",
+      "classification": "native-recovery-observed-original-reader-false-negatives",
+      "confirmedAttackerCorpses": [
+        {
+          "id": "corpse-scene-public-planner-frame-pressure-footman-1-1606",
+          "unitId": "scene-public-planner-frame-pressure-footman-1",
+          "kind": "footman",
+          "owner": "pressure",
+          "x": 2459.164049627356,
+          "y": 691.7884136020161,
+          "radius": 18,
+          "diedAtTick": 1606,
+          "equipmentCaptured": true,
+          "ownerRace": "ember"
+        },
+        {
+          "id": "corpse-scene-public-planner-frame-pressure-footman-2-1885",
+          "unitId": "scene-public-planner-frame-pressure-footman-2",
+          "kind": "footman",
+          "owner": "pressure",
+          "x": 2559.4997328720888,
+          "y": 1170.6653564049834,
+          "radius": 18,
+          "diedAtTick": 1885,
+          "equipmentCaptured": true,
+          "ownerRace": "ember"
+        }
+      ],
+      "originalNativeCycles": 1,
+      "cycleExceptionAttackersConfirmedDead": true,
+      "actualFreshPostLossDepartures": [],
+      "allFreshDeparturesProtected": true,
+      "armedScreenAt1680": {
+        "tick": 1680,
+        "workerId": "unit-planner-worker-1011",
+        "positive": true,
+        "confirmedAllDead": false,
+        "screenIds": [
+          "scene-public-planner-frame-planner-footman-1",
+          "scene-public-planner-frame-planner-footman-2",
+          "scene-public-planner-frame-planner-footman-3"
+        ],
+        "screenPower": 3,
+        "actualScreenOrders": [
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-1",
+            "order": {
+              "type": "attackMove",
+              "x": 2825.13740038782,
+              "y": 702.6570498363938,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          },
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-2",
+            "order": {
+              "type": "attackMove",
+              "x": 2892.5907917967597,
+              "y": 700.1490651011934,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          },
+          {
+            "unitId": "scene-public-planner-frame-planner-footman-3",
+            "order": {
+              "type": "attackMove",
+              "x": 2892.5907917967597,
+              "y": 700.1490651011934,
+              "targetId": "scene-public-planner-frame-pressure-footman-2"
+            }
+          }
+        ],
+        "escortIds": [],
+        "escortPower": 0,
+        "threatPower": 1,
+        "actualEscortOrders": [],
+        "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+      },
+      "victimPriorNativeClaim": {
+        "kind": "build",
+        "targetId": "build:townHall:4080:656",
+        "x": 4080,
+        "y": 656,
+        "sinceTick": 870,
+        "expiresTick": 1770
+      },
+      "conclusion": "Actual1worker death, actual attacker deaths, target hall completed. Original reader omitted owner kills, ignored an armed screen, and called existing corridor presence a new entry. Preserve original failure; these are reader defects, not proof main repeated a suicidal retry. Formal fact/requote and cause-linked goal death ledger remain unassessed."
+    },
+    {
+      "case": "small-harassment-small",
+      "originalBehaviorFlag": true,
+      "originalChecks": {
+        "interferenceTriggered": true,
+        "islandClearContinuedOrReasonedInterruption": true,
+        "localDefenseUsed": true,
+        "noArmyPingPong": true
+      },
+      "originalExit": 0,
+      "thinkCount": 560,
+      "triggerTick": 52,
+      "nativeVictimDeath": null,
+      "milestones": {
+        "trigger": 53,
+        "camp-cleared": 78,
+        "interceptors-cleared": 221
+      },
+      "homeAlive": true,
+      "ownerWorkerDeaths": 0,
+      "fogOfWar": false,
+      "interception": null,
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "ed2b35b69622647462a12cd1edbc81b797b8c7179278adc291252b3d7a334350",
+      "classification": "main-behavior-regression-already-passes",
+      "conclusion": "Local defenders hit the raider; camp completed, main force did not return. Keep as a passing main regression, not evidence a new risk model is necessary."
+    },
+    {
+      "case": "small-harassment-large",
+      "originalBehaviorFlag": true,
+      "originalChecks": {
+        "interferenceTriggered": true,
+        "islandClearContinuedOrReasonedInterruption": true,
+        "localDefenseUsed": true,
+        "noArmyPingPong": true
+      },
+      "originalExit": 0,
+      "thinkCount": 560,
+      "triggerTick": 52,
+      "nativeVictimDeath": 76,
+      "milestones": {
+        "trigger": 53,
+        "victim-loss": 76,
+        "camp-cleared": 78
+      },
+      "homeAlive": false,
+      "ownerWorkerDeaths": 5,
+      "fogOfWar": false,
+      "interception": null,
+      "actualSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+      "finalJsonStringifySha256": "cfd2dc3081660c0894ea3770ffee92fcd9b66527c8ee6ad2ab7bec10081ed26e",
+      "classification": "original-large-raid-check-is-incomplete",
+      "conclusion": "Original OR check passed despite home loss and5worker deaths. No captured formal comparison or reasoned abandonment proves the required proportional response; do not publish a full acceptance from this weak check."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "source": "2cec86d907b4b1057f753c858401dd9c68eab883",
+  "baseline": "d4ca266820770b2bf9c938eb8e90b772e88c9908",
+  "productionDiffExit": 0,
+  "fixtureSha256": {
+    "src/ai/strategy/puzzles/defense-window.scene.test.ts": "0109ddb353fdab57917fa4c11ca5cebfb12f6c68f7aa855cee230d53b00652be",
+    "src/ai/strategy/puzzles/evacuate.scene.test.ts": "c076369e38172156055f8015ed4a532c2f6dc06e02bc665b5777742572fadf1a",
+    "src/ai/strategy/puzzles/execution.ts": "eaf1745baca7aba20305101fcbcf41f7f42d98a86f0f0905b9b9f65493ce37d2",
+    "src/ai/strategy/puzzles/guarded-shore.scene.test.ts": "fca681e88c5289f8dd06302dab8e577e954e07be60f5f5f97e13d9788640eef4",
+    "src/ai/strategy/puzzles/navy-zero.scene.test.ts": "1b62804f044930c0d3e4daaae6632e3eb50886cce0d96c76a35894eb4483d03a",
+    "src/ai/strategy/puzzles/negative-return.scene.test.ts": "d6039ca270f28cc227040f074e37c9826c7916f5a0fa138df06abcb2130d125e",
+    "src/ai/strategy/puzzles/planner-binding.ts": "6f60ad407fd69ac517610d985771af49471bbdd24aa45cf4b1de3884932085e4",
+    "src/ai/strategy/puzzles/planner-checks.ts": "d3d4e73dc7b0efae4f357caa386636d1f6367fbeee3caf5455fd3b26bfad6a5e",
+    "src/ai/strategy/puzzles/register-tests.ts": "daa6641819c29bfc8910c2adb25062161ce9e13fe256cd4608d54c3358d8992e",
+    "src/ai/strategy/puzzles/run.ts": "643ba7c340883bd9618f948853793cb0b67ebbbb2e2d744848a771c7ad377d51",
+    "src/ai/strategy/puzzles/scenes.ts": "892195c421a634955c7f92ac6a9fe5f38ffc0f48d7aec658f42dc94d3539c681",
+    "src/ai/strategy/puzzles/ship-away.scene.test.ts": "7104b3ca21c458e2c09273ca645f71d00f9f6a9bdf23a051e1a3d597f956e4c5",
+    "src/ai/strategy/puzzles/supply-tier.scene.test.ts": "be8dc6e1b99da70e8c3e532fbf87031b43caf0fece06c869052ea5674eeb646d",
+    "src/ai/strategy/puzzles/witness.ts": "36fa609787b2f60b8383765e7365b3068b07a4fc12cd72d9886539a8624dd0fa",
+    "src/ai/strategy/puzzles/world.ts": "6149d52dbdb745f5568b438fa5496949b9c6171e209ec43e5d00069c94c228e0"
+  },
+  "checks": {
+    "rootTscExit": 0,
+    "toolsTscExit": 0,
+    "sceneTestsExit": 0,
+    "sceneAndBoundaryPassed": 40,
+    "waitingForGoalPlannerSkipped": 22,
+    "witnessPassed": 11,
+    "mainRuns": 33,
+    "mainPassed": 8
+  }
+}

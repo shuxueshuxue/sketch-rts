@@ -1,0 +1,1526 @@
+{
+  "source": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "scope": "Pure original JSON/CRC/hash review; no AI/planner/fact reader/SDK/sim rerun. One native main game.",
+  "games": 1,
+  "thinkCount": 640,
+  "sdkEventCount": 244,
+  "fullVisibility": true,
+  "behaviorChecksPassed": false,
+  "publicPlannerAcceptance": null,
+  "workerDeaths": [
+    {
+      "tick": 4311,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-1",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2210.4783456386954,
+        "y": 789.2575016204712,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.2613420984876,
+          "y": 802.814885635066,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 6942,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2217.163729372346,
+        "y": 789.1901457187485,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.0031418360218,
+          "y": 801.775396361163,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 9567,
+      "unit": {
+        "id": "unit-planner-worker-1006",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2212.6706754526167,
+        "y": 788.1900409751963,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3859.56654202811,
+          "y": 798.294389497739,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    }
+  ],
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 1716,
+        "targetId": "unit-planner-worker-1017",
+        "point": {
+          "x": 2273.4664078341175,
+          "y": 891.9264425008419
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+      },
+      "endedTick": 1743,
+      "outcome": "armed-alert-retreat",
+      "retreatedTick": 2056
+    },
+    {
+      "trigger": {
+        "tick": 3994,
+        "targetId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 1281.25,
+          "y": 784
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 3994
+      },
+      "endedTick": 4311,
+      "outcome": "native-death",
+      "retreatedTick": 4606
+    },
+    {
+      "trigger": {
+        "tick": 6622,
+        "targetId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 6622
+      },
+      "endedTick": 6942,
+      "outcome": "native-death",
+      "retreatedTick": 7237
+    },
+    {
+      "trigger": {
+        "tick": 9249,
+        "targetId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 9249
+      },
+      "endedTick": 9567,
+      "outcome": "native-death",
+      "retreatedTick": null
+    }
+  ],
+  "cycleCoverage": {
+    "actualCycles": 4,
+    "atLeast3OrAttackersCleared": true,
+    "limitation": "No owner worker or retry is injected to force cycles; if AI stalls, coverage remains explicit and target liveness fails."
+  },
+  "milestones": {
+    "trigger": 1717,
+    "victim-loss": 4311
+  },
+  "interception": {
+    "crossing": {
+      "x": 2432,
+      "y": 800
+    },
+    "workerStart": {
+      "x": 1280,
+      "y": 800
+    },
+    "retreatPoint": {
+      "x": 2432,
+      "y": 1792
+    },
+    "enemyDistance": 992,
+    "workerDistance": 1152,
+    "enemySpeed": 82,
+    "workerSpeed": 60,
+    "enemySeconds": 12.097560975609756,
+    "workerSeconds": 19.2,
+    "canArriveBeforeWorker": true,
+    "nativeAmbushContract": "Two original real attackers vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+    "attackerKinds": [
+      {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "kind": "raider",
+        "speed": 82
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-raider-2",
+        "kind": "raider",
+        "speed": 82
+      }
+    ],
+    "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+  },
+  "speedPremise": {
+    "initialEnemySpeed": 82,
+    "actualOwnCombat": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1009",
+        "kind": "lancer",
+        "firstTick": 208,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1015",
+        "kind": "lancer",
+        "firstTick": 388,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1028",
+        "kind": "lancer",
+        "firstTick": 1198,
+        "maxSpeed": 68,
+        "mounted": false
+      }
+    ],
+    "producerAvailableKinds": [
+      {
+        "kind": "footman",
+        "baseSpeed": 62,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      },
+      {
+        "kind": "lancer",
+        "baseSpeed": 68,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      }
+    ],
+    "allObservedOwnCombatSlower": true,
+    "allObservedOwnCombatUnmounted": true,
+    "allProducerPotentialKindsSlower": true,
+    "interpretation": "Speeds are native observations. No production, research, catalogue or AI option is disabled to enforce a result; a new faster producer/unit invalidates the corresponding premise."
+  },
+  "raiderNativeKills": [],
+  "allOwnerWorkerNativeDeaths": [
+    {
+      "tick": 4311,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "owner": "pressure",
+        "kind": "raider",
+        "x": 2145.620809719306,
+        "y": 819.1128450993663,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-1",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2210.4783456386954,
+        "y": 789.2575016204712,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.2613420984876,
+          "y": 802.814885635066,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "cause": "damage"
+    },
+    {
+      "tick": 6942,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "owner": "pressure",
+        "kind": "raider",
+        "x": 2151.388909615775,
+        "y": 814.53463682928,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2217.163729372346,
+        "y": 789.1901457187485,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.0031418360218,
+          "y": 801.775396361163,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "cause": "damage"
+    },
+    {
+      "tick": 9567,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "owner": "pressure",
+        "kind": "raider",
+        "x": 2145.856772520396,
+        "y": 818.3767505054257,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "unit-planner-worker-1006",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2210.4207177998087,
+        "y": 788.1762366073875,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3859.56654202811,
+          "y": 798.294389497739,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "cause": "damage"
+    }
+  ],
+  "retreatProposals": [
+    {
+      "tick": 1743,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1743,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1744,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1744,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1745,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1745,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1746,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1746,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1747,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1747,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1748,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1748,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1749,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1749,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1750,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1750,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1751,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1751,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1752,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1752,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1753,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1753,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1754,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1755,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1985,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1986,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1987,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1987,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1988,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1988,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1989,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 1990,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4311,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4311,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4312,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4312,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4313,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4313,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4314,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 4314,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6942,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6942,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6943,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6943,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6944,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6944,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6945,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 6945,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9567,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9567,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9568,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9568,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9569,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9569,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9570,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    },
+    {
+      "tick": 9570,
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-2"
+        ],
+        "x": 2432,
+        "y": 1792
+      }
+    }
+  ],
+  "ownerTrainCommands": [
+    {
+      "tick": 18,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "miningWorkforce",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-townHall-1",
+        "unitKind": "worker"
+      }
+    },
+    {
+      "tick": 33,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "v6Economy",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-barracks-1",
+        "unitKind": "lancer"
+      }
+    },
+    {
+      "tick": 168,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "miningWorkforce",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-townHall-1",
+        "unitKind": "worker"
+      }
+    },
+    {
+      "tick": 213,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "v6Economy",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-barracks-1",
+        "unitKind": "lancer"
+      }
+    },
+    {
+      "tick": 333,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "miningWorkforce",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-townHall-1",
+        "unitKind": "worker"
+      }
+    },
+    {
+      "tick": 1023,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "v6Economy",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-barracks-1",
+        "unitKind": "lancer"
+      }
+    },
+    {
+      "tick": 4143,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "miningWorkforce",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-townHall-1",
+        "unitKind": "worker"
+      }
+    },
+    {
+      "tick": 9048,
+      "owner": "planner",
+      "source": "internal-ai",
+      "scriptId": "miningWorkforce",
+      "command": {
+        "type": "train",
+        "buildingId": "scene-public-planner-frame-planner-townHall-1",
+        "unitKind": "worker"
+      }
+    }
+  ],
+  "finalOwnerBuildings": [
+    {
+      "id": "scene-public-planner-frame-planner-townHall-1",
+      "owner": "planner",
+      "kind": "townHall",
+      "x": 656,
+      "y": 784,
+      "hp": 900,
+      "maxHp": 900,
+      "radius": 48,
+      "complete": true,
+      "buildProgress": 560,
+      "buildTime": 560,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 730,
+      "rallyY": 828,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-public-planner-frame-planner-farm-1",
+      "owner": "planner",
+      "kind": "farm",
+      "x": 256,
+      "y": 256,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 346,
+      "rallyY": 316,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-public-planner-frame-planner-farm-2",
+      "owner": "planner",
+      "kind": "farm",
+      "x": 320,
+      "y": 256,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 410,
+      "rallyY": 316,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "scene-public-planner-frame-planner-barracks-1",
+      "owner": "planner",
+      "kind": "barracks",
+      "x": 912,
+      "y": 1136,
+      "hp": 620,
+      "maxHp": 620,
+      "radius": 40,
+      "complete": true,
+      "buildProgress": 220,
+      "buildTime": 220,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 986,
+      "rallyY": 1180,
+      "queue": [],
+      "researchQueue": []
+    },
+    {
+      "id": "building-planner-farm-1019",
+      "owner": "planner",
+      "kind": "farm",
+      "x": 800,
+      "y": 896,
+      "hp": 320,
+      "maxHp": 320,
+      "radius": 30,
+      "complete": true,
+      "buildProgress": 140,
+      "buildTime": 140,
+      "attackDamage": 0,
+      "attackRange": 0,
+      "attackCooldown": 1,
+      "cooldown": 0,
+      "rallyX": 890,
+      "rallyY": 956,
+      "queue": [],
+      "researchQueue": []
+    }
+  ],
+  "declarations": "No made-up reward, hidden enemy, compulsory loss, injected worker retry, or post-run enemy relocation.",
+  "armedAlertRetreats": [
+    {
+      "kind": "armed-native-alert-retreat",
+      "value": {
+        "tick": 1743,
+        "alerts": [
+          {
+            "raiderId": "scene-public-planner-frame-pressure-raider-2",
+            "armedId": "unit-planner-lancer-1015",
+            "gap": 227.59054122152347,
+            "nativeAcquireRadius": 230
+          }
+        ],
+        "retreat": {
+          "x": 2432,
+          "y": 1792
+        }
+      }
+    }
+  ],
+  "freshRoadDepartures": [
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 1298,
+        "unitId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.9905044382542,
+          "y": 859.1790644726759
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 1313,
+        "unitId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 1282.2342379382087,
+          "y": 852.7513774373423
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 3994,
+        "unitId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 1281.25,
+          "y": 784
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4026,
+        "unitId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.8464454220343,
+          "y": 784.1429813303997
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4054,
+        "unitId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4086,
+        "unitId": "unit-planner-worker-1017",
+        "point": {
+          "x": 1281.2813929566876,
+          "y": 784.0002717944033
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4116,
+        "unitId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 1281.8418148449102,
+          "y": 784.1423062860297
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4144,
+        "unitId": "unit-planner-worker-1012",
+        "point": {
+          "x": 1280.438523652551,
+          "y": 784.0003574630977
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 4499,
+        "unitId": "unit-planner-worker-1149",
+        "point": {
+          "x": 1282.0818713803021,
+          "y": 824.4984927599105
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6622,
+        "unitId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6652,
+        "unitId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6682,
+        "unitId": "unit-planner-worker-1017",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6712,
+        "unitId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 6742,
+        "unitId": "unit-planner-worker-1012",
+        "point": {
+          "x": 1281.0542697884412,
+          "y": 784.1826232033179
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 7097,
+        "unitId": "unit-planner-worker-1149",
+        "point": {
+          "x": 1281.8464454220343,
+          "y": 784.1429813303997
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 9249,
+        "unitId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 9279,
+        "unitId": "unit-planner-worker-1017",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 9309,
+        "unitId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 9339,
+        "unitId": "unit-planner-worker-1012",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        }
+      }
+    },
+    {
+      "kind": "actual-worker-road-departure",
+      "value": {
+        "tick": 9404,
+        "unitId": "unit-planner-worker-1220",
+        "point": {
+          "x": 1282.0818713803021,
+          "y": 824.4984927599105
+        }
+      }
+    }
+  ],
+  "nativeRetreatArrivals": [
+    {
+      "kind": "actual-retreat-arrival",
+      "value": {
+        "tick": 2056,
+        "cycle": 1,
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1",
+          "scene-public-planner-frame-pressure-raider-2"
+        ]
+      }
+    },
+    {
+      "kind": "actual-retreat-arrival",
+      "value": {
+        "tick": 4606,
+        "cycle": 2,
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1",
+          "scene-public-planner-frame-pressure-raider-2"
+        ]
+      }
+    },
+    {
+      "kind": "actual-retreat-arrival",
+      "value": {
+        "tick": 7237,
+        "cycle": 3,
+        "unitIds": [
+          "scene-public-planner-frame-pressure-raider-1",
+          "scene-public-planner-frame-pressure-raider-2"
+        ]
+      }
+    }
+  ],
+  "diagnosticNotBaseline": {
+    "source": "8dd00ed7a99246dda3af28c3445a7c2e417badee",
+    "sha256": "fbac912a054fcc456b6fa8f16a6b2a36dc5794ff0bde05e713c9db840a1a34ae",
+    "bytes": 1210546,
+    "reason": "Legacy in-transit rearm and armed evasion gap; original640think kept separately."
+  }
+}

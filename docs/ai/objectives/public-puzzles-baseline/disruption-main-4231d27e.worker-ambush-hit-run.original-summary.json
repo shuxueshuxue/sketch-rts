@@ -1,0 +1,460 @@
+{
+  "puzzle": "worker-ambush/hit-run",
+  "thinkCount": 640,
+  "maxTicks": 9600,
+  "initialSnapshotSha256": "ed8dd67ca580389f1d90b0bee017353ec7a354399d27a9fbdd648982031f2cf1",
+  "initialTick": 1,
+  "triggerRule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+  "responseRule": "After each actual ambush, both surviving initial footmen retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.",
+  "passed": false,
+  "checks": {
+    "interferenceTriggered": true,
+    "originalWorkerKilled": true,
+    "noDeadActorRecommands": true,
+    "noRepeatedWorkerDeathToSameEnemy": true,
+    "workerDeathsAtMostOne": true,
+    "secondWorkerProtectedBeforeDeparture": false,
+    "loopExercisedOrRaidersCleared": false,
+    "targetComplete": true
+  },
+  "milestones": {
+    "trigger": 1493,
+    "victim-loss": 1677,
+    "interceptors-cleared": 1885,
+    "hall-complete": 2982
+  },
+  "interception": {
+    "crossing": {
+      "x": 2432,
+      "y": 800
+    },
+    "workerStart": {
+      "x": 1280,
+      "y": 800
+    },
+    "retreatPoint": {
+      "x": 2432,
+      "y": 1792
+    },
+    "enemyDistance": 992,
+    "workerDistance": 1152,
+    "enemySpeed": 62,
+    "workerSpeed": 60,
+    "enemySeconds": 16,
+    "workerSeconds": 19.2,
+    "canArriveBeforeWorker": true,
+    "nativeAmbushContract": "Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+    "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+  },
+  "fogOfWar": false,
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 1492,
+        "targetId": "unit-planner-worker-1005",
+        "point": {
+          "x": 2302.742549138508,
+          "y": 748.6415773750088
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+      },
+      "endedTick": 1677,
+      "outcome": "native-death",
+      "retreatedTick": 1897
+    }
+  ],
+  "cycleCoverage": {
+    "actualCycles": 1,
+    "atLeast3OrAttackersCleared": false,
+    "limitation": "No owner worker or retry is injected to force cycles; if AI stalls, coverage remains explicit and target liveness fails."
+  },
+  "departureEvidence": [
+    {
+      "tick": 1680,
+      "workerId": "unit-planner-worker-1011",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 1,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4950,
+      "workerId": "scene-public-planner-frame-planner-worker-1",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    }
+  ],
+  "physicalEntrances": [
+    {
+      "tick": 1493,
+      "workerId": "scene-public-planner-frame-planner-worker-1",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 2,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 1493,
+      "workerId": "scene-public-planner-frame-planner-worker-3",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 2,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 1493,
+      "workerId": "unit-planner-worker-1024",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 2,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 1671,
+      "workerId": "unit-planner-worker-1011",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 1,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 1674,
+      "workerId": "scene-public-planner-frame-planner-worker-2",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 1,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 1676,
+      "workerId": "unit-planner-worker-1008",
+      "positive": false,
+      "confirmedAllDead": false,
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 1,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    }
+  ],
+  "workerDeaths": [
+    {
+      "tick": 1677,
+      "unit": {
+        "id": "unit-planner-worker-1005",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2699.7240578423007,
+        "y": 707.3200436773949,
+        "hp": -10,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "build",
+          "buildingKind": "townHall",
+          "x": 4080,
+          "y": 656,
+          "progressTick": 1667,
+          "progressX": 2674.9911476590228,
+          "progressY": 708.2396380803017
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    }
+  ],
+  "newHullDamagedBySameLiveCause": [],
+  "trigger": {
+    "tick": 1492,
+    "targetId": "unit-planner-worker-1005",
+    "point": {
+      "x": 2302.742549138508,
+      "y": 748.6415773750088
+    },
+    "passengerIds": [],
+    "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+  },
+  "confirmedLoss": {
+    "tick": 1677,
+    "targetId": "unit-planner-worker-1005",
+    "point": {
+      "x": 2699.7240578423007,
+      "y": 707.3200436773949
+    },
+    "actualKill": {
+      "tick": 1677,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-footman-2",
+        "owner": "pressure",
+        "kind": "footman",
+        "x": 2649.5343330554,
+        "y": 708.9073863669852,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "unit-planner-worker-1005",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2697.4756114620027,
+        "y": 707.4036431685682,
+        "hp": -10,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "build",
+          "buildingKind": "townHall",
+          "x": 4080,
+          "y": 656,
+          "progressTick": 1667,
+          "progressX": 2674.9911476590228,
+          "progressY": 708.2396380803017
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    }
+  },
+  "firstPostLossThink": 1680,
+  "repeatedHullLosses": [],
+  "repeatedWorkerLosses": [],
+  "oldPassengerLosses": [],
+  "staleProposals": [],
+  "mainSwaps": [],
+  "createdTransportIds": [],
+  "createdSoldierIds": [
+    "unit-planner-lancer-1130",
+    "unit-planner-lancer-1133",
+    "unit-planner-lancer-1136",
+    "unit-planner-lancer-1139",
+    "unit-planner-lancer-1146",
+    "unit-planner-lancer-1149"
+  ],
+  "localDefenderIdsWithActualDamage": [],
+  "abandonmentEvidence": {
+    "allocation": [],
+    "naval": []
+  },
+  "deaths": [
+    {
+      "native": {
+        "tick": 1606,
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-footman-1",
+          "owner": "pressure",
+          "kind": "footman",
+          "x": 2459.164049627356,
+          "y": 691.7884136020161,
+          "hp": -15,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "unit-planner-worker-1005"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": null,
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 1677,
+        "unit": {
+          "id": "unit-planner-worker-1005",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 2699.7240578423007,
+          "y": 707.3200436773949,
+          "hp": -10,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "build",
+            "buildingKind": "townHall",
+            "x": 4080,
+            "y": 656,
+            "progressTick": 1667,
+            "progressX": 2674.9911476590228,
+            "progressY": 708.2396380803017
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 1677,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-footman-2",
+          "owner": "pressure",
+          "kind": "footman",
+          "x": 2649.5343330554,
+          "y": 708.9073863669852,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "unit-planner-worker-1005",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 2697.4756114620027,
+          "y": 707.4036431685682,
+          "hp": -10,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "build",
+            "buildingKind": "townHall",
+            "x": 4080,
+            "y": 656,
+            "progressTick": 1667,
+            "progressX": 2674.9911476590228,
+            "progressY": 708.2396380803017
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 1885,
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-footman-2",
+          "owner": "pressure",
+          "kind": "footman",
+          "x": 2559.4997328720888,
+          "y": 1170.6653564049834,
+          "hp": -15,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "move",
+            "x": 2432,
+            "y": 1792
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": null,
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    }
+  ],
+  "sdkCommands": 93,
+  "opponentSdkCommands": 2,
+  "opponentProposals": 2,
+  "scenarioStatus": "world-trigger-observed",
+  "elapsedMs": 2570.15,
+  "cpuMs": 5463.003,
+  "final": {
+    "tick": 9601,
+    "ownerGold": 258,
+    "originalArmy": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "present": true,
+        "hp": 167,
+        "x": 4201.673075567642,
+        "y": 814.1334704235574
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "present": true,
+        "hp": 167,
+        "x": 4165.05553547889,
+        "y": 729.1571988030075
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "present": true,
+        "hp": 222,
+        "x": 4165.960417684124,
+        "y": 805.3250151423207
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "present": true,
+        "hp": 167,
+        "x": 4122.269386654647,
+        "y": 737.1252904977565
+      }
+    ],
+    "interceptors": [
+      {
+        "id": "scene-public-planner-frame-pressure-footman-1",
+        "present": false
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-footman-2",
+        "present": false
+      }
+    ],
+    "guardsAlive": []
+  },
+  "scope": "Native main AI behavior baseline only. Physical behavior and missing formal fact/requote/attribution evidence remain distinct; a never-triggered scene does not prove interruption handling failed."
+}

@@ -1,0 +1,60 @@
+{
+  "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "version": "v9_knight",
+  "cases": [
+    "transport-sunk/loaded",
+    "transport-sunk/poor",
+    "transport-sunk/empty",
+    "worker-ambush/stay",
+    "worker-ambush/hit-run",
+    "small-harassment/small",
+    "small-harassment/large"
+  ],
+  "workers": 2,
+  "maxTicksByCase": "480seconds for8/9;420seconds for10",
+  "policySdkSimDiff0": true,
+  "environment": "All native units remain visible in plannerView; no fog or hiding. Native opponent commands only, fixed world-state triggers.",
+  "files": [
+    {
+      "file": "scripts/planner-disruption-baseline.ts",
+      "blob": "a04734fe1c5df2a4077983337d33b031ad38a4c8",
+      "sha256": "9f3ea921d27f6f7284a212c56280bc0e8417efd20c900d31ffb85182b90c73c4"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/interference.ts",
+      "blob": "f6922ecfa4f7ce943b26ec66cde7cb8b7cc017c5",
+      "sha256": "3d58b7677ccb482ae8380631d99017be4812a9fae7967125f3d22581a65de85c"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/native-interference.test.ts",
+      "blob": "618fcbd0331714855cd2e621fb27e431aa2fb9a2",
+      "sha256": "8808e8e37e76b8c231dac816beb5925455cec7ce8cbc4d01ed8937f6ef7d7dcc"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/protection.ts",
+      "blob": "bf4f907b83c0f008a6ac5d15d1fa81be2c3fe140",
+      "sha256": "cb392ec365d606cf72ca280db93ddd2bab775adec105c1d4bcc099f97c53ca8f"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/run.ts",
+      "blob": "688bbc76cf3e8504d402f6d4ee4b63f4ed65c3e8",
+      "sha256": "48544864f66d7a51341b823c2d4ca91995d5d5afca0f15ba7315cb5d1637bb82"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/scenes.test.ts",
+      "blob": "bc71f43bc933d6207adbb7641c266ac75130b845",
+      "sha256": "905dfa7ecab465b9b50358f88b51c39b27ee46f9755d5e6d0a0add5c009f0388"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/disruption/scenes.ts",
+      "blob": "a06cdf9a5411e772c65687fc381f2bb615328c0b",
+      "sha256": "893528d283b5fa7b05b874532df379a3c3190d022f9e913557793a29b2b9e7b5"
+    },
+    {
+      "file": "src/ai/strategy/puzzles/world.ts",
+      "blob": "83d6c965a987b545dcafdce13b97e187c6275094",
+      "sha256": "6149d52dbdb745f5568b438fa5496949b9c6171e209ec43e5d00069c94c228e0"
+    }
+  ]
+}

@@ -1,0 +1,305 @@
+{
+  "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+  "production": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+  "semantics": "Pure extraction of recorded native SDK frames. No geometry/source/sim query, no inference that later head has this behavior.",
+  "samples": 144,
+  "first": {
+    "think": 417,
+    "tick": 6255,
+    "x": 111.99999999999983,
+    "y": 912,
+    "order": {
+      "type": "move",
+      "x": 1552,
+      "y": 912,
+      "avoidCombat": true
+    }
+  },
+  "last": {
+    "think": 560,
+    "tick": 8400,
+    "x": 111.99999999999983,
+    "y": 912,
+    "order": {
+      "type": "move",
+      "x": 1552,
+      "y": 912,
+      "avoidCombat": true
+    }
+  },
+  "maxDisplacementFromFirstSample": 0.0,
+  "ordersIdentical": true,
+  "lastRecordedTransportFacts": [
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1488,
+            "y": 656
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1488,\"y\":656},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1552,
+            "y": 624
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1552,\"y\":624},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1552,
+            "y": 720
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1552,\"y\":720},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1552,
+            "y": 912
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1552,\"y\":912},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 592
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":592},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 624
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":624},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 656
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":656},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 688
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 720
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":720},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    },
+    {
+      "predicate": {
+        "kind": "transport-at",
+        "transport": {
+          "kind": "existing",
+          "entityId": "unit-planner-transport-1000"
+        },
+        "at": {
+          "seaId": "sea:1",
+          "point": {
+            "x": 1584,
+            "y": 752
+          }
+        },
+        "tolerance": 36,
+        "byTick": 20400
+      },
+      "state": "unmet",
+      "reason": {
+        "code": "native-transport-pose",
+        "factIds": [
+          "fact:{\"at\":{\"point\":{\"x\":1584,\"y\":752},\"seaId\":\"sea:1\"},\"byTick\":20400,\"kind\":\"transport-at\",\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+        ],
+        "values": {}
+      }
+    }
+  ],
+  "lastGoalReasons": [
+    [
+      {
+        "code": "goal-plan-net-nonpositive",
+        "factIds": [],
+        "values": {
+          "valueGold": -72.70344238829671
+        }
+      }
+    ]
+  ]
+}

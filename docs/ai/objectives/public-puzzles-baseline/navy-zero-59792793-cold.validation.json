@@ -1,0 +1,431 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "scope": "Only puzzle3/default original K20 cold. No execution, witness, SDK application or sim progression. Stable empty graph is not acceptance.",
+  "classification": "missing-capability",
+  "passed": false,
+  "stableEmptyGraph": true,
+  "firstExecutablePlanThink": null,
+  "originalVitestExit": 1,
+  "coldContracts": {
+    "nativeConstructionPassed": 3,
+    "planFailed": 1,
+    "executionAndWitnessFiltered": 2
+  },
+  "snapshotIdentity": {
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+    "puzzle": "navy-zero/default",
+    "allIdentical": true,
+    "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+    "snapshotJsonBytes": 19535,
+    "originalCompactCarrier": {
+      "puzzle": "navy-zero/default",
+      "carrierPath": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/navy-zero-default.json.gz",
+      "carrierBytes": 208192,
+      "carrierSha256": "56167a1ef0e1b1266b41c475849adaed56b49919a2501dce5959b0542ed8a8ca",
+      "snapshotPath": "navy-zero-default.snapshot.json.gz",
+      "snapshotCompressedBytes": 1428,
+      "snapshotCompressedSha256": "19362687f6011a9ffd026436c89d3515afcdb6d3aeed22cc1766148e6fb240c3",
+      "snapshotJsonBytes": 19535,
+      "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+      "tick": 1
+    },
+    "originalCarrierManifestSha256": "8204f270baf8b418a9eb44f7f856aa1cbc8b9b9aceeda94b861cb27b57683b50",
+    "tick": 1,
+    "all20SameSnapshot": true,
+    "mutationChecks": [
+      {
+        "think": 1,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 1
+      },
+      {
+        "think": 2,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 2
+      },
+      {
+        "think": 3,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 3
+      },
+      {
+        "think": 4,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 4
+      },
+      {
+        "think": 5,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 5
+      },
+      {
+        "think": 6,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 6
+      },
+      {
+        "think": 7,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 7
+      },
+      {
+        "think": 8,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 8
+      },
+      {
+        "think": 9,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 9
+      },
+      {
+        "think": 10,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 10
+      },
+      {
+        "think": 11,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 11
+      },
+      {
+        "think": 12,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 12
+      },
+      {
+        "think": 13,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 13
+      },
+      {
+        "think": 14,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 14
+      },
+      {
+        "think": 15,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 15
+      },
+      {
+        "think": 16,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 16
+      },
+      {
+        "think": 17,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 17
+      },
+      {
+        "think": 18,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 18
+      },
+      {
+        "think": 19,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 19
+      },
+      {
+        "think": 20,
+        "snapshotUntouched": true,
+        "tick": 1,
+        "sequence": 20
+      }
+    ],
+    "nativeInitialGold": 810,
+    "semantics": "Pure original snapshot parsing and JSON.stringify equality; no AI, source/fact/route query or simulation. No cold tick changes."
+  },
+  "callbacks": [
+    {
+      "think": 1,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 2,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 3,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 4,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 5,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 6,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 7,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 8,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 9,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 10,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 11,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 12,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 13,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 14,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 15,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 16,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 17,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 18,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 19,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    },
+    {
+      "think": 20,
+      "passed": false,
+      "work": 117,
+      "search": {
+        "expansions": 117,
+        "depth": 3,
+        "work": 117,
+        "limitReason": "coarse-proposal-needs-alternative"
+      },
+      "chosenActions": 0
+    }
+  ],
+  "workTotal": 2340,
+  "maxWork": 117,
+  "expectedFirstError": "army transport before camp: predecessor: expected 0 to be greater than 0",
+  "sourceCodeReview": "Coarse transport enumerates snapshot existing hulls only; no candidate yields pending coarse-existing-hull-or-contact-missing, so no future transport-in is emitted. Economy provider transport-in training exists but is not reached in this original graph. The later actual capital reservation assertion has not been reached.",
+  "reusedSameSourcePrechecks": {
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "rootToolsSdkStabilityOwnershipExit": 0,
+    "noRerun": "Original full same-source prechecks already sealed with puzzle1.",
+    "evidenceSha256": "28b91161bc22acec97699d6d074a4777519d07d39174060e2dea03c705269f87"
+  },
+  "files": {
+    "analyze-navy-zero-597-cold.py": "747eb2e27e05bf5e235479fe3bda3e897d47a1087df90347b534939fecf5b96b",
+    "cold-per-think.jsonl.gz": "c385d4eddd67baaec6654b454196c49c2ad581961511a12b1f7f2becc6b3a9c2",
+    "cold-summary.json": "156d486e5c31e815b856494d36a34a2b322bcb4531d05e2cc0b4170e4976f1c3",
+    "cold.log": "0f73cc489772ac23a0092227b9d5bae532ea264042b7601336aba51738d1e824",
+    "commands.json": "6445eb5200b90f865d32a229e2da6030693fbf675f425c263b8331b6f3666166",
+    "frames/navy-zero-default.json.gz": "ef6840709369677406aec48e8b3a06d3cff71db58c31b3af8315d81f013f2965",
+    "run-navy-zero-597-cold.py": "0292235c5662070c0500a445855c2bf9da33d9e0ce7a5793e7ef84ba93f44812",
+    "seal-navy-zero-597-cold.py": "fbd7e641ed7063e7d099e566b210a63d08a72365942b9ddb6a2b68f1bfd0ec90",
+    "snapshot-identity.json": "b57d53f569de2771e6d2056984abdd96ba46f70c6e27cd749c33a06e0dc3c851",
+    "source-review/goal-coarse-transport.ts": "2968e269e1dc444dc4ccdf18003ba69c4699b5cfc7a5e14dd301e449ce700a26",
+    "source-review/goal-economy-provider.ts": "2fd4f64d2d2e6299345601d8d4fbb1217b34bcce8c7bd36413fcd38292da0de5",
+    "source-review/planner-checks.ts": "0dc1c6e1525eb9778a8bc6d63849942afc81c2589795394102a698f5eed009cf",
+    "source-review/scenes.ts": "069c40128af2cdf058007d33ac699c98e1293bd7959c5197c3233f6fbb502f46",
+    "tests.original.json": "28fab0d0e2ee93b70fd859915b7f699cccd2c0fcdb378788b492522232e15b6f",
+    "verify-navy-zero-597-input.mjs": "14fd5a8603a2c224ea886989979c889ce7c2262a1e525658bbdf184bbc136121"
+  }
+}

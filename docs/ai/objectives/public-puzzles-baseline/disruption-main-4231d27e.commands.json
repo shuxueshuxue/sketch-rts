@@ -1,0 +1,376 @@
+{
+  "source": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "results": [
+    {
+      "case": "transport-sunk/loaded",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "transport-sunk/loaded",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-loaded"
+      ],
+      "exitCode": 1,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-loaded/transport-sunk-loaded/summary.json",
+      "error": null,
+      "passed": false,
+      "checks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": false,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "milestones": {},
+      "scenarioStatus": "trigger-not-reached-no-postloss-verdict",
+      "thinkCount": 640,
+      "elapsedMs": 11945.332,
+      "cpuMs": 20242.991,
+      "cycles": [],
+      "interception": null
+    },
+    {
+      "case": "transport-sunk/poor",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "transport-sunk/poor",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-poor"
+      ],
+      "exitCode": 1,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-poor/transport-sunk-poor/summary.json",
+      "error": null,
+      "passed": false,
+      "checks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": false,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "milestones": {},
+      "scenarioStatus": "trigger-not-reached-no-postloss-verdict",
+      "thinkCount": 640,
+      "elapsedMs": 12377.023,
+      "cpuMs": 20807.121,
+      "cycles": [],
+      "interception": null
+    },
+    {
+      "case": "transport-sunk/empty",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "transport-sunk/empty",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-empty"
+      ],
+      "exitCode": 1,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/transport-sunk-empty/transport-sunk-empty/summary.json",
+      "error": null,
+      "passed": false,
+      "checks": {
+        "interferenceTriggered": false,
+        "originalHullSunk": false,
+        "correctPayloadLoss": true,
+        "noDeadActorRecommands": true,
+        "noUnsafeReplacementHullDamage": true,
+        "noSecondHullLostToSameEnemy": true,
+        "replacementOrExplicitAbandonment": false,
+        "targetOrExplicitAbandonment": false
+      },
+      "milestones": {},
+      "scenarioStatus": "trigger-not-reached-no-postloss-verdict",
+      "thinkCount": 640,
+      "elapsedMs": 13528.732,
+      "cpuMs": 21629.294,
+      "cycles": [],
+      "interception": null
+    },
+    {
+      "case": "worker-ambush/stay",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "worker-ambush/stay",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-stay"
+      ],
+      "exitCode": 1,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-stay/worker-ambush-stay/summary.json",
+      "error": null,
+      "passed": false,
+      "checks": {
+        "interferenceTriggered": true,
+        "originalWorkerKilled": true,
+        "noDeadActorRecommands": true,
+        "noRepeatedWorkerDeathToSameEnemy": true,
+        "workerDeathsAtMostOne": true,
+        "secondWorkerProtectedBeforeDeparture": false,
+        "loopExercisedOrRaidersCleared": true,
+        "targetComplete": true
+      },
+      "milestones": {
+        "trigger": 1493,
+        "victim-loss": 1677,
+        "interceptors-cleared": 1755,
+        "hall-complete": 3033
+      },
+      "scenarioStatus": "world-trigger-observed",
+      "thinkCount": 640,
+      "elapsedMs": 2532.214,
+      "cpuMs": 5554.804,
+      "cycles": [
+        {
+          "trigger": {
+            "tick": 1492,
+            "targetId": "unit-planner-worker-1005",
+            "point": {
+              "x": 2302.742549138508,
+              "y": 748.6415773750088
+            },
+            "passengerIds": [],
+            "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+          },
+          "endedTick": 1677,
+          "outcome": "native-death",
+          "retreatedTick": 1762
+        }
+      ],
+      "interception": {
+        "crossing": {
+          "x": 2432,
+          "y": 800
+        },
+        "workerStart": {
+          "x": 1280,
+          "y": 800
+        },
+        "retreatPoint": {
+          "x": 2432,
+          "y": 1792
+        },
+        "enemyDistance": 992,
+        "workerDistance": 1152,
+        "enemySpeed": 62,
+        "workerSpeed": 60,
+        "enemySeconds": 16,
+        "workerSeconds": 19.2,
+        "canArriveBeforeWorker": true,
+        "nativeAmbushContract": "Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+        "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+      }
+    },
+    {
+      "case": "worker-ambush/hit-run",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "worker-ambush/hit-run",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-hit-run"
+      ],
+      "exitCode": 1,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/worker-ambush-hit-run/worker-ambush-hit-run/summary.json",
+      "error": null,
+      "passed": false,
+      "checks": {
+        "interferenceTriggered": true,
+        "originalWorkerKilled": true,
+        "noDeadActorRecommands": true,
+        "noRepeatedWorkerDeathToSameEnemy": true,
+        "workerDeathsAtMostOne": true,
+        "secondWorkerProtectedBeforeDeparture": false,
+        "loopExercisedOrRaidersCleared": false,
+        "targetComplete": true
+      },
+      "milestones": {
+        "trigger": 1493,
+        "victim-loss": 1677,
+        "interceptors-cleared": 1885,
+        "hall-complete": 2982
+      },
+      "scenarioStatus": "world-trigger-observed",
+      "thinkCount": 640,
+      "elapsedMs": 2570.15,
+      "cpuMs": 5463.003,
+      "cycles": [
+        {
+          "trigger": {
+            "tick": 1492,
+            "targetId": "unit-planner-worker-1005",
+            "point": {
+              "x": 2302.742549138508,
+              "y": 748.6415773750088
+            },
+            "passengerIds": [],
+            "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+          },
+          "endedTick": 1677,
+          "outcome": "native-death",
+          "retreatedTick": 1897
+        }
+      ],
+      "interception": {
+        "crossing": {
+          "x": 2432,
+          "y": 800
+        },
+        "workerStart": {
+          "x": 1280,
+          "y": 800
+        },
+        "retreatPoint": {
+          "x": 2432,
+          "y": 1792
+        },
+        "enemyDistance": 992,
+        "workerDistance": 1152,
+        "enemySpeed": 62,
+        "workerSpeed": 60,
+        "enemySeconds": 16,
+        "workerSeconds": 19.2,
+        "canArriveBeforeWorker": true,
+        "nativeAmbushContract": "Two original real footmen vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+        "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+      }
+    },
+    {
+      "case": "small-harassment/small",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "small-harassment/small",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/small-harassment-small"
+      ],
+      "exitCode": 0,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/small-harassment-small/small-harassment-small/summary.json",
+      "error": null,
+      "passed": true,
+      "checks": {
+        "interferenceTriggered": true,
+        "islandClearContinuedOrReasonedInterruption": true,
+        "localDefenseUsed": true,
+        "noArmyPingPong": true
+      },
+      "milestones": {
+        "trigger": 53,
+        "camp-cleared": 78,
+        "interceptors-cleared": 221
+      },
+      "scenarioStatus": "world-trigger-observed",
+      "thinkCount": 560,
+      "elapsedMs": 5859.709,
+      "cpuMs": 11838.829,
+      "cycles": [
+        {
+          "trigger": {
+            "tick": 52,
+            "targetId": "scene-public-planner-frame-planner-worker-3",
+            "point": {
+              "x": 696.6023066340031,
+              "y": 883.7215239127879
+            },
+            "passengerIds": [],
+            "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+          },
+          "endedTick": null,
+          "outcome": null,
+          "retreatedTick": null
+        }
+      ],
+      "interception": null
+    },
+    {
+      "case": "small-harassment/large",
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "--import",
+        "tsx",
+        "scripts/planner-disruption-baseline.ts",
+        "--mode",
+        "v9_knight",
+        "--case",
+        "small-harassment/large",
+        "--out",
+        "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/small-harassment-large"
+      ],
+      "exitCode": 0,
+      "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-main-be318c3f/small-harassment-large/small-harassment-large/summary.json",
+      "error": null,
+      "passed": true,
+      "checks": {
+        "interferenceTriggered": true,
+        "islandClearContinuedOrReasonedInterruption": true,
+        "localDefenseUsed": true,
+        "noArmyPingPong": true
+      },
+      "milestones": {
+        "trigger": 53,
+        "victim-loss": 76,
+        "camp-cleared": 78
+      },
+      "scenarioStatus": "world-trigger-observed",
+      "thinkCount": 560,
+      "elapsedMs": 3125.264,
+      "cpuMs": 6185.327,
+      "cycles": [
+        {
+          "trigger": {
+            "tick": 52,
+            "targetId": "scene-public-planner-frame-planner-worker-3",
+            "point": {
+              "x": 696.6023066340031,
+              "y": 883.7215239127879
+            },
+            "passengerIds": [],
+            "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+          },
+          "endedTick": 76,
+          "outcome": "native-death",
+          "retreatedTick": null
+        }
+      ],
+      "interception": null
+    }
+  ]
+}

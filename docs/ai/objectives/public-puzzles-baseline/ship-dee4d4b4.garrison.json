@@ -1,0 +1,30 @@
+{
+  "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+  "sharedBase": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+  "scope": "Separate original post-hall observations only; no added assertion, AI, fact requests or simulation. Nearby combat units use explicit300 distance for reporting, not a native garrison acceptance radius. Actual native garrison fact states/availableTick are retained.",
+  "readerCompatibility": "Fact predicates and targets decoded only from the same original memory definition table; no new facts/provider calls.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": null,
+      "firstPostHallHoldCommand": null,
+      "firstPostHallHoldExecution": null,
+      "firstPostHallGarrisonMetAtCurrentTick": null,
+      "garrisonFactOccurrencesAfterHall": 0,
+      "framesWithPostHallHoldExecution": 0,
+      "lastPostHallObservation": {}
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": null,
+      "firstPostHallHoldCommand": null,
+      "firstPostHallHoldExecution": null,
+      "firstPostHallGarrisonMetAtCurrentTick": null,
+      "garrisonFactOccurrencesAfterHall": 0,
+      "framesWithPostHallHoldExecution": 0,
+      "lastPostHallObservation": {}
+    }
+  ]
+}

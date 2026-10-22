@@ -1,0 +1,175 @@
+{
+  "puzzle": "small-harassment/small",
+  "thinkCount": 560,
+  "maxTicks": 8400,
+  "initialSnapshotSha256": "802933901a7bc1b2f0f7516ea9a1c48ed760413884915b3c7027a0962df0175b",
+  "initialTick": 1,
+  "triggerRule": "First actual positive damage from an original island main-force unit to a member of the original camp.",
+  "responseRule": "Initial enemy force attacks a living worker at the home mine; local defense and island clear remain real AI decisions.",
+  "passed": true,
+  "checks": {
+    "interferenceTriggered": true,
+    "islandClearContinuedOrReasonedInterruption": true,
+    "localDefenseUsed": true,
+    "noArmyPingPong": true
+  },
+  "milestones": {
+    "trigger": 53,
+    "camp-cleared": 78,
+    "interceptors-cleared": 221
+  },
+  "interception": null,
+  "fogOfWar": false,
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 52,
+        "targetId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 696.6023066340031,
+          "y": 883.7215239127879
+        },
+        "passengerIds": [],
+        "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+      },
+      "endedTick": null,
+      "outcome": null,
+      "retreatedTick": null
+    }
+  ],
+  "cycleCoverage": null,
+  "departureEvidence": [],
+  "physicalEntrances": [],
+  "workerDeaths": [],
+  "newHullDamagedBySameLiveCause": [],
+  "trigger": {
+    "tick": 52,
+    "targetId": "scene-public-planner-frame-planner-worker-3",
+    "point": {
+      "x": 696.6023066340031,
+      "y": 883.7215239127879
+    },
+    "passengerIds": [],
+    "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+  },
+  "confirmedLoss": null,
+  "firstPostLossThink": null,
+  "repeatedHullLosses": [],
+  "repeatedWorkerLosses": [],
+  "oldPassengerLosses": [],
+  "staleProposals": [],
+  "mainSwaps": [],
+  "createdTransportIds": [
+    "unit-planner-transport-1108"
+  ],
+  "createdSoldierIds": [
+    "unit-planner-lancer-1077",
+    "unit-planner-lancer-1082",
+    "unit-planner-lancer-1085",
+    "unit-planner-lancer-1099",
+    "unit-planner-lancer-1102",
+    "unit-planner-lancer-1105"
+  ],
+  "localDefenderIdsWithActualDamage": [
+    "scene-public-planner-frame-planner-footman-2",
+    "scene-public-planner-frame-planner-footman-1"
+  ],
+  "abandonmentEvidence": {
+    "allocation": [],
+    "naval": []
+  },
+  "deaths": [
+    {
+      "native": {
+        "tick": 221,
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-footman-1",
+          "owner": "pressure",
+          "kind": "footman",
+          "x": 763.9815834674544,
+          "y": 925.3614170479971,
+          "hp": -12,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-3"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": null,
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    }
+  ],
+  "sdkCommands": 123,
+  "opponentSdkCommands": 1,
+  "opponentProposals": 1,
+  "scenarioStatus": "world-trigger-observed",
+  "elapsedMs": 5859.709,
+  "cpuMs": 11838.829,
+  "final": {
+    "tick": 8401,
+    "ownerGold": 617,
+    "originalArmy": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "present": true,
+        "hp": 145,
+        "x": 490.8855200192667,
+        "y": 797.8072762921297
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "present": true,
+        "hp": 145,
+        "x": 526.5816339403544,
+        "y": 793.1395733310654
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "present": true,
+        "hp": 145,
+        "x": 3100.503904787428,
+        "y": 848.7410382194173
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "present": true,
+        "hp": 145,
+        "x": 3119.3898208619908,
+        "y": 879.3894015366413
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-5",
+        "present": true,
+        "hp": 134,
+        "x": 3105.006334343503,
+        "y": 912.3911486960341
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-6",
+        "present": true,
+        "hp": 134,
+        "x": 3080.824945087883,
+        "y": 880.7509944061417
+      }
+    ],
+    "interceptors": [
+      {
+        "id": "scene-public-planner-frame-pressure-footman-1",
+        "present": false
+      }
+    ],
+    "guardsAlive": []
+  },
+  "scope": "Native main AI behavior baseline only. Physical behavior and missing formal fact/requote/attribution evidence remain distinct; a never-triggered scene does not prove interruption handling failed."
+}

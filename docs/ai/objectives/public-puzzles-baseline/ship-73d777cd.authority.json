@@ -1,0 +1,82 @@
+{
+  "source": "229e82d0ac91372b51280929b9e60ee675fa7939",
+  "sharedBase": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+  "semantics": "Actual retained runtime memory only. Bytes use native UTF-8 JSON.stringify, matching the fixed262144B bound; missing failed attempts are not reconstructed. No imports/calls into planner or simulation.",
+  "reporterSha256": "91a4586b217ba751906614945c7b5307b3c068c010150594796c8845ba0a95a5",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 396,
+        "tick": 5940,
+        "available": true,
+        "authorityBytes": 38764,
+        "executionCount": 6,
+        "terminalCount": 0,
+        "executionStatuses": {
+          "goal.position-transport:active": 1,
+          "goal.position-transport:blocked": 5
+        },
+        "eventCount": 27,
+        "currentMethodActionCount": 1,
+        "fieldBytes": {
+          "executions": 3836,
+          "events": 13428,
+          "methods": 1136,
+          "objectives": 594,
+          "leases": 382,
+          "assignments": 803,
+          "budgets": 489,
+          "issuedOrders": 373,
+          "issuedCommands": 1946
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 6,
+      "inputSha256": "40cf428026afb205ef0c1f51c691c9fbf25f46311898f0b2270c9d02122b163e"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 416,
+        "tick": 6240,
+        "available": true,
+        "authorityBytes": 63866,
+        "executionCount": 7,
+        "terminalCount": 0,
+        "executionStatuses": {
+          "goal.assemble:blocked": 2,
+          "goal.build:active": 1,
+          "goal.position-transport:blocked": 3,
+          "goal.transport-worker:blocked": 1
+        },
+        "eventCount": 53,
+        "currentMethodActionCount": 1,
+        "fieldBytes": {
+          "executions": 4665,
+          "events": 26857,
+          "methods": 1171,
+          "objectives": 652,
+          "leases": 811,
+          "assignments": 1632,
+          "budgets": 489,
+          "issuedOrders": 452,
+          "issuedCommands": 2598
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 7,
+      "inputSha256": "86bf3ab96e9b114c0669e5c1e97d010709520000e834900faa9b216bf9b15106"
+    }
+  ]
+}

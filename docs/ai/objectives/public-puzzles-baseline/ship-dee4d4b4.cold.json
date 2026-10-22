@@ -1,0 +1,1841 @@
+{
+  "source": "26ad3fd30e9a1490a0aba85d1a831a8e717e5503",
+  "sharedBase": "dee4d4b4e048064ba07d9546e0536a0ad5315f81",
+  "mode": "same original frozen snapshot, persistent native memory, K20, normal collector",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "inputSha256": "27ae143ea0fd4e65ec6fad693ae06cf7a50dc7e7c3bd5d64a18c4fa251517fe2",
+      "passed": false,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": 1,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {
+        "build": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "transport-force": 1,
+        "assemble": 1,
+        "position-transport": 1,
+        "hold-position": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 45
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "background-field",
+                "work": 4631
+              },
+              {
+                "key": "field:sea:1488:688",
+                "tier": "background-field",
+                "work": 1468
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 45,
+                "depth": 0,
+                "work": 45,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "transport-worker": 2,
+                "clear-camp": 2,
+                "transport-force": 1,
+                "assemble": 5,
+                "position-transport": 2,
+                "hold-position": 2
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 15,
+                "met": 35
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 45
+              },
+              {
+                "key": "field:sea:1488:688",
+                "tier": "existing-field",
+                "work": 5860
+              },
+              {
+                "key": "field:sea:2352:912",
+                "tier": "background-field",
+                "work": 239
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 45,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 2049,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 64
+              },
+              {
+                "key": "goal-geometry:37a37b0f",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 1984
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 2048,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "hold-position": 1
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 2048,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 2048
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 2048,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "hold-position": 1
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 2048,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "expansion-limit"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "inputSha256": "a030f84799c10495b5010cd48db9529c6e6a225865a093c1d242acf83e99b255",
+      "passed": false,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": 1,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {
+        "build": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "transport-force": 1,
+        "assemble": 1,
+        "position-transport": 1,
+        "hold-position": 1,
+        "train": 3
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 41
+              },
+              {
+                "key": "field:land:1520:720",
+                "tier": "background-field",
+                "work": 4635
+              },
+              {
+                "key": "field:sea:2352:912",
+                "tier": "background-field",
+                "work": 1468
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 41,
+                "depth": 0,
+                "work": 41,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "transport-worker": 2,
+                "clear-camp": 2,
+                "transport-force": 1,
+                "assemble": 5,
+                "position-transport": 1,
+                "hold-position": 2
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 14,
+                "met": 34
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 5992,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 41
+              },
+              {
+                "key": "field:sea:2352:912",
+                "tier": "existing-field",
+                "work": 5860
+              },
+              {
+                "key": "goal-geometry:7ddac65d",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-geometry:912eed84",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:862edc33",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:1:berths:0:sea:[]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 41
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:1:berths:0:sea:[]:refine:2:goal-domain-v5:[]:coarse:1:berths:0:sea:[[{\"x\":2352,\"y\":912},1,2]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 41
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 41,
+                "depth": 0,
+                "work": 123,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "transport-worker": 2,
+                "clear-camp": 2,
+                "transport-force": 1,
+                "assemble": 5,
+                "position-transport": 1,
+                "hold-position": 2
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 14,
+                "met": 34
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 3864,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 428
+              },
+              {
+                "key": "goal-geometry:a316e341",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-geometry:9c16d83c",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:9e149ccb",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:a214a317",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:a007d3fe",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:7adac1a4",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:2288:912",
+                "tier": "background-field",
+                "work": 2814
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:5:berths:0:sea:[[{\"x\":2352,\"y\":912},1,2]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 428
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 428,
+                "depth": 0,
+                "work": 856,
+                "limitReason": null
+              },
+              "selectedActionCount": 12,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1,
+                "transport-worker": 2,
+                "clear-camp": 4,
+                "transport-force": 1,
+                "assemble": 9,
+                "train": 1,
+                "position-transport": 1,
+                "hold-position": 2
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 18,
+                "met": 41
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 481,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 481
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 481,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "build": 1
+              },
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 0,
+            "services": []
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:669:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/ship-dee4-source/src/ai/strategy/goal-planner-input.ts:133:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 481,
+                "depth": 0,
+                "work": 0,
+                "limitReason": "coarse-proposal-needs-alternative"
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

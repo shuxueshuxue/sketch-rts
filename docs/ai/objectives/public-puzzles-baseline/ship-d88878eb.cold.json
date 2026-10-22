@@ -1,0 +1,2697 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "sharedBase": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "mode": "same original frozen snapshot, persistent native memory, K20, normal collector",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "inputSha256": "ebcbc132c68394b4bd263d2e0db8458698c9cd86b888c7d00636eae572754192",
+      "passed": true,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": 5,
+      "firstPassingThink": 1,
+      "firstExecutablePlanThink": 5,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 411
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "background-field",
+                "work": 4631
+              },
+              {
+                "key": "field:sea:1488:688",
+                "tier": "background-field",
+                "work": 1102
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 411,
+                "depth": 6,
+                "work": 411,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 120
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:1488:688",
+                "tier": "existing-field",
+                "work": 5735
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:121:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:1488:688",
+                "tier": "existing-field",
+                "work": 491
+              },
+              {
+                "key": "field:sea:2960:304",
+                "tier": "background-field",
+                "work": 5244
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 2498,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:2960:304",
+                "tier": "existing-field",
+                "work": 2084
+              },
+              {
+                "key": "goal-geometry:2087448f",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:951ae578",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:103a410d",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:f1448cfd",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "background-field",
+                "work": 4623
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:2960:240",
+                "tier": "background-field",
+                "work": 744
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 2451,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:f1448cfd",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:4fb7b87c",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "field:land:2960:240",
+                "tier": "existing-field",
+                "work": 2038
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 417,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:f1448cfd",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:166f861e",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 419,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "goal-geometry:8a04a3a5",
+                "tier": "background-field",
+                "work": 6
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:8d5f8bed",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:1:berths:1:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:1552:688",
+                "tier": "background-field",
+                "work": 5320
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:121:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 818,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:1552:688",
+                "tier": "existing-field",
+                "work": 2008
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:4:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:2960:240",
+                "tier": "background-field",
+                "work": 3318
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:121:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 818,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5244,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:sea:2960:240",
+                "tier": "existing-field",
+                "work": 4010
+              },
+              {
+                "key": "goal-geometry:1d5e1703",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:56c8b04f",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:6:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:6:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10]]:refine:2:goal-domain-v5:[]:coarse:9:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10],[{\"x\":2960,\"y\":240},1,11]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 1227,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 720,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:65dc3653",
+                "tier": "background-field",
+                "work": 11
+              },
+              {
+                "key": "point:unit-planner-transport-1000:1552:688:1f38e8f9",
+                "tier": "background-field",
+                "work": 300
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 409,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 825,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:4ebacbe9",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:10:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10],[{\"x\":2960,\"y\":240},1,11]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 818,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 828,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-geometry:8d9ebf03",
+                "tier": "background-field",
+                "work": 9
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:11:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10],[{\"x\":2960,\"y\":240},1,11]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 409,
+                "depth": 6,
+                "work": 818,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 47,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 5080,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "field:land:2976:896",
+                "tier": "background-field",
+                "work": 3154
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:12:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10],[{\"x\":2960,\"y\":240},1,11]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:f9490927",
+                "tier": "background-field",
+                "work": 1100
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 825,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 4216,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:f9490927",
+                "tier": "background-field",
+                "work": 3800
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 416,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 826,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 409
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:16:berths:2:sea:[[{\"x\":1488,\"y\":688},1,3],[{\"x\":2960,\"y\":304},1,4],[{\"x\":1552,\"y\":688},1,10],[{\"x\":2960,\"y\":240},1,11]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 825,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 416,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 416,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 416,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 416,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 416,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 416
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 416,
+                "depth": 6,
+                "work": 416,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}",
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":1552,\"y\":688},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 2
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 48,
+                "met": 124
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "inputSha256": "21d35d2da0e2530e007ccd3ca560c262bd98af59c75e5ca7f3785029f6f8a564",
+      "passed": true,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": 4,
+      "firstPassingThink": 1,
+      "firstExecutablePlanThink": 4,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:land:1520:720",
+                "tier": "background-field",
+                "work": 4635
+              },
+              {
+                "key": "field:sea:2960:304",
+                "tier": "background-field",
+                "work": 1106
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 116
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:sea:2960:304",
+                "tier": "existing-field",
+                "work": 5741
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:71:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:593:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:121:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "search-pending",
+              "search": {
+                "expansions": 0,
+                "depth": 0,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {},
+              "factStates": {
+                "unmet": 1
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 893,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:sea:2960:304",
+                "tier": "existing-field",
+                "work": 481
+              },
+              {
+                "key": "goal-geometry:91600d17",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:103a410d",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:8e9e77ad",
+                "tier": "background-field",
+                "work": 6
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 115
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 3375,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-geometry:2bedf101",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:2960:240",
+                "tier": "background-field",
+                "work": 2782
+              },
+              {
+                "key": "goal-geometry:ed95e3e4",
+                "tier": "background-field",
+                "work": 6
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 115
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 810,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-geometry:2bedf101",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:166f861e",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:1:berths:1:sea:[[{\"x\":2960,\"y\":304},1,3]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 806,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 115
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 407,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-geometry:2bedf101",
+                "tier": "background-field",
+                "work": 4
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 115
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 409,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-geometry:fa808f22",
+                "tier": "background-field",
+                "work": 6
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 115
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:1:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:sea:2960:240",
+                "tier": "background-field",
+                "work": 5338
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 806,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 27,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 120
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 2400,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:sea:2960:240",
+                "tier": "existing-field",
+                "work": 1990
+              },
+              {
+                "key": "goal-geometry:c9032a1d",
+                "tier": "background-field",
+                "work": 6
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 116
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 413,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-geometry:cab11908",
+                "tier": "background-field",
+                "work": 9
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 116
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5464,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "field:land:2976:896",
+                "tier": "background-field",
+                "work": 3154
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:2:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 1100
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:2:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:refine:2:goal-domain-v5:[]:coarse:4:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 1209,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 5204,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4801
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 5017,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 5116,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 5116,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 5017,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 5116,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 2693,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "point:unit-planner-transport-1000:2960:240:3f73f435",
+                "tier": "background-field",
+                "work": 2290
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 403,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 808,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 2
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:5:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 806,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 116
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 1211,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-voyage-risk:planner",
+                "tier": "critical-route",
+                "work": 2
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:6:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v5:[]:coarse:6:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:refine:2:goal-domain-v5:[]:coarse:7:berths:2:sea:[[{\"x\":2960,\"y\":304},1,3],[{\"x\":2960,\"y\":240},1,9]]:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 403
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 403,
+                "depth": 6,
+                "work": 1209,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1520,\"y\":720}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 1
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 5
+              },
+              "factStates": {
+                "unmet": 46,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

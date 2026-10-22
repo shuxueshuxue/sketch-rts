@@ -1,0 +1,36 @@
+{
+  "production": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "scope": "37 independent readonly far final transport/native location/fullSDK absence appendix; original canonical unchanged",
+  "payloads": [
+    {
+      "file": "audit.py",
+      "bytes": 7332,
+      "sha256": "fa01330efd8e1bd1d03d4b21a919d0d76e34b9714a0c693773d6aabc654e7a71"
+    },
+    {
+      "file": "native-locations.mts",
+      "bytes": 1019,
+      "sha256": "2d8cb02e0faa0529a4941317ceac187502fa1eeadeec0aba4c3d7d7d92680b19"
+    },
+    {
+      "file": "native-locations.json",
+      "bytes": 3947,
+      "sha256": "217d289a77737505d4fdf016ee4cf9cc7218ecbb8cd398d0da0c5e208b52abdf"
+    },
+    {
+      "file": "result.json",
+      "bytes": 13860,
+      "sha256": "26e5f7d2bb044c19c438f19fd2783bf06a83bc7d098069ee4eb326a5c56ac1c0"
+    }
+  ],
+  "originalManifestSha256": "7bafda617799e591ec5965b5a383add86db66323a34054e018000ed676d13631",
+  "calls": {
+    "AI": 0,
+    "FactReader": 0,
+    "navigation": 0,
+    "SDK": 0,
+    "sim": 0
+  },
+  "limits": "No build or hold was observed; no full per-tick worker safety replay by37."
+}

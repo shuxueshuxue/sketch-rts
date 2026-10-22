@@ -1,0 +1,14 @@
+{
+  "source": "7f3055edf48e93d7e79a16b2101ff6199ce2f575",
+  "productionDiff0": true,
+  "checks": [
+    {
+      "check": "root",
+      "exitCode": 0
+    },
+    {
+      "check": "contracts",
+      "exitCode": 0
+    }
+  ]
+}

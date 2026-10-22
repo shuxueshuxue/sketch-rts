@@ -1,0 +1,59 @@
+{
+  "source": "1b8103c5dabad721f0f62905f61c0837d70aec1c",
+  "passed": false,
+  "stable": true,
+  "thinkCount": 20,
+  "firstExecutable": null,
+  "firstActualReadyThink": 6,
+  "observedPorts": {
+    "combatOptions": true,
+    "futureProjection": true
+  },
+  "lastReadyKeys": [
+    [
+      "goalId",
+      "planId",
+      "action"
+    ],
+    [
+      "goalId",
+      "planId",
+      "action"
+    ]
+  ],
+  "lastPlans": [
+    {
+      "status": "ready",
+      "kinds": [
+        "build",
+        "train",
+        "assemble",
+        "position-transport",
+        "transport-force",
+        "assemble",
+        "clear-camp",
+        "position-transport",
+        "transport-worker",
+        "build",
+        "assemble",
+        "hold-position"
+      ],
+      "readyKinds": [
+        "build",
+        "assemble"
+      ],
+      "search": {
+        "expansions": 818,
+        "depth": 5,
+        "work": 818,
+        "limitReason": null
+      }
+    }
+  ],
+  "firstError": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+  "lastError": "actual allocation trace, not a hand-authored amount: expected null not to be null",
+  "errorCounts": {
+    "actual allocation trace, not a hand-authored amount: expected null not to be null": 19,
+    "army transport before camp: predecessor: expected 0 to be greater than 0": 1
+  }
+}

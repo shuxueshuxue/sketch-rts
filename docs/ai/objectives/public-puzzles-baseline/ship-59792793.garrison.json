@@ -1,0 +1,484 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "sharedBase": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "scope": "Separate original post-hall observations only; no added assertion, AI, fact requests or simulation. Nearby combat units use explicit300 distance for reporting, not a native garrison acceptance radius. Actual native garrison fact states/availableTick are retained.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": {
+        "think": 558,
+        "tick": 8370,
+        "halls": [
+          {
+            "id": "building-planner-townHall-1106",
+            "owner": "planner",
+            "kind": "townHall",
+            "x": 2832,
+            "y": 720,
+            "hp": 900,
+            "maxHp": 900,
+            "radius": 48,
+            "complete": true,
+            "buildProgress": 560,
+            "buildTime": 560,
+            "attackDamage": 0,
+            "attackRange": 0,
+            "attackCooldown": 1,
+            "cooldown": 0,
+            "rallyX": 2922,
+            "rallyY": 780,
+            "queue": [],
+            "researchQueue": []
+          }
+        ]
+      },
+      "firstPostHallHoldCommand": null,
+      "firstPostHallHoldExecution": null,
+      "firstPostHallGarrisonMetAtCurrentTick": null,
+      "garrisonFactOccurrencesAfterHall": 3,
+      "framesWithPostHallHoldExecution": 0,
+      "lastPostHallObservation": {
+        "think": 560,
+        "tick": 8400,
+        "holdExecutions": [],
+        "garrisonFacts": [
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "unmet",
+              "observedTick": 8400,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1106\",[],0,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0,
+              "entityIds": [],
+              "availableTick": 8400
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":20400}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"byTick\\\\\\\":20400,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4.513026606084081}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"throughTick\\\\\\\":20400}\\\"]]\"]"
+            ]
+          }
+        ],
+        "holdAdmissions": [],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-1",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2859.3688431454348,
+            "y": 659.9979160976026,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 263.2485714215909
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3078.3455278279284,
+            "y": 887.109705836409,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 102.73093203457493
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3093.489204360688,
+            "y": 854.449805942638,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 124.61994931595787
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3127.087094689915,
+            "y": 841.5199271564614,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 160.60942848686244
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 112,
+            "x": 3104.0782843049906,
+            "y": 912.2855919994066,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 129.10951714448137
+          }
+        ]
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": {
+        "think": 456,
+        "tick": 6840,
+        "halls": [
+          {
+            "id": "building-planner-townHall-1103",
+            "owner": "planner",
+            "kind": "townHall",
+            "x": 2832,
+            "y": 720,
+            "hp": 900,
+            "maxHp": 900,
+            "radius": 48,
+            "complete": true,
+            "buildProgress": 560,
+            "buildTime": 560,
+            "attackDamage": 0,
+            "attackRange": 0,
+            "attackCooldown": 1,
+            "cooldown": 0,
+            "rallyX": 2922,
+            "rallyY": 780,
+            "queue": [],
+            "researchQueue": []
+          }
+        ]
+      },
+      "firstPostHallHoldCommand": null,
+      "firstPostHallHoldExecution": null,
+      "firstPostHallGarrisonMetAtCurrentTick": {
+        "think": 536,
+        "tick": 8040,
+        "holdExecutions": [],
+        "garrisonFacts": [
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "met",
+              "observedTick": 8040,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1103\",[],0.9065534073951573,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0.9065534073951573,
+              "entityIds": [],
+              "availableTick": 8040
+            },
+            "producerActionIds": []
+          }
+        ],
+        "holdAdmissions": [],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-1",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2904.9740215386237,
+            "y": 732.0122434149008,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 178.708348787094
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3088.575988176995,
+            "y": 871.1899740930479,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 115.27745009120626
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3051.622030911015,
+            "y": 883.5775546878584,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 76.63555771728711
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3152,
+            "y": 848,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 182.42806801586207
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 112,
+            "x": 3086.227368510282,
+            "y": 907.1132810908889,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 110.78618047981699
+          },
+          {
+            "id": "unit-planner-worker-1114",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2750.870071088532,
+            "y": 835.4792610258226,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 233.12281041902187
+          },
+          {
+            "id": "unit-planner-worker-1117",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2931.532246644843,
+            "y": 851.6752966050884,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 58
+            },
+            "distanceToMine": 62.785829766771215
+          },
+          {
+            "id": "unit-planner-worker-1120",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2924.0896775716615,
+            "y": 846.6148454798489,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "return",
+              "timer": 0
+            },
+            "distanceToMine": 71.64897111329141
+          },
+          {
+            "id": "unit-planner-worker-1123",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2931.5322466458133,
+            "y": 851.6752966036711,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 28
+            },
+            "distanceToMine": 62.7858297670845
+          }
+        ]
+      },
+      "garrisonFactOccurrencesAfterHall": 81,
+      "framesWithPostHallHoldExecution": 0,
+      "lastPostHallObservation": {
+        "think": 560,
+        "tick": 8400,
+        "holdExecutions": [],
+        "garrisonFacts": [],
+        "holdAdmissions": [],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-1",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2931.213674744616,
+            "y": 851.4586796189483,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 51
+            },
+            "distanceToMine": 63.164421561259694
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3088.575988176995,
+            "y": 871.1899740930479,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 115.27745009120626
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3051.622030911015,
+            "y": 883.5775546878584,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 76.63555771728711
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3140.361398383194,
+            "y": 860.6132942054874,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 168.12759507429567
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 112,
+            "x": 3086.227368510282,
+            "y": 907.1132810908889,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 110.78618047981699
+          },
+          {
+            "id": "unit-planner-worker-1114",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2851.825888267777,
+            "y": 797.4810691249221,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 158.50927343614632
+          },
+          {
+            "id": "unit-planner-worker-1117",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2931.532246644843,
+            "y": 851.6752966050884,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 21
+            },
+            "distanceToMine": 62.785829766771215
+          },
+          {
+            "id": "unit-planner-worker-1120",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2926.5705339293886,
+            "y": 848.3016625215962,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 68.69063629221543
+          },
+          {
+            "id": "unit-planner-worker-1123",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2909.2045394252987,
+            "y": 836.4939432293729,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "return",
+              "timer": 0
+            },
+            "distanceToMine": 89.45727665078775
+          },
+          {
+            "id": "unit-planner-footman-1132",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3178.071016068529,
+            "y": 873.638126926502,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 203.30457176936017
+          },
+          {
+            "id": "unit-planner-footman-1134",
+            "kind": "footman",
+            "hp": 167,
+            "x": 3167.743228840702,
+            "y": 837.2416156008971,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 200.54429322085088
+          }
+        ]
+      }
+    }
+  ]
+}

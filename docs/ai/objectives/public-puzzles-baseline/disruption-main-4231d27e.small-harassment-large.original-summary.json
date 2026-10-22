@@ -1,0 +1,1237 @@
+{
+  "puzzle": "small-harassment/large",
+  "thinkCount": 560,
+  "maxTicks": 8400,
+  "initialSnapshotSha256": "2681933c298d83e6df9036f557154730a413914a593d951daffbac7926a19b75",
+  "initialTick": 1,
+  "triggerRule": "First actual positive damage from an original island main-force unit to a member of the original camp.",
+  "responseRule": "Initial enemy force attacks a living worker at the home mine; local defense and island clear remain real AI decisions.",
+  "passed": true,
+  "checks": {
+    "interferenceTriggered": true,
+    "islandClearContinuedOrReasonedInterruption": true,
+    "localDefenseUsed": true,
+    "noArmyPingPong": true
+  },
+  "milestones": {
+    "trigger": 53,
+    "victim-loss": 76,
+    "camp-cleared": 78
+  },
+  "interception": null,
+  "fogOfWar": false,
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 52,
+        "targetId": "scene-public-planner-frame-planner-worker-3",
+        "point": {
+          "x": 696.6023066340031,
+          "y": 883.7215239127879
+        },
+        "passengerIds": [],
+        "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+      },
+      "endedTick": 76,
+      "outcome": "native-death",
+      "retreatedTick": null
+    }
+  ],
+  "cycleCoverage": null,
+  "departureEvidence": [],
+  "physicalEntrances": [],
+  "workerDeaths": [
+    {
+      "tick": 76,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-3",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 644.9646790887491,
+        "y": 832.173996794035,
+        "hp": -26,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 497.6844645790538,
+          "y": 631.23812241145
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 127,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 652.0821576181352,
+        "y": 865.8278655010561,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 508.96772298037206,
+          "y": 620.3494286156526
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 217,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-1",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 579.7741201862591,
+        "y": 832.450809039005,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 571.693405248855,
+          "y": 580.7946898295563
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 232,
+      "unit": {
+        "id": "unit-planner-worker-1074",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 736.2453006179957,
+        "y": 887.7225733046473,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "repair",
+          "buildingId": "building-planner-defenseTower-1127"
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 331,
+      "unit": {
+        "id": "unit-planner-worker-1201",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 730.6586633039005,
+        "y": 811.2705106380924,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 730,
+          "y": 828
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    }
+  ],
+  "newHullDamagedBySameLiveCause": [],
+  "trigger": {
+    "tick": 52,
+    "targetId": "scene-public-planner-frame-planner-worker-3",
+    "point": {
+      "x": 696.6023066340031,
+      "y": 883.7215239127879
+    },
+    "passengerIds": [],
+    "rule": "First actual positive damage from an original island main-force unit to a member of the original camp."
+  },
+  "confirmedLoss": {
+    "tick": 76,
+    "targetId": "scene-public-planner-frame-planner-worker-3",
+    "point": {
+      "x": 644.9646790887491,
+      "y": 832.173996794035
+    },
+    "actualKill": {
+      "tick": 76,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-knight-4",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 709.7401910412532,
+        "y": 868.1876679258313,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-3",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 647.9195452709511,
+        "y": 832.173996794035,
+        "hp": -26,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 497.6844645790538,
+          "y": 631.23812241145
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    }
+  },
+  "firstPostLossThink": 90,
+  "repeatedHullLosses": [],
+  "repeatedWorkerLosses": [
+    {
+      "tick": 127,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-knight-2",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 699.5032818382614,
+        "y": 863.166383752288,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 652.265130403603,
+        "y": 865.391589264649,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 508.96772298037206,
+          "y": 620.3494286156526
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    },
+    {
+      "tick": 217,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-knight-7",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 616.7035941888798,
+        "y": 872.7882857436838,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-1",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 579.9940470885123,
+        "y": 830.9899576353569,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 571.693405248855,
+          "y": 580.7946898295563
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    },
+    {
+      "tick": 232,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-knight-5",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 696.4740461339036,
+        "y": 835.4004149476275,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "unit-planner-worker-1074",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 736.2444947230498,
+        "y": 886.9197012767789,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "repair",
+          "buildingId": "building-planner-defenseTower-1127"
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    },
+    {
+      "tick": 331,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-knight-4",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 704.561636629787,
+        "y": 786.0025100607727,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "unit-planner-worker-1201",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 731.1741205451591,
+        "y": 810.9866113911421,
+        "hp": -2,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 730,
+          "y": 828
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    }
+  ],
+  "oldPassengerLosses": [],
+  "staleProposals": [],
+  "mainSwaps": [],
+  "createdTransportIds": [],
+  "createdSoldierIds": [],
+  "localDefenderIdsWithActualDamage": [
+    "scene-public-planner-frame-planner-footman-2",
+    "scene-public-planner-frame-planner-footman-1"
+  ],
+  "abandonmentEvidence": {
+    "allocation": [],
+    "naval": []
+  },
+  "deaths": [
+    {
+      "native": {
+        "tick": 76,
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 644.9646790887491,
+          "y": 832.173996794035,
+          "hp": -26,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 497.6844645790538,
+            "y": 631.23812241145
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 76,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-4",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 709.7401910412532,
+          "y": 868.1876679258313,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-3",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 647.9195452709511,
+          "y": 832.173996794035,
+          "hp": -26,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 497.6844645790538,
+            "y": 631.23812241145
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 127,
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 652.0821576181352,
+          "y": 865.8278655010561,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 508.96772298037206,
+            "y": 620.3494286156526
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 127,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-2",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 699.5032818382614,
+          "y": 863.166383752288,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-2",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 652.265130403603,
+          "y": 865.391589264649,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 508.96772298037206,
+            "y": 620.3494286156526
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 212,
+        "unit": {
+          "id": "scene-public-planner-frame-planner-footman-2",
+          "owner": "planner",
+          "kind": "footman",
+          "x": 704.000052965897,
+          "y": 736.7971804486267,
+          "hp": -23,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-pressure-knight-4"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 212,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-3",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 743.8500648361851,
+          "y": 791.359379302068,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-planner-footman-2",
+          "owner": "planner",
+          "kind": "footman",
+          "x": 704.000052965897,
+          "y": 736.7971804486267,
+          "hp": -23,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-pressure-knight-4"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 217,
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 579.7741201862591,
+          "y": 832.450809039005,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 571.693405248855,
+            "y": 580.7946898295563
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 217,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-7",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 616.7035941888798,
+          "y": 872.7882857436838,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-planner-worker-1",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 579.9940470885123,
+          "y": 830.9899576353569,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 571.693405248855,
+            "y": 580.7946898295563
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 232,
+        "unit": {
+          "id": "unit-planner-worker-1074",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 736.2453006179957,
+          "y": 887.7225733046473,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "repair",
+            "buildingId": "building-planner-defenseTower-1127"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 232,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-5",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 696.4740461339036,
+          "y": 835.4004149476275,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "unit-planner-worker-1074",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 736.2444947230498,
+          "y": 886.9197012767789,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "repair",
+            "buildingId": "building-planner-defenseTower-1127"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 250,
+        "unit": {
+          "id": "scene-public-planner-frame-planner-footman-1",
+          "owner": "planner",
+          "kind": "footman",
+          "x": 582.9236798991274,
+          "y": 797.1364833310868,
+          "hp": -23,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-pressure-knight-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 250,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-1",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 603.4071340296956,
+          "y": 830.9397113335864,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-planner-footman-1",
+          "owner": "planner",
+          "kind": "footman",
+          "x": 583.1698143175274,
+          "y": 797.5426715555632,
+          "hp": -23,
+          "maxHp": 145,
+          "attackDamage": 16,
+          "attackRange": 48,
+          "attackCooldown": 22,
+          "level": 0,
+          "speed": 62,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-pressure-knight-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 331,
+        "unit": {
+          "id": "unit-planner-worker-1201",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 730.6586633039005,
+          "y": 811.2705106380924,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 730,
+            "y": 828
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 331,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-knight-4",
+          "owner": "pressure",
+          "kind": "knight",
+          "x": 704.561636629787,
+          "y": 786.0025100607727,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "unit-planner-worker-1201",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 731.1741205451591,
+          "y": 810.9866113911421,
+          "hp": -2,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 730,
+            "y": 828
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    }
+  ],
+  "sdkCommands": 26,
+  "opponentSdkCommands": 1900,
+  "opponentProposals": 1900,
+  "scenarioStatus": "world-trigger-observed",
+  "elapsedMs": 3125.264,
+  "cpuMs": 6185.327,
+  "final": {
+    "tick": 8401,
+    "ownerGold": 90,
+    "originalArmy": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "present": false,
+        "hp": -23,
+        "x": 582.9236798991274,
+        "y": 797.1364833310868
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "present": false,
+        "hp": -23,
+        "x": 704.000052965897,
+        "y": 736.7971804486267
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "present": true,
+        "hp": 145,
+        "x": 3120.8206443270765,
+        "y": 861.1225232045459
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "present": true,
+        "hp": 145,
+        "x": 3156.5774676416418,
+        "y": 856.9452529893242
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-5",
+        "present": true,
+        "hp": 134,
+        "x": 3113.3429039152725,
+        "y": 900.0365287956911
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-6",
+        "present": true,
+        "hp": 134,
+        "x": 3084.9412252772063,
+        "y": 877.915392962737
+      }
+    ],
+    "interceptors": [
+      {
+        "id": "scene-public-planner-frame-pressure-knight-1",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 616.0466168679242,
+        "y": 784.5181104008844,
+        "homeX": 960,
+        "homeY": 1056,
+        "hp": 156,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 33,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 622.920183215486,
+          "y": 786.894067946118
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-2",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 663.8810504637567,
+        "y": 848.6556513486784,
+        "homeX": 1008,
+        "homeY": 1056,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 25,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 690.4163096011815,
+          "y": 857.029181157096
+        },
+        "orderQueue": [],
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-3",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 681.6059159567809,
+        "y": 809.7918997496299,
+        "homeX": 1056,
+        "homeY": 1056,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 33,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 676.4039698532418,
+          "y": 807.6061380163651
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-4",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 657.4463219158143,
+        "y": 773.0180773242184,
+        "homeX": 960,
+        "homeY": 1104,
+        "hp": 140,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 2,
+        "xp": 50,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-5",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 626.0667480444196,
+        "y": 826.0458736525813,
+        "homeX": 1008,
+        "homeY": 1104,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 25,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 705.68008928739,
+          "y": 819.3114697979855
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-6",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 707.0280178772575,
+        "y": 842.2759770494824,
+        "homeX": 1056,
+        "homeY": 1104,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-7",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 585.3081708392151,
+        "y": 816.5998339384622,
+        "homeX": 960,
+        "homeY": 1152,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 25,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 596.7151272171227,
+          "y": 813.9148699950147
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-8",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 598.6362258443605,
+        "y": 859.9813293121595,
+        "homeX": 1008,
+        "homeY": 1152,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 602.1025108075391,
+          "y": 847.1130187322967
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-9",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 681.3306688435675,
+        "y": 887.0800752006571,
+        "homeX": 1056,
+        "homeY": 1152,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "move",
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-knight-10",
+        "owner": "pressure",
+        "kind": "knight",
+        "x": 636.1685622931678,
+        "y": 882.8319296626637,
+        "homeX": 960,
+        "homeY": 1200,
+        "hp": 220,
+        "maxHp": 220,
+        "speed": 72,
+        "attackDamage": 24,
+        "attackRange": 72,
+        "attackClass": "melee",
+        "attackCooldown": 26,
+        "cooldown": 0,
+        "radius": 22,
+        "carryingGold": 0,
+        "kills": 0,
+        "xp": 0,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 638.8587368854976,
+          "y": 865.6441223063814
+        },
+        "orderQueue": [],
+        "arrivedAt": {
+          "x": 644.9646790887491,
+          "y": 832.173996794035
+        },
+        "hands": {},
+        "gearMass": 0,
+        "bodyRadius": 22
+      }
+    ],
+    "guardsAlive": []
+  },
+  "scope": "Native main AI behavior baseline only. Physical behavior and missing formal fact/requote/attribution evidence remain distinct; a never-triggered scene does not prove interruption handling failed."
+}

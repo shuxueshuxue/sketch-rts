@@ -1,0 +1,173 @@
+{
+  "source": "229e82d0ac91372b51280929b9e60ee675fa7939",
+  "sharedBase": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+  "scope": "Read actual runtime verdicts, not regrading. SDK application streams equal original saved receipts; no AI/source/simulation.",
+  "oldPassed": 1,
+  "strictStepPassed": 1,
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "oldPhysicalAndAnyGoalPassed": false,
+      "actualStepOwnershipPassed": false,
+      "criterion": "per-required-step-goal-and-native-sdk-effect",
+      "steps": [
+        {
+          "step": "position-transport",
+          "status": "goal-confirmed",
+          "goalCommandCount": 7,
+          "sdkAppliedCount": 7,
+          "effectTick": 2205,
+          "scriptIds": [
+            "goal.position-transport"
+          ],
+          "entityIds": [
+            "unit-planner-transport-1000"
+          ]
+        },
+        {
+          "step": "transport-force",
+          "status": "goal-confirmed",
+          "goalCommandCount": 9,
+          "sdkAppliedCount": 9,
+          "effectTick": 3090,
+          "scriptIds": [
+            "goal.transport-force"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-footman-1",
+            "scene-public-planner-frame-planner-footman-2",
+            "scene-public-planner-frame-planner-footman-3",
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        },
+        {
+          "step": "clear-camp",
+          "status": "goal-confirmed",
+          "goalCommandCount": 6,
+          "sdkAppliedCount": 6,
+          "effectTick": 3660,
+          "scriptIds": [
+            "goal.clear-camp"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-neutral-murlocPeon-1",
+            "scene-public-planner-frame-neutral-murlocPeon-2"
+          ]
+        },
+        {
+          "step": "transport-worker",
+          "status": "unconfirmed",
+          "goalCommandCount": 0,
+          "sdkAppliedCount": 0,
+          "effectTick": null,
+          "scriptIds": [],
+          "entityIds": []
+        },
+        {
+          "step": "build",
+          "status": "unconfirmed",
+          "goalCommandCount": 0,
+          "sdkAppliedCount": 0,
+          "effectTick": null,
+          "scriptIds": [],
+          "entityIds": []
+        }
+      ],
+      "sdkApplicationCount": 66,
+      "sdkStreamSha256": "5da3d3f62c7c3fc7b8c4a9bb5679953f558570cfbcf851c98a4313866345ff4a",
+      "sdkStreamPath": "runtime/sdk/ship-away-far.jsonl.gz",
+      "sdkStreamEqualsRuntimeReceipt": true,
+      "nativeResultError": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":true,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1767,\"army-boarded\":2208,\"farm-complete\":2737,\"army-on-island\":3077,\"landing-near\":3077,\"target-attacked\":3564,\"camp-cleared\":3652,\"shipyard-complete\":4013},\"commands\":[{\"tick\":17,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":17,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":32,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":32,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-2\",\"buildingKind\":\"barracks\",\"x\":776,\"y\":884}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":167,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":167,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":227,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":688,\"avoidCombat\":true}},{\"tick\":242,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":242,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1552,\"y\":688,\"avoidCombat\":true}},{\"tick\":242,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":302,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\"],\"resourceId\":\"resource-0\"}},{\"tick\":407,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":720,\"avoidCombat\":true}},{\"tick\":1262,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1412,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":1517,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1667,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1020\"],\"resourceId\":\"resource-0\"}},{\"tick\":1847,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2177,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":2237,\"command\":{\"type\":\"unload\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":2960,\"y\":240}},{\"tick\":2537,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1010\",\"buildingKind\":\"farm\",\"x\":810,\"y\":684}},{\"tick\":2747,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":2867,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3182,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":3197,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":3197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":3407,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":112,\"y\":880,\"avoidCombat\":true}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3602,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-1\"}},{\"tick\":3602,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-1\"}},{\"tick\":3647,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"shipyard\",\"x\":208,\"y\":784}},{\"tick\":3917,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3932,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":112,\"y\":784,\"avoidCombat\":true}},{\"tick\":4022,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4292,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"farm\",\"x\":950,\"y\":712}},{\"tick\":4517,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":912,\"y\":112,\"avoidCombat\":true}},{\"tick\":4532,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4607,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":5057,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":5567,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-1\",\"buildingKind\":\"stables\",\"x\":916,\"y\":912}},{\"tick\":5777,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":912,\"avoidCombat\":true}},{\"tick\":5882,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":5927,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1612.5628421664505,\"y\":235.22615401205667,\"avoidCombat\":true}},{\"tick\":6167,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}},{\"tick\":6992,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":7937,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}}],\"losses\":[{\"tick\":3630,\"kind\":\"murlocPeon\",\"owner\":\"neutral\"},{\"tick\":3652,\"kind\":\"murlocPeon\",\"owner\":\"neutral\"}],\"final\":{\"gold\":589,\"homeAlive\":true,\"armyAlive\":4,\"workersRescued\":0,\"guardsAlive\":0,\"localGuardsAlive\":0,\"buildings\":{\"townHall\":1,\"farm\":4,\"barracks\":1,\"shipyard\":1,\"stables\":1}}}: expected false to be true // Object.is equality",
+        "stack": "AssertionError: {\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":true,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1767,\"army-boarded\":2208,\"farm-complete\":2737,\"army-on-island\":3077,\"landing-near\":3077,\"target-attacked\":3564,\"camp-cleared\":3652,\"shipyard-complete\":4013},\"commands\":[{\"tick\":17,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-3\"],\"resourceId\":\"resource-0\"}},{\"tick\":17,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":32,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\",\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":32,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-2\",\"buildingKind\":\"barracks\",\"x\":776,\"y\":884}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":152,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":1488,\"y\":688,\"avoidCombat\":true}},{\"tick\":167,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":167,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":227,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":688,\"avoidCombat\":true}},{\"tick\":242,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":242,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":1552,\"y\":688,\"avoidCombat\":true}},{\"tick\":242,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":302,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-2\"],\"resourceId\":\"resource-0\"}},{\"tick\":407,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":720,\"avoidCombat\":true}},{\"tick\":1262,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1412,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":1517,\"command\":{\"type\":\"train\",\"buildingId\":\"scene-public-planner-frame-planner-townHall-1\",\"unitKind\":\"worker\"}},{\"tick\":1667,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1020\"],\"resourceId\":\"resource-0\"}},{\"tick\":1847,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2177,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2207,\"command\":{\"type\":\"board\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"transportId\":\"unit-planner-transport-1000\"}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":2237,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"]}},{\"tick\":2237,\"command\":{\"type\":\"unload\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":2960,\"y\":240}},{\"tick\":2537,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1010\",\"buildingKind\":\"farm\",\"x\":810,\"y\":684}},{\"tick\":2747,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1010\"],\"resourceId\":\"resource-0\"}},{\"tick\":2867,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3137,\"command\":{\"type\":\"move\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"x\":3056.1748751219407,\"y\":614.09112552841,\"avoidCombat\":true}},{\"tick\":3182,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"]}},{\"tick\":3197,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"]}},{\"tick\":3197,\"command\":{\"type\":\"holdPosition\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"]}},{\"tick\":3407,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":112,\"y\":880,\"avoidCombat\":true}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-1\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3482,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-4\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-2\"}},{\"tick\":3602,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-2\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-1\"}},{\"tick\":3602,\"command\":{\"type\":\"attack\",\"unitIds\":[\"scene-public-planner-frame-planner-footman-3\"],\"targetId\":\"scene-public-planner-frame-neutral-murlocPeon-1\"}},{\"tick\":3647,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"shipyard\",\"x\":208,\"y\":784}},{\"tick\":3917,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":3932,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":112,\"y\":784,\"avoidCombat\":true}},{\"tick\":4022,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4292,\"command\":{\"type\":\"build\",\"unitId\":\"unit-planner-worker-1017\",\"buildingKind\":\"farm\",\"x\":950,\"y\":712}},{\"tick\":4517,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":912,\"y\":112,\"avoidCombat\":true}},{\"tick\":4532,\"command\":{\"type\":\"mine\",\"unitIds\":[\"unit-planner-worker-1017\"],\"resourceId\":\"resource-0\"}},{\"tick\":4607,\"command\":{\"type\":\"train\",\"buildingId\":\"building-planner-barracks-1004\",\"unitKind\":\"lancer\"}},{\"tick\":5057,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":5567,\"command\":{\"type\":\"build\",\"unitId\":\"scene-public-planner-frame-planner-worker-1\",\"buildingKind\":\"stables\",\"x\":916,\"y\":912}},{\"tick\":5777,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1552,\"y\":912,\"avoidCombat\":true}},{\"tick\":5882,\"command\":{\"type\":\"mine\",\"unitIds\":[\"scene-public-planner-frame-planner-worker-1\"],\"resourceId\":\"resource-0\"}},{\"tick\":5927,\"command\":{\"type\":\"move\",\"unitIds\":[\"unit-planner-transport-1000\"],\"x\":1612.5628421664505,\"y\":235.22615401205667,\"avoidCombat\":true}},{\"tick\":6167,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}},{\"tick\":6992,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"weaponTraining\"}},{\"tick\":7937,\"command\":{\"type\":\"research\",\"buildingId\":\"building-planner-barracks-1004\",\"upgradeKind\":\"reinforcedPlating\"}}],\"losses\":[{\"tick\":3630,\"kind\":\"murlocPeon\",\"owner\":\"neutral\"},{\"tick\":3652,\"kind\":\"murlocPeon\",\"owner\":\"neutral\"}],\"final\":{\"gold\":589,\"homeAlive\":true,\"armyAlive\":4,\"workersRescued\":0,\"guardsAlive\":0,\"localGuardsAlive\":0,\"buildings\":{\"townHall\":1,\"farm\":4,\"barracks\":1,\"shipyard\":1,\"stables\":1}}}: expected false to be true // Object.is equality\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/register-tests.ts:134:75\n    at file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:533:11\n    at runWithTimeout (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:39:7)\n    at runTest (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1056:17)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at runSuite (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runSuite (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1205:15)\n    at runFiles (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1262:5)\n    at startTests (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/runner/dist/index.js:1271:3)"
+      },
+      "nativeResultSha256": "a130a058b6e44feb43762bad7aafcdaa04d394524aa9b7e82099bc5b2f7c8a3d"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "oldPhysicalAndAnyGoalPassed": true,
+      "actualStepOwnershipPassed": true,
+      "criterion": "per-required-step-goal-and-native-sdk-effect",
+      "steps": [
+        {
+          "step": "position-transport",
+          "status": "goal-confirmed",
+          "goalCommandCount": 4,
+          "sdkAppliedCount": 4,
+          "effectTick": 4485,
+          "scriptIds": [
+            "goal.position-transport"
+          ],
+          "entityIds": [
+            "unit-planner-transport-1000"
+          ]
+        },
+        {
+          "step": "transport-force",
+          "status": "goal-confirmed",
+          "goalCommandCount": 9,
+          "sdkAppliedCount": 9,
+          "effectTick": 975,
+          "scriptIds": [
+            "goal.transport-force"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-footman-1",
+            "scene-public-planner-frame-planner-footman-2",
+            "scene-public-planner-frame-planner-footman-3",
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        },
+        {
+          "step": "clear-camp",
+          "status": "goal-confirmed",
+          "goalCommandCount": 4,
+          "sdkAppliedCount": 4,
+          "effectTick": 1860,
+          "scriptIds": [
+            "goal.clear-camp"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-neutral-murlocPeon-1",
+            "scene-public-planner-frame-neutral-murlocPeon-2"
+          ]
+        },
+        {
+          "step": "transport-worker",
+          "status": "goal-confirmed",
+          "goalCommandCount": 77,
+          "sdkAppliedCount": 2,
+          "effectTick": 6165,
+          "scriptIds": [
+            "goal.transport-worker"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ]
+        },
+        {
+          "step": "build",
+          "status": "goal-confirmed",
+          "goalCommandCount": 1,
+          "sdkAppliedCount": 1,
+          "effectTick": 6855,
+          "scriptIds": [
+            "goal.build"
+          ],
+          "entityIds": [
+            "building-planner-townHall-1100"
+          ]
+        }
+      ],
+      "sdkApplicationCount": 151,
+      "sdkStreamSha256": "d304c965f9d8dea4615dbdded0b46596ef77f144506359ce0bb3030d580b20f7",
+      "sdkStreamPath": "runtime/sdk/ship-away-near.jsonl.gz",
+      "sdkStreamEqualsRuntimeReceipt": true,
+      "nativeResultError": null,
+      "nativeResultSha256": "1a994b00567c41f4b65b7ec65f15eb84a0dc22ac76b8c92e9b0577f19a549829"
+    }
+  ]
+}

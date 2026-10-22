@@ -1,0 +1,20 @@
+{
+  "source": "1b8103c5dabad721f0f62905f61c0837d70aec1c",
+  "production": "cda746b4a8ae52c4f4233fedfc2bbde589dc2489",
+  "argv": [
+    "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/ai/strategy/puzzles/navy-zero.scene.test.ts",
+    "--maxWorkers",
+    "1",
+    "--minWorkers",
+    "1",
+    "--testNamePattern",
+    "constructs a deterministic|exposes the intended|native owner-think scope diagnostic|frozen-world dependency graph",
+    "--reporter=json",
+    "--outputFile=/codegeex/jeffry/sketch-public-puzzles/evidence/navy-zero-1b8103c5-cold/tests.original.json"
+  ],
+  "exitCode": 1,
+  "scope": "Original puzzle3/default four cold contracts, K20 normal collector, execution and witness excluded. Source/predicate/world unchanged, no tick edits, default6144."
+}

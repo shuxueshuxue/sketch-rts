@@ -1,0 +1,58 @@
+{
+  "source": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "commands": {
+    "root-tsc": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false"
+      ],
+      "exitCode": 0
+    },
+    "tools-ai-tsc": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "-p",
+        "tools/ai/tsconfig.json"
+      ],
+      "exitCode": 0
+    },
+    "tools-cli-tsc": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "-p",
+        "tools/cli/tsconfig.json"
+      ],
+      "exitCode": 0
+    },
+    "contracts-sdk": {
+      "argv": [
+        "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/ai/strategy/puzzles/disruption/scenes.test.ts",
+        "src/ai/strategy/puzzles/disruption/native-interference.test.ts",
+        "src/ai/strategy/puzzles/disruption/protection.test.ts",
+        "src/sdk/package-boundaries.test.ts",
+        "--maxWorkers",
+        "1",
+        "--minWorkers",
+        "1",
+        "--reporter=json",
+        "--outputFile=/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/contracts-sdk.json"
+      ],
+      "exitCode": 0
+    }
+  }
+}
