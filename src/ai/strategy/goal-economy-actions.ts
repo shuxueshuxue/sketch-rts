@@ -35,7 +35,8 @@ export function declareGoalTraining(input: Readonly<{
   const production = goalFact({ kind: 'production', unitKind, producer, at, byTick });
   // A pool anchor is not the native rally input. Reuse the same live unit /
   // resource rally target (or native new-building default) used at birth.
-  const exit = goalFact({ kind: 'spawn-exit', producer, unitKind, toward: { point: productionRallyPoint(context.snapshot, source) } });
+  const exit = goalFact({ kind: 'spawn-exit', producer, unitKind, toward: { point: productionRallyPoint(context.snapshot, source),
+    ...(unitMover(unitKind) === 'sea' && at.seaId ? { seaId: at.seaId } : {}) } });
   const gold = goalFact({ kind: 'gold', minimum: amountGold, byTick });
   const room = goalFact({ kind: 'population-room', minimum: count * rules.supplyUsed, byTick });
   const cap = goalFact({ kind: 'supply-cap', minimum: requiredSupplyCap(unitKind) });

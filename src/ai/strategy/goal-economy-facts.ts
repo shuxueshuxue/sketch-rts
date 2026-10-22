@@ -8,9 +8,10 @@ import type { Building, TrainableUnitKind } from '../../shared/types';
 import { goalFact, goalValueKey } from './goal-facts';
 import { goalBuildingRegions, type GoalEconomicGroundingPorts } from './goal-economy-grounding';
 import type { GoalFact, GoalFactObservation, GoalFlowSource, GoalPlanningContext } from './goal-planner-types';
+import type { GoalSeaSpawnReader } from './goal-sea-spawn';
 import type { Point, Target } from './types';
 
-export type GoalEconomicFactPorts = GoalEconomicGroundingPorts & Readonly<{ reservedGold: number }>;
+export type GoalEconomicFactPorts = GoalEconomicGroundingPorts & Readonly<{ reservedGold: number; seaSpawn?: GoalSeaSpawnReader }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const supported = new Set(['gold', 'production', 'supply-cap', 'population-room', 'build-site', 'spawn-exit',
   'building-complete', 'hall-complete', 'shipyard-for']);
@@ -146,9 +147,30 @@ export function readGoalEconomicFact(fact: GoalFact, context: GoalPlanningContex
     if (!producer || !producer.complete || !trainingBuildingFor(race, p.unitKind) || !canTrainAt(race, producer.kind, p.unitKind))
       return answer(false, 'native-spawn-producer-unavailable', [p.producer, producer && buildingRevision(producer)]);
     const rally = productionRallyPoint(snapshot, producer);
+    if (unitMover(p.unitKind) === 'sea') {
+      if (!ports.seaSpawn) return pending('native-sea-spawn-port-required', buildingRevision(producer));
+      const recruit = trainingRecruitPrototype(snapshot, producer, { unitKind: p.unitKind as TrainableUnitKind, remaining: 0 });
+      const spawn = ports.seaSpawn(producer, recruit);
+      const dependencies = [buildingRevision(producer), recruit.kind, spawn];
+      if (spawn.state === 'pending') return pending(spawn.reason.code, dependencies, spawn.requestIds);
+      if (spawn.state !== 'met') return answer(false, spawn.reason.code, dependencies);
+      const options = spawn.value.options;
+      if (options.length === 1) {
+        const selected = options[0]!.seaId;
+        return answer(!p.toward.seaId || p.toward.seaId === selected,
+          !p.toward.seaId || p.toward.seaId === selected ? 'native-sea-spawn-single-component' : 'native-sea-spawn-component-mismatch',
+          dependencies, { availableTick: tick });
+      }
+      const selected = ports.regionAt(rally, 'sea');
+      if (!selected || !options.some(option => option.seaId === selected))
+        return pending('native-sea-spawn-rally-component-pending', dependencies, spawn.factIds);
+      const requested = p.toward.seaId ?? ports.regionAt(p.toward.point, 'sea');
+      return answer(!requested || requested === selected,
+        !requested || requested === selected ? 'native-sea-spawn-rally-component' : 'native-sea-spawn-rally-component-mismatch',
+        dependencies, { availableTick: tick });
+    }
     if (rally.x !== p.toward.point.x || rally.y !== p.toward.point.y)
       return answer(false, 'native-spawn-rally-binding-changed', [buildingRevision(producer), p.toward]);
-    if (unitMover(p.unitKind) === 'sea') return pending('native-sea-spawn-port-required', buildingRevision(producer));
     const recruit = trainingRecruitPrototype(snapshot, producer, { unitKind: p.unitKind as TrainableUnitKind, remaining: 0 });
     const routes: GoalFactObservation[] = [];
     const point = landSpawnPoint(snapshot, producer, recruit, (from, goal) => {

@@ -3,19 +3,21 @@ import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { UNIT_DEFS } from '../../shared/catalog';
+import { createBuilding } from '../../shared/map';
 import { landSpawnPoint, landSpawnPrototype, productionRallyPoint } from '../../shared/production-spawn';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
-import { snapshotGame, stepGame, tryPlayerCommand } from '../../shared/sim';
+import { snapshotGame, stepGame, trainingRecruitPrototype, tryPlayerCommand } from '../../shared/sim';
 import type { GameSnapshot } from '../../shared/types';
 import { createAiPolicyMemory } from '../memory';
 import { withAllocationArrivalQuery, type AllocationLandRouteReader } from './allocation-arrival-query';
 import { buildObservedStrategyDecision, projectStrategyTrace } from './decision';
-import { declareGoalWaitIncome } from './goal-economy-actions';
+import { declareGoalTraining, declareGoalWaitIncome } from './goal-economy-actions';
 import { readGoalEconomicFact, type GoalEconomicFactPorts } from './goal-economy-facts';
 import { goalFact } from './goal-facts';
+import { createGoalSeaSpawnReader, type GoalSeaSpawn } from './goal-sea-spawn';
 import { FactWorkQueue, withFactWork } from './fact-work';
 import { createGoalGeometryReader } from './goal-geometry-source';
-import type { GoalGeometryMemory } from './goal-grounding-ports';
+import type { GoalGeometryMemory, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalFact, GoalPlanningContext } from './goal-planner-types';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 
@@ -170,4 +172,75 @@ describe('economic facts from native snapshots and the actual Situation', () => 
     expect(strict(() => readGoalEconomicFact(fact, context, ports(context))))
       .toMatchObject({ state: 'pending', reason: { code: 'native-sea-spawn-port-required' } });
   });
+
+  function seaWorld(unitKind: 'cutter' | 'transport') {
+    const fixture = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/sea-spawn-11maps.json.gz', import.meta.url))).toString());
+    const game = nativeGame(); game.map = structuredClone(fixture.maps.find((entry: { name: string }) => entry.name === 'pineshade').map);
+    game.buildings = [createBuilding('real-yard', 'us', 'shipyard', 1360, 400, true)]; game.units = [];
+    const { context } = world(snapshotGame(game)), producer = context.snapshot.buildings[0]!;
+    const recruit = trainingRecruitPrototype(context.snapshot, producer, { unitKind, remaining: 0 });
+    let memory: GoalGeometryMemory = { version: 1, entries: [] }, published: GoalPublishedValue<GoalSeaSpawn> | undefined;
+    for (let think = 1; think <= 10; think++) {
+      const work = new FactWorkQueue(context.tick, 6144, undefined, think);
+      const reader = createGoalSeaSpawnReader({ snapshot: context.snapshot, owner: context.owner, regionsReady: true,
+        terrainRevision: 'same-terrain', regionAt: point => seaIdAt(context.snapshot.map, point),
+        geometry: createGoalGeometryReader({ tick: context.tick, work, memory }) });
+      published = strict(() => reader(producer, recruit)); strict(() => work.flush());
+      memory = JSON.parse(JSON.stringify(memory));
+      if (published.state === 'met') break;
+    }
+    if (published?.state !== 'met') throw Error('native sea decision not published');
+    const proof = published;
+    const input: GoalEconomicFactPorts = { ...ports(context), seaSpawn: () => proof };
+    const fact = (toward: { point: { x: number; y: number }; seaId?: `sea:${number}` }) =>
+      goalFact({ kind: 'spawn-exit', unitKind, producer: { kind: 'existing', entityId: producer.id }, toward });
+    return { context, producer, input, fact, proof };
+  }
+
+  it('accepts the sole transport sea despite a different rally side and waiting traffic, but not a different requested sea', () => {
+    const { context, producer, input, fact } = seaWorld('transport');
+    producer.rallyX = 1408; producer.rallyY = 281.84195818133674;
+    expect(seaIdAt(context.snapshot.map, productionRallyPoint(context.snapshot, producer))).toBe('sea:1');
+    const toward = { point: productionRallyPoint(context.snapshot, producer) };
+    expect(strict(() => readGoalEconomicFact(fact(toward), context, input)))
+      .toMatchObject({ state: 'met', reason: { code: 'native-sea-spawn-single-component' }, availableTick: context.tick });
+    expect(readGoalEconomicFact(fact({ ...toward, seaId: 'sea:1' }), context, input)?.state).toBe('unmet');
+    expect(readGoalEconomicFact(fact({ ...toward, seaId: 'sea:4' }), context, input)?.state).toBe('met');
+    for (const seaId of ['sea:1', 'sea:4'] as const) {
+      const action = declareGoalTraining({ producer: { kind: 'existing', entityId: producer.id }, unitKind: 'transport', count: 1,
+        at: { point: producer, seaId }, byTick: context.tick + 5000 }, context)!;
+      const exit = action.preconditions.find(precondition => precondition.predicate.kind === 'spawn-exit')!;
+      expect(exit.predicate).toMatchObject({ toward: { seaId } });
+      expect(readGoalEconomicFact(exit, context, input)?.state).toBe(seaId === 'sea:4' ? 'met' : 'unmet');
+    }
+  });
+
+  it('requires an observed rally component for an ambiguous cutter, never treats a proposed rally as already applied', () => {
+    const { context, producer, input, fact, proof } = seaWorld('cutter');
+    const sea1 = proof.value.options.find(option => option.seaId === 'sea:1')!, sea4 = proof.value.options.find(option => option.seaId === 'sea:4')!;
+    if (sea1.rally.kind !== 'sea-component' || sea4.rally.kind !== 'sea-component') throw Error('expected conditional rally');
+    producer.rallyX = sea1.rally.point.x; producer.rallyY = sea1.rally.point.y;
+    expect(readGoalEconomicFact(fact({ point: sea1.rally.point, seaId: 'sea:1' }), context, input)?.state).toBe('met');
+    expect(readGoalEconomicFact(fact({ point: sea4.rally.point, seaId: 'sea:4' }), context, input)?.state).toBe('unmet');
+    expect(readGoalEconomicFact(fact({ point: sea4.rally.point }), context, input)?.state).toBe('unmet');
+    // A changed point in the same sea does not change this decision fact.
+    expect(readGoalEconomicFact(fact({ point: { x: sea1.rally.point.x + 1, y: sea1.rally.point.y } }), context, input)?.state).toBe('met');
+    producer.rallyX = producer.x; producer.rallyY = producer.y;
+    expect(readGoalEconomicFact(fact({ point: sea4.rally.point, seaId: 'sea:4' }), context, input))
+      .toMatchObject({ state: 'pending', reason: { code: 'native-sea-spawn-rally-component-pending' } });
+  });
+
+  it('keeps unbuilt producers and missing sea proofs unready without outputs or native queries', () => {
+    const { context, producer, input, fact } = seaWorld('transport');
+    const before = JSON.stringify(context.snapshot);
+    expect(readGoalEconomicFact(goalFact({ kind: 'spawn-exit', producer: { kind: 'binding', name: 'future-yard' },
+      unitKind: 'transport', toward: { point: producer } }), context, input))
+      .toMatchObject({ state: 'unmet', reason: { code: 'spawn-producer-output-not-born' } });
+    const unresolved: GoalEconomicFactPorts = { ...input, seaSpawn: () => ({ state: 'pending', requestIds: ['native-seas'],
+      reason: { code: 'native-local-geometry-pending', factIds: [], values: {} } }) };
+    expect(strict(() => readGoalEconomicFact(fact({ point: producer }), context, unresolved)))
+      .toMatchObject({ state: 'pending', reason: { code: 'native-local-geometry-pending' } });
+    expect(JSON.stringify(context.snapshot)).toBe(before);
+  });
+
 });

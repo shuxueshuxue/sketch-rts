@@ -11,6 +11,10 @@ import type { GoalFactReader } from './goal-planner-types';
 import { landIdAt, type RegionIndex } from './regions';
 import type { Point } from './types';
 
+// A separate decision port. Exact launch ranking/steering stays optional and
+// is not used as a training prerequisite or as a substitute for a born ship.
+export { createGoalSeaSpawnReader, type GoalSeaSpawnReader, type GoalSeaSpawn } from './goal-sea-spawn';
+
 export type ArrivalPlanningPhysicsInput = Readonly<{
   snapshot: GameSnapshot; geometry: GoalGeometryReader; geometryRevision: string;
   regions?: RegionIndex;

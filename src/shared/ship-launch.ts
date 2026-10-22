@@ -5,6 +5,7 @@ import { convexHull, polygonPlanes, polygonRadius, polygonTouchesCell } from './
 import { productionRallyPoint } from './production-spawn';
 import { shipBodyClearAtPose } from './ship-collisions';
 import { shipProfile, shipScale } from './ship-geometry';
+import { shipLaunchCandidates } from './ship-launch-geometry';
 import { hullFits, hullPassageClear, type ShipPose } from './ship-navigation';
 import { CELL_GROUND, footprintHalf, sameGround, steerPoint, walkableGoal } from './terrain';
 import type { Building, GameMap, GameSnapshot, Obstacle, Unit, UnitKind } from './types';
@@ -28,8 +29,6 @@ type Berths = {
 };
 const berths = new WeakMap<object, WeakMap<Building, Berths>>();
 const prototypes = new WeakMap<Building, Map<UnitKind, { definition:typeof UNIT_DEFS[UnitKind]; radius:number; physicalRadius:number; unit:Unit }>>();
-const LAUNCH_GAP = 4;
-const OUTWARD_STEPS = [0, 32, 64] as const;
 
 /** A completed blocked job needs a shape probe, not a new runtime unit every
  * tick. These derived defaults are never added to the game or used to spawn
@@ -149,39 +148,18 @@ function launchPathClear(snapshot:Harbor, ship:Unit, entry:ShipPose, pose:ShipPo
 /** The hull support on each face determines its center, so even a broadside
  * carrier clears the square pier without replacing its hull with a circle. */
 function harborPoses(snapshot: Harbor, dock: Building, ship: Unit): {poses:ShipPose[];entries:Map<ShipPose,ShipPose>} {
-  const map = snapshot.map, profile = shipProfile(ship)!, half = solidHalf(snapshot, dock);
-  const connected = harborWater(map, dock, half + polygonRadius(profile.hull) + 64 + (map.terrain?.cell ?? 0));
-  const offsets = [0, -half / 2, half / 2, -half, half];
-  const candidates: ShipPose[] = [];
-  const entries=new Map<ShipPose,ShipPose>();
-  for (let direction = 0; direction < 16; direction++) {
-    const heading = direction * Math.PI / 8, c = detCos(heading), s = detSin(heading);
-    const hull = profile.hull.map(point => ({ x: point.x * c - point.y * s, y: point.x * s + point.y * c }));
-    const left = Math.min(...hull.map(point => point.x)), right = Math.max(...hull.map(point => point.x));
-    const top = Math.min(...hull.map(point => point.y)), bottom = Math.max(...hull.map(point => point.y));
-    for (let face = 0; face < 4; face++) for (const offset of offsets) {
-      const tangent = Math.max(-half + 1, Math.min(half - 1, offset));
-      const anchor = face === 0 ? { x: dock.x + half + 1, y: dock.y + tangent }
-        : face === 1 ? { x: dock.x - half - 1, y: dock.y + tangent }
-        : face === 2 ? { x: dock.x + tangent, y: dock.y + half + 1 }
-        : { x: dock.x + tangent, y: dock.y - half - 1 };
-      if (!connected(anchor, anchor)) continue;
-      for (const outward of OUTWARD_STEPS) {
-        const gap = LAUNCH_GAP + outward;
-        const point = face === 0 ? { x: dock.x + half - left + gap, y: dock.y + offset }
-          : face === 1 ? { x: dock.x - half - right - gap, y: dock.y + offset }
-          : face === 2 ? { x: dock.x + offset, y: dock.y + half - top + gap }
-          : { x: dock.x + offset, y: dock.y - half - bottom - gap };
-        const pose = { ...point, heading };
-        const entry={x:point.x-(face===0?outward:face===1?-outward:0),y:point.y-(face===2?outward:face===3?-outward:0),heading};
-        if (hullFits(map, ship, pose) && connected(anchor, point) && (!outward || hullPassageClear(map,ship,entry,pose))) {
-          candidates.push(pose); entries.set(pose,entry);
-        }
-      }
+  const map = snapshot.map, candidates = shipLaunchCandidates(map, dock, ship);
+  const connected = harborWater(map, dock, candidates.reach);
+  const poses: ShipPose[] = [], entries = new Map<ShipPose, ShipPose>();
+  for (let index = 0; index < candidates.count; index++) {
+    const { pose, entry, anchor, outward } = candidates.at(index);
+    if (connected(anchor, anchor) && hullFits(map, ship, pose) && connected(anchor, pose)
+      && (!outward || hullPassageClear(map, ship, entry, pose))) {
+      poses.push(pose); entries.set(pose, entry);
     }
   }
   // Equal choices retain authored direction/face/offset order on every run.
-  return {poses:candidates.sort((a, b) => Math.hypot(a.x - dock.x, a.y - dock.y) - Math.hypot(b.x - dock.x, b.y - dock.y)),entries};
+  return {poses:poses.sort((a, b) => Math.hypot(a.x - dock.x, a.y - dock.y) - Math.hypot(b.x - dock.x, b.y - dock.y)),entries};
 }
 
 /** Only the small harbor halo is labeled. Read the current cells directly so
