@@ -4,6 +4,8 @@ import { purchaseCost } from '../policy/script-runner';
 import type { ActionToken, AllocationBudget, AllocationPayment, AllocationUnmetDemand, CommandAdmission,
   ExecutableMethod, ExecutionAction, IssuedActionCommand, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
+import { recordGoalTrainingAdmissions } from './goal-training-ledger';
+import { admittedCommandSpendIds, issuedCapitalPurchase } from './goal-capital-lineage';
 
 /** The old runner and formal admission share the catalog prices. Building
  * upgrades also spend capital although the old economy does not track them. */
@@ -11,12 +13,57 @@ export function allocationCommandCost(snapshot: GameSnapshot, owner: string, com
   return command.type === 'upgradeBuilding' ? BUILDING_DEFS[command.to].cost : purchaseCost(snapshot, owner, command);
 }
 const outstanding = (budget: AllocationBudget) => budget.state === 'reserved' ? budget.amountGold - budget.paidGold : 0;
-export function reservedAllocationGold(memory: StrategyAllocationMemory): number {
-  return Object.values(memory.budgets).reduce((sum, budget) => sum + outstanding(budget), 0);
+export function reservedAllocationGold(memory: StrategyAllocationMemory, forObjectiveId?: string): number {
+  return Object.values(memory.budgets).reduce((sum, budget) => sum + (budget.plannedGold !== undefined
+    && budget.objectiveId === forObjectiveId ? 0 : outstanding(budget)), 0);
 }
 
-/** Only runnable stages reserve cash. Later capital remains a prerequisite, not
- * a reason to refuse the affordable first step of an otherwise quoted chain. */
+/** An admitted chain saves real incoming cash, including thinks where new
+ * geometry is pending. Future income never becomes an actual cash balance. */
+export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashGold: number, tick: number): StrategyAllocationMemory {
+  if (!Number.isFinite(cashGold) || cashGold < 0) throw Error('Invalid allocation cash');
+  const budgets = { ...memory.budgets };
+  for (const budget of Object.values(budgets)) if (budget.plannedGold !== undefined && budget.state === 'reserved'
+    && ['failed', 'abandoned'].includes(memory.objectives[budget.objectiveId]?.status ?? 'abandoned'))
+    budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
+  const adjustable = Object.values(budgets).filter(budget => {
+    if (budget.plannedGold === undefined || budget.state !== 'reserved') return false;
+    return !issuedCapitalPurchase(memory, budget);
+  })
+    .sort((a, b) => (a.expectedPaymentTick ?? Infinity) - (b.expectedPaymentTick ?? Infinity) || a.id.localeCompare(b.id));
+  const adjustableIds = new Set(adjustable.map(budget => budget.id));
+  // An issued native purchase may already have spent the cash before its ACK
+  // arrives. Keep that budget intact so its real payment can still be proved.
+  const protectedGold = Object.values(budgets).reduce((sum, budget) => sum + (adjustableIds.has(budget.id) ? 0 : outstanding(budget)), 0);
+  let free = Math.max(0, cashGold - protectedGold);
+  // Preserve existing claims first; cash loss trims the later payment claims
+  // before earlier ones. This does not reshuffle saved cash on unchanged input.
+  for (const budget of adjustable) {
+    const held = Math.min(free, Math.max(0, budget.amountGold - budget.paidGold), Math.max(0, budget.plannedGold! - budget.paidGold));
+    budgets[budget.id] = { ...budget, amountGold: budget.paidGold + held }; free -= held;
+  }
+  for (const original of adjustable) {
+    const budget = budgets[original.id]!;
+    const added = Math.min(free, Math.max(0, budget.plannedGold! - budget.amountGold));
+    budgets[budget.id] = { ...budget, amountGold: budget.amountGold + added }; free -= added;
+  }
+  return { ...memory, budgets };
+}
+
+/** A selected plan that ended cannot retain a saving claim. Real issued
+ * purchases keep their receipt lineage until payment acknowledgement. */
+export function releaseEndedGoalCapital(memory: StrategyAllocationMemory,
+  plans: readonly Readonly<{ goal: { id: string }; status: string }>[], tick: number): StrategyAllocationMemory {
+  const ended = new Set(plans.filter(plan => ['failed', 'abandoned'].includes(plan.status)).map(plan => plan.goal.id));
+  const budgets = Object.fromEntries(Object.entries(memory.budgets).map(([id, budget]) => [id,
+    budget.plannedGold !== undefined && budget.state === 'reserved' && ended.has(budget.objectiveId)
+      && !issuedCapitalPurchase(memory, budget)
+      ? { ...budget, state: 'released' as const, releasedTick: tick } : budget]));
+  return { ...memory, budgets };
+}
+
+/** Runnable purchases reserve first. An admitted plan also saves later capital
+ * from remaining actual cash without gating affordable earlier actions. */
 export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAllocationMemory; method: ExecutableMethod;
   actions: readonly ExecutionAction[]; cashGold: number; tick: number }>) {
   const { memory, method, actions, cashGold, tick } = input;
@@ -24,8 +71,36 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
   const registry = new Map(method.spends.map(spend => [spend.spendId, spend]));
   if (registry.size !== method.spends.length) throw new Error('Duplicate allocation spend id');
   const budgets = { ...memory.budgets }, unmet: AllocationUnmetDemand[] = [];
-  let free = Math.max(0, cashGold - reservedAllocationGold(memory));
+  let free = Math.max(0, cashGold - reservedAllocationGold({ ...memory, budgets }));
   const referred = new Set<string>();
+  const reserve = (spendId: string, action: ExecutionAction, future: boolean) => {
+      const spend = registry.get(spendId)!;
+      const id = `budget:${spendId}`, old = budgets[id];
+      const purchase = old && issuedCapitalPurchase(memory, old);
+      if (old && old.state !== 'released' && old.objectiveId !== method.objectiveId
+        && !(old.plannedGold !== undefined && spend.expectedPaymentTick !== undefined && !future && old.paidGold === 0
+          && !purchase)) {
+        if (!future) unmet.push({ id: `${action.token.actionId}/spend-owner:${spendId}`, objectiveId: method.objectiveId,
+          methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold },
+          reason: { code: 'capital-already-owned-by-an-alternative', factIds: [id], values: {} } });
+        return;
+      }
+      const paid = old?.paidGold ?? 0;
+      if (paid > spend.amountGold) throw new Error('Allocation spend decreased below its real payment');
+      const held = old?.state === 'reserved' ? old.amountGold - paid : 0;
+      const added = Math.min(free, Math.max(0, spend.amountGold - paid - held)); free -= added;
+      const amountGold = paid + held + added;
+      budgets[id] = { id, spendId, objectiveId: method.objectiveId,
+        methodId: purchase || old?.nativePayments?.length ? old!.methodId : method.id,
+        action: purchase?.action ?? (old?.nativePayments?.length ? old.action : action.token),
+        amountGold, paidGold: paid, state: paid >= spend.amountGold ? 'spent' : 'reserved', sinceTick: old?.sinceTick ?? tick,
+        ...(old?.nativePayments ? { nativePayments: old.nativePayments } : {}),
+        ...(spend.expectedPaymentTick === undefined ? {} : { plannedGold: spend.amountGold, expectedPaymentTick: spend.expectedPaymentTick }),
+        releasedTick: null, includedUtilityTermCodes: [...spend.includedUtilityTermCodes], externalReservationIds: [...spend.externalReservationIds] };
+      if (!future && amountGold < spend.amountGold) unmet.push({ id: `${action.token.actionId}/capital:${spendId}`, objectiveId: method.objectiveId,
+        methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold - amountGold },
+        reason: { code: 'current-stage-awaits-income', factIds: [spendId], values: { heldGold: amountGold, requiredGold: spend.amountGold } } });
+  };
   for (const plan of method.actions) {
     const action = actions.find(action => action.token.actionId === plan.id);
     for (const spendId of plan.spendIds) {
@@ -35,24 +110,15 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
       if (referred.has(spendId)) continue;
       if (!action || !['ready', 'active', 'blocked'].includes(action.status)) continue;
       referred.add(spendId);
-      const id = `budget:${spendId}`, old = budgets[id];
-      if (old && old.state !== 'released' && old.objectiveId !== method.objectiveId) {
-        unmet.push({ id: `${action.token.actionId}/spend-owner:${spendId}`, objectiveId: method.objectiveId,
-          methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold },
-          reason: { code: 'capital-already-owned-by-an-alternative', factIds: [id], values: {} } });
-        continue;
-      }
-      const paid = old?.paidGold ?? 0;
-      if (paid > spend.amountGold) throw new Error('Allocation spend decreased below its real payment');
-      const held = old?.state === 'reserved' ? old.amountGold - paid : 0;
-      const added = Math.min(free, Math.max(0, spend.amountGold - paid - held)); free -= added;
-      const amountGold = paid + held + added;
-      budgets[id] = { id, spendId, objectiveId: method.objectiveId, methodId: method.id, action: action.token,
-        amountGold, paidGold: paid, state: paid >= spend.amountGold ? 'spent' : 'reserved', sinceTick: old?.sinceTick ?? tick,
-        releasedTick: null, includedUtilityTermCodes: [...spend.includedUtilityTermCodes], externalReservationIds: [...spend.externalReservationIds] };
-      if (amountGold < spend.amountGold) unmet.push({ id: `${action.token.actionId}/capital:${spendId}`, objectiveId: method.objectiveId,
-        methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold - amountGold },
-        reason: { code: 'current-stage-awaits-income', factIds: [spendId], values: { heldGold: amountGold, requiredGold: spend.amountGold } } });
+      reserve(spendId, action, false);
+    }
+  }
+  if (method.kind === 'goal-plan') {
+    const parent = method.actions.map(plan => actions.find(action => action.token.actionId === plan.id))
+      .find(action => action && ['ready', 'active', 'blocked', 'complete'].includes(action.status));
+    if (parent) for (const spend of method.spends) if (spend.expectedPaymentTick !== undefined && !referred.has(spend.spendId)) {
+      if (!Number.isFinite(spend.amountGold) || spend.amountGold < 0 || !Number.isFinite(spend.expectedPaymentTick)) throw Error('Invalid planned capital');
+      reserve(spend.spendId, parent, true);
     }
   }
   return { memory: { ...memory, budgets }, unmet };
@@ -85,13 +151,14 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
     const baseline = issuedCommandBaseline(snapshot, admission.command);
     const command: IssuedActionCommand = { id: admission.commandId, action: admission.action, executor: admission.executor,
       purpose: admission.purpose, acceptedTick: snapshot.tick, command: structuredClone(admission.command), ...(baseline ? { worldBefore: baseline } : {}) };
-    issuedCommands[command.id] = command;
+    const spendIds = admittedCommandSpendIds(memory, command);
+    issuedCommands[command.id] = spendIds.length ? { ...command, spendIds } : command;
     const unitIds = commandSetsNativeOrder(admission.command)
       ? 'unitIds' in admission.command ? admission.command.unitIds : 'unitId' in admission.command ? [admission.command.unitId] : [] : [];
     for (const unitId of unitIds) issuedOrders[unitId] = { commandId: command.id, action: command.action, executor: command.executor,
       purpose: command.purpose, unitId, acceptedTick: snapshot.tick, observedTick: null, observedOrder: null };
   }
-  return { ...memory, issuedCommands, issuedOrders };
+  return recordGoalTrainingAdmissions({ ...memory, issuedCommands, issuedOrders }, snapshot, admissions);
 }
 
 /** A receipt is idempotent and tied to the real parent command and native
@@ -101,14 +168,28 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
   const budgets = { ...memory.budgets };
   for (const receipt of payments) {
     const budget = budgets[receipt.budgetId], proof = receipt.proof;
-    if (!budget || !sameAction(budget.action, action)) throw new Error('Allocation payment has no admitted parent');
-    if (budget.paidGold > 0) {
+    const purchase = memory.issuedCommands[proof.acceptedCommandId];
+    if (purchase && purchase.acceptedTick > snapshot.tick) throw new Error('Allocation payment has no admitted parent');
+    if (!budget || !sameAction(budget.action, action)
+      && (!purchase || !admittedCommandSpendIds(memory, purchase).includes(budget.spendId)))
+      throw new Error('Allocation payment has no admitted parent');
+    const declarative = memory.executions[action.actionId]?.intent.kind === 'goal-action';
+    const entityId = proof.kind === 'production' ? proof.jobId : proof.buildingId;
+    const recorded = declarative && budget.nativePayments?.find(payment => payment.commandId === proof.acceptedCommandId
+      && payment.kind === proof.kind && payment.entityId === entityId);
+    if (recorded) {
+      if (recorded.amountGold !== receipt.amountGold) throw new Error('Allocation payment changed after acknowledgement');
+      continue;
+    }
+    if (!declarative && budget.paidGold > 0) {
       if (budget.paidGold !== receipt.amountGold) throw new Error('Allocation payment changed after acknowledgement');
       continue;
     }
     const command = memory.issuedCommands[proof.acceptedCommandId];
-    if (!command || !sameAction(command.action, action)
+    if (!command || command.acceptedTick > snapshot.tick || !sameAction(command.action, action)
       || command.executor !== memory.executions[action.actionId]?.executor) throw new Error('Allocation payment has no admitted parent');
+    if (declarative && (entityId === null || Object.values(budgets).some(other => other.nativePayments
+      ?.some(payment => payment.commandId === command.id)))) throw new Error('Native command payment identity reused');
     let price: number | undefined;
     if (proof.kind === 'production' && command.command.type === 'train' && command.worldBefore?.kind === 'production') {
       const queue = snapshot.buildings.find(building => building.id === proof.buildingId && building.owner === memory.owner)?.queue;
@@ -123,9 +204,12 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
       if (building && building.kind === command.command.buildingKind && !command.worldBefore.buildingIds.includes(building.id)
         && Math.hypot(building.x - command.command.x, building.y - command.command.y) < 1) price = BUILDING_DEFS[building.kind].cost;
     }
+    const paidGold = (declarative ? budget.paidGold : 0) + receipt.amountGold;
     if (price === undefined || !Number.isFinite(receipt.amountGold) || receipt.amountGold !== price
-      || receipt.amountGold > budget.amountGold) throw new Error('Allocation payment is not proven by the native world');
-    budgets[budget.id] = { ...budget, paidGold: receipt.amountGold, state: 'spent' };
+      || paidGold > budget.amountGold) throw new Error('Allocation payment is not proven by the native world');
+    budgets[budget.id] = { ...budget, paidGold, state: !declarative || paidGold >= budget.amountGold ? 'spent' : 'reserved',
+      ...(declarative ? { nativePayments: [...(budget.nativePayments ?? []), { kind: proof.kind,
+        commandId: command.id, entityId: entityId!, amountGold: receipt.amountGold, observedTick: snapshot.tick }] } : {}) };
   }
   return { ...memory, budgets };
 }

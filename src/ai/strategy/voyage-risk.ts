@@ -42,7 +42,7 @@ export type VoyageRiskRequest = Readonly<{
 }>;
 type Progress = { id: string; key: string; cursor: number; total: number; damage: number; boundarySeconds: number; computedTick: number };
 type NativeRouteProgress = { id: string; inputs: string; job: string; ready: boolean };
-export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; routeIds: string[]; entries: Progress[];
+export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; thinkSequence?: number; routeIds: string[]; entries: Progress[];
   nativeRoutes?: NativeRouteProgress[] };
 export type VoyageRisk = Readonly<
   { status: 'known'; survivalProbability: number; expectedDamage: number; expectedHpLoss: number;
@@ -170,10 +170,13 @@ function known(progress: Progress | undefined, ship: Unit, threats: readonly Thr
  * publication. Repeated gross/net queries in this tick cannot spend more work;
  * terrain/weapon caches merely accelerate the same answer. */
 export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, requests: readonly VoyageRiskRequest[], memory: VoyageRiskMemory,
-  observation?: StrategyObservationMemory) {
+  observation?: StrategyObservationMemory, options?: Readonly<{ advance?: boolean; sampleAllowance?: number }>) {
   if (memory.version !== 1 || memory.owner !== owner) throw new Error('Voyage risk memory owner/version mismatch');
-  const advance = memory.tick !== snapshot.tick;
-  if (advance) { memory.tick = snapshot.tick; memory.routeIds = []; }
+  const sequence = currentFactWork()?.receipt.thinkSequence;
+  const advance = options?.advance !== false && (sequence === undefined ? memory.tick !== snapshot.tick : memory.thinkSequence !== sequence);
+  const sampleAllowance = Math.min(VOYAGE_RISK_SAMPLES_PER_THINK, options?.sampleAllowance ?? VOYAGE_RISK_SAMPLES_PER_THINK);
+  if (!Number.isSafeInteger(sampleAllowance) || sampleAllowance < 0) throw Error('Invalid voyage sample allowance');
+  if (advance) { memory.tick = snapshot.tick; if (sequence !== undefined) memory.thinkSequence = sequence; else delete memory.thinkSequence; memory.routeIds = []; }
   memory.nativeRoutes ??= [];
   const bodies = standingBodies(snapshot);
   setBuildingBodies(snapshot.map, bodies);
@@ -271,7 +274,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     }
     if (advance && progress.cursor < samples) {
       const pose: Unit = { ...ship, sailing: { ...ship.sailing!, route: undefined } }; shareShipProfile(ship, pose);
-      while (progress.cursor < samples && samplesUsed < VOYAGE_RISK_SAMPLES_PER_THINK) {
+      while (progress.cursor < samples && samplesUsed < sampleAllowance) {
         const leg = legs.find(part => part.offset + part.samples > progress!.cursor)!;
         const index = progress.cursor - leg.offset, point = shipPoseAt(leg.from, leg.to, (index + .5) / leg.samples);
         pose.x = point.x; pose.y = point.y; pose.sailing!.heading = point.heading;

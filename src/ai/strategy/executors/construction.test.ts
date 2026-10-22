@@ -18,7 +18,7 @@ import { establishForceExecutor } from './establish-force';
 type Frame = { snapshot: GameSnapshot; owner: string; nextId: number; activePlayers: string[] };
 const frames: Record<string, Frame> = JSON.parse(gunzipSync(readFileSync(
   new URL('../../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString()).frames;
-function request(frameId: string, kind: Exclude<ActionIntent['kind'], 'assemble-force'>, targetId: string, resources: string[], gold: number): ExecutorInput {
+function request(frameId: string, kind: Exclude<ActionIntent['kind'], 'assemble-force' | 'goal-action'>, targetId: string, resources: string[], gold: number): ExecutorInput {
   const frame = structuredClone(frames[frameId]!), { snapshot, owner } = frame;
   setBuildingBodies(snapshot.map, standingBodies(snapshot));
   const entity = [...snapshot.resources, ...snapshot.buildings].find(entity => entity.id === targetId)!;

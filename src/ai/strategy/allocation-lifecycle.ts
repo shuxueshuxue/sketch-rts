@@ -3,8 +3,13 @@ import type { ActionGrant, ActionToken, AllocationEvent, AllocationReason, Execu
   ExecutorFeedback, StrategyAllocationMemory } from './allocation-types';
 import { advancesAllocationCommand, applyAllocationPayments } from './allocation-ledger';
 import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS } from './control';
+import { retainGoalAuthorityReferences } from './goal-authority-references';
 import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
 import { assessForceAssemblyPosts } from './assembly-posts';
+import { validateGoalOutputFeedback } from './goal-output-validation';
+import { observeGoalTraining } from './goal-training-ledger';
+import { validateGoalGuardFeedback } from './goal-guard-feedback';
+import { retainAllocationExecutions } from './allocation-execution-retention';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
  * before safety services or assignment-stage accounting consume it. */
@@ -115,7 +120,8 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     if (assemblyReady) for (const action of actions) if (action.phase !== 'ready-for-departure') next = { ...next,
       executions: { ...next.executions, [action.token.actionId]: { ...action, phase: 'ready-for-departure' } } };
     if (!['complete', 'failed', 'abandoned'].includes(objective.status) && actions.length
-      && actions.every(action => terminal(action.status)) && !pendingGarrison && !assemblyReady) {
+      && actions.every(action => terminal(action.status)) && !pendingGarrison && !assemblyReady
+      && next.methods[objective.methodId]?.stage !== 'goal-plan') {
       const status = actions.every(action => action.status === 'complete') ? 'complete'
         : actions.some(action => action.status === 'failed') ? 'failed' : 'abandoned';
       objectives[id] = { ...objective, status, committedUtilityGold: null, assignmentIds: [] };
@@ -124,7 +130,8 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     if (['complete', 'failed', 'abandoned'].includes(objectives[id]!.status)) {
       for (const lease of Object.values(leases)) if (lease.objectiveId === id) delete leases[lease.resourceKey];
       for (const assignment of Object.values(assignments)) if (assignment.objectiveId === id) delete assignments[assignment.id];
-      for (const budget of Object.values(budgets)) if (budget.objectiveId === id && budget.state !== 'released')
+      for (const budget of Object.values(budgets)) if (budget.objectiveId === id && budget.state !== 'released'
+        && (budget.plannedGold === undefined || objectives[id]!.status !== 'complete'))
         budgets[budget.id] = { ...budget, state: 'released', releasedTick: snapshot.tick };
     }
   }
@@ -201,7 +208,9 @@ export function allocationGrants(memory: StrategyAllocationMemory): ActionGrant[
       const leases = orderIds(Object.values(memory.leases).filter(lease => sameAction(lease.action, token)));
       return { revision: memory.revision, action: token, objectiveId: execution.objectiveId, methodId: execution.methodId,
         leases, assignments: orderIds(Object.values(memory.assignments).filter(assignment => sameAction(assignment.action, token))),
-        budgets: orderIds(Object.values(memory.budgets).filter(budget => sameAction(budget.action, token) && budget.state !== 'released')),
+        budgets: orderIds(Object.values(memory.budgets).filter(budget => sameAction(budget.action, token) && budget.state !== 'released'
+          && (budget.plannedGold === undefined || memory.methods[execution.methodId]?.actions
+            .find(action => action.id === token.actionId)?.spendIds.includes(budget.spendId)))),
         voyages: orderIds(Object.values(memory.voyages).filter(voyage => sameAction(voyage.action, token))),
         orders: Object.values(memory.issuedOrders).filter(order => sameAction(order.action, token)).sort((a, b) => a.unitId < b.unitId ? -1 : a.unitId > b.unitId ? 1 : 0),
         commands: orderIds(Object.values(memory.issuedCommands).filter(command => sameAction(command.action, token))),
@@ -220,6 +229,10 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
   if (!execution || !sameAction(execution.token, feedback.action) || feedback.allocationRevision !== memory.revision)
     throw new Error('Stale allocation executor feedback');
   if (terminal(execution.status)) throw new Error('Feedback attempted to restart a terminal allocation action');
+  let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
+  next = observeGoalTraining(next, snapshot);
+  feedback = validateGoalOutputFeedback(next, snapshot, feedback);
+  feedback = validateGoalGuardFeedback(next, snapshot, feedback);
   const pending = Array.isArray(feedback.state.pendingVoyageIds) ? feedback.state.pendingVoyageIds : [];
   const continuing = feedback.status === 'complete' && pending.length > 0;
   if (continuing && (!['deliver-force', 'deliver-workers'].includes(execution.intent.kind)
@@ -227,7 +240,6 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
     throw new Error('Allocation continuation has an ungranted voyage');
   const nextStatus = continuing ? 'active' as const : feedback.status;
   const state = continuing ? { ...feedback.state, requiredWaveComplete: true } : feedback.state;
-  let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
   const previousProgress = feedback.progress.length ? snapshot.tick : execution.lastProgressTick;
   next = { ...next, executions: { ...next.executions, [execution.token.actionId]: { ...execution,
     status: nextStatus, phase: continuing ? 'continuing-voyages' : feedback.phase, state: structuredClone(state), lastProgressTick: previousProgress } } };
@@ -268,8 +280,7 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
   if (terminal(nextStatus)) next = appendAllocationEvent(next, { objectiveId: execution.objectiveId,
     methodId: execution.methodId, action: execution.token, kind: 'action-finished', outcome: feedback.status as 'complete' | 'failed' | 'abandoned',
     reason: { code: feedback.reasons[0]?.reason ?? `action-${feedback.status}`, factIds: [], values: {} } }, snapshot.tick);
-  assertStrategyAllocationBounds(next);
-  return next;
+  return pruneAllocationProvenance(next);
 }
 
 /** Drop acknowledged provenance only after its last active reference ends.
@@ -301,7 +312,8 @@ export function pruneAllocationProvenance(memory: StrategyAllocationMemory): Str
     ));
   const budgets = Object.fromEntries(Object.entries(memory.budgets).filter(([, budget]) => budget.state !== 'released'
     || memory.methods[budget.methodId] || live(budget.action)));
-  const next = { ...memory, budgets, blocked, issuedOrders, issuedCommands, events: retainAllocationEvents(memory.events) };
+  const next = retainGoalAuthorityReferences(retainAllocationExecutions({ ...memory, budgets, blocked, issuedOrders, issuedCommands,
+    events: retainAllocationEvents(memory.events) }));
   assertStrategyAllocationBounds(next);
   return next;
 }

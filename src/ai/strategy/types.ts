@@ -117,7 +117,7 @@ export type SiteThreat = Readonly<{
     /** Current native activity is separate from a route the enemy could choose.
      * One enemy has at most one actual site; other sites retain redirect risk. */
     intent?: Readonly<{ kind: 'actual-intrusion' | 'potential-redirect'; actualSiteId: string | null; redirectGroupId: string;
-      basis: 'native-target' | 'native-destination' | 'hostile-presence' | 'potential-route' }> }> [];
+      basis: 'native-target' | 'native-destination' | 'native-unload' | 'hostile-presence' | 'potential-route' }> }> [];
   arrivedStrength: number;
   /** Not yet at the site; disjoint from arrivedStrength. */
   incomingStrength: number;
@@ -167,7 +167,7 @@ export type ObjectiveKind = 'DefendSite' | 'RecoverSite' | 'ExpandLand' | 'Conqu
   | 'ReinforceFront' | 'AttackSite' | 'ContestRoute' | 'CounterHarass' | 'Evacuate';
 export type Effect =
   | Readonly<{ kind: 'site-safe'; siteId: string; throughTick: number }>
-  | Readonly<{ kind: 'mining-established'; mineId: string; completeHall: true; garrisonHandoff: true }>
+  | Readonly<{ kind: 'mining-established'; mineId: string; completeHall: true; garrisonHandoff: true; garrisonThroughTick?: number }>
   | Readonly<{ kind: 'force-present'; landId: LandId; minimumStrength: number; throughTick: number }>
   | Readonly<{ kind: 'entity-destroyed'; entityId: string }>
   | Readonly<{ kind: 'route-controlled'; target: Target }>
@@ -310,7 +310,7 @@ export type Method = Readonly<{
   objectiveId: ObjectiveId;
   kind: 'local-squad' | 'main-army-recall' | 'wait-in-cover' | 'cross-sea-reinforcement'
     | 'direct-conquest' | 'staged-beachhead' | 'land-expansion' | 'land-attack'
-    | 'route-pressure' | 'counter-harassment' | 'recovery' | 'evacuation';
+    | 'route-pressure' | 'counter-harassment' | 'recovery' | 'evacuation' | 'goal-plan';
   preconditions: readonly Precondition[];
   subgoals: readonly Subgoal[];
   demands: readonly ResourceDemand[];

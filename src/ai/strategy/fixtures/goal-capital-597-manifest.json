@@ -1,0 +1,42 @@
+[
+  {
+    "fixture": "goal-capital-597-near-6150.json.gz",
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/near/first-returned-townhall-build-command/actual-frame.jsonl.gz",
+    "originalGzipSha256": "7efce41d2424d2d3179d795602f149ddb114b09edf3ffd8b2b1e9daae4b036e8",
+    "fixtureGzipSha256": "5cdf3c332b0c2aade7a521d62161d69d02aed09f19a07006ddc9d01a3c546b15",
+    "scope": "Pure extraction of original snapshot and actual memoryBefore, no planner or simulation."
+  },
+  {
+    "fixture": "goal-capital-597-near-6285.json.gz",
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/near/first-new-townhall-snapshot/actual-frame.jsonl.gz",
+    "originalGzipSha256": "832f645495056c3b5b724955ae111162afe2a3bf00627704f7475ef0cd972020",
+    "fixtureGzipSha256": "28e1fafe68b513a724db7aedb79c0c6d93b6ea6b9fe1beecf10c801a10afca42",
+    "scope": "Pure extraction of original snapshot and actual memoryBefore, no planner or simulation."
+  },
+  {
+    "fixture": "goal-capital-597-near-6840.json.gz",
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/near/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+    "originalGzipSha256": "4923d93a9f226523b16bc77f850276cc3f84426263ec055324f9538b5eaef83b",
+    "fixtureGzipSha256": "580ab17a07065b63b48bacbb1157cf1e521e6ddb9ba548f5b6a52d05f27298ca",
+    "scope": "Pure extraction of original snapshot and actual memoryBefore, no planner or simulation."
+  },
+  {
+    "fixture": "goal-capital-597-far-7815.json.gz",
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/far/first-new-townhall-snapshot/actual-frame.jsonl.gz",
+    "originalGzipSha256": "d752cba1ad5b928f7662223a68d9629fb0b126e4680f0b5650f5f464bf20421d",
+    "fixtureGzipSha256": "b954ac5fbf6d21a8c0c3c9e9ef7a3c7ae409f58ee1667774c5be88f7703b05de",
+    "scope": "Pure extraction of original snapshot and actual memoryBefore, no planner or simulation."
+  },
+  {
+    "fixture": "goal-capital-597-near-6345.json.gz",
+    "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+    "original": "/tmp/goal-597-near6345-original/capital-release-near/6345/actual-frame.jsonl.gz",
+    "originalGzipSha256": "ca98739d88a21542e54a5625c480ac3b762e185fa3c42d7248da70fcbbe69ad3",
+    "fixtureGzipSha256": "c4c8344e127d4e769e0d6648a1ab3022b4274b0fb6f25f3ccc9cc107a529cf1e",
+    "scope": "Pure extraction of original snapshot and actual memoryBefore, no planner or simulation."
+  }
+]

@@ -114,6 +114,19 @@ describe('whole-bundle opportunity oracle', () => {
       .toThrow('Invalid imported task loss upper bound');
   });
 
+  it('adopts explicitly matched progress without quoting displacement, retaining other imported losses', () => {
+    const old = source({ objectiveId: 'same-progress', committed: true, quote: () => { throw Error('same progress was repriced as a competitor'); } });
+    const oracle = createOpportunityOracle([old], { effectKeysFor: () => [],
+      continuesCommitment: (from, to) => from === 'same-progress' && to === request.objectiveId,
+      unpricedCommitmentsFor: () => ['same-progress', 'other-progress'],
+      importedUpperBoundFor: id => { expect(id).toBe('other-progress'); return { unitIds: request.unitIds,
+        bound: { targetId: 'different-mine', gold: 450, window, components: [{ code: 'full-potential', valueGold: 450, factIds: [] }] } }; } });
+    expect(oracle(request)).toMatchObject({ status: 'known', gold: 450, displacements: [{ objectiveId: 'other-progress', marginalGold: 450 }] });
+    expect(createOpportunityOracle([old], { effectKeysFor: () => [], unpricedCommitmentsFor: () => ['same-progress'],
+      continuesCommitment: (from, to) => from === 'same-progress' && to === request.objectiveId })(request))
+      .toMatchObject({ status: 'known', gold: 0, alternatives: [] });
+  });
+
   it('retains every actual displacement when a speculative whole group overlaps two commitments', () => {
     const sources = [source({ id: 'old/a', objectiveId: 'old-a', committed: true, unitIds: ['a'],
       quote: ids => ids.length ? { status: 'feasible', score: 100, coverage: 'complete' } : { status: 'not-runnable', reasonCode: 'no-members' } }),

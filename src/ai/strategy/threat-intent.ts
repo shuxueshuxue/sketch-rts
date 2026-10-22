@@ -21,7 +21,8 @@ export function createThreatIntentQuery(snapshot: GameSnapshot, owner: PlayerId,
   };
   for (const unit of snapshot.units) {
     if (unit.hp <= 0 || !strategyIsOpponent(snapshot, owner, unit.owner, teams)) continue;
-    const order = unit.order;
+    const carrierId = unit.deck?.shipId ?? unit.cabin?.shipId, carrier = carrierId ? entities.get(carrierId) : undefined;
+    const order = carrier && 'order' in carrier && carrier.order.type === 'unload' ? carrier.order : unit.order;
     let site: Site | undefined, basis: Intent['basis'] = 'potential-route';
     if ((order.type === 'attack' || order.type === 'attackMove') && order.targetId) {
       const entity = entities.get(order.targetId);
@@ -33,6 +34,10 @@ export function createThreatIntentQuery(snapshot: GameSnapshot, owner: PlayerId,
     if (!site && (order.type === 'attackMove' || order.type === 'move' && !order.avoidCombat)) {
       site = nearest(order, 240);
       if (site) basis = 'native-destination';
+    }
+    if (!site && order.type === 'unload') {
+      site = nearest(order, Infinity);
+      if (site) basis = 'native-unload';
     }
     // A stationary armed intruder has no competing declared journey. A unit
     // currently fighting a neutral camp or fleeing is not silently reassigned.

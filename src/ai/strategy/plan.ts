@@ -23,6 +23,15 @@ export type ObjectiveFamily = Readonly<{
 }>;
 export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: generateNavalObjectives, decompose: decomposeNavalObjective };
 
+/** The ordinary objective generators, without method recipes or another
+ * Situation evaluation. Goal planning consumes exactly this target list. */
+export function generateStrategyObjectives(situation: Situation, context: PlanningContext,
+  previous: readonly import('./observation-memory').PreviousObjective[] = [],
+  families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY, LAND_OBJECTIVE_FAMILY]) {
+  return families.flatMap(family => family.generate(situation, context, previous)
+    .map(objective => ({ family, objective })));
+}
+
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY, LAND_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick,
@@ -35,8 +44,7 @@ function assembleStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, opti
   const old = preparation.history && preparation.history.tick < snapshot.tick ? preparation.history : undefined;
   const context: PlanningContext = { snapshot, owner, memory: options.memory, ...(options.teams ? { teams: options.teams } : {}) };
   const situation = evaluateSituation(snapshot, owner, options.memory, old && observationHistory(preparation), options.teams ?? snapshot.teams, fieldBuildBudget, observation, preparation);
-  const generated = families.flatMap(family => family.generate(situation, context, old?.objectives ?? [])
-    .map(objective => ({ family, objective })));
+  const generated = generateStrategyObjectives(situation, context, old?.objectives ?? [], families);
   if (new Set(generated.map(entry => entry.objective.id)).size !== generated.length) throw new Error('Duplicate strategic objective id');
   const methods = generated.flatMap(({ family, objective }) => family.decompose(situation, objective, context));
   const idOrder = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

@@ -212,7 +212,8 @@ function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(
       try {
         const observed = memory ?? createAiPolicyMemory();
         const base = buildAiPlanTrace(snapshot,request.playerId,observed,request.version??DEFAULT_AI_PLANNER_VERSION);
-        observer({trace:strategy?.project ? { ...base, strategy: strategy.project() } : base,
+        observer({trace:{ ...(strategy?.project ? { ...base, strategy: strategy.project() } : base),
+          ...(strategy?.goalPlanner ? { goalPlanner: strategy.goalPlanner } : {}) },
           context:projectDeathThinkContext(snapshot,request.playerId,observed)});
       } catch(error) { console.error('AI plan observation failed',error); }
     } else planned.push(...planAiOwnerCommandEntries(snapshot, request, options));

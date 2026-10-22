@@ -1,0 +1,50 @@
+[
+  {
+    "name": "near-5025",
+    "originalPath": "/tmp/goal-597-build-worker-full-originals-verified/live-worker-markers/near/all-started-cohort-snapshot-cargo/actual-frame.jsonl.gz",
+    "originalGzipSha256": "9075e6d359484f2b870e93ce973f912f68663c6062ca0a79e2437810e00467bd",
+    "derivedFixture": "goal-world-597-near-5025.json.gz",
+    "fixtureGzipSha256": "55be9eb5f9881877ada5c48ab85ab21f10843b979beb81563526482bfde7a220",
+    "selection": [
+      "snapshot",
+      "memoryBefore"
+    ],
+    "tick": 5025
+  },
+  {
+    "name": "far-7140",
+    "originalPath": "/tmp/goal-597-build-worker-full-originals-verified/live-worker-markers/far/all-started-cohort-snapshot-cargo/actual-frame.jsonl.gz",
+    "originalGzipSha256": "2a54ca0d58ca849e1024c92e0ab200e5e15e3ff7de22af376b6802235961a76e",
+    "derivedFixture": "goal-world-597-far-7140.json.gz",
+    "fixtureGzipSha256": "e2fccb52bb6be28d07a36c452c242c5051f1295f6096852fa1d3344aa68b0ea0",
+    "selection": [
+      "snapshot",
+      "memoryBefore"
+    ],
+    "tick": 7140
+  },
+  {
+    "name": "far-7680",
+    "originalPath": "/tmp/goal-597-build-worker-full-originals-verified/live-worker-markers/far/previously-loaded-now-offship/actual-frame.jsonl.gz",
+    "originalGzipSha256": "bc435f4c4d58484e1023c1a7e4b8c4265451d64edb2aa479c8af372e532519be",
+    "derivedFixture": "goal-world-597-far-7680.json.gz",
+    "fixtureGzipSha256": "2b4d2199eea777baa3d7a591f1be88b097314abc54c23bfc810fc25f255567d6",
+    "selection": [
+      "snapshot",
+      "memoryBefore"
+    ],
+    "tick": 7680
+  },
+  {
+    "name": "near-8040",
+    "originalPath": "/tmp/goal-597-near-settle-originals/commitment-settle-near/8040/actual-frame.jsonl.gz",
+    "originalGzipSha256": "9a97ebf24edffb927c8168d403ac0ebdd0cf2edc4543b8cb072a9e8e73d6a857",
+    "derivedFixture": "goal-world-597-near-8040.json.gz",
+    "fixtureGzipSha256": "8617d6744514ac9de86ad56d55d7909640a2e7750025827241b7e9542af7131c",
+    "selection": [
+      "snapshot",
+      "memoryBefore"
+    ],
+    "tick": 8040
+  }
+]

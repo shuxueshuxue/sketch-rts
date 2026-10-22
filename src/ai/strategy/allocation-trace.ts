@@ -9,6 +9,7 @@ export function projectStrategyAllocation(memory: StrategyAllocationMemory,
   commandAdmissions?: readonly CommandAdmission[]): StrategyAllocationTrace {
   const budget = ordered(Object.values(memory.budgets));
   return { revision: memory.revision,
+    ...(memory.goalReferences ? { goalReferences: memory.goalReferences } : {}),
     ...(memory.decisionCounts ? { decisionCounts: memory.decisionCounts } : {}),
     objectives: Object.values(memory.objectives).sort((a, b) => a.objectiveId < b.objectiveId ? -1 : a.objectiveId > b.objectiveId ? 1 : 0),
     assignments: ordered(Object.values(memory.assignments)),

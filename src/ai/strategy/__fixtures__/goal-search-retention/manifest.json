@@ -1,0 +1,10 @@
+{
+  "production": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "runSource": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "original": "/tmp/goal-d888-midrun-01/far.original-member.jsonl.gz",
+  "tick": 4500,
+  "gzipSha256": "34f97390be7ea2eed52ccafe0c98e950a2adee3896a75191777d1c855d409731",
+  "plainSha256": "f7739f7b5d5671706e27db6e596f66aa975f49615ed4cfe11ede76103f198ff6",
+  "bytes": 895429,
+  "scope": "Original complete far t4500 member, including original before/after memory and both compared search graphs; no AI or simulation rerun."
+}

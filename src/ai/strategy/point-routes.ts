@@ -1,4 +1,6 @@
-import { advanceShipRouteSearch, SHIP_STATIC_ROUTE_SLICE_MAX_WORK, type ShipPose, type ShipRouteSearchState } from '../../shared/ship-navigation';
+import { boundCache, touchCache, type CacheCapacity, type CacheUse } from './bounded-cache';
+import { advanceShipRouteSearch, SHIP_STATIC_ROUTE_SLICE_MAX_WORK, type ShipPose } from '../../shared/ship-navigation';
+import { restoreShipRouteSearchState, storeShipRouteSearchState, type StoredShipRouteSearchState } from './point-route-state';
 import { shareShipProfile, shipProfile } from '../../shared/ship-geometry';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { coursePerformance, windAt } from '../../shared/ship-wind';
@@ -7,21 +9,21 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { fnv1a } from '../../shared/sim/checksum';
 import { observationJsonBytes } from './observation-json-bytes';
-import { currentFactWork } from './fact-work';
+import { currentFactWork, factPublicationPending } from './fact-work';
 import type { StrategyObservationMemory } from './observation-memory';
 import type { Point } from './types';
 
 type Route = { points: ShipPose[]; partial: boolean };
-type Entry = { id: string; key: string; firstRequestedTick: number; lastRequestedTick: number;
-  geometryVersion: string; readyTick: number | null; publishedTick?: number;
-  work: number; state: ShipRouteSearchState; failure?: 'memory-budget' };
-export type PointRouteMemory = { entries: Entry[] };
+type Entry = CacheUse & { id: string; key: string; firstRequestedTick: number; lastRequestedTick: number;
+  lastRequestedThink?: number; readyThink?: number; geometryVersion: string; readyTick: number | null; publishedTick?: number;
+  work: number; state: StoredShipRouteSearchState; failure?: 'memory-budget' };
+export type PointRouteMemory = { entries: Entry[]; capacity?: CacheCapacity };
 export const POINT_ROUTE_MEMORY_BYTES = 32 * 1024;
 export const POINT_ROUTE_LIMIT = 16;
-export type PointRouteFact = Readonly<
+export type PointRouteFact = Readonly<{ cacheId?: string } & (
   { status: 'complete'; route: Route; ticks: number; computedTick: number; work: number;
     basis: 'continued-native-search' | 'observed-native-route' | 'observed-at-berth' }
-  | { status: 'pending' | 'static-infeasible' | 'transient-blocked'; reasonCode: string; work: number }>;
+  | { status: 'pending' | 'static-infeasible' | 'transient-blocked'; reasonCode: string; work: number })>;
 const clearStatic = Object.assign(() => true, { hasTraffic: false });
 
 /** A static geometry cache and a fresh motion/wind price. Native search uses
@@ -30,7 +32,7 @@ const clearStatic = Object.assign(() => true, { hasTraffic: false });
  * mobile traffic at their eventual launch time. Real traffic remains an
  * explicitly temporary execution constraint, rather than static infeasibility. */
 export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservationMemory, ship: Unit,
-  from: Point, goal: Point, future = false): PointRouteFact {
+  from: Point, goal: Point, future = false, timingOnly = false): PointRouteFact {
   const queue = currentFactWork();
   if (!queue) throw new Error('Point routes require the shared think work ledger');
   const liveOrigin = from.x === ship.x && from.y === ship.y;
@@ -60,48 +62,46 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
   let entry = memory.entries.find(entry => entry.key === key);
   if (!entry) {
     const previous = memory.entries.find(entry => entry.id === id);
-    if (memory.entries.length >= POINT_ROUTE_LIMIT) {
-      memory.entries.sort((a, b) => a.lastRequestedTick - b.lastRequestedTick || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-      if (memory.entries[0]!.lastRequestedTick === snapshot.tick)
-        return { status: 'pending', reasonCode: 'native-point-route-entry-budget', work: 0 };
-      memory.entries.shift();
-    }
     entry = { id, key, geometryVersion,
       firstRequestedTick: previous?.geometryVersion === geometryVersion ? previous.firstRequestedTick : snapshot.tick,
       lastRequestedTick: snapshot.tick, readyTick: null, work: 0, state: { phase: 'prepare' } };
     memory.entries.push(entry);
   }
-  entry.lastRequestedTick = snapshot.tick;
+  entry.lastRequestedTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) entry.lastRequestedThink = queue.receipt.thinkSequence; else delete entry.lastRequestedThink;
   const progress = entry;
+  const sequence = queue.receipt.thinkSequence ?? snapshot.tick;
+  touchCache(progress, sequence, timingOnly && progress.readyTick === null ? [] : queue.consumerPlanIds());
+  const bounded = boundPointRouteMemory(memory, sequence);
+  if (!bounded.entries.includes(progress) || bounded.capacity.pressure)
+    return { status: 'pending', reasonCode: 'native-point-route-pinned-capacity', work: progress.work };
   const taskKey = `point:${key}`;
+  queue.consume(taskKey);
   if (progress.readyTick === null) queue.register({ key: taskKey, goal, reportKey: `point:${id}:${fnv1a(key)}`,
-    tier: queue.isCritical(goal) ? 'critical-route' : 'background-field',
+    ...(timingOnly ? { kind: 'timing' as const } : {}),
+    tier: !timingOnly && queue.isCritical(goal) ? 'critical-route' : 'background-field',
     minimum: SHIP_STATIC_ROUTE_SLICE_MAX_WORK,
     run() {
+      if (!memory.entries.includes(progress) || memory.capacity?.pressure) return { work: 0, done: true };
       const meter = { logicalWork: 0, expandedStates: 0 };
+      const state = restoreShipRouteSearchState(progress.state);
       // A finite expansion cap avoids the native Infinity-only whole-map
       // potential prepass; the existing continued native search still owns
       // trial order, collision tests and its normal logical slice boundary.
       const route = advanceShipRouteSearch(snapshot.map, pose, goal, clearStatic,
-        Number.MAX_SAFE_INTEGER, true, progress.state, meter);
+        Number.MAX_SAFE_INTEGER, true, state, meter);
       if (meter.logicalWork > SHIP_STATIC_ROUTE_SLICE_MAX_WORK) throw new Error('Native static slice reservation was exceeded');
       progress.work += meter.logicalWork;
       if (route) {
-        progress.readyTick = snapshot.tick;
+        progress.readyTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) progress.readyThink = queue.receipt.thinkSequence; else delete progress.readyThink;
         progress.state = { phase: 'done', result: route };
-      }
-      if (observationJsonBytes(memory) > POINT_ROUTE_MEMORY_BYTES) {
-        // Never let search graphs evict the complete policy memory. Report a
-        // bounded failure, rather than treating a truncated graph as a road.
-        progress.state = { phase: 'done', result: { points: [], partial: true } };
-        progress.failure = 'memory-budget';
-        progress.readyTick = snapshot.tick;
-      }
+      } else progress.state = storeShipRouteSearchState(state);
+      boundPointRouteMemory(memory, sequence);
       return { work: meter.logicalWork, done: progress.readyTick !== null };
     } });
-  const route = progress.state.result;
+  if (memory.capacity?.pressure) return { status: 'pending', reasonCode: 'native-point-route-pinned-capacity', work: progress.work };
+  const route = 'phase' in progress.state ? progress.state.result : undefined;
   if (progress.failure) return { status: 'pending', reasonCode: 'native-point-route-memory-budget', work: progress.work };
-  if (progress.readyTick === null || progress.readyTick >= snapshot.tick || !route)
+  if (progress.readyTick === null || factPublicationPending(progress.readyTick, progress.readyThink, snapshot.tick, queue) || !route)
     return { status: 'pending', reasonCode: 'native-point-route-pending', work: progress.work };
   const end = route.points.at(-1) ?? pose;
   if (route.partial || Math.hypot(end.x - goal.x, end.y - goal.y) > 1e-5)
@@ -116,7 +116,7 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
   }
   progress.publishedTick ??= snapshot.tick;
   return { status: 'complete', route, ticks: pointRouteTicks(snapshot, pose, route.points), computedTick: snapshot.tick,
-    work: progress.work, basis: 'continued-native-search' };
+    work: progress.work, cacheId: taskKey, basis: 'continued-native-search' };
 }
 
 /** Reprice the native point list with this hull's actual limits and wind.
@@ -137,4 +137,13 @@ function pointRouteTicks(snapshot: GameSnapshot, ship: Unit, points: readonly Sh
   }
   seconds += Math.max(0, limits.speed - (ship.sailing?.speed ?? 0)) / Math.max(1, limits.acceleration);
   return Math.ceil(seconds * SIM_TICKS_PER_SECOND);
+}
+
+/** Byte and entry limits share the same selected-plan pin/LRU contract. */
+export function boundPointRouteMemory(memory: PointRouteMemory, sequence: number) {
+  const result = boundCache({ kind: 'point-route', entries: memory.entries, id: entry => `point:${entry.key}`,
+    lastUsed: entry => entry.lastUsedThink ?? entry.lastRequestedThink ?? entry.lastRequestedTick,
+    plans: entry => entry.planIds ?? [], maxEntries: POINT_ROUTE_LIMIT, maxBytes: POINT_ROUTE_MEMORY_BYTES,
+    bytes: entries => observationJsonBytes({ entries }), thinkSequence: sequence, capacity: memory.capacity });
+  memory.entries = result.entries; memory.capacity = result.capacity; return result;
 }

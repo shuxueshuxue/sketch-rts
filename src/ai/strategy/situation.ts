@@ -1,3 +1,4 @@
+import { readCacheMap, retainCacheMap } from './bounded-cache';
 import { arrivalColumns, EMPTY_UNIT_ARRIVALS, unitArrivalFacts, withUnitArrivals, type UnitArrivalFacts } from './unit-arrivals';
 import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
@@ -18,7 +19,7 @@ import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { createUnitCommitmentQuery, unitRoles } from './commitments';
-import { landIdAt, regionIndex, seaIdAt, unitLocation } from './regions';
+import { landIdAt, regionIndex, seaIdAt, unitLocation, type RegionIndex } from './regions';
 import { forceSuccessProbability, STRATEGY_PARAMETERS } from './utility';
 import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, SituationObservation, SiteThreat, Target, SituationUnit } from './types';
 import type { SituationHistory, StrategyObservationMemory } from './observation-memory';
@@ -34,14 +35,13 @@ function stableUnitFacts(snapshot: GameSnapshot, unit: Unit, location: Situation
   const key = snapshot.map.terrain ?? snapshot.map;
   let values = cacheable ? idleUnitFacts.get(key) : undefined;
   if (cacheable && !values) idleUnitFacts.set(key, values = new Map());
-  const old = prior ?? values?.get(unit.id), expiresTick = unit.expiresTick ?? null;
+  const old = prior ?? (values ? readCacheMap(values, unit.id) : undefined), expiresTick = unit.expiresTick ?? null;
   if (old && old.owner === unit.owner && old.kind === unit.kind && old.location === location && old.hp === unit.hp
     && old.maxHp === unit.maxHp && old.strength === strength && old.roles === roles && old.expiresTick === expiresTick && old.commitments === commitments && unitArrivalFacts(old) === arrivals) return old;
   const row: SituationUnit = withUnitArrivals({ id: unit.id, owner: unit.owner, kind: unit.kind, location, hp: unit.hp, maxHp: unit.maxHp,
     strength, roles, expiresTick, commitments }, arrivals);
   if (values) {
-    if (!old && values.size >= 2048) values.delete(values.keys().next().value!);
-    values.set(unit.id, row);
+    retainCacheMap(values, unit.id, row, 2048);
   }
   return row;
 }
@@ -64,7 +64,7 @@ const descriptions = {
   away: ({ id, tick }: { id: string; tick: number }) =>
     [factEvidence('snapshot.units', `No land defender within ${STATION_RANGE} of ${id}; not proof that the site is safe`, tick)],
   route: (tick: number) => [factEvidence('memory.territory.objective', 'Actual retained pressure point; its ETA is keyed by this opportunity id', tick)],
-  threat: (tick: number) => [factEvidence('strategy.situation', 'All sites use the same terrain component, physical station radius and shared 45-second arrival forecast', tick)],
+  threat: (tick: number) => [factEvidence('strategy.situation', 'All sites share physical routes; declared intrusion ETAs extend to ten minutes and speculative arrivals to the evaluation horizon', tick)],
 };
 
 // Diagnostic only. Neither publication, utility nor control may read this
@@ -72,15 +72,31 @@ const descriptions = {
 let constructionCount = 0;
 export function situationConstructionCount(): number { return constructionCount; }
 
+export type SituationPhysicalQueries = Readonly<{
+  regions: RegionIndex;
+  distances: ReturnType<typeof createPlanningDistanceQuery>;
+  arrivals: ReturnType<typeof createArrivalQuery>;
+  /** Published projection only; undefined is pending, never a native fallback. */
+  projectGround?: (point: { x: number; y: number }, mover: 'land' | 'sea') => { x: number; y: number } | undefined;
+}>;
+
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
  * The previous value is observational history, never a serialized policy task. */
 export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: SituationHistory,
-  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory): Situation {
+  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory,
+  physical?: SituationPhysicalQueries): Situation {
   constructionCount++;
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
-  const regions = regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
-  const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
-  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
+  const regions = physical?.regions ?? regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
+  const distances = physical?.distances ?? createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
+  const query = physical?.arrivals ?? createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
+  const projected = new Map<string, { x: number; y: number } | undefined>();
+  const ground = (point: { x: number; y: number }, mover: 'land' | 'sea' = 'land') => {
+    const key = `${mover}:${point.x}:${point.y}`;
+    if (!projected.has(key)) projected.set(key, physical?.projectGround ? physical.projectGround(point, mover) : walkableGoal(snapshot.map, point.x, point.y, mover));
+    return projected.get(key);
+  };
+  const projectedLand = (point: { x: number; y: number }) => { const value = ground(point); return value && landIdAt(snapshot.map, value); };
   const { liveUnits: live, live: byId } = snapshotUnitIndex(snapshot);
   const locations = new Map<string, SituationUnit['location']>();
   for (const unit of live) locations.set(unit.id, unitLocation(snapshot.map, unit, byId, tick));
@@ -109,7 +125,8 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const target = (entity: { id: string; x: number; y: number; kind?: string }): Target => {
     const known = targetCache.get(entity.id); if (known) return known;
     const landId = landIdAt(snapshot.map, entity);
-    const seaId = seaIdAt(snapshot.map, entity.kind === 'shipyard' ? walkableGoal(snapshot.map, entity.x, entity.y, 'sea') : entity);
+    const seaPoint = entity.kind === 'shipyard' ? ground(entity, 'sea') : entity;
+    const seaId = seaPoint && seaIdAt(snapshot.map, seaPoint);
     const result = { entityId: entity.id, point: point(entity), ...(landId ? { landId } : {}), ...(seaId ? { seaId } : {}) };
     targetCache.set(entity.id, result); return result;
   };
@@ -195,13 +212,20 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const bounded = Number.isFinite(fieldBuildBudget);
   const optionalLimit = bounded ? RUNTIME_OPTIONAL_TARGETS : MAX_OPTIONAL_TARGETS;
   const harassLimit = bounded ? RUNTIME_HARASS_TARGETS : MAX_HARASS_TARGETS;
+  const threatIntent = createThreatIntentQuery(snapshot, owner, sites, teams);
+  const hasDeclaredIntent = (unit: Unit, siteId: string) => {
+    const intent = threatIntent(unit, siteId);
+    return intent.kind === 'actual-intrusion' && intent.basis !== 'hostile-presence';
+  };
+  const threatWindow = (unit: Unit, siteId: string) => hasDeclaredIntent(unit, siteId)
+    ? STRATEGY_PARAMETERS.knownThreatHorizonTicks : horizonTicks;
   const landActors = live.filter(unit => !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && unit.attackDamage > 0);
   const urgentSites = new Set(sites.filter(site => landActors.some(unit => foe(unit.owner)
     && unitLand(unit) === site.target.landId
-    && distance(unit, site.target.point) <= unit.speed * STRATEGY_PARAMETERS.threatHorizonTicks / SIM_TICKS_PER_SECOND + 240) || live.some(unit => foe(unit.owner) && (unitMover(unit.kind) === 'sea' && weapon(unit).armed
+    && distance(unit, site.target.point) <= unit.speed * threatWindow(unit, site.id) / SIM_TICKS_PER_SECOND + 240) || live.some(unit => foe(unit.owner) && (unitMover(unit.kind) === 'sea' && weapon(unit).armed
       && distance(unit, site.target.point) <= weapon(unit).range || (unit.deck || unit.cabin)
       && (() => { const ship = byId.get(unit.deck?.shipId ?? unit.cabin!.shipId);
-        return ship?.order.type === 'unload' && landIdAt(snapshot.map, walkableGoal(snapshot.map, ship.order.x, ship.order.y)) === site.target.landId; })()))).map(site => site.id));
+        return ship?.order.type === 'unload' && projectedLand(ship.order) === site.target.landId; })()))).map(site => site.id));
   const targets = new Map<string, Target>(sites.filter(site => !bounded || urgentSites.has(site.id)
     || site.kind === 'hall' && urgentSites.size > 0).map(site => [site.id, site.target]));
   for (const entity of [...snapshot.resources, ...snapshot.buildings]) if (retainedIds.has(entity.id)) targets.set(entity.id, target(entity));
@@ -300,27 +324,26 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   let priorUnits = capturesExplanations() ? undefined : decisionUnitFacts.get(memory);
   if (!capturesExplanations() && !priorUnits) decisionUnitFacts.set(memory, priorUnits = new Map());
   const units = live.map(unit => {
-    const old = priorUnits?.get(unit.id);
+    const old = priorUnits ? readCacheMap(priorUnits, unit.id) : undefined;
     const row = stableUnitFacts(snapshot, unit, locations.get(unit.id)!, strength(unit), unitRoles(unit),
       unitCommitments(unit, recovering.get(unit.id), mobilePatients.has(unit.id), acceptedHealing.get(unit.id)),
       arrivalsFor(unit, old && unitArrivalFacts(old)), old);
     if (priorUnits && row.location.kind !== 'unknown') {
-      if (!old && priorUnits.size >= 2048) priorUnits.delete(priorUnits.keys().next().value!);
-      priorUnits.set(unit.id, row);
+      retainCacheMap(priorUnits, unit.id, row, 2048);
     }
     return row;
   });
   const threatEvidence = explanationRecipe(descriptions.threat, tick);
-  const threatIntent = createThreatIntentQuery(snapshot, owner, sites, teams);
   const threats: SiteThreat[] = sites.map(site => {
     const land = site.target.landId;
     const candidates = live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin
       && unitLand(unit) === land
-      && distance(unit, site.target.point) <= unit.speed * STRATEGY_PARAMETERS.threatHorizonTicks / SIM_TICKS_PER_SECOND + 240);
+      && distance(unit, site.target.point) <= unit.speed * threatWindow(unit, site.id) / SIM_TICKS_PER_SECOND + 240);
     const field = candidates.length ? distances.field(site.target.point) : null;
-    const incoming = incomingLandArmy(snapshot, owner, options, site.target.point, STRATEGY_PARAMETERS.threatHorizonTicks, candidates,
-      unit => { const cost = field?.field.cost(unit); return cost === undefined ? undefined
-        : { ticks: Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND), endpoint: site.target.point }; });
+    const incoming = incomingLandArmy(snapshot, owner, options, site.target.point, STRATEGY_PARAMETERS.knownThreatHorizonTicks, candidates,
+      unit => { const cost = field?.field.cost(unit), ticks = cost === undefined ? undefined : Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
+        return ticks === undefined || ticks > threatWindow(unit, site.id) ? undefined
+          : { ticks, endpoint: site.target.point }; });
     const attackers: SiteThreat['attackers'][number][] = incoming.map(({ unit, ticks }) => ({ unitId: unit.id, strength: strength(unit),
       arrival: deferredRecord({ status: 'reachable' as const, ticks, landTicks: ticks, crossings: [], evidence: [evidence('policy.incomingLandArmy',
         `Shared arrival admission using building-aware weighted goal field; geometry built ${field?.builtTick}`, field?.builtTick)] }) }));
@@ -328,9 +351,9 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
       arrival: { status: 'unknown', reason: deferredRecord({ code: 'threat-geometry-refresh-pending', detail: 'Coarse same-land threat candidate; arrival field is pending, not confirmed inside the response window', evidence: [] }) } });
     for (const passenger of live.filter(unit => foe(unit.owner) && unit.kind !== 'worker' && unit.attackDamage > 0 && (unit.deck || unit.cabin))) {
       const boat = byId.get(passenger.deck?.shipId ?? passenger.cabin!.shipId);
-      if (!boat || boat.order.type !== 'unload' || landIdAt(snapshot.map, walkableGoal(snapshot.map, boat.order.x, boat.order.y)) !== land) continue;
+      if (!boat || boat.order.type !== 'unload' || projectedLand(boat.order) !== land) continue;
       const arrival = query.arrival(passenger, site.target);
-      if ('ticks' in arrival && arrival.ticks <= STRATEGY_PARAMETERS.threatHorizonTicks || arrival.status === 'unknown')
+      if ('ticks' in arrival && arrival.ticks <= STRATEGY_PARAMETERS.knownThreatHorizonTicks || arrival.status === 'unknown')
         attackers.push({ unitId: passenger.id, strength: strength(passenger), arrival });
     }
     for (const ship of live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'sea')) {
@@ -352,7 +375,10 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     const staticStrength = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'defenseTower'
       && building.complete && building.hp > 0 && distance(building, site.target.point) <= STATION_RANGE).length * TOWER_STRENGTH;
     const friendly = defenders.reduce((sum, unit) => sum + strength(unit), 0) + staticStrength;
-    return deferredEvidence({ siteId: site.id, horizonTicks: STRATEGY_PARAMETERS.threatHorizonTicks, attackers,
+    const declared = attackers.filter(attacker => hasDeclaredIntent(byId.get(attacker.unitId)!, site.id));
+    const siteHorizon = Math.min(STRATEGY_PARAMETERS.knownThreatHorizonTicks, Math.max(horizonTicks,
+      ...declared.map(attacker => 'ticks' in attacker.arrival ? attacker.arrival.ticks : STRATEGY_PARAMETERS.knownThreatHorizonTicks)));
+    return deferredEvidence({ siteId: site.id, horizonTicks: siteHorizon, attackers,
       arrivedStrength: present.reduce((sum, attacker) => sum + attacker.strength, 0),
       incomingStrength: attackers.filter(attacker => !presentIds.has(attacker.unitId)).reduce((sum, attacker) => sum + attacker.strength, 0),
       friendlyOnStationStrength: friendly, firstArrivalTicks: present.length ? 0 : attackers.reduce<number | null>((minimum, attacker) =>

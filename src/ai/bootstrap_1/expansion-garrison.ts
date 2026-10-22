@@ -20,9 +20,9 @@ import { incomingLandArmy } from '../policy/land-arrivals';
 import { strategyLeaseAllows } from '../strategy/control';
 import { expansionGarrisonActor } from '../strategy/incumbent-actors';
 import { bindIncumbentCommands, inheritIncumbentCommand } from '../strategy/incumbent-command-source';
+import { EXPANSION_GARRISON_COVERAGE_RADIUS as PERIMETER } from './expansion-garrison-rules';
 
 const POST_RANGE = 240;
-const PERIMETER = 650;
 // A small raid's first two arriving fighters, not the opponent's entire army.
 // Larger committed attacks retain the mine-rally commander's priority.
 const RAID_FIGHTERS = 2;

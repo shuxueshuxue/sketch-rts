@@ -1,0 +1,464 @@
+{
+  "status": "supported-empirical-default-with-counted-alpha-fallback",
+  "authorization": "182 2026-10-21 13:37; supported domain empirical, outside-support alpha; natural validation limitations retained",
+  "modelId": "camp-native-arrival-empirical-v4",
+  "payloadSha256": "eb6050c67b2ef4b184b9df24fbd83564434ad4d27e5dc8dbb54086e7b2a08c03",
+  "previousFrozenEvidence": {
+    "report": "camp-model-arrival-v1.evidence.json",
+    "archiveSha256": "2868d6c26b1d5dfe6fa20286bde86d6cf129a8a315a7ef4ac98c47b44e706a02",
+    "historicalNaturalGate": "not met; new supported-domain policy supersedes the switch decision, not the evidence"
+  },
+  "nativeSource": "8d483125feb63ad6ab2e41c99d21b16a6ccad45f",
+  "newControlled": {
+    "rows": 1152,
+    "errors": [],
+    "settledLossLabels": 1152,
+    "nativeZeroDeaths": 1152,
+    "nativeCampWins": 1152,
+    "workers": 16,
+    "workerQuota": 57,
+    "fullOwnerPlannerRuns": 0,
+    "scope": "native installed local tactical policy on original puzzle snapshot terrain; not owner-think/puzzle execution acceptance",
+    "dimensions": {
+      "count": {
+        "3": 384,
+        "4": 384,
+        "5": 384
+      },
+      "ownHp": {
+        "0.75": 576,
+        "1": 576
+      },
+      "guardHp": {
+        "0.75": 576,
+        "1": 576
+      },
+      "upgrade": {
+        "0": 576,
+        "1": 576
+      },
+      "formation": {
+        "random": 576,
+        "declared-group": 576
+      },
+      "arrivalLagTicks": {
+        "0": 576,
+        "60": 576
+      },
+      "items": {
+        "none": 384,
+        "use": 768
+      },
+      "scrollKind": {
+        "None": 384,
+        "healingScroll": 384,
+        "guardianScroll": 384
+      },
+      "seed": {
+        "0": 288,
+        "1": 288,
+        "2": 288,
+        "3": 288
+      }
+    },
+    "unknownWorkerIncomeGold": true,
+    "modelWorkerCount": 0,
+    "sourceOfLabels": "native positive damage/death/removal/healing; post-clear residual settlement up to300ticks",
+    "map": "bareDuel",
+    "holdout": "Every original puzzle controlled derivative remains held out together with bareDuel; original18 natural rows are evaluation only"
+  },
+  "fit": {
+    "trainingControls": 22602,
+    "naturalFitRows": 0,
+    "settings": {
+      "maxDepth": 8,
+      "minimumLeafRows": 12,
+      "minimumLeafWeight": 0.3,
+      "thresholds": 24,
+      "criterion": "sum weighted squared errors for zero-loss, win, and casualty/capital",
+      "controlAnchorWeight": 1,
+      "naturalWeight": 1
+    },
+    "globalParameters": true,
+    "mapFeature": false,
+    "support": "full composition signature plus observed finite feature ranges; unsupported composition/features use alpha with trace marker/counter; unpublished physical affiliation, invalid schema and unknown leaf labels remain pending"
+  },
+  "heldOut": {
+    "controlled": {
+      "pairedRows": 8713,
+      "alphaUnknownRows": 0,
+      "new": {
+        "zeroLoss": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 0.6471021714502044,
+          "predicted": 0.6481077453101367,
+          "bias": 0.0010055738599321802,
+          "mae": 0.22193925174511253,
+          "squaredError": 0.12300404563369134
+        },
+        "win": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 0.9165408915941292,
+          "predicted": 0.9184283318799069,
+          "bias": 0.0018874402857776964,
+          "mae": 0.057107056688182375,
+          "squaredError": 0.03374639812535586
+        },
+        "lossGold": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 80.64494673805201,
+          "predicted": 79.96928007602843,
+          "bias": -0.6756666620235865,
+          "mae": 56.02236617006332,
+          "squaredError": 9765.957659063875
+        },
+        "actualZeroPredictedPositiveExpectedLoss": 5206,
+        "actualZeroPredictedLossMoreLikelyThanZero": 530,
+        "actualZeroCount": 5476,
+        "actualZeroMeanPredictedLoss": 26.23670684055191
+      },
+      "alpha019": {
+        "zeroLoss": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 0.6471021714502044,
+          "predicted": 0.858239575020739,
+          "bias": 0.2111374035705344,
+          "mae": 0.252828260603146,
+          "squaredError": 0.252828260603146
+        },
+        "win": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 0.9165408915941292,
+          "predicted": 0.7640683088185048,
+          "bias": -0.15247258277562442,
+          "mae": 0.24122675876962305,
+          "squaredError": 0.07966448082007299
+        },
+        "lossGold": {
+          "n": 8558,
+          "weight": 148.65337902837902,
+          "actual": 80.64494673805201,
+          "predicted": 31.15433709633907,
+          "bias": -49.490609641712936,
+          "mae": 66.48600723668432,
+          "squaredError": 18924.840900229454
+        },
+        "actualZeroPredictedPositiveExpectedLoss": 207,
+        "actualZeroPredictedLossMoreLikelyThanZero": 207,
+        "actualZeroCount": 5476,
+        "actualZeroMeanPredictedLoss": 6.195215485756027
+      }
+    },
+    "natural": {
+      "pairedRows": 1,
+      "alphaUnknownRows": 0,
+      "new": {
+        "zeroLoss": {
+          "n": 1,
+          "weight": 1,
+          "actual": 1.0,
+          "predicted": 0.8679495750542454,
+          "bias": -0.13205042494575459,
+          "mae": 0.13205042494575459,
+          "squaredError": 0.017437314728354365
+        },
+        "win": {
+          "n": 1,
+          "weight": 1,
+          "actual": 1.0,
+          "predicted": 1.0,
+          "bias": 0.0,
+          "mae": 0.0,
+          "squaredError": 0.0
+        },
+        "lossGold": {
+          "n": 1,
+          "weight": 1,
+          "actual": 0.0,
+          "predicted": 13.86380120669485,
+          "bias": 13.86380120669485,
+          "mae": 13.86380120669485,
+          "squaredError": 192.2049838987536
+        },
+        "actualZeroPredictedPositiveExpectedLoss": 1,
+        "actualZeroPredictedLossMoreLikelyThanZero": 0,
+        "actualZeroCount": 1,
+        "actualZeroMeanPredictedLoss": 13.86380120669485
+      },
+      "alpha019": {
+        "zeroLoss": {
+          "n": 1,
+          "weight": 1,
+          "actual": 1.0,
+          "predicted": 1.0,
+          "bias": 0.0,
+          "mae": 0.0,
+          "squaredError": 0.0
+        },
+        "win": {
+          "n": 1,
+          "weight": 1,
+          "actual": 1.0,
+          "predicted": 0.7906021899520754,
+          "bias": -0.20939781004792457,
+          "mae": 0.20939781004792457,
+          "squaredError": 0.0438474428528667
+        },
+        "lossGold": {
+          "n": 1,
+          "weight": 1,
+          "actual": 0.0,
+          "predicted": 0.0,
+          "bias": 0.0,
+          "mae": 0.0,
+          "squaredError": 0.0
+        },
+        "actualZeroPredictedPositiveExpectedLoss": 0,
+        "actualZeroPredictedLossMoreLikelyThanZero": 0,
+        "actualZeroCount": 1,
+        "actualZeroMeanPredictedLoss": 0.0
+      }
+    },
+    "naturalEvaluationRows": 18,
+    "naturalSupportedRows": 1,
+    "naturalUnsupportedRows": 17,
+    "sameOriginal8443": {
+      "frozenOriginalDenominator": 8443,
+      "metrics": {
+        "old": {
+          "n": 8443,
+          "excluded": 0,
+          "actual": 81.7451948872168,
+          "predicted": 80.8347539587882,
+          "bias": -0.9104409284285959,
+          "mae": 54.58463863075111
+        },
+        "new": {
+          "n": 8331,
+          "excluded": 112,
+          "actual": 77.73583420033343,
+          "predicted": 77.50169185112622,
+          "bias": -0.2341423492071944,
+          "mae": 55.634426091985205
+        },
+        "alpha": {
+          "n": 8443,
+          "excluded": 0,
+          "actual": 81.7451948872168,
+          "predicted": 32.67108839274687,
+          "bias": -49.07410649446993,
+          "mae": 67.43869732710031
+        }
+      },
+      "commonKnownSubset": {
+        "v3": {
+          "n": 8331,
+          "actual": 77.73583420033343,
+          "predicted": 77.3094000796082,
+          "bias": -0.42643412072522585,
+          "mae": 53.73176046000538
+        },
+        "v4": {
+          "n": 8331,
+          "actual": 77.73583420033343,
+          "predicted": 77.50169185112622,
+          "bias": -0.2341423492071944,
+          "mae": 55.634426091985205
+        },
+        "alpha": {
+          "n": 8331,
+          "actual": 77.73583420033343,
+          "predicted": 29.53347080564481,
+          "bias": -48.202363394688604,
+          "mae": 64.87799327242702
+        }
+      },
+      "v4UnavailableOnOriginal": {
+        "n": 112,
+        "reasons": {
+          "leaf-label-unavailable": 112
+        }
+      }
+    },
+    "limitations": [
+      "New-fold results have112 leaf-label-unavailable rows on the original8443. These remain pending and are excluded explicitly, not reported as8443 passed.",
+      "Natural supported sample actual loss0, new prediction13.86380120669485, alpha0: natural noninferiority is not established.",
+      "Support and censored-label checks remain runtime gates. No map correction, conservative margin, realised future-contact feature or invented worker opportunity cost."
+    ]
+  },
+  "originalPuzzleConditionalQuotes": [
+    {
+      "variant": "far",
+      "snapshotSha256": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+      "usage": {
+        "quotes": 1,
+        "empirical": 1,
+        "alpha": 0,
+        "outsideSupport": 0,
+        "pending": 0
+      },
+      "modelQuote": {
+        "modelId": "camp-native-arrival-empirical-v4",
+        "expectedLossGold": 1.1443565261030197,
+        "successProbability": 1,
+        "battleTicks": 127,
+        "requiredForce": 2.554819263267845,
+        "lossDistribution": {
+          "zeroProbability": 0.9901178971687948,
+          "positive": [
+            {
+              "probability": 0.13112391930835735,
+              "lossGold": 106.15384615384613
+            },
+            {
+              "probability": 0.13056356067883446,
+              "lossGold": 115.00000000000003
+            },
+            {
+              "probability": 0.1252001280819725,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.13808837656099904,
+              "lossGold": 115
+            },
+            {
+              "probability": 0.15465898174831894,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.15465898174831894,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.143611911623439,
+              "lossGold": 125.5769230769231
+            },
+            {
+              "probability": 0.022094140249759846,
+              "lossGold": 135
+            }
+          ]
+        },
+        "factIds": [
+          "camp-model:14f9a3f0c3d403ed98dc93a9785c266bcbcb9e9818f3546e89d67dc0dcb1b011",
+          "scene-public-planner-frame-neutral-murlocPeon-1",
+          "scene-public-planner-frame-neutral-murlocPeon-2",
+          "scene-public-planner-frame-planner-footman-1",
+          "scene-public-planner-frame-planner-footman-2",
+          "scene-public-planner-frame-planner-footman-3",
+          "scene-public-planner-frame-planner-footman-4"
+        ]
+      },
+      "nativeNavigationCalls": 0
+    },
+    {
+      "variant": "near",
+      "snapshotSha256": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+      "usage": {
+        "quotes": 1,
+        "empirical": 1,
+        "alpha": 0,
+        "outsideSupport": 0,
+        "pending": 0
+      },
+      "modelQuote": {
+        "modelId": "camp-native-arrival-empirical-v4",
+        "expectedLossGold": 1.1443565261030197,
+        "successProbability": 1,
+        "battleTicks": 127,
+        "requiredForce": 2.554819263267845,
+        "lossDistribution": {
+          "zeroProbability": 0.9901178971687948,
+          "positive": [
+            {
+              "probability": 0.13112391930835735,
+              "lossGold": 106.15384615384613
+            },
+            {
+              "probability": 0.13056356067883446,
+              "lossGold": 115.00000000000003
+            },
+            {
+              "probability": 0.1252001280819725,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.13808837656099904,
+              "lossGold": 115
+            },
+            {
+              "probability": 0.15465898174831894,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.15465898174831894,
+              "lossGold": 114.99999999999999
+            },
+            {
+              "probability": 0.143611911623439,
+              "lossGold": 125.5769230769231
+            },
+            {
+              "probability": 0.022094140249759846,
+              "lossGold": 135
+            }
+          ]
+        },
+        "factIds": [
+          "camp-model:14f9a3f0c3d403ed98dc93a9785c266bcbcb9e9818f3546e89d67dc0dcb1b011",
+          "scene-public-planner-frame-neutral-murlocPeon-1",
+          "scene-public-planner-frame-neutral-murlocPeon-2",
+          "scene-public-planner-frame-planner-footman-1",
+          "scene-public-planner-frame-planner-footman-2",
+          "scene-public-planner-frame-planner-footman-3",
+          "scene-public-planner-frame-planner-footman-4"
+        ]
+      },
+      "nativeNavigationCalls": 0
+    }
+  ],
+  "files": {
+    "/tmp/sketch-camp-model-20261021/puzzle-controls-v1/cases.json": {
+      "bytes": 457275,
+      "sha256": "53c32d025356e76a22bce774a73f03eaa851fec4fac637fd0517294582100590"
+    },
+    "/tmp/sketch-camp-model-20261021/puzzle-controls-v1/controlled-puzzle-v1.mts": {
+      "bytes": 16783,
+      "sha256": "19edf2c46854c6c3bf7d669c05bebab95303f4334324461900e02e7cc8e7cf61"
+    },
+    "/tmp/sketch-camp-model-20261021/puzzle-controls-v1/episodes.jsonl.gz": {
+      "bytes": 1760,
+      "sha256": "8298aee9f6a9d4b11f79f1a6d5336437ed1590cbc4bfbfcab24968dbca80da17"
+    },
+    "/tmp/sketch-camp-model-20261021/puzzle-controls-v1/model-data.jsonl.gz": {
+      "bytes": 77265,
+      "sha256": "22770d1709cf8a242f4133093e8ade82f248dcecb8efffa25dcd0137cbbaadcf"
+    },
+    "/tmp/sketch-camp-model-20261021/puzzle-controls-v1/completion.json": {
+      "bytes": 4601,
+      "sha256": "4343809a753b674d5560dfa0c0e9e20020cdb8b8b2c311b92482d4c68a50fd3a"
+    },
+    "/tmp/sketch-camp-model-20261021/supported-default-v2/model.json": {
+      "bytes": 540647,
+      "sha256": "eb6050c67b2ef4b184b9df24fbd83564434ad4d27e5dc8dbb54086e7b2a08c03"
+    },
+    "/tmp/sketch-camp-model-20261021/supported-default-v2/lomo.json": {
+      "bytes": 174670,
+      "sha256": "af9eaf07a37354dc7668ac7e062e68c5a825f3bcf222872c5776c1649d71c552"
+    },
+    "/tmp/sketch-camp-model-20261021/supported-default-v2/lomo-predictions.jsonl.gz": {
+      "bytes": 204176,
+      "sha256": "7141157600a6cf064e707e279e7208499e6995bd15c414a41970d255f8ab6b18"
+    },
+    "/tmp/sketch-camp-model-20261021/supported-default-v2/fit.py": {
+      "bytes": 7529,
+      "sha256": "fc0efcb75e3fd95bcca81add8c723c0c7612c11efc4bb39d245c642338716b97"
+    }
+  }
+}

@@ -59,7 +59,8 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
     const baseTrace = buildAiPlanTrace(snapshot, owner, memories[owner]!, agent.version, previous[owner]);
     // This is the transaction which just issued these orders. Projection cannot
     // construct another Situation or advance the voyage-risk continuation.
-    const projected = strategy?.project ? { ...baseTrace, strategy: strategy.project() } : baseTrace;
+    const projected = { ...baseTrace, ...(strategy?.project ? { strategy: strategy.project() } : {}),
+      ...(strategy?.goalPlanner ? { goalPlanner: strategy.goalPlanner } : {}) };
     trace = ledger.withPlanTrace(projected, projected.previousTick ?? -1); previous[owner] = trace;
   }
   const end = performance.now();

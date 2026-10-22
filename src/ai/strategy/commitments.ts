@@ -1,3 +1,4 @@
+import { readCacheMap, retainCacheMap } from './bounded-cache';
 import { unitMover } from '../../shared/catalog';
 import { isTransportKind } from '../../shared/transport-role';
 import { walkableGoal } from '../../shared/terrain';
@@ -43,7 +44,7 @@ export function createUnitCommitmentQuery(snapshot: GameSnapshot, owner: PlayerI
     if (unit.owner !== owner) return EMPTY_COMMITMENTS;
     const tick = snapshot.tick, unitId = unit.id;
     let results: Commitment[] | undefined, count = 0;
-    const old = previous?.get(unitId) ?? EMPTY_COMMITMENTS, role = unitRoles(unit)[0]!;
+    const old = (previous ? readCacheMap(previous, unitId) : undefined) ?? EMPTY_COMMITMENTS, role = unitRoles(unit)[0]!;
     const append = (source: string, taskId: string, target: string | null, accepted = false) => {
       const prior = old[count];
       if (previous && !results && prior && prior.source === source && prior.taskId === taskId && prior.objectiveId === target && prior.role === role) { count++; return; }
@@ -113,7 +114,7 @@ export function createUnitCommitmentQuery(snapshot: GameSnapshot, owner: PlayerI
     const answer = results ?? (count === old.length ? old : count ? old.slice(0, count) : EMPTY_COMMITMENTS);
     if (previous) {
       if (!answer.length) previous.delete(unitId);
-      else { if (!previous.has(unitId) && previous.size >= 2048) previous.delete(previous.keys().next().value!); previous.set(unitId, answer); }
+      else retainCacheMap(previous, unitId, answer, 2048);
     }
     return answer;
   };

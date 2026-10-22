@@ -2,9 +2,11 @@ import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { constructionWorkers } from '../../shared/construction';
-import { resolveUnitDamage, unitAttackDamageProfile } from '../../shared/damage';
+import { withinExpansionGarrisonCoverage } from '../bootstrap_1/expansion-garrison-rules';
 import type { Unit } from '../../shared/types';
 import { strategyIsOpponent } from './ownership';
+import { canLandIntercept, landInterceptionShotDamage } from './land-interception';
+import { assessLandCombatAttrition, landCombatResponseCoverage, landCombatWorkTicks } from './land-combat-assessment';
 import { creepForce, forceFor, neutralCamps, EXPANSION_GUARD_RANGE, type Camp } from '../policy/v7/creep';
 import { combatRating, structureRating } from '../policy/v6/strength';
 import type {
@@ -232,7 +234,7 @@ class LandModel {
         threat.lossProbability, threat.attackers.map(attacker => [attacker.unitId, attacker.strength, arrival(attacker.arrival)])]),
       guards: ownHall && this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && !interruption(unit)
         && unit.location.kind === 'land' && unit.location.landId === candidate.target.landId
-        && gap(unit.location.point, candidate.target.point) <= 650).map(unit => [unit.id, unit.strength, unit.commitments.map(claim => claim.objectiveId)]),
+        && withinExpansionGarrisonCoverage(unit.location.point, candidate.target.point)).map(unit => [unit.id, unit.strength, unit.commitments.map(claim => claim.objectiveId)]),
       workers: this.mining(candidate.kind) && this.own.filter(unit => unit.roles.includes('worker') && !interruption(unit))
         .map(unit => { const a = arrivalAt(unit, candidate.key); return [unit.id, unquoted(a), knownArrival(a)
           && a.status === 'reachable' && a.ticks < HORIZON]; }),
@@ -261,8 +263,7 @@ class LandModel {
     const targets = camp?.creeps ?? (harasser ? [harasser] : this.context.snapshot.buildings.filter(building => building.id === candidate.key));
     let pool = potential.filter(fighter => !fighter.interrupted
       && (!mining || frontRole(fighter.unit)));
-    const canIntercept = (fighter: Pick<Fighter, 'raw'>) => !harasser || fighter.raw.attackRange > harasser.attackRange
-      || fighter.raw.speed >= harasser.speed;
+    const canIntercept = (fighter: Pick<Fighter, 'raw'>) => !harasser || canLandIntercept(fighter.raw, harasser);
     pool.sort((a, b) => Number(canIntercept(b)) - Number(canIntercept(a))
       || Number(a.borrowed) - Number(b.borrowed) || a.eta - b.eta || a.unit.id.localeCompare(b.unit.id));
     const measure = (fighters: Fighter[]) => {
@@ -275,14 +276,12 @@ class LandModel {
     };
     const shotDamage = new Map<string, number>();
     const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => {
-      if (!shotDamage.has(fighter.unit.id)) shotDamage.set(fighter.unit.id, resolveUnitDamage(this.context.snapshot, harasser,
-        fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage);
+      if (!shotDamage.has(fighter.unit.id)) shotDamage.set(fighter.unit.id, landInterceptionShotDamage(this.context.snapshot, fighter.raw, harasser));
       return sum + shotDamage.get(fighter.unit.id)!;
     }, 0) : 0;
     // Combat work is a stated estimate. ETA and response reachability remain shared Situation facts.
-    const workTicks = (fighters: Fighter[]) => candidate.kind === 'ContestRoute' ? HORIZON : Math.max(1,
-      targets.reduce((sum, target) => sum + target.hp, 0) / Math.max(1e-6,
-        fighters.reduce((sum, fighter) => sum + fighter.raw.attackDamage / Math.max(1, fighter.raw.attackCooldown), 0)));
+    const workTicks = (fighters: Fighter[]) => landCombatWorkTicks(targets, fighters.map(fighter => fighter.raw),
+      candidate.kind === 'ContestRoute' ? HORIZON : undefined);
     const enemyPool = this.situation.units.filter(unit => this.foe(unit.owner) && unit.hp > 0 && battleRole(unit));
     const responding = (window: number) => enemyPool.filter(unit => {
       const arrival = arrivalAt(unit, arrivalKey);
@@ -290,8 +289,7 @@ class LandModel {
         && (unit.expiresTick === null || unit.expiresTick > s.tick + arrival.ticks);
     }).map(unit => {
       const arrival = arrivalAt(unit, arrivalKey) as Extract<Arrival, { ticks: number }>;
-      const coverage = unit.expiresTick === null ? 1 : Math.min(1,
-        (unit.expiresTick - s.tick - arrival.ticks) / Math.max(1, window - arrival.ticks));
+      const coverage = landCombatResponseCoverage(s.tick, window, arrival.ticks, unit.expiresTick);
       return coverage === 1 ? unit : { ...unit, strength: unit.strength * coverage };
     });
     const towers = this.context.snapshot.buildings.filter(building => this.foe(building.owner)
@@ -430,7 +428,7 @@ class LandModel {
       condition('budget', hall || s.economy.cashGold - reservedElsewhere >= BUILDING_DEFS.townHall.cost ? 'met' : 'unmet', 'hall-capital',
         hall ? '矿厅已经支付，不重复扣费' : '清营之后需要矿厅本金', { kind: 'gold', amount: hall ? 0 : BUILDING_DEFS.townHall.cost });
       const guards = this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && unit.location.kind === 'land'
-        && unit.location.landId === candidate.target.landId && gap(unit.location.point, candidate.target.point) <= 650 && !interruption(unit)
+        && unit.location.landId === candidate.target.landId && withinExpansionGarrisonCoverage(unit.location.point, candidate.target.point) && !interruption(unit)
         && unit.commitments.some(claim => claim.objectiveId === identity('DefendSite', s.owner, hall?.id ?? '')));
       const guardPower = guards.reduce((sum, unit) => sum + unit.strength, 0);
       const staticPower = hall ? this.context.snapshot.buildings.filter(building => building.owner === s.owner && building.complete
@@ -510,18 +508,16 @@ class LandModel {
     }
     cost.push(term('force-time', forceTimeGold(crew.reduce((sum, fighter) => sum + fighter.unit.strength * fighter.coverage, 0),
       Math.min(HORIZON, (eta ?? 0) + duration)), '兵力在途与执行占用，成功失败都产生'));
-    const exposedHp = crew.reduce((sum, fighter) => sum + fighter.raw.hp, 0), price = crew.reduce((sum, fighter) => sum + UNIT_DEFS[fighter.raw.kind].cost, 0);
     const firing = new Map([...responders.map(unit => this.raw.get(unit.id)).filter((unit): unit is Unit => !!unit),
       ...towers, ...targets.filter(target => target.attackDamage > 0)].map(source => [source.id, source]));
-    const damage = [...firing.values()].reduce((sum, source) => {
+    const attrition = assessLandCombatAttrition({ tick: s.tick, arrivalTicks: eta ?? 0, workTicks: duration,
+      fighters: crew.map(fighter => fighter.raw), fieldStrength: power, requiredFieldStrength: required,
+      firing: [...firing.values()].map(source => {
       const unit = this.units.get(source.id), arrival = unit && arrivalAt(unit, arrivalKey);
-      const starts = knownArrival(arrival) ? Math.max(eta ?? 0, arrival.ticks) : eta ?? 0;
-      const ends = unit?.expiresTick === null || unit?.expiresTick === undefined ? (eta ?? 0) + duration
-        : Math.min((eta ?? 0) + duration, unit.expiresTick - s.tick);
-      return sum + source.attackDamage / Math.max(1, source.attackCooldown) * Math.max(0, ends - starts);
-    }, 0);
-    cost.push(term('expected-attrition', Math.min(price, price * damage / Math.max(1, exposedHp))
-      * (1 - forceSuccessProbability(power, required)), '交战窗口火力暴露与战力比给出的风险估计，非实际死亡归因'));
+      return { body: source, arrivalTicks: knownArrival(arrival) ? arrival.ticks : null, expiresTick: unit?.expiresTick ?? null };
+    }) });
+    cost.push(term('expected-attrition', attrition.expectedLossGold,
+      '交战窗口火力暴露与战力比给出的风险估计，非实际死亡归因'));
     const displaced = new Set(borrowed.flatMap(fighter => fighter.unit.commitments.map(item => item.objectiveId)
       .filter((oldId): oldId is string => oldId !== null && oldId !== id)));
     if (borrowed.some(fighter => fighter.unit.commitments.some(claim => claim.objectiveId === null)))

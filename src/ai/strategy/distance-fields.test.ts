@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { prepareMoverDistanceField, groundDistanceField, segmentWalkable, setBuildingBodies, shareBuildingBodies } from '../../shared/terrain';
 import type { GameMap, GameSnapshot } from '../../shared/types';
 import { createPlanningDistanceQuery } from './distance-fields';
+import { FactWorkQueue, withFactWork } from './fact-work';
 import { regionIndex } from './regions';
 import { observationMemory } from './observation-memory';
 
@@ -89,5 +90,24 @@ describe('event-refreshed planning goal fields', () => {
     expect(final.scannedRows).toBe(10); expect(final.scannedAtTick).toBe(115);
     expect(final.shores.length).toBeGreaterThan(prefix);
     expect(final.lands.size).toBe(2);
+  });
+});
+
+ it('publishes weighted land fields by think sequence with a fixed physical clock', () => {
+  const world = map(), snapshot = { tick: 100, map: world, buildings: [], resources: [] } as unknown as GameSnapshot;
+  let state = observationMemory(snapshot, 'player', { jobs: [], unitClaims: {} });
+  const goal = { x: 875, y: 125 };
+  const first = new FactWorkQueue(100, 6144, undefined, 1);
+  withFactWork(first, () => {
+    const query = createPlanningDistanceQuery(snapshot, 1, 'land', state);
+    expect(query.field(goal)).toBeNull(); first.flush();
+    expect(createPlanningDistanceQuery(snapshot, 1, 'land', state).field(goal)).toBeNull();
+  });
+  state = JSON.parse(JSON.stringify(state));
+  const next = new FactWorkQueue(100, 6144, first.receipt, 2);
+  withFactWork(next, () => {
+    const result = createPlanningDistanceQuery(snapshot, 1, 'land', state).field(goal);
+    expect(result?.builtTick).toBe(100); expect(result?.field.cost({ x: 125, y: 125 })).toBe(750);
+    expect(next.flush().used).toBe(0);
   });
 });

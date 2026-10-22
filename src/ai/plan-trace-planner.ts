@@ -45,6 +45,7 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
   const baseTrace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,
     request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION, previous);
-  const trace = strategy ? { ...baseTrace, strategy } : baseTrace;
+  const trace = { ...baseTrace, ...(strategy ? { strategy } : {}),
+    ...(controlled?.goalPlanner ? { goalPlanner: controlled.goalPlanner } : {}) };
   return { commands, trace: deathLedger ? deathLedger.withPlanTrace(trace, trace.previousTick ?? -1) : trace };
 }

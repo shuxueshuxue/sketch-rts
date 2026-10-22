@@ -64,6 +64,9 @@ export type AiPlanTrace = {
    * Only publication/history metadata persists in memory.strategy.observation.
    * Existing module-state nodes remain valid when no strategy evaluator is attached. */
   readonly strategy?: StrategyPlanTrace;
+  /** Optional read-only regression graph. Absence means no goal planner ran;
+   * planned actions do not imply grants, issued commands or physical success. */
+  readonly goalPlanner?: import('./strategy/goal-planner-types').GoalPlannerOutput;
   /** Opt-in external simulation observation; never retained in policy memory. */
   deathLedger?: AiDeathLedgerFrame;
   /** Exact blocked/abandoned branches from this think, held outside policy memory. */

@@ -29,6 +29,7 @@ export type ProductionBinding = Readonly<{
     queueIndex: number; observedTick: number; remainingTicks: number }>;
 }>;
 export type ActionIntent =
+  | import('./goal-execution-types').GoalExecutableIntent
   | Readonly<{ kind: 'clear-camp'; memberIds: readonly string[] }>
   | Readonly<{ kind: 'assemble-force'; campTarget: Target; requiredForce: number;
       posts: readonly Readonly<{ id: string; target: Target; unitIds: readonly string[] }>[] }>
@@ -98,6 +99,14 @@ export type AllocationBudget = Readonly<{
   action: ActionToken;
   amountGold: number;
   paidGold: number;
+  /** An admitted goal chain earmarks actual cash toward this later payment.
+   * The target is not cash; amountGold remains the funded/paid amount. */
+  plannedGold?: number;
+  expectedPaymentTick?: number;
+  /** Goal batches can pay several distinct native jobs from one reservation.
+   * Identity makes equal-sized payments idempotent without losing later jobs. */
+  nativePayments?: readonly Readonly<{ kind: 'production' | 'foundation'; commandId: string;
+    entityId: string; amountGold: number; observedTick: number }>[];
   state: 'reserved' | 'spent' | 'released';
   sinceTick: number;
   releasedTick: number | null;
@@ -110,6 +119,7 @@ export type AllocationBudget = Readonly<{
 export type PlannedAllocationSpend = Readonly<{
   spendId: string;
   amountGold: number;
+  expectedPaymentTick?: number;
   includedUtilityTermCodes: readonly string[];
   externalReservationIds: readonly string[];
 }>;
@@ -178,6 +188,8 @@ export type AllocationValuationBasis = Readonly<{ kind: 'proven-lower-bound';
   probabilityLower: number; probabilityUpper: number; unresolvedProbability: number }>;
 export type AllocationDecisionCounts = Readonly<{ lowerBoundSelections: number; lowerBoundInitialSelections: number; assemblyValueUnknownComparisons?: number }>;
 export type ObjectiveAllocation = Readonly<{
+  /** Original admitted collector definition, retained once for execution receipts after discovery ends. */
+  goalDefinitionRef?: string;
   objectiveId: ObjectiveId;
   methodId: MethodId;
   target: Target;
@@ -231,9 +243,14 @@ export type IssuedActionCommand = Readonly<{
   purpose: IssuedActionOrder['purpose'];
   acceptedTick: number;
   command: GameCommand;
+  /** Cash identities actually admitted for this purchase, independent of a
+   * later method revision or saving action. This is not another reservation. */
+  spendIds?: readonly string[];
   /** Minimal admission-time baseline for proving a later world payment. */
   worldBefore?: Readonly<{ kind: 'production'; buildingId: string;
-    jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[] }>
+    jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[];
+    /** Actual mover-region quantity baseline; never individual birth IDs. */
+    pool?: Readonly<{ key: string; at: Target; quantity: number; creditFloor: number }> }>
     | Readonly<{ kind: 'construction'; buildingIds: readonly string[] }>;
 }>;
 /** An accepted command from a real old producer branch, before adoption. This
@@ -327,7 +344,12 @@ export type StrategyAllocationMemory = Readonly<{
   revision: number;
   nextActionGeneration: number;
   nextEventSequence: number;
+  /** Immutable goal definitions live once here; control records use short
+   * version references. This data counts toward the same authority byte cap. */
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
+  goalIdentityVersion?: 1;
   decisionCounts?: AllocationDecisionCounts;
+  goalTraining?: import('./goal-training-ledger').GoalTrainingMemory;
   objectives: Readonly<Record<ObjectiveId, ObjectiveAllocation>>;
   /** Concrete, numerical plans survive forks and hull birth. An active voyage
    * must not lose its manifest because a later query starts aboard the ship. */
@@ -363,6 +385,7 @@ export type ActionGrant = Readonly<{
   orderOverrides: readonly Readonly<{ unitId: string; preemptionEventId: AllocationEventId; previousCommandId: string | null }>[];
 }>;
 export type ExecutorInput = Readonly<{
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
   snapshot: GameSnapshot;
   owner: PlayerId;
   objective: DecisionFacts<Objective>;
@@ -370,6 +393,14 @@ export type ExecutorInput = Readonly<{
   execution: ExecutionAction;
   grant: ActionGrant;
   events: readonly AllocationEvent[];
+  /** The same owner-think source, including actual free cash after reserved
+   * budgets. This callback never enters serialized execution state. */
+  goalFacts?: import('./goal-planner-types').GoalFactReader;
+  /** Current-window protection of this exact admitted cohort, using the
+   * shared domain quotation rather than treating every enemy as a defeat. */
+  goalProtection?: import('./goal-current-protection').GoalProtectionReader;
+  /** Same-epoch central job / aggregate-pool accounting, without birth IDs. */
+  goalTraining?: import('./goal-execution-types').GoalTrainingReader;
 }>;
 export type ExecutorFeedback = Readonly<{
   action: ActionToken;
@@ -387,13 +418,19 @@ export type ExecutorFeedback = Readonly<{
   /** A receipt is checked against the native queue/foundation and the captured
    * pre-command baseline. Command admission alone is never a payment. */
   payments?: readonly AllocationPayment[];
+  /** Declarative output slots are not bound until the common lifecycle
+   * validates these proposals against actual native world evidence. */
+  goalOutputs?: readonly import('./goal-execution-types').GoalOutputReceipt[];
   handoffs: readonly Readonly<{ eventId: AllocationEventId; disposition: 'shrink' | 'pause' | 'fail' }>[];
 }>;
 export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
   providerId: string;
   /** A completed gathering coordinator is a retained prerequisite, not the
    * conquest's final effect. Existing methods omit this and execute normally. */
-  stage?: 'assembly' | 'execution';
+  stage?: 'assembly' | 'execution' | 'goal-plan';
+  /** Exact current ready/active bundle declared by goal regression. The
+   * allocator must not recruit prefix members or implicit auxiliary units. */
+  goalBundle?: Readonly<{ planId: string; unitIds: readonly string[] }>;
   /** Stable preference within this objective, not a global defense/island priority. */
   preference: number;
   spends: readonly PlannedAllocationSpend[];
@@ -482,6 +519,9 @@ export type StrategyAllocationInput = Readonly<{
   fixedVoyageLoading?: (unit: Unit, voyage: FixedVoyage) => FixedVoyageLoading;
   /** Verified optimistic target envelope only for imported-task leases. */
   importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
+  /** Receipt-backed imported progress towards the requester's same terminal
+   * effect. This removes displaced-plan value, never the physical handoff. */
+  continuesImported?: (fromObjectiveId: string, toObjectiveId: string) => boolean;
   /** Optional observation of the exact materialized request, never a second
    * provider evaluation. The receiver cannot participate in admission. */
   observeCandidate?: (request: Readonly<{ objectiveId: string; method: ExecutableMethod;
@@ -520,6 +560,7 @@ export type CommandAdmission = Readonly<{
   | Readonly<{ status: 'rejected'; reason: ExecutorReason }>
 );
 export type StrategyAllocationTrace = Readonly<{
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
   revision: number;
   decisionCounts?: AllocationDecisionCounts;
   objectives: readonly ObjectiveAllocation[];

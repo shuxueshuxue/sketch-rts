@@ -1,3 +1,4 @@
+import { retainCacheMap, readCacheMap } from './bounded-cache';
 import { shareShipProfile } from '../../shared/ship-geometry';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { coursePerformance, windAt } from '../../shared/ship-wind';
@@ -17,7 +18,7 @@ const facts = new WeakMap<Terrain, SeaFacts>();
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 const angleGap = (a: number, b: number) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
 function retain<T>(values: Map<string, T>, key: string, value: T, limit: number) {
-  values.delete(key); if (values.size >= limit) values.delete(values.keys().next().value!); values.set(key, value);
+  retainCacheMap(values, key, value, limit);
 }
 
 /** Pricing is a pure projection of endpoints, motion rates, rig and uniform wind.
@@ -32,7 +33,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
   if (terrain && !shared) facts.set(terrain, shared = { roads: new Map(), prices: new Map() });
   const local = new Map<string, Estimate>(), poses = new WeakMap<Unit, Unit>();
   const stats = { requests: 0, localHits: 0, priceHits: 0, geometryBuilds: 0, pricings: 0 };
-  function travel(ship: Unit, from: Point, to: Point, future = false): Estimate {
+  function travel(ship: Unit, from: Point, to: Point, future = false, requestWork = true): Estimate {
     stats.requests++;
     if (gap(from, to) <= 1e-7) return { status: 'known', ticks: 0, computedTick: snapshot.tick, geometryTick: null };
     const limits = shipMotionLimits(ship);
@@ -42,18 +43,18 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const windKey = windAt(snapshot.map, from).key;
     const key = `${roadKey}:${ship.kind}:${limits.speed}:${limits.acceleration}:${limits.turnRate}:${windKey}:${fixed ? 'aligned' : ship.sailing?.heading ?? 0}`;
     // Publication depends on this owner's serialized work, before either cache.
-    const field = fields.field(to);
+    const field = fields.field(to, requestWork);
     if (!field) return pending;
     const localHit = cache === 'reuse' && local.get(key);
     if (localHit) { stats.localHits++; return localHit; }
-    const hit = cache === 'reuse' && fixed ? shared?.prices.get(key) : undefined;
+    const hit = cache === 'reuse' && fixed ? shared ? readCacheMap(shared.prices, key) : undefined : undefined;
     if (hit !== undefined) {
       stats.priceHits++; retain(shared!.prices, key, hit, 1024);
       const result: Estimate = { status: 'known', ticks: hit, geometryTick: field.builtTick, computedTick: snapshot.tick };
       local.set(key, result); return result;
     }
     const knownRoad = cache === 'reuse' && shared?.roads.has(roadKey);
-    let road = knownRoad ? shared!.roads.get(roadKey) : undefined;
+    let road = knownRoad ? readCacheMap(shared!.roads, roadKey) : undefined;
     const geometryTick = field.builtTick;
     if (!fixed || !knownRoad) {
       road = field.field.road(from, to);
@@ -97,5 +98,6 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     }
     return result;
   }
-  return { travel, stats, get deferredFields() { return fields.deferred; } };
+  return { travel, prepareField: (goal: Point) => { fields.field(goal); }, stats,
+    get deferredFields() { return fields.deferred; } };
 }

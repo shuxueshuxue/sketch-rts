@@ -28,6 +28,7 @@ export type BundleValuationSource = Readonly<{
  * an actual commitment, even if that lower bound is a profitable alternative. */
 export function createOpportunityOracle(sources: readonly BundleValuationSource[], options: Readonly<{
   effectKeysFor: (objectiveId: string) => readonly string[];
+  continuesCommitment?: (fromObjectiveId: string, toObjectiveId: string) => boolean;
   unpricedCommitmentsFor?: (unitIds: readonly string[]) => readonly string[];
   unpricedProductionFor?: (uses: readonly ProductionUse[]) => readonly string[];
   importedUpperBoundFor?: (objectiveId: string, window: ValuationWindow) => Readonly<{
@@ -56,11 +57,13 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
     // Retaining or growing this same objective does not displace itself. A
     // partial commitment with no standalone quote must not block replacement supply.
     unknown.delete(request.objectiveId);
+    for (const id of unknown) if (options.continuesCommitment?.(id, request.objectiveId)) unknown.delete(id);
     const alternatives: OpportunityAlternative[] = [];
     const effects = new Map<string, { alternative: OpportunityAlternative; marginal: number }>();
     for (const source of ordered) {
       const sharedProduction = productionUsesOverlap(canonicalProductionUses(source.production), production);
-      if (source.objectiveId === request.objectiveId || !source.unitIds.some(id => requested.has(id)) && !sharedProduction
+      if (source.objectiveId === request.objectiveId || options.continuesCommitment?.(source.objectiveId, request.objectiveId)
+        || !source.unitIds.some(id => requested.has(id)) && !sharedProduction
         || source.effectKeys.some(key => requestEffects.has(key))) continue;
       const ids = [...new Set(source.unitIds)].sort();
       const remaining = ids.filter(id => !requested.has(id));
