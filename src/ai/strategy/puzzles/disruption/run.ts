@@ -8,7 +8,7 @@ import type { AiPolicyMemory } from '../../../memory';
 import type { AiScriptVersion } from '../../../policy';
 import type { SdkGameCommandPlanner } from '../../../../sdk/game-runner';
 import { snapshotGame } from '../../../../shared/sim';
-import { UNIT_DEFS } from '../../../../shared/catalog';
+import { UNIT_DEFS, RACE_TECH_RULES } from '../../../../shared/catalog';
 import { sameGround } from '../../../../shared/terrain';
 import type { GameCommand } from '../../../../shared/types';
 import { createInterference } from './interference';
@@ -32,6 +32,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   const departureEvidence: ReturnType<typeof departureProtection>[] = [], departureSeen = new Set<string>();
   const previousWorkerX = new Map(game.units.filter(u => u.owner === owner && u.kind === 'worker').map(u => [u.id, u.x]));
   const physicalEntrances: ReturnType<typeof departureProtection>[] = [], entrySeen = new Set<string>();
+  const speedObservations = new Map<string, { id: string; kind: string; firstTick: number; maxSpeed: number; mounted: boolean }>();
+  const producerKinds = new Map<string, number>();
   const localDamage = new Set<string>(), firstResponse: unknown[] = [], attribution: unknown[] = [];
   let actualOpponentCommands = 0;
   let firstLossThink: number | null = null, think = 0, lastMemory: AiPolicyMemory | undefined;
@@ -79,6 +81,14 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
       write('sdk', row); if (e.owner === opponent) actualOpponentCommands++; if (e.owner === owner) ownCommands.push({ tick: e.tick, scriptId: e.scriptId, command: e.command });
     },
     onStep() {
+      if (puzzle.variant === 'fast-hit-run') {
+        for (const u of game.units) if (u.owner === owner && u.kind !== 'worker' && !UNIT_DEFS[u.kind].naval && u.hp > 0) {
+          const prior = speedObservations.get(u.id);
+          speedObservations.set(u.id, { id: u.id, kind: u.kind, firstTick: prior?.firstTick ?? game.tick,
+            maxSpeed: Math.max(prior?.maxSpeed ?? 0, u.speed), mounted: UNIT_DEFS[u.kind].bodyForm === 'mounted' });
+        }
+        for (const b of game.buildings) if (b.owner === owner && b.complete && b.hp > 0 && !producerKinds.has(b.kind)) producerKinds.set(b.kind, game.tick);
+      }
       if (puzzle.key === 'worker-ambush' && interruption.state.trigger) for (const u of game.units) {
         if (u.owner === owner && u.kind === 'worker' && u.x >= 1280 && u.x < 3712 && u.y >= 704 && u.y <= 896
           && (previousWorkerX.get(u.id) ?? u.x) < 1280 && u.id !== interruption.state.trigger.targetId && !entrySeen.has(u.id)) {
@@ -129,12 +139,13 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     replacementOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : createdTransports.size > 0,
     targetOrExplicitAbandonment: puzzle.variant === 'poor' ? abandoned.length + navalAbandoned.length > 0 : milestones['hall-complete'] !== undefined,
   } : puzzle.key === 'worker-ambush' ? {
-    interferenceTriggered: !!interruption.state.trigger, originalWorkerKilled: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? ''),
+    interferenceTriggered: !!interruption.state.trigger,
+    ...(puzzle.variant === 'fast-hit-run' ? {} : { originalWorkerKilled: !!interruption.state.loss && world.interceptors.includes(interruption.state.loss.actualKill?.source.id ?? '') }),
     noDeadActorRecommands: staleProposals.length === 0, noRepeatedWorkerDeathToSameEnemy: repeatedWorkerLosses.length === 0,
     workerDeathsAtMostOne: workerDeaths.length <= 1,
-    secondWorkerProtectedBeforeDeparture: departureEvidence.filter(e => e.tick >= (interruption.state.loss?.tick ?? Infinity)).every(e => e.positive)
-      && physicalEntrances.filter(e => e.tick >= (interruption.state.loss?.tick ?? Infinity)).every(e => e.positive),
-    loopExercisedOrRaidersCleared: puzzle.variant !== 'hit-run' || interruption.state.cycles.length >= 3
+    secondWorkerProtectedBeforeDeparture: departureEvidence.filter(e => e.tick >= (interruption.state.loss?.tick ?? (puzzle.variant === 'fast-hit-run' ? interruption.state.trigger?.tick : undefined) ?? Infinity)).every(e => e.positive)
+      && physicalEntrances.filter(e => e.tick >= (interruption.state.loss?.tick ?? (puzzle.variant === 'fast-hit-run' ? interruption.state.trigger?.tick : undefined) ?? Infinity)).every(e => e.positive),
+    loopExercisedOrRaidersCleared: (puzzle.variant !== 'hit-run' && puzzle.variant !== 'fast-hit-run') || interruption.state.cycles.length >= 3
       || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
     targetComplete: milestones['hall-complete'] !== undefined,
   } : {
@@ -144,12 +155,21 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
     localDefenseUsed: puzzle.variant === 'large' || localDamage.size > 0,
     noArmyPingPong: world.mainForce.every(id => mainSwaps.filter(e => e.unitId === id && e.region === 'home-land').length <= 1),
   };
+  const initialEnemySpeed = Math.min(...initial.units.filter(u => world.interceptors.includes(u.id)).map(u => u.speed));
+  const producible = Object.entries(RACE_TECH_RULES.grove.units).filter(([kind, rule]) => kind !== 'worker' && !UNIT_DEFS[kind as keyof typeof UNIT_DEFS].naval && producerKinds.has(rule.at))
+    .map(([kind, rule]) => ({ kind, baseSpeed: UNIT_DEFS[kind as keyof typeof UNIT_DEFS].speed, producer: rule.at, producerFirstCompleteTick: producerKinds.get(rule.at)!,
+      note: 'Producer exists; supply/technology/payment eligibility is not inferred.' }));
+  const speedPremise = puzzle.variant === 'fast-hit-run' ? { initialEnemySpeed, actualOwnCombat: [...speedObservations.values()], producerAvailableKinds: producible,
+    allObservedOwnCombatSlower: [...speedObservations.values()].every(u => u.maxSpeed < initialEnemySpeed),
+    allObservedOwnCombatUnmounted: [...speedObservations.values()].every(u => !u.mounted),
+    allProducerPotentialKindsSlower: producible.every(u => u.baseSpeed < initialEnemySpeed),
+    interpretation: 'Speeds are native observations. No production, research, catalogue or AI option is disabled to enforce a result; a new faster producer/unit invalidates the corresponding premise.' } : null;
   const summary = { puzzle: `${puzzle.key}/${puzzle.variant}`, thinkCount: think, maxTicks: options.maxTicks ?? puzzle.maxTicks,
     initialSnapshotSha256: createHash('sha256').update(JSON.stringify(initial)).digest('hex'), initialTick: initial.tick,
     triggerRule: puzzle.triggerRule, responseRule: puzzle.responseRule, behaviorChecksPassed: Object.values(checks).every(Boolean), publicPlannerAcceptance: null, checks,
     missingFormalAcceptance: ['post-loss fact-driven replan and remaining-chain requote', 'cause-linked interruption and death ledger', 'full proportional response and nonpositive-value abandonment evidence'], milestones,
-    interception, fogOfWar: false, cycles: interruption.state.cycles,
-    cycleCoverage: puzzle.variant !== 'hit-run' ? null : { actualCycles: interruption.state.cycles.length,
+    interception, speedPremise, fogOfWar: false, cycles: interruption.state.cycles,
+    cycleCoverage: (puzzle.variant !== 'hit-run' && puzzle.variant !== 'fast-hit-run') ? null : { actualCycles: interruption.state.cycles.length,
       atLeast3OrAttackersCleared: interruption.state.cycles.length >= 3 || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
       limitation: 'No owner worker or retry is injected to force cycles; if AI stalls, coverage remains explicit and target liveness fails.' },
     departureEvidence, physicalEntrances, workerDeaths, newHullDamagedBySameLiveCause,

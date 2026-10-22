@@ -5,7 +5,7 @@ import { HOME, ISLAND, MAINLAND, PUZZLE_OWNER, PUZZLE_OPPONENT, TARGET_MINE,
   camp, finishWorld, homeEconomy, puzzleBuilder, soldiers, targetMine, terrainWorld, type PuzzleWorld } from '../world';
 
 export type DisruptionKey = 'transport-sunk' | 'worker-ambush' | 'small-harassment';
-export type DisruptionVariant = 'loaded' | 'poor' | 'empty' | 'stay' | 'hit-run' | 'small' | 'large';
+export type DisruptionVariant = 'loaded' | 'poor' | 'empty' | 'stay' | 'hit-run' | 'fast-hit-run' | 'small' | 'large';
 export type DisruptionWorld = PuzzleWorld & {
   interceptors: string[]; localDefenders: string[]; mainForce: string[];
   road: { x: number; y: number } | null; retreat: { x: number; y: number };
@@ -29,7 +29,7 @@ function shipScene(variant: 'loaded' | 'poor' | 'empty'): DisruptionWorld {
   return { ...world, interceptors: world.game.units.filter(u => u.owner === world.opponent).map(u => u.id),
     mainForce: world.army.map(u => u.id), localDefenders: [], road: null, retreat: { x: 2048, y: 1536 } };
 }
-function workerScene(): DisruptionWorld {
+function workerScene(fast = false): DisruptionWorld {
   const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   b.townHall(PUZZLE_OWNER, HOME.x, HOME.y).farms(PUZZLE_OWNER, 2, 256, 256)
     .goldMine('resource-0', HOME.x, HOME.y + 224, 4 * UNIT_DEFS.worker.cost);
@@ -38,7 +38,7 @@ function workerScene(): DisruptionWorld {
   b.building(PUZZLE_OWNER, 'barracks', 896, 1120);
   const mine = { x: 4256, y: 800 }, road = { x: 2432, y: 800 };
   targetMine(b, mine);
-  soldiers(b, 'footman', 2, { x: road.x - 48, y: 512 }, PUZZLE_OPPONENT);
+  soldiers(b, fast ? 'raider' : 'footman', 2, { x: road.x - 48, y: 512 }, PUZZLE_OPPONENT);
   const lands = [
     { left: 128, top: 128, right: 1280, bottom: 1792 },
     { left: 1152, top: 704, right: 3840, bottom: 896 },
@@ -77,12 +77,12 @@ export const DISRUPTION_CASES: readonly DisruptionCase[] = [
       : 'Original transport carries an original soldier and has moved at least128 from its original near-embark pose.',
     responseRule: 'One initial enemy warship attacks that real hull, then holds at its observed sinking position; no spawn/delete/teleport or tick trigger.',
     create: () => shipScene(variant) })),
-  ...(['stay', 'hit-run'] as const).map(variant => ({ key: 'worker-ambush' as const, variant,
-    title: variant === 'stay' ? '游击兵守路截杀工人' : '游击兵反复往返截杀', maxTicks: seconds(480),
+  ...(['stay', 'hit-run', 'fast-hit-run'] as const).map(variant => ({ key: 'worker-ambush' as const, variant,
+    title: variant === 'stay' ? '游击兵守路截杀工人' : variant === 'fast-hit-run' ? '快骑游击反复往返截杀' : '游击兵反复往返截杀', maxTicks: seconds(480),
     triggerRule: 'First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).',
     responseRule: variant === 'stay' ? 'Two initial footmen attack that worker, then hold at the actual death position.'
-      : 'After each actual ambush, both surviving initial footmen retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.',
-    create: workerScene })),
+      : `After each actual ambush, both surviving initial ${variant === 'fast-hit-run' ? 'raiders (native speed82)' : 'footmen'} retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.`,
+    create: () => workerScene(variant === 'fast-hit-run') })),
   ...(['small', 'large'] as const).map(variant => ({ key: 'small-harassment' as const, variant,
     title: variant === 'small' ? '小股骚扰保主力清营' : '大军骚扰允许比较后中止', maxTicks: seconds(420),
     triggerRule: 'First actual positive damage from an original island main-force unit to a member of the original camp.',
