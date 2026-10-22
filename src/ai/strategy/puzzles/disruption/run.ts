@@ -144,7 +144,8 @@ export function runDisruption(puzzle: DisruptionCase, options: { version?: AiScr
   };
   const summary = { puzzle: `${puzzle.key}/${puzzle.variant}`, thinkCount: think, maxTicks: options.maxTicks ?? puzzle.maxTicks,
     initialSnapshotSha256: createHash('sha256').update(JSON.stringify(initial)).digest('hex'), initialTick: initial.tick,
-    triggerRule: puzzle.triggerRule, responseRule: puzzle.responseRule, passed: Object.values(checks).every(Boolean), checks, milestones,
+    triggerRule: puzzle.triggerRule, responseRule: puzzle.responseRule, behaviorChecksPassed: Object.values(checks).every(Boolean), publicPlannerAcceptance: null, checks,
+    missingFormalAcceptance: ['post-loss fact-driven replan and remaining-chain requote', 'cause-linked interruption and death ledger', 'full proportional response and nonpositive-value abandonment evidence'], milestones,
     interception, fogOfWar: false, cycles: interruption.state.cycles,
     cycleCoverage: puzzle.variant !== 'hit-run' ? null : { actualCycles: interruption.state.cycles.length,
       atLeast3OrAttackersCleared: interruption.state.cycles.length >= 3 || world.interceptors.every(id => kills.some(k => k.unit.id === id)),
