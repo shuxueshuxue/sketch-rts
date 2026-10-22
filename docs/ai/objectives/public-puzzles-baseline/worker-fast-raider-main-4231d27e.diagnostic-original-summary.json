@@ -1,0 +1,631 @@
+{
+  "puzzle": "worker-ambush/fast-hit-run",
+  "thinkCount": 640,
+  "maxTicks": 9600,
+  "initialSnapshotSha256": "e854ce19e140f3d8950fb30b7b591937a918f0661acd4c3b47537ef8edf82f83",
+  "initialTick": 1,
+  "triggerRule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+  "responseRule": "After each actual ambush, both surviving initial raiders (native speed82) retreat to the fixed far point; a different worker starting the corridor triggers the next return. Repeat at least3 unless the owner clears the attackers; no tick trigger.",
+  "behaviorChecksPassed": false,
+  "publicPlannerAcceptance": null,
+  "checks": {
+    "interferenceTriggered": true,
+    "noDeadActorRecommands": true,
+    "noRepeatedWorkerDeathToSameEnemy": true,
+    "workerDeathsAtMostOne": true,
+    "secondWorkerProtectedBeforeDeparture": true,
+    "loopExercisedOrRaidersCleared": true,
+    "targetComplete": false
+  },
+  "missingFormalAcceptance": [
+    "post-loss fact-driven replan and remaining-chain requote",
+    "cause-linked interruption and death ledger",
+    "full proportional response and nonpositive-value abandonment evidence"
+  ],
+  "milestones": {
+    "trigger": 1718,
+    "victim-loss": 1775,
+    "interceptors-cleared": 2359
+  },
+  "interception": {
+    "crossing": {
+      "x": 2432,
+      "y": 800
+    },
+    "workerStart": {
+      "x": 1280,
+      "y": 800
+    },
+    "retreatPoint": {
+      "x": 2432,
+      "y": 1792
+    },
+    "enemyDistance": 992,
+    "workerDistance": 1152,
+    "enemySpeed": 82,
+    "workerSpeed": 60,
+    "enemySeconds": 12.097560975609756,
+    "workerSeconds": 19.2,
+    "canArriveBeforeWorker": true,
+    "nativeAmbushContract": "Two original real attackers vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+    "attackerKinds": [
+      {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "kind": "raider",
+        "speed": 82
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-raider-2",
+        "kind": "raider",
+        "speed": 82
+      }
+    ],
+    "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+  },
+  "speedPremise": {
+    "initialEnemySpeed": 82,
+    "actualOwnCombat": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1009",
+        "kind": "lancer",
+        "firstTick": 208,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1015",
+        "kind": "lancer",
+        "firstTick": 388,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1028",
+        "kind": "lancer",
+        "firstTick": 1198,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1124",
+        "kind": "lancer",
+        "firstTick": 9283,
+        "maxSpeed": 68,
+        "mounted": false
+      }
+    ],
+    "producerAvailableKinds": [
+      {
+        "kind": "footman",
+        "baseSpeed": 62,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      },
+      {
+        "kind": "lancer",
+        "baseSpeed": 68,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      }
+    ],
+    "allObservedOwnCombatSlower": true,
+    "allObservedOwnCombatUnmounted": true,
+    "allProducerPotentialKindsSlower": true,
+    "interpretation": "Speeds are native observations. No production, research, catalogue or AI option is disabled to enforce a result; a new faster producer/unit invalidates the corresponding premise."
+  },
+  "fogOfWar": false,
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 1717,
+        "targetId": "unit-planner-worker-1017",
+        "point": {
+          "x": 2275.715327959509,
+          "y": 891.8567412124188
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+      },
+      "endedTick": 1775,
+      "outcome": "native-death",
+      "retreatedTick": 2077
+    },
+    {
+      "trigger": {
+        "tick": 2077,
+        "targetId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 3163.0585133848,
+          "y": 789.8696557988368
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+      },
+      "endedTick": null,
+      "outcome": null,
+      "retreatedTick": null
+    }
+  ],
+  "cycleCoverage": {
+    "actualCycles": 2,
+    "atLeast3OrAttackersCleared": true,
+    "limitation": "No owner worker or retry is injected to force cycles; if AI stalls, coverage remains explicit and target liveness fails."
+  },
+  "departureEvidence": [
+    {
+      "tick": 4065,
+      "workerId": "unit-planner-worker-1121",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    }
+  ],
+  "physicalEntrances": [
+    {
+      "tick": 3992,
+      "workerId": "scene-public-planner-frame-planner-worker-1",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4022,
+      "workerId": "unit-planner-worker-1012",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4053,
+      "workerId": "scene-public-planner-frame-planner-worker-3",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4084,
+      "workerId": "scene-public-planner-frame-planner-worker-2",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4114,
+      "workerId": "unit-planner-worker-1006",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    },
+    {
+      "tick": 4274,
+      "workerId": "unit-planner-worker-1121",
+      "positive": true,
+      "confirmedAllDead": true,
+      "screenIds": [],
+      "screenPower": 0,
+      "actualScreenOrders": [],
+      "escortIds": [],
+      "escortPower": 0,
+      "threatPower": 0,
+      "actualEscortOrders": [],
+      "note": "Existing shared strengthOf, native positions and explicit follow/corridor movement; actual armed screen attacking the observed threat is also counted; no timeout or disappearance proof. Full route safety and losses are separately observed."
+    }
+  ],
+  "workerDeaths": [
+    {
+      "tick": 1775,
+      "unit": {
+        "id": "unit-planner-worker-1017",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2367.4495060598783,
+        "y": 892.9368561795843,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "mine",
+          "resourceId": "resource-1",
+          "phase": "toMine",
+          "timer": 0
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    }
+  ],
+  "newHullDamagedBySameLiveCause": [],
+  "trigger": {
+    "tick": 1717,
+    "targetId": "unit-planner-worker-1017",
+    "point": {
+      "x": 2275.715327959509,
+      "y": 891.8567412124188
+    },
+    "passengerIds": [],
+    "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+  },
+  "confirmedLoss": {
+    "tick": 1775,
+    "targetId": "unit-planner-worker-1017",
+    "point": {
+      "x": 2367.4495060598783,
+      "y": 892.9368561795843
+    },
+    "actualKill": {
+      "tick": 1775,
+      "source": {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "owner": "pressure",
+        "kind": "raider",
+        "x": 2305.6611649233178,
+        "y": 853.1580332137272,
+        "entityType": "unit",
+        "present": true
+      },
+      "unit": {
+        "id": "unit-planner-worker-1017",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2365.200739539395,
+        "y": 893.0113487050636,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "mine",
+          "resourceId": "resource-1",
+          "phase": "toMine",
+          "timer": 0
+        },
+        "attackClass": "melee",
+        "orderQueue": []
+      },
+      "cause": "damage"
+    }
+  },
+  "firstPostLossThink": 1785,
+  "repeatedHullLosses": [],
+  "repeatedWorkerLosses": [],
+  "oldPassengerLosses": [],
+  "staleProposals": [],
+  "mainSwaps": [],
+  "createdTransportIds": [],
+  "createdSoldierIds": [
+    "unit-planner-lancer-1009",
+    "unit-planner-lancer-1015",
+    "unit-planner-lancer-1028",
+    "unit-planner-lancer-1124"
+  ],
+  "localDefenderIdsWithActualDamage": [],
+  "abandonmentEvidence": {
+    "allocation": [],
+    "naval": []
+  },
+  "deaths": [
+    {
+      "native": {
+        "tick": 1775,
+        "unit": {
+          "id": "unit-planner-worker-1017",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 2367.4495060598783,
+          "y": 892.9368561795843,
+          "hp": 0,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 1775,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "owner": "pressure",
+          "kind": "raider",
+          "x": 2305.6611649233178,
+          "y": 853.1580332137272,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "unit-planner-worker-1017",
+          "owner": "planner",
+          "kind": "worker",
+          "x": 2365.200739539395,
+          "y": 893.0113487050636,
+          "hp": 0,
+          "maxHp": 70,
+          "attackDamage": 10,
+          "attackRange": 36,
+          "attackCooldown": 34,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 2269,
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "owner": "pressure",
+          "kind": "raider",
+          "x": 2566.953026201551,
+          "y": 1142.7569641729922,
+          "hp": -11,
+          "maxHp": 115,
+          "attackDamage": 14,
+          "attackRange": 72,
+          "attackCooldown": 20,
+          "level": 0,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 2269,
+        "source": {
+          "id": "unit-planner-lancer-1015",
+          "owner": "planner",
+          "kind": "lancer",
+          "x": 2587.1252657438276,
+          "y": 1114.5167269032468,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-raider-1",
+          "owner": "pressure",
+          "kind": "raider",
+          "x": 2567.905440836126,
+          "y": 1141.7361268078812,
+          "hp": -11,
+          "maxHp": 115,
+          "attackDamage": 14,
+          "attackRange": 72,
+          "attackCooldown": 20,
+          "level": 0,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    },
+    {
+      "native": {
+        "tick": 2359,
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "owner": "pressure",
+          "kind": "raider",
+          "x": 2598.632780987369,
+          "y": 976.6770519081969,
+          "hp": -11,
+          "maxHp": 115,
+          "attackDamage": 14,
+          "attackRange": 72,
+          "attackCooldown": 20,
+          "level": 0,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 2359,
+        "source": {
+          "id": "unit-planner-lancer-1015",
+          "owner": "planner",
+          "kind": "lancer",
+          "x": 2623.908261576097,
+          "y": 1001.772706874822,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "scene-public-planner-frame-pressure-raider-2",
+          "owner": "pressure",
+          "kind": "raider",
+          "x": 2600.1417645704905,
+          "y": 976.1489625059603,
+          "hp": -11,
+          "maxHp": 115,
+          "attackDamage": 14,
+          "attackRange": 72,
+          "attackCooldown": 20,
+          "level": 0,
+          "speed": 82,
+          "order": {
+            "type": "attack",
+            "targetId": "scene-public-planner-frame-planner-worker-1"
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    }
+  ],
+  "sdkCommands": 71,
+  "opponentSdkCommands": 9,
+  "opponentProposals": 9,
+  "scenarioStatus": "world-trigger-observed",
+  "elapsedMs": 2280.237,
+  "cpuMs": 4625.209,
+  "final": {
+    "tick": 9601,
+    "ownerGold": 10,
+    "originalArmy": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "present": true,
+        "hp": 145,
+        "x": 3973.159303878685,
+        "y": 789.0979470249202
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "present": true,
+        "hp": 145,
+        "x": 3937.5127238568675,
+        "y": 794.1299777033021
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "present": true,
+        "hp": 145,
+        "x": 4006.943728416957,
+        "y": 801.5322808879698
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "present": true,
+        "hp": 145,
+        "x": 3910.1039708853446,
+        "y": 768.2419598317729
+      }
+    ],
+    "interceptors": [
+      {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "present": false
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-raider-2",
+        "present": false
+      }
+    ],
+    "guardsAlive": []
+  },
+  "scope": "Native main AI behavior baseline only. Physical behavior and missing formal fact/requote/attribution evidence remain distinct; a never-triggered scene does not prove interruption handling failed."
+}

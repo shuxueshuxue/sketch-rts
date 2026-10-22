@@ -1,0 +1,88 @@
+{
+  "source": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "mode": "v9_knight",
+  "variant": "worker-ambush/fast-hit-run",
+  "at": "2026-10-22T03:14:55.990283+00:00",
+  "policySdkSimDiff0": true,
+  "nativeWorldChanges": "Only fast variant attacker kind is raider; original terrain/positions/retreat unchanged. Worker-only evasive controller and fresh-crossing trigger locked per18403:07; no production option disabled.",
+  "responseRule": "Only worker attack targets. Native idle acquire230/strikeReach/canReach armed alert triggers move to unchanged2432,1792. Per-native-tick enemy observation/SDK delay3, owner15tick thought. All survivors must arrive/alertclear before a different worker newly crosses x<1280\u2192x>=1280; already-in-transit worker cannot rearm. At least3 unless native-killed.",
+  "rules": "<=1 worker death, positive protection before next departure, hall by480seconds. Initial death is not required. Full global visibility.",
+  "files": [
+    {
+      "path": "scripts/planner-disruption-baseline.ts",
+      "sha256": "59922934181fd5f161d85b65b21ebb381c8d5c147630a412edab4d0c5d4d0dc1",
+      "blob": "3177c702bbd23ffd6be57b369867fc09211720cb"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/README.zh.md",
+      "sha256": "ca0dddc5d476f60cbef14e9ba311e3c24ba997e1c271cc3c672ba158c4132eba",
+      "blob": "df56f0bea6d39ea2d057d455808fc6a52e8dfdb6"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/fixtures/manifest.json",
+      "sha256": "27870b23e0963e3446ccafea7e934168a5001f2381021a44d08a710f706fd278",
+      "blob": "c090fd02e6889b64e982f824db1a48eb624dd6e4"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/fixtures/worker-ambush-hit-run-1680.jsonl.gz",
+      "sha256": "d980971a6e727b3e9dae8158731dc40241382ba436601e6ec8745dbe497eb2d3",
+      "blob": "2e90549b3f9278283cbb315e4292592f76219dca"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/fixtures/worker-ambush-hit-run-1890.jsonl.gz",
+      "sha256": "86f39e9ed716a69139c1c4ac4c2c244a40575ffe6f2a6f3aff6d61e002efbdab",
+      "blob": "2505aa67989d152bb7f95e1998080faa22dbc1c3"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/fixtures/worker-ambush-stay-1680.jsonl.gz",
+      "sha256": "d980971a6e727b3e9dae8158731dc40241382ba436601e6ec8745dbe497eb2d3",
+      "blob": "2e90549b3f9278283cbb315e4292592f76219dca"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/fixtures/worker-ambush-stay-1755.jsonl.gz",
+      "sha256": "63c30e7f85c8a59e1b5bcb0497e5d330644aaada5e7dd82e5d4ed41b3d4329bf",
+      "blob": "6a867940472b37040e69a5d71e51fe139f91e474"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/interference.ts",
+      "sha256": "08a8fe7a7096ec2bd03401c27b6858cbf10947e355233b4bff0ca19e83cba4c3",
+      "blob": "efd3a7890bffd7dad568b31512fb88e640473657"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/native-interference.test.ts",
+      "sha256": "4ed50ba4e0b2cc8764973b0ecf5119d96e377de1a6aa08bed91ebba9198d468c",
+      "blob": "119801c86e3bf0bccf9602ad42fd404217eb842a"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/protection.test.ts",
+      "sha256": "88428ba093e188318d2af50d44f416858fdeaebabf0571c88ad4ec54f50010f2",
+      "blob": "d3bdb07431e4070697bc6ec1bf88d0ba5af422ee"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/protection.ts",
+      "sha256": "8995820e96214ae2e73f22c8f727bacb4d76f241624f1589bd3c29aa4899832d",
+      "blob": "e90def833b7e0caf9143b10f1841d1cfea1085ee"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/run.ts",
+      "sha256": "dae1c292ac709b71d5a237331a55d9b7d3281f0ee1127b1d9ad83c00affca7d4",
+      "blob": "3bb988795034afc09689dbf43437d3cef59d55b6"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/scenes.test.ts",
+      "sha256": "e831cf8b047c291d241b88e47955546d63b628088de9c66c352eea2463cbf928",
+      "blob": "0564a9d026234cff22468630c3b8cc94f203f08d"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/disruption/scenes.ts",
+      "sha256": "37f70ded7e0fdebb6ab088f78b5efdb3ccfa0d07bd752d1d5d8aae123772a29f",
+      "blob": "460b04358ba90cbb81749138702f898ffd6c8b9b"
+    },
+    {
+      "path": "src/ai/strategy/puzzles/world.ts",
+      "sha256": "6149d52dbdb745f5568b438fa5496949b9c6171e209ec43e5d00069c94c228e0",
+      "blob": "83d6c965a987b545dcafdce13b97e187c6275094"
+    }
+  ]
+}

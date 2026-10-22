@@ -1,0 +1,47 @@
+{
+  "scope": "Native constructor/derived initial step only; no AI. Original seven initial snapshot JSON bytes versus final fast candidate.",
+  "rows": [
+    {
+      "case": "transport-sunk/loaded",
+      "same": true,
+      "originalSha256": "44c242efba78cf1901618a8f983e52da2072c92d016c610bab3e2e26f496fd7e",
+      "currentSha256": "44c242efba78cf1901618a8f983e52da2072c92d016c610bab3e2e26f496fd7e"
+    },
+    {
+      "case": "transport-sunk/poor",
+      "same": true,
+      "originalSha256": "bb1b430462a06f78f6268f5ad31e791e00dca218430f4040ce5acb620c93372f",
+      "currentSha256": "bb1b430462a06f78f6268f5ad31e791e00dca218430f4040ce5acb620c93372f"
+    },
+    {
+      "case": "transport-sunk/empty",
+      "same": true,
+      "originalSha256": "2c14b3e95aeebcf8769fe2562b4dcb72d0f964bc8d4020a724f499c5fa3bc340",
+      "currentSha256": "2c14b3e95aeebcf8769fe2562b4dcb72d0f964bc8d4020a724f499c5fa3bc340"
+    },
+    {
+      "case": "worker-ambush/stay",
+      "same": true,
+      "originalSha256": "ed8dd67ca580389f1d90b0bee017353ec7a354399d27a9fbdd648982031f2cf1",
+      "currentSha256": "ed8dd67ca580389f1d90b0bee017353ec7a354399d27a9fbdd648982031f2cf1"
+    },
+    {
+      "case": "worker-ambush/hit-run",
+      "same": true,
+      "originalSha256": "ed8dd67ca580389f1d90b0bee017353ec7a354399d27a9fbdd648982031f2cf1",
+      "currentSha256": "ed8dd67ca580389f1d90b0bee017353ec7a354399d27a9fbdd648982031f2cf1"
+    },
+    {
+      "case": "small-harassment/small",
+      "same": true,
+      "originalSha256": "802933901a7bc1b2f0f7516ea9a1c48ed760413884915b3c7027a0962df0175b",
+      "currentSha256": "802933901a7bc1b2f0f7516ea9a1c48ed760413884915b3c7027a0962df0175b"
+    },
+    {
+      "case": "small-harassment/large",
+      "same": true,
+      "originalSha256": "2681933c298d83e6df9036f557154730a413914a593d951daffbac7926a19b75",
+      "currentSha256": "2681933c298d83e6df9036f557154730a413914a593d951daffbac7926a19b75"
+    }
+  ]
+}

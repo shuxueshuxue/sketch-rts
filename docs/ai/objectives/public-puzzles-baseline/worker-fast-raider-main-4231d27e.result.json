@@ -1,0 +1,314 @@
+{
+  "source": "fb2e8b44117d61ffed8a87fe1dfb5f804a81e445",
+  "main": "4231d27ee31779286acf3ebb40cf4416aef0f01f",
+  "argv": [
+    "/codegeex/jeffry/sketch-rts-naval/.node24/bin/node",
+    "--import",
+    "tsx",
+    "scripts/planner-disruption-baseline.ts",
+    "--mode",
+    "v9_knight",
+    "--case",
+    "worker-ambush/fast-hit-run",
+    "--out",
+    "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run"
+  ],
+  "exitCode": 1,
+  "error": null,
+  "summary": "/codegeex/jeffry/sketch-public-puzzles/evidence/disruption-fast-raider-fb2e8b44/run/worker-ambush-fast-hit-run/summary.json",
+  "behaviorChecksPassed": false,
+  "publicPlannerAcceptance": null,
+  "checks": {
+    "ambushOrNativeClearanceObserved": true,
+    "noDeadActorRecommands": true,
+    "noRepeatedWorkerDeathToSameEnemy": false,
+    "workerDeathsAtMostOne": false,
+    "secondWorkerProtectedBeforeDeparture": false,
+    "loopExercisedOrRaidersCleared": true,
+    "targetComplete": false
+  },
+  "milestones": {
+    "trigger": 1717,
+    "victim-loss": 4311
+  },
+  "thinkCount": 640,
+  "cycles": [
+    {
+      "trigger": {
+        "tick": 1716,
+        "targetId": "unit-planner-worker-1017",
+        "point": {
+          "x": 2273.4664078341175,
+          "y": 891.9264425008419
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor)."
+      },
+      "endedTick": 1743,
+      "outcome": "armed-alert-retreat",
+      "retreatedTick": 2056
+    },
+    {
+      "trigger": {
+        "tick": 3994,
+        "targetId": "scene-public-planner-frame-planner-worker-1",
+        "point": {
+          "x": 1281.25,
+          "y": 784
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 3994
+      },
+      "endedTick": 4311,
+      "outcome": "native-death",
+      "retreatedTick": 4606
+    },
+    {
+      "trigger": {
+        "tick": 6622,
+        "targetId": "scene-public-planner-frame-planner-worker-2",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 6622
+      },
+      "endedTick": 6942,
+      "outcome": "native-death",
+      "retreatedTick": 7237
+    },
+    {
+      "trigger": {
+        "tick": 9249,
+        "targetId": "unit-planner-worker-1006",
+        "point": {
+          "x": 1281.1830131583606,
+          "y": 784.1859054347361
+        },
+        "passengerIds": [],
+        "rule": "First living owner worker reaches the unique land corridor midpoint band (within160 of its x, in the corridor).",
+        "departureObservedTick": 9249
+      },
+      "endedTick": 9567,
+      "outcome": "native-death",
+      "retreatedTick": null
+    }
+  ],
+  "interception": {
+    "crossing": {
+      "x": 2432,
+      "y": 800
+    },
+    "workerStart": {
+      "x": 1280,
+      "y": 800
+    },
+    "retreatPoint": {
+      "x": 2432,
+      "y": 1792
+    },
+    "enemyDistance": 992,
+    "workerDistance": 1152,
+    "enemySpeed": 82,
+    "workerSpeed": 60,
+    "enemySeconds": 12.097560975609756,
+    "workerSeconds": 19.2,
+    "canArriveBeforeWorker": true,
+    "nativeAmbushContract": "Two original real attackers vs the native worker; actual kill is separately required by mechanics evidence, no invented win probability.",
+    "attackerKinds": [
+      {
+        "id": "scene-public-planner-frame-pressure-raider-1",
+        "kind": "raider",
+        "speed": 82
+      },
+      {
+        "id": "scene-public-planner-frame-pressure-raider-2",
+        "kind": "raider",
+        "speed": 82
+      }
+    ],
+    "environment": "No fog of war: unchanged native plannerView includes all units; distance never hides an enemy."
+  },
+  "speedPremise": {
+    "initialEnemySpeed": 82,
+    "actualOwnCombat": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "kind": "footman",
+        "firstTick": 2,
+        "maxSpeed": 62,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1009",
+        "kind": "lancer",
+        "firstTick": 208,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1015",
+        "kind": "lancer",
+        "firstTick": 388,
+        "maxSpeed": 68,
+        "mounted": false
+      },
+      {
+        "id": "unit-planner-lancer-1028",
+        "kind": "lancer",
+        "firstTick": 1198,
+        "maxSpeed": 68,
+        "mounted": false
+      }
+    ],
+    "producerAvailableKinds": [
+      {
+        "kind": "footman",
+        "baseSpeed": 62,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      },
+      {
+        "kind": "lancer",
+        "baseSpeed": 68,
+        "producer": "barracks",
+        "producerFirstCompleteTick": 2,
+        "note": "Producer exists; supply/technology/payment eligibility is not inferred."
+      }
+    ],
+    "allObservedOwnCombatSlower": true,
+    "allObservedOwnCombatUnmounted": true,
+    "allProducerPotentialKindsSlower": true,
+    "interpretation": "Speeds are native observations. No production, research, catalogue or AI option is disabled to enforce a result; a new faster producer/unit invalidates the corresponding premise."
+  },
+  "workerDeaths": [
+    {
+      "tick": 4311,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-1",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2210.4783456386954,
+        "y": 789.2575016204712,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.2613420984876,
+          "y": 802.814885635066,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 6942,
+      "unit": {
+        "id": "scene-public-planner-frame-planner-worker-2",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2217.163729372346,
+        "y": 789.1901457187485,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3856.0031418360218,
+          "y": 801.775396361163,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    },
+    {
+      "tick": 9567,
+      "unit": {
+        "id": "unit-planner-worker-1006",
+        "owner": "planner",
+        "kind": "worker",
+        "x": 2212.6706754526167,
+        "y": 788.1900409751963,
+        "hp": 0,
+        "maxHp": 70,
+        "attackDamage": 10,
+        "attackRange": 36,
+        "attackCooldown": 34,
+        "level": 0,
+        "speed": 60,
+        "order": {
+          "type": "move",
+          "x": 3859.56654202811,
+          "y": 798.294389497739,
+          "avoidCombat": true
+        },
+        "attackClass": "melee",
+        "orderQueue": [
+          {
+            "type": "mine",
+            "resourceId": "resource-1",
+            "phase": "toMine",
+            "timer": 0
+          }
+        ]
+      },
+      "reason": "death",
+      "countedAsLoss": true
+    }
+  ],
+  "cpuMs": 5569.675
+}
