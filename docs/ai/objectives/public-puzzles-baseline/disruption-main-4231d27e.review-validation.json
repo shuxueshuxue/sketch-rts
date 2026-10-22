@@ -1,0 +1,43 @@
+{
+  "integrationSource": "eff81fdd857b7e0b6eeb91607857fc381526668d",
+  "baselineRuntimeSource": "be318c3f5170b9ccfec22e60ce05b443e537379c",
+  "readerMainSource": "ad50656b9ef85b4f7e7b04d26fe99f1cfc48edcc",
+  "integrationRootTscExit": 0,
+  "integrationRootLogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "integrationTests": {
+    "passed": 25,
+    "failed": 0,
+    "tests": [
+      "SDK package boundaries does not import the AI package from the SDK",
+      "SDK package boundaries keeps AI claim memory on the SDK snapshot query surface",
+      "SDK package boundaries keeps AI policy entity enumeration on query helpers",
+      "SDK package boundaries keeps AI snapshot convenience helpers as SDK query delegation",
+      "SDK package boundaries keeps AI modules out of SDK and shared",
+      "SDK package boundaries does not carry banned cleanup-era naming in source or specs",
+      "SDK package boundaries keeps SDK gameplay control room-scoped instead of global-session scoped",
+      "native world-triggered interference mechanics one real warship sinks the loaded transport",
+      "native world-triggered interference mechanics one real warship sinks the empty transport",
+      "native world-triggered interference mechanics two real footmen kill a worker after its actual midpoint crossing",
+      "native world-triggered interference mechanics small raid is issued only after actual damage in the original island camp",
+      "native world-triggered interference mechanics far raiders can reach the real corridor before a newly departing worker",
+      "native world-triggered interference mechanics real retreat and return commands produce at least3 native ambush cycles without spawning victims",
+      "native world-triggered interference mechanics records native owner kills of the observed attackers as positive death evidence",
+      "joins original native protection evidence worker-ambush-stay/1680",
+      "joins original native protection evidence worker-ambush-stay/1755",
+      "joins original native protection evidence worker-ambush-hit-run/1680",
+      "joins original native protection evidence worker-ambush-hit-run/1890",
+      "disruption scene transport-sunk/loaded constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene transport-sunk/poor constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene transport-sunk/empty constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene worker-ambush/stay constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene worker-ambush/hit-run constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene small-harassment/small constructs the same native cold frame with real opponents and connected targets",
+      "disruption scene small-harassment/large constructs the same native cold frame with real opponents and connected targets"
+    ]
+  },
+  "finalReviewSdk": {
+    "passed": 7,
+    "failed": 0
+  },
+  "scope": "18 native/fixture contracts plus7 SDK boundary checks; SDK/sim used by mechanical contracts. Repeated final reviewSDK7 overlaps, not extra denominator. No whole src suite, no new risk model, no new main baseline AI game."
+}

@@ -1,0 +1,2650 @@
+{
+  "puzzle": "transport-sunk/poor",
+  "thinkCount": 640,
+  "maxTicks": 9600,
+  "initialSnapshotSha256": "bb1b430462a06f78f6268f5ad31e791e00dca218430f4040ce5acb620c93372f",
+  "initialTick": 1,
+  "triggerRule": "Original transport carries an original soldier and has moved at least128 from its original near-embark pose.",
+  "responseRule": "One initial enemy warship attacks that real hull, then holds at its observed sinking position; no spawn/delete/teleport or tick trigger.",
+  "passed": false,
+  "checks": {
+    "interferenceTriggered": false,
+    "originalHullSunk": false,
+    "correctPayloadLoss": false,
+    "noDeadActorRecommands": true,
+    "noUnsafeReplacementHullDamage": true,
+    "noSecondHullLostToSameEnemy": true,
+    "replacementOrExplicitAbandonment": false,
+    "targetOrExplicitAbandonment": false
+  },
+  "milestones": {},
+  "interception": null,
+  "fogOfWar": false,
+  "cycles": [],
+  "cycleCoverage": null,
+  "departureEvidence": [],
+  "physicalEntrances": [],
+  "workerDeaths": [],
+  "newHullDamagedBySameLiveCause": [],
+  "trigger": null,
+  "confirmedLoss": null,
+  "firstPostLossThink": null,
+  "repeatedHullLosses": [],
+  "repeatedWorkerLosses": [],
+  "oldPassengerLosses": [],
+  "staleProposals": [],
+  "mainSwaps": [
+    {
+      "tick": 124,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 141,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 154,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 163,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 377,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 377,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 377,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 377,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 409,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 409,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 409,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 409,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 852,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 852,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 852,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 852,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 877,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 878,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 878,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 893,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1052,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1052,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1052,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1052,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1084,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1086,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1090,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1127,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1159,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1159,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1159,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1159,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1192,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1195,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1196,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1206,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1274,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1274,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1274,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1274,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1294,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1296,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1299,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1304,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1342,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1342,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1342,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1342,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1369,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1370,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1373,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1378,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1416,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1416,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1416,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1416,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1444,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1446,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1449,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1453,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1489,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1489,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1489,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1489,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1519,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1519,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 1520,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1527,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1873,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 1873,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 1873,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 1873,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 1894,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 1894,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 1894,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 1898,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 2097,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 2097,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 2097,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 2097,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 2119,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 2119,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 2119,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 2121,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 2474,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 2474,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 2474,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 2474,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 2494,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "aboard"
+    },
+    {
+      "tick": 2495,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 2495,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 2499,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 2541,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 2541,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 2541,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 2541,
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "region": "home-land"
+    },
+    {
+      "tick": 2570,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 2571,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 2573,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 2868,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 2868,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 2868,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 2899,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 2901,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 2905,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 2955,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 2955,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 2955,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 2976,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 2978,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 2981,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3098,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3098,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3098,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3124,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3125,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3126,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 3160,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3160,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3160,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3184,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3184,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 3184,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3220,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3220,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3220,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3244,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3244,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 3244,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3334,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3334,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3334,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3364,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3366,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3369,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 3421,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3421,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3421,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3454,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3456,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3466,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 3732,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 3732,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 3732,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 3758,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 3759,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 3765,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4075,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4075,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4075,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4103,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4104,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4105,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4144,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4144,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4144,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4177,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4178,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4179,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4219,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4219,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4219,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4249,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4251,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4256,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4302,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4302,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4302,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4328,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4329,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4333,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4417,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4417,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4417,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4444,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4445,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4447,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4684,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4684,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4684,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4714,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4714,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4714,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4744,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4744,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4744,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4774,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4774,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4774,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4813,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4813,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4813,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4834,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4834,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4834,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4870,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4870,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4870,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4894,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4894,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4894,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4942,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4942,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4942,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 4969,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 4969,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 4969,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 4999,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 4999,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 4999,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5029,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5029,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5029,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5118,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5118,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5118,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5149,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5153,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5153,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5284,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5284,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5284,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5314,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5314,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5316,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5344,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5344,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5344,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5374,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5376,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5385,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5429,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5429,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5429,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5449,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5450,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5453,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5504,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5504,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5504,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5526,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5529,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5530,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5579,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5579,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5579,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5601,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5604,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5607,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5654,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5654,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5654,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5674,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5675,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5677,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5744,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5744,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5744,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5767,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5768,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5772,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5819,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5819,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5819,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5842,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5846,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5846,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5894,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5894,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5894,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5917,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5919,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5922,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 5969,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 5969,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 5969,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 5989,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 5990,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 5991,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6044,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6044,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6044,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6066,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6068,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6071,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6119,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6119,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6119,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6143,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6143,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6146,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6194,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6194,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6194,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6216,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6218,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6221,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6269,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6269,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6269,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6293,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6293,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6296,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6344,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6344,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6344,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6366,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6370,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6371,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6419,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6419,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6419,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6441,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6444,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6446,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6494,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6494,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6494,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6514,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6516,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6518,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 6584,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 6584,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 6584,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 6607,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 6608,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 6611,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7075,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7075,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7075,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7102,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7102,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7103,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7478,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7478,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7478,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7507,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7530,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7532,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7564,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7564,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7564,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7603,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7608,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7614,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7654,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7654,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7654,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7690,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7695,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7702,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7744,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7744,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7744,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7779,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7787,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7788,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7819,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7819,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7819,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7857,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7862,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7874,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7909,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7909,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7909,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 7945,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 7950,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 7957,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 7999,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 7999,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 7999,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8034,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8042,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8042,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8074,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8074,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8074,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8112,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8117,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8129,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8164,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8164,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8164,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8200,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8205,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8212,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8254,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8254,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8254,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8289,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8297,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8297,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8329,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8329,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8329,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8367,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8372,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8384,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8419,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8419,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8419,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8455,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8460,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8467,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8509,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8509,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8509,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8544,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8552,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8552,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8584,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8584,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8584,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8622,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8627,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8639,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8674,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8674,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8674,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8710,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8716,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8722,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8764,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8764,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8764,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8799,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8807,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8807,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8839,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8839,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8839,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8877,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8882,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 8894,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8929,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 8929,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 8929,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 8965,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 8971,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 8977,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9019,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9019,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9019,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9054,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9062,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9062,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9094,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9094,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9094,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9125,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9132,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9142,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9184,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9184,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9184,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9222,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9227,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9233,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9274,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9274,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9274,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9317,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9318,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9329,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9364,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9364,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9364,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9402,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9404,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9412,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9454,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9454,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9454,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9490,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    },
+    {
+      "tick": 9497,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9502,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9544,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "home-land"
+    },
+    {
+      "tick": 9544,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "home-land"
+    },
+    {
+      "tick": 9544,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "home-land"
+    },
+    {
+      "tick": 9587,
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "region": "aboard"
+    },
+    {
+      "tick": 9587,
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "region": "aboard"
+    },
+    {
+      "tick": 9599,
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "region": "aboard"
+    }
+  ],
+  "createdTransportIds": [],
+  "createdSoldierIds": [
+    "unit-planner-lancer-1014",
+    "unit-planner-lancer-1024",
+    "unit-planner-lancer-1094",
+    "unit-planner-lancer-1170",
+    "unit-planner-lancer-1189",
+    "unit-planner-lancer-1246"
+  ],
+  "localDefenderIdsWithActualDamage": [],
+  "abandonmentEvidence": {
+    "allocation": [],
+    "naval": []
+  },
+  "deaths": [
+    {
+      "native": {
+        "tick": 6528,
+        "unit": {
+          "id": "unit-planner-warship-1754",
+          "owner": "planner",
+          "kind": "warship",
+          "x": 1807.2836769501166,
+          "y": 1275.2777975635966,
+          "hp": -37,
+          "maxHp": 400,
+          "attackDamage": 0,
+          "attackRange": 0,
+          "attackCooldown": 40,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 1552,
+            "y": 1360,
+            "avoidCombat": true
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "reason": "death",
+        "countedAsLoss": true
+      },
+      "actualMatchingKill": {
+        "tick": 6528,
+        "source": {
+          "id": "scene-public-planner-frame-pressure-warship-1",
+          "owner": "pressure",
+          "kind": "warship",
+          "x": 2016,
+          "y": 1088,
+          "entityType": "unit",
+          "present": true
+        },
+        "unit": {
+          "id": "unit-planner-warship-1754",
+          "owner": "planner",
+          "kind": "warship",
+          "x": 1807.2836769501166,
+          "y": 1275.2777975635966,
+          "hp": -37,
+          "maxHp": 400,
+          "attackDamage": 0,
+          "attackRange": 0,
+          "attackCooldown": 40,
+          "level": 0,
+          "speed": 60,
+          "order": {
+            "type": "move",
+            "x": 1552,
+            "y": 1360,
+            "avoidCombat": true
+          },
+          "attackClass": "melee",
+          "orderQueue": []
+        },
+        "cause": "damage"
+      },
+      "assignments": [],
+      "note": "Only original native source and original authority at observation time; empty attribution is not invented."
+    }
+  ],
+  "sdkCommands": 453,
+  "opponentSdkCommands": 0,
+  "opponentProposals": 0,
+  "scenarioStatus": "trigger-not-reached-no-postloss-verdict",
+  "elapsedMs": 12377.023,
+  "cpuMs": 20807.121,
+  "final": {
+    "tick": 9601,
+    "ownerGold": 639,
+    "originalArmy": [
+      {
+        "id": "scene-public-planner-frame-planner-footman-1",
+        "present": true,
+        "hp": 167,
+        "x": 1680.7693573552338,
+        "y": 668.4515417212257
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-2",
+        "present": true,
+        "hp": 167,
+        "x": 1648.1478907101196,
+        "y": 687.1020085765539
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-3",
+        "present": true,
+        "hp": 167,
+        "x": 1647.1793369667612,
+        "y": 725.2996774013162
+      },
+      {
+        "id": "scene-public-planner-frame-planner-footman-4",
+        "present": true,
+        "hp": 167,
+        "x": 779.1303516123821,
+        "y": 769.5422637634198
+      }
+    ],
+    "interceptors": [
+      {
+        "id": "scene-public-planner-frame-pressure-warship-1",
+        "owner": "pressure",
+        "kind": "warship",
+        "x": 2016,
+        "y": 1088,
+        "homeX": 2016,
+        "homeY": 1088,
+        "hp": 328,
+        "maxHp": 400,
+        "speed": 60,
+        "attackDamage": 20,
+        "attackRange": 312,
+        "attackClass": "ranged",
+        "attackCooldown": 40,
+        "cooldown": 0,
+        "radius": 33.6,
+        "carryingGold": 0,
+        "kills": 1,
+        "xp": 180,
+        "level": 0,
+        "effects": [],
+        "order": {
+          "type": "hold",
+          "x": 2016,
+          "y": 1088
+        },
+        "orderQueue": [],
+        "gearMass": 0,
+        "holdMass": 160,
+        "shipParts": {
+          "rigging": 123,
+          "rudder": 76,
+          "cabin": 160
+        },
+        "fittings": [
+          {
+            "id": "mounted-scene-public-planner-frame-pressure-warship-1",
+            "x": 44.88,
+            "y": 0,
+            "radius": 15.84,
+            "bearing": 0,
+            "halfArc": 0.5235987755982988,
+            "accepts": [
+              "shipCannon",
+              "shipMortar",
+              "flameProjector"
+            ]
+          }
+        ],
+        "bodyRadius": 33.6,
+        "shipSizeVersion": 1,
+        "sailing": {
+          "heading": 2.1684131553516885,
+          "speed": 0,
+          "load": 160,
+          "balance": 0,
+          "sail": {
+            "angle": 0,
+            "billow": 0,
+            "set": 0,
+            "mode": "idle"
+          },
+          "velocityX": 0,
+          "velocityY": 0,
+          "hullHitTick": 6307
+        }
+      }
+    ],
+    "guardsAlive": [
+      "scene-public-planner-frame-neutral-murlocPeon-1",
+      "scene-public-planner-frame-neutral-murlocPeon-2"
+    ]
+  },
+  "scope": "Native main AI behavior baseline only. Physical behavior and missing formal fact/requote/attribution evidence remain distinct; a never-triggered scene does not prove interruption handling failed."
+}
