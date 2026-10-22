@@ -147,14 +147,22 @@ export function withGoalPlanningMemory<T>(memory: AiPolicyMemory, run: () => T):
     if (memory.strategyAllocation && !references.priorIdentitiesRestored) {
       const { goalReferences, ...records } = memory.strategyAllocation;
       memory.strategyAllocation = { ...restoreGoalPlanningIdentities(records), ...(goalReferences ? { goalReferences } : {}) };
-      // Published authority versions are immutable. Map their original
-      // declaration identity on restore without changing the stored version.
-      const aliases = references.priorDeclarations ??= {};
-      for (const [id, entry] of Object.entries(goalReferences?.entries ?? {})) {
-        const value = entry.content;
-        if (entry.namespace === 'declaration' && value && typeof value === 'object' && 'priorId' in value
-          && typeof value.priorId === 'string') aliases[id] = restoreGoalPlanningIdentities(value.priorId);
-      }
+    }
+    // During the staged search replacement, older owner memory may already
+    // contain this alias table. Materialize it into the authority record once
+    // so an admitted intent is also readable outside a planner scope.
+    for (const [id, priorId] of Object.entries(references.priorDeclarations ?? {})) {
+      const entry = memory.strategyAllocation?.goalReferences?.entries[id];
+      const value = entry?.content;
+      if (entry?.namespace === 'declaration' && value && typeof value === 'object' && !Array.isArray(value)
+        && 'priorId' in value) entry.content = { ...value, priorId };
+    }
+    delete references.priorDeclarations;
+    if (!references.priorIdentitiesRestored) for (const entry of Object.values(memory.strategyAllocation?.goalReferences?.entries ?? {})) {
+      const value = entry.content;
+      if (entry.namespace === 'declaration' && value && typeof value === 'object' && !Array.isArray(value)
+        && 'priorId' in value && typeof value.priorId === 'string')
+        entry.content = { ...value, priorId: restoreGoalPlanningIdentities(value.priorId) };
     }
     references.priorIdentitiesRestored = true;
     let result: T | undefined;
@@ -167,9 +175,7 @@ export function withGoalPlanningMemory<T>(memory: AiPolicyMemory, run: () => T):
         // while still retaining their full bodies between real owner thinks.
         memory.goalPlanning = JSON.parse(JSON.stringify(memory.goalPlanning));
       }
-      if (references.priorDeclarations) references.priorDeclarations = Object.fromEntries(Object.entries(references.priorDeclarations)
-        .filter(([id]) => !!memory.strategyAllocation?.goalReferences?.entries[id]));
-      try { collectGoalPlanningReferences(references, [memory.goalPlanning, memory.strategyAllocation, references.priorDeclarations]); }
+      try { collectGoalPlanningReferences(references, [memory.goalPlanning, memory.strategyAllocation]); }
       finally { clearGoalDeclarationRuntime(references); restoredObservations.delete(references); }
     }
   });

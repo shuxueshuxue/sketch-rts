@@ -121,6 +121,10 @@ export type AiPolicyMemory = {
   /** Opt-in declarative search evidence only; not command/resource authority. */
   goalPlanning?: import('./strategy/goal-planner-input').GoalPlannerRuntimeMemory;
   goalPlanningReferences?: import('./strategy/goal-planning-references').GoalPlanningReferences;
+  goalSearch?: import('./strategy/goal-search-format').GoalSearchMemory;
+  /** Native publication/service state survives removal of old search data.
+   * Its reachable definitions remain charged until the source-key migration. */
+  goalPublications?: import('./strategy/goal-search-migration').GoalPublicationMemory;
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
     objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;
