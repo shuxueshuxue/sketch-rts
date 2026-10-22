@@ -1,0 +1,85 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "sharedBase": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "readyNodeOccurrencesByKind": {
+        "wait-income": 49,
+        "assemble": 3,
+        "transport-worker": 182,
+        "position-transport": 25,
+        "transport-force": 40
+      },
+      "firstReadyByKind": {
+        "wait-income": {
+          "think": 8,
+          "tick": 120
+        },
+        "assemble": {
+          "think": 10,
+          "tick": 150
+        },
+        "transport-worker": {
+          "think": 34,
+          "tick": 510
+        },
+        "position-transport": {
+          "think": 46,
+          "tick": 690
+        },
+        "transport-force": {
+          "think": 361,
+          "tick": 5415
+        }
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "readyNodeOccurrencesByKind": {
+        "wait-income": 89,
+        "assemble": 253,
+        "transport-worker": 22,
+        "position-transport": 10,
+        "transport-force": 1,
+        "clear-camp": 1,
+        "build": 64,
+        "hold-position": 241
+      },
+      "firstReadyByKind": {
+        "wait-income": {
+          "think": 8,
+          "tick": 120
+        },
+        "assemble": {
+          "think": 9,
+          "tick": 135
+        },
+        "transport-worker": {
+          "think": 15,
+          "tick": 225
+        },
+        "position-transport": {
+          "think": 26,
+          "tick": 390
+        },
+        "transport-force": {
+          "think": 175,
+          "tick": 2625
+        },
+        "clear-camp": {
+          "think": 248,
+          "tick": 3720
+        },
+        "build": {
+          "think": 261,
+          "tick": 3915
+        },
+        "hold-position": {
+          "think": 313,
+          "tick": 4695
+        }
+      }
+    }
+  ]
+}

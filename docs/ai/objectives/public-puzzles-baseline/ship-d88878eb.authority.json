@@ -1,0 +1,80 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "sharedBase": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "semantics": "Actual retained runtime memory only. Bytes use native UTF-8 JSON.stringify, matching the fixed262144B bound; missing failed attempts are not reconstructed. No imports/calls into planner or simulation.",
+  "reporterSha256": "91a4586b217ba751906614945c7b5307b3c068c010150594796c8845ba0a95a5",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 376,
+        "tick": 5640,
+        "available": true,
+        "authorityBytes": 46849,
+        "executionCount": 1,
+        "terminalCount": 0,
+        "executionStatuses": {
+          "goal.transport-force:active": 1
+        },
+        "eventCount": 28,
+        "currentMethodActionCount": 1,
+        "fieldBytes": {
+          "executions": 1002,
+          "events": 13393,
+          "methods": 1503,
+          "objectives": 871,
+          "leases": 2110,
+          "assignments": 4563,
+          "budgets": 489,
+          "issuedOrders": 1855,
+          "issuedCommands": 1874
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 4,
+      "inputSha256": "bb3b58244b24f94ab9b127d0382323222ea174940963dc1f2caae3506ee9164d"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 507,
+        "tick": 7605,
+        "available": true,
+        "authorityBytes": 76370,
+        "executionCount": 6,
+        "terminalCount": 1,
+        "executionStatuses": {
+          "goal.build:complete": 1,
+          "goal.hold-position:active": 1,
+          "goal.wait-income:active": 4
+        },
+        "eventCount": 40,
+        "currentMethodActionCount": 2,
+        "fieldBytes": {
+          "executions": 4432,
+          "events": 20299,
+          "methods": 2138,
+          "objectives": 1400,
+          "leases": 1733,
+          "assignments": 3568,
+          "budgets": 660,
+          "issuedOrders": 1524,
+          "issuedCommands": 1221
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 8,
+      "inputSha256": "7824e9a492bc94609f2ab43dc0d4a0447a9c4d42ba0f0099054c3deb240b3cb8"
+    }
+  ]
+}

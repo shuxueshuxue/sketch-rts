@@ -1,0 +1,361 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "sharedBase": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "mode": "normal-collector-controlled-owner-public-execution",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 234,
+      "firstReadyTick": 120,
+      "firstFormalCommandTick": 150,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 9,
+        "goal.transport-worker": 213,
+        "goal.position-transport": 3,
+        "goal.transport-force": 9
+      },
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "v6Economy": 14
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 261
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 224
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 75
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "search-pending",
+          "count": 217
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "waiting-facts",
+          "count": 63
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": false,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "farm-complete": 3085,
+          "transport-at-embark": 3330,
+          "worker-on-island": 4202,
+          "shipyard-complete": 4433,
+          "army-boarded": 5418,
+          "army-on-island": 6223,
+          "landing-near": 6223
+        },
+        "losses": [],
+        "final": {
+          "gold": 699,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 2,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 50,
+      "elapsedMs": 5543383.364,
+      "cpuMs": 5926701.009,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "search-pending",
+          "actions": [
+            "assemble",
+            "clear-camp",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [
+            {
+              "code": "goal-search-pinned-capacity",
+              "factIds": [
+                "ConquerIsland:planner:resource-1",
+                "ExpandLand:planner:resource-1"
+              ],
+              "values": {
+                "bytes": 284352,
+                "limitBytes": 262144
+              }
+            }
+          ],
+          "capacityPressure": [
+            {
+              "kind": "search",
+              "thinkSequence": 560,
+              "bytes": 284352,
+              "limitBytes": 262144,
+              "entries": 2,
+              "limitEntries": 9007199254740991,
+              "planIds": [
+                "ConquerIsland:planner:resource-1",
+                "ExpandLand:planner:resource-1"
+              ],
+              "overflowCount": 96,
+              "requestCount": 2
+            }
+          ]
+        },
+        {
+          "goalId": "ExpandLand:planner:resource-1",
+          "status": "search-pending",
+          "actions": [
+            "wait-income",
+            "assemble",
+            "clear-camp",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [
+            {
+              "code": "goal-plan-net-nonpositive",
+              "factIds": [],
+              "values": {
+                "valueGold": -0.9572413586657494
+              }
+            },
+            {
+              "code": "goal-search-pinned-capacity",
+              "factIds": [
+                "ConquerIsland:planner:resource-1",
+                "ExpandLand:planner:resource-1"
+              ],
+              "values": {
+                "bytes": 284352,
+                "limitBytes": 262144
+              }
+            }
+          ],
+          "capacityPressure": [
+            {
+              "kind": "search",
+              "thinkSequence": 560,
+              "bytes": 284352,
+              "limitBytes": 262144,
+              "entries": 2,
+              "limitEntries": 9007199254740991,
+              "planIds": [
+                "ConquerIsland:planner:resource-1",
+                "ExpandLand:planner:resource-1"
+              ],
+              "overflowCount": 96,
+              "requestCount": 2
+            }
+          ]
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":false,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"farm-complete\":3085,\"transport-at-embark\":3330,\"worker-on-island\":4202,\"shipyard-complete\":4433,\"army-bo"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 61,
+      "firstReadyTick": 120,
+      "firstFormalCommandTick": 135,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 16,
+        "goal.transport-worker": 23,
+        "goal.position-transport": 1,
+        "goal.transport-force": 11,
+        "goal.clear-camp": 5,
+        "goal.build": 1,
+        "goal.hold-position": 4
+      },
+      "incumbentExecutors": {
+        "economy": 23,
+        "miningWorkforce": 10,
+        "v6Economy": 21,
+        "constructionRecovery": 1,
+        "v6Backline": 23
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 329
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 98
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 133
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "ready",
+          "count": 286
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "search-pending",
+          "count": 92
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "waiting-facts",
+          "count": 127
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "worker-on-island": 837,
+          "army-boarded": 2632,
+          "farm-complete": 3164,
+          "army-on-island": 3260,
+          "landing-near": 3260,
+          "target-attacked": 3789,
+          "camp-cleared": 3902,
+          "hall-complete": 4680,
+          "footmen-trained": 6327
+        },
+        "losses": [
+          {
+            "tick": 3863,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 3902,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 163,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 6,
+            "barracks": 2,
+            "defenseTower": 2,
+            "sanctum": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 117,
+      "elapsedMs": 3045971.862,
+      "cpuMs": 3263656.915,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        },
+        {
+          "goalId": "ExpandLand:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":true,\"campCleared\":true,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"transport-at-embark\":1,\"worker-on-island\":837,\"army-boarded\":2632,\"farm-complete\":3164,\"army-on-island\":32"
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "executionsAccepted": 0,
+    "physicalPassed": 0,
+    "withFormalCommands": 2,
+    "observedNativeThinks": 1120,
+    "formalCommandCount": 295
+  },
+  "testCounts": {
+    "numTotalTests": 12,
+    "numPassedTests": 8,
+    "numFailedTests": 2,
+    "numPendingTests": 2,
+    "numTodoTests": 0,
+    "numTotalTestSuites": 2,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 2,
+    "numPendingTestSuites": 0
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "production": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "scope": "26 only: JSON/CRC/hash and fixed native component lookup. No AI, FactReader, routes, SDK invocation or simulation. This is not a 23/37 independent audit.",
+  "input": {
+    "gzipSha256": "9b657754cf83276230cb649f7a423da30fbddffd2e883473893df13a3b2cd78f",
+    "plainSha256": "a19922cc60ef542372c204a2e2c8025cebc11a4d0bef17fa7f201f2a46ad76e0"
+  },
+  "tick": 8400,
+  "observedThinks": 560,
+  "sdkEvents": 261,
+  "physicalChecks": {
+    "islandHallComplete": false,
+    "campCleared": false,
+    "armyTransported": true,
+    "safeWorkerSequence": false
+  },
+  "stepOwnership": false,
+  "allTownHallBuildApplications": [],
+  "target": {
+    "id": "resource-1",
+    "kind": "goldMine",
+    "x": 2976,
+    "y": 896,
+    "amount": 40000,
+    "startAmount": 40000,
+    "harvestCooldownRemaining": 0,
+    "landId": "land:2"
+  },
+  "originalFootmen": [
+    {
+      "id": "scene-public-planner-frame-planner-footman-1",
+      "hp": 167,
+      "x": 2340,
+      "y": 860,
+      "order": {
+        "type": "idle"
+      },
+      "landId": "land:2"
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-2",
+      "hp": 167,
+      "x": 2244,
+      "y": 972,
+      "order": {
+        "type": "idle"
+      },
+      "landId": "land:2"
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-3",
+      "hp": 167,
+      "x": 2364,
+      "y": 892,
+      "order": {
+        "type": "idle"
+      },
+      "landId": "land:2"
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-4",
+      "hp": 167,
+      "x": 2316,
+      "y": 828,
+      "order": {
+        "type": "idle"
+      },
+      "landId": "land:2"
+    }
+  ],
+  "originalCamp": [
+    {
+      "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+      "hp": 80,
+      "order": {
+        "type": "idle"
+      },
+      "x": 3191,
+      "y": 960
+    },
+    {
+      "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+      "hp": 80,
+      "order": {
+        "type": "idle"
+      },
+      "x": 3081,
+      "y": 960
+    }
+  ],
+  "budgets": {
+    "budget:goal-ref:spend:v4": {
+      "id": "budget:goal-ref:spend:v4",
+      "spendId": "goal-ref:spend:v4",
+      "objectiveId": "ConquerIsland:planner:resource-1",
+      "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+      "action": {
+        "actionId": "goal-ref:action:v39",
+        "generation": 11
+      },
+      "amountGold": 400,
+      "paidGold": 0,
+      "state": "reserved",
+      "sinceTick": 120,
+      "plannedGold": 400,
+      "expectedPaymentTick": 8844,
+      "releasedTick": null,
+      "includedUtilityTermCodes": [
+        "remaining-plan-actions"
+      ],
+      "externalReservationIds": [
+        "naval:islandHall"
+      ]
+    }
+  },
+  "finalPlans": [
+    {
+      "goalId": "ConquerIsland:planner:resource-1",
+      "status": "search-pending",
+      "reasons": [
+        {
+          "code": "goal-search-pinned-capacity",
+          "factIds": [
+            "ConquerIsland:planner:resource-1",
+            "ExpandLand:planner:resource-1"
+          ],
+          "values": {
+            "bytes": 284352,
+            "limitBytes": 262144
+          }
+        }
+      ],
+      "search": {
+        "expansions": 357,
+        "depth": 7,
+        "work": 714,
+        "limitReason": null
+      }
+    },
+    {
+      "goalId": "ExpandLand:planner:resource-1",
+      "status": "search-pending",
+      "reasons": [
+        {
+          "code": "goal-plan-net-nonpositive",
+          "factIds": [],
+          "values": {
+            "valueGold": -0.9572413586657494
+          }
+        },
+        {
+          "code": "goal-search-pinned-capacity",
+          "factIds": [
+            "ConquerIsland:planner:resource-1",
+            "ExpandLand:planner:resource-1"
+          ],
+          "values": {
+            "bytes": 284352,
+            "limitBytes": 262144
+          }
+        }
+      ],
+      "search": {
+        "expansions": 1179,
+        "depth": 7,
+        "work": 2358,
+        "limitReason": null
+      }
+    }
+  ],
+  "delivery": {
+    "23": "SESSION_DIRECT_NOT_LIVE: far final handoff not delivered",
+    "32": "delivered",
+    "37": "SESSION_DIRECT_NOT_LIVE: far final handoff not delivered"
+  }
+}

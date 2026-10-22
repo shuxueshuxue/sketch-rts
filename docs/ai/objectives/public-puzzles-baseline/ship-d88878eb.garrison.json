@@ -1,0 +1,833 @@
+{
+  "source": "8bc0cd4aeb1a8c871a015bdb7c418f382c528a24",
+  "sharedBase": "d88878eb79ff7fcc0f2dfaf99ec1ba7452a95bff",
+  "scope": "Separate original post-hall observations only; no added assertion, AI, fact requests or simulation. Nearby combat units use explicit300 distance for reporting, not a native garrison acceptance radius. Actual native garrison fact states/availableTick are retained.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": null,
+      "firstPostHallHoldCommand": null,
+      "firstPostHallHoldExecution": null,
+      "firstPostHallGarrisonMetAtCurrentTick": null,
+      "garrisonFactOccurrencesAfterHall": 0,
+      "framesWithPostHallHoldExecution": 0,
+      "lastPostHallObservation": {}
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "firstCompleteHallObserved": {
+        "think": 313,
+        "tick": 4695,
+        "halls": [
+          {
+            "id": "building-planner-townHall-1090",
+            "owner": "planner",
+            "kind": "townHall",
+            "x": 2800,
+            "y": 720,
+            "hp": 900,
+            "maxHp": 900,
+            "radius": 48,
+            "complete": true,
+            "buildProgress": 560,
+            "buildTime": 560,
+            "attackDamage": 0,
+            "attackRange": 0,
+            "attackCooldown": 1,
+            "cooldown": 0,
+            "rallyX": 2890,
+            "rallyY": 780,
+            "queue": [],
+            "researchQueue": []
+          }
+        ]
+      },
+      "firstPostHallHoldCommand": {
+        "think": 313,
+        "tick": 4695,
+        "holdExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.hold-position",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v87",
+              "actionKind": "hold-position",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v86"
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 3049.3234297808945,
+                "y": 964.1731753099954
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "holding-position",
+            "sinceTick": 4695,
+            "lastProgressTick": 4695,
+            "state": {}
+          }
+        ],
+        "garrisonFacts": [
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12015
+                }
+              },
+              "state": "unmet",
+              "observedTick": 4695,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",\"formal-garrison-hold-required\"]",
+              "evidence": [],
+              "entityIds": [],
+              "reason": {
+                "code": "formal-garrison-hold-required",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}"
+                ],
+                "values": {}
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12015}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":3.5448275862068965}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":7095}\\\"]]\"]"
+            ]
+          },
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12840
+                }
+              },
+              "state": "unmet",
+              "observedTick": 4695,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"formal-garrison-hold-required\"]",
+              "evidence": [],
+              "entityIds": [],
+              "reason": {
+                "code": "formal-garrison-hold-required",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}"
+                ],
+                "values": {}
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12840}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12840,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1025\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4.435045359972992}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":7095}\\\"]]\"]"
+            ]
+          }
+        ],
+        "holdAdmissions": [
+          {
+            "commandId": "planner:strategy-command:4695:313:1",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:2",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-2"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:3",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-3"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:4",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-4"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          }
+        ],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3049.3234297808945,
+            "y": 964.1731753099954,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 100.11946457448283
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3077.8247996669706,
+            "y": 941.3714081011251,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 111.47580230838236
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3041.3354477573776,
+            "y": 929.0705807735231,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 73.22830085667105
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 79,
+            "x": 3051.352444680128,
+            "y": 894.4922671557423,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 75.3675273416967
+          }
+        ]
+      },
+      "firstPostHallHoldExecution": {
+        "think": 313,
+        "tick": 4695,
+        "holdExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.hold-position",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v87",
+              "actionKind": "hold-position",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v86"
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 3049.3234297808945,
+                "y": 964.1731753099954
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "holding-position",
+            "sinceTick": 4695,
+            "lastProgressTick": 4695,
+            "state": {}
+          }
+        ],
+        "garrisonFacts": [
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12015
+                }
+              },
+              "state": "unmet",
+              "observedTick": 4695,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",\"formal-garrison-hold-required\"]",
+              "evidence": [],
+              "entityIds": [],
+              "reason": {
+                "code": "formal-garrison-hold-required",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}"
+                ],
+                "values": {}
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12015}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":3.5448275862068965}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":7095}\\\"]]\"]"
+            ]
+          },
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12840
+                }
+              },
+              "state": "unmet",
+              "observedTick": 4695,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"formal-garrison-hold-required\"]",
+              "evidence": [],
+              "entityIds": [],
+              "reason": {
+                "code": "formal-garrison-hold-required",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}"
+                ],
+                "values": {}
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12840}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12840,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1025\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4.435045359972992}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":7095}\\\"]]\"]"
+            ]
+          }
+        ],
+        "holdAdmissions": [
+          {
+            "commandId": "planner:strategy-command:4695:313:1",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:2",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-2"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:3",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-3"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          },
+          {
+            "commandId": "planner:strategy-command:4695:313:4",
+            "source": "executor",
+            "executor": "goal.hold-position",
+            "action": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "allocationRevision": 313,
+            "purpose": "task",
+            "command": {
+              "type": "holdPosition",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-4"
+              ]
+            },
+            "status": "accepted",
+            "admittedTick": 4695,
+            "queuedTick": null
+          }
+        ],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3049.3234297808945,
+            "y": 964.1731753099954,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 100.11946457448283
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3077.8247996669706,
+            "y": 941.3714081011251,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 111.47580230838236
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3041.3354477573776,
+            "y": 929.0705807735231,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 73.22830085667105
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 79,
+            "x": 3051.352444680128,
+            "y": 894.4922671557423,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 75.3675273416967
+          }
+        ]
+      },
+      "firstPostHallGarrisonMetAtCurrentTick": null,
+      "garrisonFactOccurrencesAfterHall": 496,
+      "framesWithPostHallHoldExecution": 248,
+      "lastPostHallObservation": {
+        "think": 560,
+        "tick": 8400,
+        "holdExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v88",
+              "generation": 19
+            },
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "executor": "goal.hold-position",
+            "intent": {
+              "kind": "goal-action",
+              "goalId": "ConquerIsland:planner:resource-1",
+              "declarationId": "goal-ref:declaration:v87",
+              "actionKind": "hold-position",
+              "parameters": {},
+              "outputs": [],
+              "parametersRef": "goal-ref:parameters:v86"
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 3049.3234297808945,
+                "y": 964.1731753099954
+              }
+            },
+            "dependsOn": [],
+            "completionEffects": [],
+            "status": "active",
+            "phase": "holding-position",
+            "sinceTick": 4695,
+            "lastProgressTick": 4695,
+            "state": {
+              "goalProtectionCheckedTick": 8400,
+              "goalProtectionCheckedThrough": 10800,
+              "goalProtectionLeaseThrough": 12015,
+              "goalProtectionMemberIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ],
+              "goalHoldingSince": 4710
+            }
+          }
+        ],
+        "garrisonFacts": [
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12015
+                }
+              },
+              "state": "unmet",
+              "observedTick": 8400,
+              "availableTick": 12015,
+              "quantity": 4.451380993602054,
+              "entityIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ],
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",{\"actionId\":\"goal-ref:action:v88\",\"generation\":19},4710,12015,[[\"scene-public-planner-frame-planner-footman-1\",145,3049.3234297808945,964.1731753099954],[\"scene-public-planner-frame-planner-footman-2\",145,3077.8247996669706,941.3714081011251],[\"scene-public-planner-frame-planner-footman-3\",145,3041.3354477573776,929.0705807735231],[\"scene-public-planner-frame-planner-footman-4\",79,3051.352444680128,894.4922671557423]],4.451380993602054,0,\"[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",[\\\"resource-1\\\",[[\\\"building-planner-townHall-1090\\\",\\\"townHall\\\",2800,720,true,560,560,[],[],{\\\"x\\\":2890,\\\"y\\\":780},{\\\"buildingDurability\\\":0,\\\"leadership\\\":0,\\\"rangeTraining\\\":0,\\\"reinforcedPlating\\\":0,\\\"shipbuilding\\\":0,\\\"speedTraining\\\":0,\\\"weaponTraining\\\":1}],[\\\"scene-public-planner-frame-planner-townHall-1\\\",\\\"townHall\\\",656,784,true,560,560,[],[],{\\\"x\\\":730,\\\"y\\\":828},{\\\"buildingDurability\\\":0,\\\"leadership\\\":0,\\\"rangeTraining\\\":0,\\\"reinforcedPlating\\\":0,\\\"shipbuilding\\\":0,\\\"speedTraining\\\":0,\\\"weaponTraining\\\":1}]]]]\",[{\"action\":{\"actionId\":\"goal-ref:action:v88\",\"generation\":19},\"id\":\"lease:scene-public-planner-frame-planner-footman-1\",\"incumbentTask\":null,\"methodId\":\"goal-bundle:ConquerIsland:planner:resource-1\",\"minimumStayUntilTick\":12015,\"objectiveId\":\"ConquerIsland:planner:resource-1\",\"origin\":\"allocator\",\"resourceKey\":\"unit:scene-public-planner-frame-planner-footman-1\",\"sinceTick\":4695},{\"action\":{\"actionId\":\"goal-ref:action:v88\",\"generation\":19},\"id\":\"lease:scene-public-planner-frame-planner-footman-2\",\"incumbentTask\":null,\"methodId\":\"goal-bundle:ConquerIsland:planner:resource-1\",\"minimumStayUntilTick\":12015,\"objectiveId\":\"ConquerIsland:planner:resource-1\",\"origin\":\"allocator\",\"resourceKey\":\"unit:scene-public-planner-frame-planner-footman-2\",\"sinceTick\":4695},{\"action\":{\"actionId\":\"goal-ref:action:v88\",\"generation\":19},\"id\":\"lease:scene-public-planner-frame-planner-footman-3\",\"incumbentTask\":null,\"methodId\":\"goal-bundle:ConquerIsland:planner:resource-1\",\"minimumStayUntilTick\":12015,\"objectiveId\":\"ConquerIsland:planner:resource-1\",\"origin\":\"allocator\",\"resourceKey\":\"unit:scene-public-planner-frame-planner-footman-3\",\"sinceTick\":4695},{\"action\":{\"actionId\":\"goal-ref:action:v88\",\"generation\":19},\"id\":\"lease:scene-public-planner-frame-planner-footman-4\",\"incumbentTask\":null,\"methodId\":\"goal-bundle:ConquerIsland:planner:resource-1\",\"minimumStayUntilTick\":12015,\"objectiveId\":\"ConquerIsland:planner:resource-1\",\"origin\":\"allocator\",\"resourceKey\":\"unit:scene-public-planner-frame-planner-footman-4\",\"sinceTick\":4695}]]",
+              "evidence": [],
+              "reason": {
+                "code": "formal-garrison-obligation-in-progress",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12015}",
+                  "goal-ref:action:v88",
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {
+                  "supportedThroughTick": 12015,
+                  "protectionWindowThroughTick": 10800,
+                  "nativeHoldingNow": true,
+                  "obligationFulfilled": false,
+                  "assumesObservedMembership": true,
+                  "assumesNoNewOrdersOrThreats": true,
+                  "nativePostObserved": true,
+                  "retainedLease": true,
+                  "fieldStrength": 4.451380993602054,
+                  "requiredFieldStrength": 0
+                }
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12015}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12015}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12015,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":3.7598574365160564}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":10800}\\\"]]\"]"
+            ]
+          },
+          {
+            "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+            "observation": {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 12840
+                }
+              },
+              "state": "unmet",
+              "observedTick": 8400,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"formal-garrison-hold-required\"]",
+              "evidence": [],
+              "entityIds": [],
+              "reason": {
+                "code": "formal-garrison-hold-required",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\",\"throughTick\":12840}"
+                ],
+                "values": {}
+              }
+            },
+            "producerActionIds": [
+              "action:hold-position:[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\",\\\"throughTick\\\":12840}\",\"action:hold-position:[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"kind\\\\\\\":\\\\\\\"route-controlled\\\\\\\",\\\\\\\"throughTick\\\\\\\":12840}\\\",[\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"entityId\\\\\\\":\\\\\\\"resource-1\\\\\\\",\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2976,\\\\\\\"y\\\\\\\":896}},\\\\\\\"kind\\\\\\\":\\\\\\\"hall-complete\\\\\\\",\\\\\\\"mineId\\\\\\\":\\\\\\\"resource-1\\\\\\\"}\\\",\\\"fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"byTick\\\\\\\":12840,\\\\\\\"cohort\\\\\\\":[{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-1\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-2\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-3\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"scene-public-planner-frame-planner-footman-4\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"},{\\\\\\\"entityId\\\\\\\":\\\\\\\"unit-planner-lancer-1025\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"existing\\\\\\\"}],\\\\\\\"kind\\\\\\\":\\\\\\\"force-at\\\\\\\",\\\\\\\"metric\\\\\\\":\\\\\\\"combat-rating\\\\\\\",\\\\\\\"minimum\\\\\\\":4.721402529331386}\\\",\\\"fact:{\\\\\\\"kind\\\\\\\":\\\\\\\"site-safe\\\\\\\",\\\\\\\"site\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:2\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":3049.3234297808945,\\\\\\\"y\\\\\\\":964.1731753099954}},\\\\\\\"throughTick\\\\\\\":10800}\\\"]]\"]"
+            ]
+          }
+        ],
+        "holdAdmissions": [],
+        "actualNearbyCombatUnits": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-2",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2818.9628370209,
+            "y": 794.8630291387275,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 186.78693056934748
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3049.3234297808945,
+            "y": 964.1731753099954,
+            "order": {
+              "type": "hold",
+              "x": 3049.3234297808945,
+              "y": 964.1731753099954
+            },
+            "distanceToMine": 100.11946457448283
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3077.8247996669706,
+            "y": 941.3714081011251,
+            "order": {
+              "type": "hold",
+              "x": 3077.8247996669706,
+              "y": 941.3714081011251
+            },
+            "distanceToMine": 111.47580230838236
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3041.3354477573776,
+            "y": 929.0705807735231,
+            "order": {
+              "type": "hold",
+              "x": 3041.3354477573776,
+              "y": 929.0705807735231
+            },
+            "distanceToMine": 73.22830085667105
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "kind": "footman",
+            "hp": 79,
+            "x": 3051.352444680128,
+            "y": 894.4922671557423,
+            "order": {
+              "type": "hold",
+              "x": 3051.352444680128,
+              "y": 894.4922671557423
+            },
+            "distanceToMine": 75.3675273416967
+          },
+          {
+            "id": "unit-planner-worker-1107",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2927.3898112616193,
+            "y": 856.9763816556937,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 15
+            },
+            "distanceToMine": 62.33613107871767
+          },
+          {
+            "id": "unit-planner-worker-1110",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2883.5447956478115,
+            "y": 831.8593761319,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "return",
+              "timer": 0
+            },
+            "distanceToMine": 112.52548352259595
+          },
+          {
+            "id": "unit-planner-worker-1113",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2927.7979048323095,
+            "y": 857.2101616720934,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "gather",
+              "timer": 52
+            },
+            "distanceToMine": 61.87158908626982
+          },
+          {
+            "id": "unit-planner-worker-1116",
+            "kind": "worker",
+            "hp": 70,
+            "x": 2899.1635400658693,
+            "y": 840.8067122049094,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-1",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "distanceToMine": 94.60518269545793
+          },
+          {
+            "id": "unit-planner-footman-1125",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3049.271688029696,
+            "y": 810.2948108101905,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 112.75690542393474
+          },
+          {
+            "id": "unit-planner-footman-1127",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3037.8424485972173,
+            "y": 775.5273457916528,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 135.41842142228455
+          },
+          {
+            "id": "unit-planner-footman-1129",
+            "kind": "footman",
+            "hp": 145,
+            "x": 3014.1061579726197,
+            "y": 818.0010093415574,
+            "order": {
+              "type": "idle"
+            },
+            "distanceToMine": 86.80968735786385
+          }
+        ]
+      }
+    }
+  ]
+}
